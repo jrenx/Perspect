@@ -1,0 +1,14 @@
+# DYNINST_INCLUDE and DYNINST_LIB should be set to locations
+# where Dyniinst header and library files were installed, respectively
+#CC=cl
+analysis: analysis.o
+	$(CC) analysis.o -L$(DYNINST_LIB) -ldyninstAPI -lboost_system -ltbbmalloc_proxy -lstdc++\
+	       	-o analysis -std=c++11
+
+analysis.o: analysis.cpp
+	$(CC) -c $(CFLAGS) -I$(DYNINST_INCLUDE) analysis.cpp -std=c++11
+
+clean:
+	rm *.o
+
+
