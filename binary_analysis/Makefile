@@ -6,7 +6,7 @@ analysis: analysis.o
 	       	-o analysis -std=c++11
 
 analysis.o: analysis.cpp
-	$(CC) -c $(CFLAGS) -I$(DYNINST_INCLUDE) analysis.cpp -std=c++11
+	$(CC) -g -c $(CFLAGS) -I$(DYNINST_INCLUDE) analysis.cpp -std=c++11
 
 clean:
 	rm analysis.o analysis
