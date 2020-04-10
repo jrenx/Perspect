@@ -41,6 +41,43 @@ BPatch_addressSpace* startInstrumenting(accessType_t accessType, const char* nam
   return handle;
 }
 
+int binaryAnalysis(BPatch_addressSpace *app) {
+    BPatch_image* appImage = app->getImage();
+
+    vector<BPatch_function*> functions;
+    const char *func_name = "scanblock";
+    appImage->findFunction(func_name, functions);
+    if (functions.size() == 0) {
+        fprintf(stderr, "Loading function %s failed.\n", func_name);
+        return -1;
+    } else if (functions.size() > 1) {
+        fprintf(stderr, "More than one function with name %s, using one.\n", func_name);
+    }
+
+    BPatch_flowGraph* fg = functions[0]->getCFG();
+
+    set<BPatch_basicBlock*> blocks;
+    fg->getAllBasicBlocks(blocks);
+
+    for (auto block_iter = blocks.begin();
+         block_iter != blocks.end();
+         ++block_iter) {
+
+        BPatch_basicBlock *block = *block_iter;
+        std::vector<InstructionAPI::Instruction> insns;
+        block->getInstructions(insns);
+        for (auto insn_iter = insns.begin();
+             insn_iter != insns.end();
+             ++insn_iter) {
+            InstructionAPI::Instruction insn = *insn_iter;
+            if (insn.readsMemory() || insn.writesMemory()) {
+                fprintf(stdout, "Instruction reads or writes memory\n");
+            }
+        }
+    }
+    return 0;
+}
+
 int main() {
   // Set up information about the program to be instrumented 
   const char* progName = "909_ziptest_exe";
@@ -54,4 +91,6 @@ int main() {
   	fprintf(stderr, "startInstrumenting failed\n");
 	exit(1);
   }
+
+  binaryAnalysis(app);
 }
