@@ -2,7 +2,7 @@
 # where Dyniinst header and library files were installed, respectively
 #CC=cl
 analysis: analysis.o
-	$(CC) analysis.o -L$(DYNINST_LIB) -ldyninstAPI -lboost_system -ltbbmalloc_proxy -linstructionAPI -lstdc++\
+	$(CC) analysis.o -L$(DYNINST_LIB) -ldyninstAPI -lboost_system -ltbbmalloc_proxy -linstructionAPI -lparseAPI -lsymtabAPI -lcommon -lstdc++\
 	       	-o analysis -std=c++11
 
 analysis.o: analysis.cpp
