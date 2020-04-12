@@ -211,7 +211,7 @@ public:
   int i = 0;
   virtual bool endAtPoint(Assignment::Ptr ap) {
     i = i + 1;
-    if (i > 8) return true;
+    if (i > 10) return true; //8 was ok
     return false;
     //return ap->insn().readsMemory();
   }
@@ -224,7 +224,7 @@ public:
 void slice(Function *f, Block *b, Instruction insn) {
 
   // Convert the instruction to assignments
-  AssignmentConverter ac(true, true);
+  AssignmentConverter ac(true, false);
   vector<Assignment::Ptr> assignments;
   ac.convert(insn, b->last(), f, b, assignments);
 
@@ -235,7 +235,7 @@ void slice(Function *f, Block *b, Instruction insn) {
     assign = *ait;
   }
 
-  Slicer s(assign, b, f);
+  Slicer s(assign, b, f, true, false);
   CustomSlicer cs;
   GraphPtr slice = s.backwardSlice(cs);
   cout << slice->size() << endl;
