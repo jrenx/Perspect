@@ -1,6 +1,7 @@
 import gdb
 import json
 import re
+import os
 
 with open('config.json') as configFile:
     config = json.load(configFile)
@@ -14,7 +15,8 @@ else:
     output_filename = 'out.log'
 
 def run(cmd):
-    return gdb.execute(cmd, to_string=True)
+    outs = gdb.execute(cmd, to_string=True)
+    return outs.split(os.linesep)
 
 def br_success(outs):
     for line in outs:
