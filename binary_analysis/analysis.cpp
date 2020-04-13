@@ -13,6 +13,8 @@
 #include "CodeObject.h"
 #include "CFG.h"
 #include "Graph.h"
+#include <boost/unordered_set.hpp>
+#include <boost/heap/priority_queue.hpp>
 
 using namespace std;
 using namespace Dyninst;
@@ -208,20 +210,21 @@ Instruction findIfCondition2(Block *b) {
 
 class CustomSlicer : public Slicer::Predicates {
 public:
-  int i = 0;
   virtual bool endAtPoint(Assignment::Ptr ap) {
-    i = i + 1;
-    if (i > 10) return true; //8 was ok
-    return false;
-    //return ap->insn().readsMemory();
+    //cout << ap->format();
+    //cout << "  ";
+    //cout << ap->insn().readsMemory();
+    //cout << endl;
+    return ap->insn().readsMemory();
   }
 
   virtual bool addPredecessor(AbsRegion reg) {
+    //cout << reg.format() << endl;
     return true;
   }
 };
 
-void slice(Function *f, Block *b, Instruction insn) {
+GraphPtr buildSlice(Function *f, Block *b, Instruction insn) {
 
   // Convert the instruction to assignments
   AssignmentConverter ac(true, false);
@@ -231,18 +234,74 @@ void slice(Function *f, Block *b, Instruction insn) {
   // An instruction can corresponds to multiple assignments
   Assignment::Ptr assign; //TODO, how to handle multiple ones?
   for (auto ait = assignments.begin(); ait != assignments.end(); ++ait) {
-    cout << (*ait)->format() << endl;
+    //cout << (*ait)->format() << endl;
     assign = *ait;
   }
 
   Slicer s(assign, b, f, true, false);
   CustomSlicer cs;
   GraphPtr slice = s.backwardSlice(cs);
-  cout << slice->size() << endl;
+  //cout << slice->size() << endl;
   string filePath("/home/anygroup/perf_debug_tool/binary_analysis/graph");
   slice->printDOT(filePath);
+  return slice;
 }
 
+void locateBitVariables(GraphPtr slice, boost::unordered_set<Assignment::Ptr> &bitVariables) {
+  boost::heap::priority_queue<Node::Ptr> q;
+
+  NodeIterator begin, end;
+  slice->exitNodes(begin, end);
+  for (NodeIterator it = begin; it != end; ++it)
+    q.push(*it);
+
+  while (!q.empty()) {
+    Node::Ptr node = q.top();
+    q.pop();
+
+    NodeIterator iBegin, iEnd;
+    node->ins(iBegin, iEnd);
+    for (NodeIterator it = iBegin; it != iEnd; ++it)
+      q.push(*it);
+
+    SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(node);
+    Assignment::Ptr assign = aNode->assign();
+    entryID id = assign->insn().getOperation().getID();
+    if (id == e_and) {
+      cout << "FOUND an AND instruction: ";
+      cout << assign->format() << " ";
+      cout << assign->insn().format() << endl;
+      bitVariables.insert(assign);
+      continue;
+    }
+
+    cout << "CHECKING instruction: ";
+    cout << assign->format() << " ";
+    cout << assign->insn().format() << " ";
+    cout << id << " ";
+    cout << endl;
+
+    if (id != e_mov) continue; // FIXME: heuristic to only include direct moves ...
+
+    NodeIterator oBegin, oEnd;
+    node->outs(oBegin, oEnd);
+    for (NodeIterator it = oBegin; it != oEnd; ++it) {
+      SliceNode::Ptr oNode = boost::static_pointer_cast<SliceNode>(*it);
+      Assignment::Ptr oAssign = oNode->assign();
+      cout << "Predecessor: ";
+      cout << oAssign->format() << " ";
+      cout << oAssign->insn().format() << endl;
+
+      if (bitVariables.find(oAssign) != bitVariables.end()) {
+        bitVariables.insert(assign);
+        cout << "ADDING" << endl;
+      }
+    }
+  }
+  //for (auto it = bitVariables.begin(); it != bitVariables.end(); ++it) {
+  //  cout << (*it)->format() << endl;
+  //}
+}
 
 int main() {
   // Set up information about the program to be instrumented 
@@ -258,5 +317,24 @@ int main() {
   Function *func = getFunction(progName, funcName);
   Block *immedDom = getImmediateDominator2(func, 0x40940c);
   Instruction ifCond = findIfCondition2(immedDom);
-  slice(func, immedDom, ifCond);
+  GraphPtr slice = buildSlice(func, immedDom, ifCond);
+
+  boost::unordered_set<Assignment::Ptr> bitVariables;
+  locateBitVariables(slice, bitVariables);
+
+  // get all the leaf nodes.
+  NodeIterator begin, end;
+  slice->entryNodes(begin, end);
+  //slice->allNodes(begin, end);
+  for(NodeIterator it = begin; it != end; ++it) {
+    SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(*it);
+    Assignment::Ptr assign = aNode->assign();
+    //cout << assign->format() << " " << assign->insn().format() << " " << assign->insn().getOperation().getID() << " " << endl;
+    if (assign->insn().readsMemory()) {
+      cout << assign->format() << " ";
+      cout << assign->insn().format() << " ";
+      cout << (bitVariables.find(assign) != bitVariables.end())  << " ";
+      cout << endl;
+    }
+  }
 }
