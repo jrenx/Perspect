@@ -14,7 +14,7 @@ if 'out' in config:
 else:
     output_filename = 'out.log'
 
-output_file = open(output_filename, 'r')
+output_file = open(output_filename, 'w')
 
 
 def run(cmd):
