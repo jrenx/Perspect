@@ -18,7 +18,18 @@ output_file = open(output_filename, 'w')
 
 
 def run(cmd):
-    return gdb.execute(cmd, to_string=True).split(os.linesep)
+    # /dev/shm - save file in RAM
+    ltxname = "/dev/shm/c.log"
+
+    gdb.execute("set logging file " + ltxname)  # lpfname
+    gdb.execute("set logging redirect on")
+    gdb.execute("set logging overwrite on")
+    gdb.execute("set logging on")
+    gdb.execute(cmd)
+    gdb.execute("set logging off")
+
+    replyContents = open(ltxname, 'r').read()  # read entire file
+    return replyContents.split(os.linesep)
 
 
 def br_success(outs):
@@ -60,12 +71,20 @@ while True:
     if reg_value == '':
         clean_up()
         exit()
+
+    output_file.write("{} value: {}".format(reg, reg_value))
+
     run('disable br 1')
     run('watch -l *(int *){}'.format(reg_value))
 
-    while True:
-        outs = run('reverse-cont')
-        print('\n\nreverse-cont: ' + outs)
-        print('\n\n')
+    # while True:
+    #     try:
+    #         outs = run('reverse-cont')
+    #     except gdb.error:
+    #         break
+    #     print('\n\nreverse-cont output: ')
+    #     for line in outs:
+    #         print(line)
+    #     print('\n\n')
 
     run('delete br {}'.format(str(continue_count + 1)))
