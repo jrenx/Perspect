@@ -38,7 +38,7 @@ def br_success(outs):
 def get_reg_value(outs):
     for line in outs:
         words = line.split()
-        if len(words) >= 2 && words[0] == reg:
+        if len(words) >= 2 and words[0] == reg:
             return words[1]
     return ''
 
