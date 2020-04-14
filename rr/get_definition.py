@@ -60,4 +60,12 @@ while True:
     if reg_value == '':
         clean_up()
         exit()
-    print(reg_value)
+    run('disable br 1')
+    run('watch -l *(int *){}'.format(reg_value))
+
+    while True:
+        outs = run('reverse-cont')
+        print('\n\nreverse-cont: ' + outs)
+        print('\n\n')
+
+    run('delete br {}'.format(str(continue_count + 1)))
