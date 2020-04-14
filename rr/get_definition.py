@@ -32,6 +32,13 @@ def run(cmd):
     return replyContents.split(os.linesep)
 
 
+def process_exit(outs):
+    for line in outs:
+        if re.search(r'Inferior \d+ \(process \d+\) exited with code \d+', line):
+            return True
+    return False
+
+
 def br_success(outs):
     for line in outs:
         if re.search(r'Make breakpoint pending on future shared library load', line):
@@ -62,16 +69,16 @@ continue_count = 0
 while True:
     continue_count += 1
     try:
-        run('c {}'.format(str(continue_count)))
-        outs = run('i reg {}'.format(reg))
+        outs = run('c {}'.format(str(continue_count)))
     except gdb.error:
         clean_up()
         exit()
-    reg_value = get_reg_value(outs)
-    if reg_value == '':
+    if process_exit(outs):
         clean_up()
         exit()
 
+    outs = run('i reg {}'.format(reg))
+    reg_value = get_reg_value(outs)
     output_file.write("{} value: {}".format(reg, reg_value))
 
     run('disable br 1')
