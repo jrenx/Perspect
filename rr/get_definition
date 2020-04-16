@@ -1,18 +1,10 @@
 source result_parser.py
 
 p $init_argument()
-r
 set logging file result.log
 set logging overwrite on
 set logging redirect on
 set logging on
 p $set_breakpoint()
 set logging off
-
-if ($is_br_success == 0){
-    print "setting break point failed"
-    exit(-1)
-}
-
-
 
