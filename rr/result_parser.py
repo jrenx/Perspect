@@ -40,6 +40,20 @@ class SetBreakpoint(gdb.Function):
 
 SetBreakpoint()
 
+
+class ContinueMulti(gdb.Function):
+    def __init__(self):
+        super(ContinueMulti, self).__init__('continue_multi')
+
+    def invoke(self):
+        continue_count = gdb.convenience_variable('continue_count')
+        gdb.execute('c {}'.format(str(continue_count)))
+        return 1
+
+
+ContinueMulti()
+
+
 class CheckProcessExit(gdb.Function):
     def __init__(self):
         super(CheckProcessExit, self).__init__('is_process_exit')
