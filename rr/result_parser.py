@@ -15,8 +15,7 @@ class InitArgument(gdb.Function):
         line_num = config['line']
         reg = config['reg']
 
-        gdb.set_convenience_variable('filename', filename)
-        gdb.set_convenience_variable('line_num', line_num)
+        gdb.set_convenience_variable('br_point', '{}:{}'.format(filename, line_num))
         gdb.set_convenience_variable('reg', reg)
 
         if 'out' in config:
