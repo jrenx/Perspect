@@ -1,11 +1,11 @@
 source result_parser.py
 
-p $init_argument()
+$init_argument()
 set logging file result.log
 set logging overwrite on
 set logging redirect on
 set logging on
-p $set_breakpoint()
+$set_breakpoint()
 set logging off
 
 if $is_br_success() == 0
@@ -15,18 +15,20 @@ end
 
 r
 
+set logging file result.log
+set logging overwrite on
+set logging redirect on
+set logging on
 set $continue_count = 1
 while 1
-    set logging file result.log
-    set logging overwrite on
-    set logging redirect on
-    set logging on
+    $update_file()
     c $continue_count
-    set logging off
 
-quit
+    quit
     if $is_process_exit() == 1
       quit
     end
 
 end
+set logging off
+quit

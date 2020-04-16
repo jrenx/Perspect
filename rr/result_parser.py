@@ -29,6 +29,16 @@ class InitArgument(gdb.Function):
 InitArgument()
 
 
+class UpdateFilePosition(gdb.Function):
+    def __init__(self):
+        super(UpdateFilePosition, self).__init__('update_file')
+
+    def invoke(self):
+        with open('result.log', 'r') as f:
+            position = f.tell()
+        gdb.set_convenience_variable('log_position', position)
+
+
 class SetBreakpoint(gdb.Function):
     def __init__(self):
         super(SetBreakpoint, self).__init__('set_breakpoint')
@@ -60,6 +70,8 @@ class CheckProcessExit(gdb.Function):
 
     def invoke(self):
         with open('result.log', 'r') as f:
+            position = int(gdb.convenience_variable('log_position'))
+            f.seek(position)
             outs = f.readlines()
         for line in outs:
             if re.search(r'Inferior \d+ \(process \d+\) exited', line):
@@ -78,6 +90,8 @@ class CheckBreakpointSuccess(gdb.Function):
 
     def invoke(self):
         with open('result.log', 'r') as f:
+            position = int(gdb.convenience_variable('log_position'))
+            f.seek(position)
             outs = f.readlines()
         for line in outs:
             if re.search(r'Make breakpoint pending on future shared library load', line):
@@ -95,7 +109,10 @@ class GetRegValue(gdb.Function):
         super(GetRegValue, self).__init__('get_reg_value')
 
     def invoke(self):
-        outs = open('result.log', 'r').readlines()
+        with open('result.log', 'r') as f:
+            position = int(gdb.convenience_variable('log_position'))
+            f.seek(position)
+            outs = f.readlines()
         reg = gdb.convenience_variable('reg')
         for line in outs:
             words = line.split()
