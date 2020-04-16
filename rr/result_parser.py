@@ -39,6 +39,9 @@ class UpdateFilePosition(gdb.Function):
         gdb.set_convenience_variable('log_position', position)
 
 
+UpdateFilePosition()
+
+
 class SetBreakpoint(gdb.Function):
     def __init__(self):
         super(SetBreakpoint, self).__init__('set_breakpoint')
@@ -47,6 +50,7 @@ class SetBreakpoint(gdb.Function):
         br_point = gdb.convenience_variable('br_point')
         gdb.execute('br {}'.format(br_point))
         return 1
+
 
 SetBreakpoint()
 
