@@ -24,9 +24,9 @@ while 1
     p $update_file()
     c $continue_count
 
-    quit
+    loop_break
     if $is_process_exit() == 1
-      quit
+        loop_break
     end
 
 end
