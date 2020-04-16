@@ -24,6 +24,7 @@ class InitArgument(gdb.Function):
         else:
             output_filename = 'out.log'
         gdb.set_convenience_variable('output_filename', output_filename)
+        return 1
 
 
 InitArgument()
@@ -38,8 +39,9 @@ class CheckProcessExit(gdb.Function):
         for line in outs:
             if re.search(r'Inferior \d+ \(process \d+\) exited', line):
                 gdb.set_convenience_variable('RET', 1)
-                return
+                return 1
         gdb.set_convenience_variable('RET', 0)
+        return 0
 
 
 CheckProcessExit()
@@ -54,8 +56,9 @@ class CheckBreakpointSuccess(gdb.Function):
         for line in outs:
             if re.search(r'Make breakpoint pending on future shared library load', line):
                 gdb.set_convenience_variable('RET', 0)
-                return
+                return 0
         gdb.set_convenience_variable('RET', 1)
+        return 1
 
 
 CheckBreakpointSuccess()
@@ -73,8 +76,9 @@ class GetRegValue(gdb.Function):
             if len(words) >= 2 and words[0] == reg:
                 gdb.set_convenience_variable('reg_value', words[1])
                 gdb.set_convenience_variable('RET', 1)
-                return
+                return 1
         gdb.set_convenience_variable('RET', 0)
+        return 0
 
 
 GetRegValue()
