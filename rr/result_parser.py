@@ -29,6 +29,17 @@ class InitArgument(gdb.Function):
 InitArgument()
 
 
+class SetBreakpoint(gdb.Function):
+    def __init__(self):
+        super(SetBreakpoint, self).__init__('set_breakpoint')
+
+    def invoke(self):
+        br_point = gdb.convenience_variable('br_point')
+        gdb.execute('br {}'.format(br_point))
+        return 1
+
+SetBreakpoint()
+
 class CheckProcessExit(gdb.Function):
     def __init__(self):
         super(CheckProcessExit, self).__init__('is_process_exit')
