@@ -9,6 +9,6 @@ p $set_breakpoint()
 set logging off
 
 if $is_br_success() == 0
-    echo "Setting breakpoint failed"
-    exit
+    echo Setting breakpoint failed
+    quit
 end
