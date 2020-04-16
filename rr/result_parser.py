@@ -70,8 +70,10 @@ class CheckProcessExit(gdb.Function):
 
     def invoke(self):
         with open('result.log', 'r') as f:
-            position = int(gdb.convenience_variable('log_position'))
-            f.seek(position)
+            position = gdb.convenience_variable('log_position')
+            if position is not None:
+                position = int(position)
+                f.seek(position)
             outs = f.readlines()
         for line in outs:
             if re.search(r'Inferior \d+ \(process \d+\) exited', line):
@@ -90,8 +92,10 @@ class CheckBreakpointSuccess(gdb.Function):
 
     def invoke(self):
         with open('result.log', 'r') as f:
-            position = int(gdb.convenience_variable('log_position'))
-            f.seek(position)
+            position = gdb.convenience_variable('log_position')
+            if position is not None:
+                position = int(position)
+                f.seek(position)
             outs = f.readlines()
         for line in outs:
             if re.search(r'Make breakpoint pending on future shared library load', line):
@@ -110,8 +114,10 @@ class GetRegValue(gdb.Function):
 
     def invoke(self):
         with open('result.log', 'r') as f:
-            position = int(gdb.convenience_variable('log_position'))
-            f.seek(position)
+            position = gdb.convenience_variable('log_position')
+            if position is not None:
+                position = int(position)
+                f.seek(position)
             outs = f.readlines()
         reg = gdb.convenience_variable('reg')
         for line in outs:
