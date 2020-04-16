@@ -12,3 +12,18 @@ if $is_br_success() == 0
     echo Setting breakpoint failed
     quit
 end
+
+set $continue_count = 0
+while 1:
+    set logging file result.log
+    set logging overwrite on
+    set logging redirect on
+    set logging on
+    c $continue_count
+    set logging off
+
+    if $is_process_exit() == 1
+      quit
+    end
+
+end
