@@ -3,47 +3,78 @@ import json
 import re
 
 
-def set_argument():
-    with open('config.json') as configFile:
-        config = json.load(configFile)
+class InitArgument(gdb.Function):
+    def __init__(self):
+        super(InitArgument, self).__init__('init_argument')
 
-    filename = config['file']
-    line_num = config['line']
-    reg = config['reg']
+    def invoke(self):
+        with open('config.json') as configFile:
+            config = json.load(configFile)
 
-    gdb.set_convenience_variable('filename', filename)
-    gdb.set_convenience_variable('line_num', line_num)
-    gdb.set_convenience_variable('reg', reg)
+        filename = config['file']
+        line_num = config['line']
+        reg = config['reg']
 
-    if 'out' in config:
-        output_filename = config['out']
-    else:
-        output_filename = 'out.log'
+        gdb.set_convenience_variable('filename', filename)
+        gdb.set_convenience_variable('line_num', line_num)
+        gdb.set_convenience_variable('reg', reg)
 
-    output_file = open(output_filename, 'w')
-
-def process_exit(outs):
-    for line in outs:
-        if re.search(r'Inferior \d+ \(process \d+\) exited', line):
-            gdb.set_convenience_variable('RET', 1)
-            return
-    gdb.set_convenience_variable('RET', 0)
+        if 'out' in config:
+            output_filename = config['out']
+        else:
+            output_filename = 'out.log'
+        gdb.set_convenience_variable('output_filename', output_filename)
 
 
-def br_success(outs):
-    for line in outs:
-        if re.search(r'Make breakpoint pending on future shared library load', line):
-            gdb.set_convenience_variable('RET', 0)
-            return
-    gdb.set_convenience_variable('RET', 1)
+InitArgument()
 
 
-def get_reg_value(outs):
-    reg = gdb.convenience_variable('reg')
-    for line in outs:
-        words = line.split()
-        if len(words) >= 2 and words[0] == reg:
-            gdb.set_convenience_variable('reg_value', words[1])
-            gdb.set_convenience_variable('RET', 1)
-            return
-    gdb.set_convenience_variable('RET', 0)
+class CheckProcessExit(gdb.Function):
+    def __init__(self):
+        super(CheckProcessExit, self).__init__('is_process_exit')
+
+    def invoke(self):
+        outs = open('result.log', 'r').readlines()
+        for line in outs:
+            if re.search(r'Inferior \d+ \(process \d+\) exited', line):
+                gdb.set_convenience_variable('RET', 1)
+                return
+        gdb.set_convenience_variable('RET', 0)
+
+
+CheckProcessExit()
+
+
+class CheckBreakpointSuccess(gdb.Function):
+    def __init__(self):
+        super(CheckBreakpointSuccess, self).__init__('is_br_success')
+
+    def invoke(self):
+        outs = open('result.log', 'r').readlines()
+        for line in outs:
+            if re.search(r'Make breakpoint pending on future shared library load', line):
+                gdb.set_convenience_variable('RET', 0)
+                return
+        gdb.set_convenience_variable('RET', 1)
+
+
+CheckBreakpointSuccess()
+
+
+class GetRegValue(gdb.Function):
+    def __init__(self):
+        super(GetRegValue, self).__init__('get_reg_value')
+
+    def invoke(self):
+        outs = open('result.log', 'r').readlines()
+        reg = gdb.convenience_variable('reg')
+        for line in outs:
+            words = line.split()
+            if len(words) >= 2 and words[0] == reg:
+                gdb.set_convenience_variable('reg_value', words[1])
+                gdb.set_convenience_variable('RET', 1)
+                return
+        gdb.set_convenience_variable('RET', 0)
+
+
+GetRegValue()
