@@ -35,7 +35,7 @@ class SetBreakpoint(gdb.Function):
 
     def invoke(self):
         br_point = gdb.convenience_variable('br_point')
-        gdb.execute('br {}'.format(br_point))
+        gdb.execute('br {}'.format(br_point), from_tty=True)
         return 1
 
 SetBreakpoint()
