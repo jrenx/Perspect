@@ -38,6 +38,7 @@ class UpdateFilePosition(gdb.Function):
             f.seek(0, 2)
             position = f.tell()
         gdb.set_convenience_variable('log_position', str(position))
+        return 1
 
 
 UpdateFilePosition()
