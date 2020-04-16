@@ -59,7 +59,8 @@ class CheckProcessExit(gdb.Function):
         super(CheckProcessExit, self).__init__('is_process_exit')
 
     def invoke(self):
-        outs = open('result.log', 'r').readlines()
+        with open('result.log', 'r') as f:
+            outs = f.readlines()
         for line in outs:
             if re.search(r'Inferior \d+ \(process \d+\) exited', line):
                 gdb.set_convenience_variable('RET', 1)
@@ -76,7 +77,8 @@ class CheckBreakpointSuccess(gdb.Function):
         super(CheckBreakpointSuccess, self).__init__('is_br_success')
 
     def invoke(self):
-        outs = open('result.log', 'r').readlines()
+        with open('result.log', 'r') as f:
+            outs = f.readlines()
         for line in outs:
             if re.search(r'Make breakpoint pending on future shared library load', line):
                 gdb.set_convenience_variable('RET', 0)
