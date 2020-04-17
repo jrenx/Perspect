@@ -92,6 +92,28 @@ class CheckProcessExit(gdb.Function):
 CheckProcessExit()
 
 
+class CheckProgramStop(gdb.Function):
+    def __init__(self):
+        super(CheckProgramStop, self).__init__('is_program_stop')
+
+    def invoke(self):
+        with open('result.log', 'r') as f:
+            position = gdb.convenience_variable('log_position')
+            if position is not None:
+                position = int(position)
+                f.seek(position)
+            outs = f.readlines()
+        for line in outs:
+            if re.search(r'Program stopped', line):
+                gdb.set_convenience_variable('RET', 1)
+                return 1
+        gdb.set_convenience_variable('RET', 0)
+        return 0
+
+
+CheckProgramStop()
+
+
 class CheckBreakpointSuccess(gdb.Function):
     def __init__(self):
         super(CheckBreakpointSuccess, self).__init__('is_br_success')

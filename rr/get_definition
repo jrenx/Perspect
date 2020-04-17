@@ -1,5 +1,7 @@
 source result_parser.py
 
+set pagination off
+
 p $init_argument()
 set logging file result.log
 set logging overwrite on
@@ -29,6 +31,16 @@ while 1 == 1
         loop_break
     end
 
+    while 1 == 1
+        p $update_file()
+        reverse_cont
+        if $is_program_stop() == 1:
+            loop_break
+        end
+    end
+
+
 end
 set logging off
+set pagination on
 quit
