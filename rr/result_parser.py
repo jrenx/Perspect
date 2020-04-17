@@ -63,7 +63,8 @@ class ContinueMulti(gdb.Function):
 
     def invoke(self):
         continue_count = gdb.convenience_variable('continue_count')
-        gdb.execute('c {}'.format(str(continue_count)))
+        for _ in range(continue_count):
+            gdb.execute('c')
         return 1
 
 
