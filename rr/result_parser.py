@@ -142,8 +142,9 @@ class GetRegValue(gdb.Function):
         super(GetRegValue, self).__init__('get_reg_value')
 
     def invoke(self):
-        reg = gdb.convenience_variable('reg').strip('"')
+        reg = str(gdb.convenience_variable('reg')).strip('"')
         gdb.execute('i reg {}'.format(reg))
+        gdb.flush()
         with open('result.log', 'r') as f:
             position = gdb.convenience_variable('log_position')
             if position is not None:
