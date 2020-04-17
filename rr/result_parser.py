@@ -142,13 +142,14 @@ class GetRegValue(gdb.Function):
         super(GetRegValue, self).__init__('get_reg_value')
 
     def invoke(self):
+        reg = gdb.convenience_variable('reg')
+        gdb.execute('i reg {}'.format(reg))
         with open('result.log', 'r') as f:
             position = gdb.convenience_variable('log_position')
             if position is not None:
                 position = int(position)
                 f.seek(position)
             outs = f.readlines()
-        reg = gdb.convenience_variable('reg')
         for line in outs:
             words = line.split()
             if len(words) >= 2 and words[0] == reg:
@@ -160,3 +161,27 @@ class GetRegValue(gdb.Function):
 
 
 GetRegValue()
+
+
+class WatchRegValue(gdb.Function):
+    def __init__(self):
+        super(WatchRegValue, self).__init__('watch_reg_value')
+
+    def invoke(self):
+        reg_value = gdb.convenience_variable('reg_value')
+        gdb.execute('watch -l *(int *){}'.format(reg_value))
+        return 1
+
+
+WatchRegValue()
+
+
+class DeleteWatchPoint(gdb.Function):
+    def __init__(self):
+        super(DeleteWatchPoint, self).__init__('delete_watch_point')
+
+    def invoke(self):
+        gdb.execute('delete br {}'.format(str(gdb.convenience_variable('continue_count') + 1)))
+        return 1
+
+DeleteWatchPoint()
