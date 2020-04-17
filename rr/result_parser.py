@@ -169,7 +169,7 @@ class WatchRegValue(gdb.Function):
         super(WatchRegValue, self).__init__('watch_reg_value')
 
     def invoke(self):
-        reg_value = gdb.convenience_variable('reg_value')
+        reg_value = str(gdb.convenience_variable('reg_value')).strip('"')
         gdb.execute('watch -l *(int *){}'.format(reg_value))
         return 1
 
