@@ -154,6 +154,9 @@ class GetRegValue(gdb.Function):
         for line in outs:
             words = line.split()
             if len(words) >= 2 and words[0] == reg:
+                output_filename = str(gdb.convenience_variable('output_filename')).strip('"')
+                with open(output_filename, 'w') as f:
+                    f.write('register value: {}'.format(words[1]))
                 gdb.set_convenience_variable('reg_value', words[1])
                 gdb.set_convenience_variable('RET', 1)
                 return 1
@@ -184,5 +187,6 @@ class DeleteWatchPoint(gdb.Function):
     def invoke(self):
         gdb.execute('delete br {}'.format(str(gdb.convenience_variable('continue_count') + 1)))
         return 1
+
 
 DeleteWatchPoint()
