@@ -189,3 +189,27 @@ class DeleteWatchPoint(gdb.Function):
 
 
 DeleteWatchPoint()
+
+
+class ProcessWatchOutput(gdb.Function):
+    def __init__(self):
+        super(ProcessWatchOutput, self).__init__('process_watch_output')
+
+    def invoke(self):
+        with open('result.log', 'r') as f:
+            position = gdb.convenience_variable('log_position')
+            if position is not None:
+                position = int(position)
+                f.seek(position)
+            outs = f.readlines()
+        output_filename = str(gdb.convenience_variable('output_filename')).strip('"')
+        output_file = open(output_filename, 'w')
+        for line in outs:
+            if re.search(r'Old value =', line):
+                output_file.write(line.strip('\n'))
+            elif re.search(r'New value =', line):
+                output_file.write(line.strip('\n'))
+        return 1
+
+
+ProcessWatchOutput()

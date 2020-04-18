@@ -47,6 +47,7 @@ while 1 == 1
         if $is_program_stop() == 1
             loop_break
         end
+        p $process_watch_output()
     end
 
     p $delete_watch_point()
