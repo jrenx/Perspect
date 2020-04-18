@@ -22,7 +22,8 @@ class InitArgument(gdb.Function):
             output_filename = config['out']
         else:
             output_filename = 'out.log'
-        os.remove(output_filename)
+        if os.path.exists(output_filename):
+            os.remove(output_filename)
         gdb.set_convenience_variable('output_filename', output_filename)
         return 1
 
