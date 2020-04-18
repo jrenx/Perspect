@@ -56,4 +56,5 @@ while 1 == 1
 end
 set logging off
 set pagination on
+p $clean_up()
 quit

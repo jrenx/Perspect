@@ -1,6 +1,7 @@
 import gdb
 import json
 import re
+import os
 
 
 class InitArgument(gdb.Function):
@@ -21,6 +22,7 @@ class InitArgument(gdb.Function):
             output_filename = config['out']
         else:
             output_filename = 'out.log'
+        os.remove(output_filename)
         gdb.set_convenience_variable('output_filename', output_filename)
         return 1
 
@@ -154,7 +156,7 @@ class GetRegValue(gdb.Function):
             words = line.split()
             if len(words) >= 2 and words[0] == reg:
                 output_filename = str(gdb.convenience_variable('output_filename')).strip('"')
-                with open(output_filename, 'w') as f:
+                with open(output_filename, 'a') as f:
                     f.write('register {} value: {}'.format(reg, words[1]))
                 gdb.set_convenience_variable('reg_value', words[1])
                 gdb.set_convenience_variable('RET', 1)
@@ -203,7 +205,7 @@ class ProcessWatchOutput(gdb.Function):
                 f.seek(position)
             outs = f.readlines()
         output_filename = str(gdb.convenience_variable('output_filename')).strip('"')
-        output_file = open(output_filename, 'w')
+        output_file = open(output_filename, 'a')
         for line in outs:
             if re.search(r'Old value =', line):
                 output_file.write(line.strip('\n'))
@@ -213,3 +215,15 @@ class ProcessWatchOutput(gdb.Function):
 
 
 ProcessWatchOutput()
+
+
+class CleanUp(gdb.Function):
+    def __init__(self):
+        super(CleanUp, self).__init__('clean_up')
+
+    def invoke(self):
+        os.remove('result.log')
+        return 1
+
+
+CleanUp()
