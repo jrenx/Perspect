@@ -209,11 +209,11 @@ class ProcessWatchOutput(gdb.Function):
         output_file = open(output_filename, 'a')
         found = False
         for line in outs:
-            if re.search(r'(Old)|(New) value =', line):
+            if found:
+                output_file.write(line)
+            elif re.search(r'(Old)|(New) value =', line):
                 found = True
-        if found:
-            output_file.writelines(outs)
-            return 1
+                output_file.write(line)
         output_file.close()
         return 0
 
