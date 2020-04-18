@@ -1,5 +1,5 @@
 {
-	"break_point": "*0x40937d",
+	"break_point": "*0x409398",
 	"reg": "rcx",
 	"out": "out.log"
 }
