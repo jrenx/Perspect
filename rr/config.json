@@ -1,6 +1,5 @@
 {
-	"file": "mgc0.c",
-	"line": 125,
-	"reg": "ecx",
+	"break_point": "*0x40937d",
+	"reg": "rcx",
 	"out": "out.log"
 }

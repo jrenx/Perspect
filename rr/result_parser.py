@@ -11,11 +11,10 @@ class InitArgument(gdb.Function):
         with open('config.json') as configFile:
             config = json.load(configFile)
 
-        filename = config['file']
-        line_num = config['line']
+        break_point = config['break_point']
         reg = config['reg']
 
-        gdb.set_convenience_variable('br_point', '{}:{}'.format(filename, line_num))
+        gdb.set_convenience_variable('br_point', break_point)
         gdb.set_convenience_variable('reg', reg)
 
         if 'out' in config:
@@ -49,7 +48,7 @@ class SetBreakpoint(gdb.Function):
         super(SetBreakpoint, self).__init__('set_breakpoint')
 
     def invoke(self):
-        br_point = gdb.convenience_variable('br_point')
+        br_point = str(gdb.convenience_variable('br_point')).strip('"')
         gdb.execute('br {}'.format(br_point))
         return 1
 
