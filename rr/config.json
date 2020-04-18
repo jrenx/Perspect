@@ -1,6 +1,6 @@
 {
 	"file": "mgc0.c",
 	"line": 125,
-	"reg": "rcx",
+	"reg": "ecx",
 	"out": "out.log"
 }
