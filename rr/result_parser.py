@@ -157,7 +157,7 @@ class GetRegValue(gdb.Function):
             if len(words) >= 2 and words[0] == reg:
                 output_filename = str(gdb.convenience_variable('output_filename')).strip('"')
                 with open(output_filename, 'a') as f:
-                    f.write('register {} value: {}'.format(reg, words[1]))
+                    f.write('register {} value: {}\n'.format(reg, words[1]))
                 gdb.set_convenience_variable('reg_value', words[1])
                 gdb.set_convenience_variable('RET', 1)
                 return 1
@@ -208,9 +208,9 @@ class ProcessWatchOutput(gdb.Function):
         output_file = open(output_filename, 'a')
         for line in outs:
             if re.search(r'Old value =', line):
-                output_file.write(line.strip('\n'))
+                output_file.write(line)
             elif re.search(r'New value =', line):
-                output_file.write(line.strip('\n'))
+                output_file.write(line)
         return 1
 
 
