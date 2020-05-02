@@ -60,14 +60,15 @@ int main(int argc, char *argv[]) {
 
     PyObject_CallMethod(py_trace_obj, "run_function_trace", "(s)", "scanblock");
     PyObject_CallMethod(py_trace_obj, "read_trace_from_disk", "(s)", "scanblock");
-    PyObject *result = PyObject_CallMethod(py_trace_obj, "is_instruction_after", "(s,s)", "0x80500bb", "0x80500bf");
+    PyObject *is_before = PyObject_CallMethod(py_trace_obj, "is_instruction_after", "(s,s)", "0x80500bb", "0x80500bf");
 
-    if (result == nullptr) {
+    if (is_before == nullptr) {
+        PyErr_Print();
         std::cerr << "Failed to get function result" << std::endl;
         return 1;
     }
 
-    if (PyObject_IsTrue(result)) {
+    if (PyObject_IsTrue(is_before)) {
         std::cout << "Is before" << std::endl;
     } else {
         std::cout << "Not before" << std::endl;
