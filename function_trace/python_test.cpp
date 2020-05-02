@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
     // Creates an instance of the class
     PyObject *py_trace_obj = nullptr;
     if (PyCallable_Check(python_class)) {
-        PyObject *args = Py_BuildValue("s", "~/go-repro/909_ziptest/ziptest ~/go-repro/909_ziptest/test.zip");
+        PyObject *args = Py_BuildValue("(s)", "~/go-repro/909_ziptest/ziptest ~/go-repro/909_ziptest/test.zip");
         PyObject *keywords = PyDict_New();
         PyDict_SetItemString(keywords, "is_32", Py_True);
         PyDict_SetItemString(keywords, "pin", PyUnicode_FromString("~/pin-3.11/pin"));
