@@ -44,10 +44,17 @@ int main(int argc, char *argv[]) {
         Py_DECREF(args);
         Py_DECREF(keywords);
     } else {
-        std::cout << "Cannot instantiate the Python class" << std::endl;
+        std::cout << "Python class not callable" << std::endl;
         Py_DECREF(python_class);
         return 1;
     }
+
+    if (py_trace_obj == nullptr) {
+        std::cerr << "Fails to instantiate Python class" << std::endl;
+        return 1;
+    }
+
+    
 
     Py_Finalize();
     return(0);
