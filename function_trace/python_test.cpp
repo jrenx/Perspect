@@ -58,13 +58,21 @@ int main(int argc, char *argv[]) {
     }
     std::cout << "class instantiated" << std::endl;
 
-    PyObject_CallMethod(py_trace_obj, "run_function_trace", "(s)", "scanblock");
+    PyObject *result = PyObject_CallMethod(py_trace_obj, "run_function_trace", "(s)", "scanblock");
+
+    if (result == nullptr) {
+        std::cerr << "Failed to get function result" << std::endl;
+        PyErr_Print();
+        return 1;
+    }
+    Py_DECREF(result);
+
     PyObject_CallMethod(py_trace_obj, "read_trace_from_disk", "(s)", "scanblock");
-    PyObject *is_before = PyObject_CallMethod(py_trace_obj, "is_instruction_after", "(s,s)", "0x80500bb", "0x80500bf");
+    PyObject *is_before = PyObject_CallMethod(py_trace_obj, "is_instruction_after", "ss", "0x80500bb", "0x80500bf");
 
     if (is_before == nullptr) {
-        PyErr_Print();
         std::cerr << "Failed to get function result" << std::endl;
+        PyErr_Print();
         return 1;
     }
 
@@ -73,6 +81,7 @@ int main(int argc, char *argv[]) {
     } else {
         std::cout << "Not before" << std::endl;
     }
+    Py_DECREF(is_before);
     
 
     Py_Finalize();
