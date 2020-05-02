@@ -28,7 +28,7 @@ class TraceCollector:
             obj_file = os.path.join('obj-intel64', 'function_trace.so')
         pin_program_list = [self.pin, '-t', obj_file, '-f', function_name, '-o', '{}.out'.format(function_name), '--']
         pin_program_list.extend(self.program)
-        subprocess.call(pin_program_list, shell=True)
+        subprocess.call(' '.join(pin_program_list), shell=True)
 
     def is_instruction_after(self, function_name, before, after):
         traces = self.traces[function_name]
