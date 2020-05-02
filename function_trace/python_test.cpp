@@ -13,6 +13,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     Py_DECREF(module_name);
+    std::cout << "module imported" << std::endl;
 
     PyObject *dict = PyModule_GetDict(module);
     if (dict == nullptr) {
@@ -21,6 +22,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     Py_DECREF(module);
+    std::cout << "module dictionary found" << std::endl;
 
     PyObject *python_class = PyDict_GetItemString(dict, "TraceCollector");
     if (python_class == nullptr) {
@@ -29,6 +31,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     Py_DECREF(dict);
+    std::cout << "class found" << std::endl;
 
 
     // Creates an instance of the class
@@ -44,7 +47,7 @@ int main(int argc, char *argv[]) {
         Py_DECREF(args);
         Py_DECREF(keywords);
     } else {
-        std::cout << "Python class not callable" << std::endl;
+        std::cerr << "Python class not callable" << std::endl;
         Py_DECREF(python_class);
         return 1;
     }
@@ -53,9 +56,24 @@ int main(int argc, char *argv[]) {
         std::cerr << "Fails to instantiate Python class" << std::endl;
         return 1;
     }
+    std::cout << "class instantiated" << std::endl;
 
+    PyObject_CallMethod(py_trace_obj, "run_function_trace", "(s)", "scanblock");
+    PyObject_CallMethod(py_trace_obj, "read_trace_from_disk", "(s)", "scanblock");
+    PyObject *result = PyObject_CallMethod(py_trace_obj, "is_instruction_after", "(s,s)", "0x80500bb", "0x80500bf");
+
+    if (result == nullptr) {
+        std::cerr << "Failed to get function result" << std::endl;
+        return 1;
+    }
+
+    if (PyObject_IsTrue(result)) {
+        std::cout << "Is before" << std::endl;
+    } else {
+        std::cout << "Not before" << std::endl;
+    }
     
 
     Py_Finalize();
-    return(0);
+    return 0;
 }

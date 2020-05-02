@@ -32,6 +32,10 @@ class TraceCollector:
 
     def is_instruction_after(self, function_name, before, after):
         traces = self.traces[function_name]
+        if isinstance(before, str):
+            before = int(before, 16)
+        if isinstance(after, str):
+            after = int(after, 16)
         for trace in traces:
             found = False
             for instruction in trace:
@@ -41,6 +45,7 @@ class TraceCollector:
                     found = True
                 else:
                     found = False
+        return True
 
     def parse_function_trace(self, filename):
         traces = []
