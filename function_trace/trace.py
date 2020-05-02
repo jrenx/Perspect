@@ -9,7 +9,7 @@ class TraceCollector:
         # program is a string that can run the test program
         self.program = program.split()
         self.is_32 = is_32
-        self.pin = pin  # path to pin binary
+        self.pin = str(pin)  # path to pin binary
         self.traces = {}
 
     def is_trace_available(self, fucntion_name):
