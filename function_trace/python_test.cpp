@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
     }
     Py_DECREF(result);
 
-    PyObject *is_before = PyObject_CallMethod(py_trace_obj, "is_instruction_after", "ss", "0x80500bb", "0x80500bf");
+    PyObject *is_before = PyObject_CallMethod(py_trace_obj, "is_instruction_after", "sss", "scanblock", "0x80500bb", "0x80500bf");
 
     if (is_before == nullptr) {
         std::cerr << "Failed to get is_instruction_after result" << std::endl;
