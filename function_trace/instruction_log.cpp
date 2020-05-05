@@ -20,7 +20,7 @@ std::vector<unsigned long> addresses;
 /* ===================================================================== */
 
 KNOB<string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool", "o", "ftrace.out", "specify trace file name");
-KNOB<string> KnobInstructionArgs(KNOB_MODE_APPEND, "pintool", "i", 0x0, "specify instructions to trace");
+KNOB<string> KnobInstructionArgs(KNOB_MODE_APPEND, "pintool", "i", "0x0", "specify instructions to trace");
 
 /* ===================================================================== */
 /* Print Help Message                                                    */
