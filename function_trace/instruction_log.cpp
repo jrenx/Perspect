@@ -13,7 +13,7 @@ using std::endl;
 /* ===================================================================== */
 
 std::ofstream TraceFile;
-std::vector<ADDRINT> addresses{};
+std::vector<ADDRINT> addresses;
 
 /* ===================================================================== */
 /* Commandline Switches */
