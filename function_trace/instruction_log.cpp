@@ -51,9 +51,9 @@ VOID record_pc(ADDRINT pc)
 
 bool is_ins_traced(ADDRINT pc)
 {
-    for (ADDRINT addr: addresses)
+    for (std::vector<ADDRINT>::iterator it = addresses.begin(); it != addresses.end(); ++it)
     {
-        if (addr == pc) return true;
+        if (*it == pc) return true;
     }
     return false;
 }
@@ -69,7 +69,7 @@ VOID ImageLoad(IMG img, VOID *v)
             RTN_Open(rtn);
             for (INS ins = RTN_InsHead(rtn); INS_Valid(ins); ins = INS_Next(ins))
             {
-                if (is_ins_traced(INS_ADDRESS(ins)))
+                if (is_ins_traced(INS_Address(ins)))
                 {
                     INS_InsertCall(ins, IPOINT_AFTER, AFUNPTR(record_pc), IARG_INST_PTR, IARG_END);
                 }
