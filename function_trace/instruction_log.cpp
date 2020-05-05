@@ -51,7 +51,7 @@ VOID record_pc(ADDRINT pc)
 
 bool is_ins_traced(ADDRINT pc)
 {
-    for (auto addr: addresses)
+    for (ADDRINT addr: addresses)
     {
         if (addr == pc) return true;
     }
@@ -98,7 +98,7 @@ int main (INT32 argc, CHAR *argv[])
     if (PIN_Init(argc, argv)) return 0;
 
     //Initialize global variables
-    for (auto i = 0; i < KnobInstructionArgs.NumberOfValues(); ++i) {
+    for (UINT32 i = 0; i < KnobInstructionArgs.NumberOfValues(); ++i) {
         addresses.push_back(KnobInstructionArgs.Value(i));
     }
 
