@@ -13,14 +13,14 @@ using std::endl;
 /* ===================================================================== */
 
 std::ofstream TraceFile;
-std::vector<ADDRINT> addresses;
+std::vector<unsigned long> addresses;
 
 /* ===================================================================== */
 /* Commandline Switches */
 /* ===================================================================== */
 
 KNOB<string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool", "o", "ftrace.out", "specify trace file name");
-KNOB<ADDRINT> KnobInstructionArgs(KNOB_MODE_APPEND, "pintool", "i", 0x0, "specify instructions to trace");
+KNOB<string> KnobInstructionArgs(KNOB_MODE_APPEND, "pintool", "i", 0x0, "specify instructions to trace");
 
 /* ===================================================================== */
 /* Print Help Message                                                    */
@@ -51,7 +51,7 @@ VOID record_pc(ADDRINT pc)
 
 bool is_ins_traced(ADDRINT pc)
 {
-    for (std::vector<ADDRINT>::iterator it = addresses.begin(); it != addresses.end(); ++it)
+    for (std::vector<unsigned long>::iterator it = addresses.begin(); it != addresses.end(); ++it)
     {
         if (*it == pc) return true;
     }
@@ -99,7 +99,10 @@ int main (INT32 argc, CHAR *argv[])
 
     //Initialize global variables
     for (UINT32 i = 0; i < KnobInstructionArgs.NumberOfValues(); ++i) {
-        addresses.push_back(KnobInstructionArgs.Value(i));
+        unsigned long addr;
+        std::istringstream iss(KnobInstructionArgs.Value(i));
+        iss >> std::hex >> addr;
+        addresses.push_back(addr);
     }
 
     TraceFile.open(KnobOutputFile.Value().c_str());
