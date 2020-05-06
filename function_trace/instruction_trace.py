@@ -42,6 +42,9 @@ class InsTrace:
                 elif addr == successor:
                     succ_cnt += 1
                     pred_cnt = 0
+                else:
+                    succ_cnt = 0
+                    pred_cnt = 0
         return ret
 
     def get_predictive_predecessors(self, predecessors, successor):
@@ -53,4 +56,4 @@ class InsTrace:
 
 if __name__ == '__main__':
     trace = InsTrace('~/go-repro/909_ziptest_exe2 ~/go-repro/909_ziptest/test.zip', pin='~/pin-3.11/pin')
-    print(trace.get_predictive_predecessors([0x409deb], 0x409e13))
+    print(trace.get_predictive_predecessors([0x409deb, 0x409d49], 0x409e13))
