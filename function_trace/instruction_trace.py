@@ -5,7 +5,7 @@ import os
 class InsTrace:
 
     def __init__(self, program, is_32=False, pin='pin'):
-        self.program = program
+        self.program = program.split()
         self.is_32 = is_32
         self.pin = pin
 
