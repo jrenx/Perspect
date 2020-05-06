@@ -49,10 +49,10 @@ class InsTrace:
 
     def get_predictive_predecessors(self, predecessors, successor):
         self.run_function_trace([hex(pred) for pred in predecessors], hex(successor))
-        dict = {}
+        ret = {}
         for pred in predecessors:
-            dict[pred] = self.get_predictive_predecessor(pred, successor)
-        return dict
+            ret[pred] = self.get_predictive_predecessor(pred, successor)
+        return ret
 
 if __name__ == '__main__':
     trace = InsTrace('~/go-repro/909_ziptest_exe2 ~/go-repro/909_ziptest/test.zip', pin='~/pin-3.11/pin')
