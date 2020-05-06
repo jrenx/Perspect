@@ -71,7 +71,7 @@ VOID ImageLoad(IMG img, VOID *v)
             {
                 if (is_ins_traced(INS_Address(ins)))
                 {
-                    INS_InsertCall(ins, IPOINT_AFTER, AFUNPTR(record_pc), IARG_INST_PTR, IARG_END);
+                    INS_InsertCall(ins, IPOINT_BEFORE, AFUNPTR(record_pc), IARG_INST_PTR, IARG_END);
                 }
             }
             RTN_Close(rtn);
