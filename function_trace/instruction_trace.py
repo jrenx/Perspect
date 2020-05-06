@@ -18,7 +18,7 @@ class InsTrace:
         for pred in predecessors:
             pin_program_list.extend(['-i', pred])
         pin_program_list.extend(['-i', successor])
-        pin_program_list.add('--')
+        pin_program_list.append('--')
         pin_program_list.extend(self.program)
         subprocess.call(' '.join(pin_program_list), shell=True)
 
@@ -56,4 +56,4 @@ class InsTrace:
 
 if __name__ == '__main__':
     trace = InsTrace('~/go-repro/909_ziptest_exe2 ~/go-repro/909_ziptest/test.zip', pin='~/pin-3.11/pin')
-    print(trace.get_predictive_predecessors([0x409deb, 0x409d49], 0x409e13))
+    print(trace.get_predictive_predecessors([0x409deb], 0x409e13))
