@@ -29,6 +29,8 @@ class InsTrace:
         succ_cnt = 0
         with open('instruction_trace.out') as file:
             for line in file:
+                if 'start' in line or 'eof' in line:
+                    continue
                 addr = int(line, 16)
                 if addr == predecessor:
                     if pred_cnt > 0:
