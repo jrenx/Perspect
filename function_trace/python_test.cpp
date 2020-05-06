@@ -1,16 +1,14 @@
 #include <iostream>
 #include <Python.h>
 
+void test_function_trace() {
 
-int main(int argc, char *argv[]) {
-    Py_Initialize();
-
-    PyObject *module_name = PyUnicode_FromString("trace");
+    PyObject *module_name = PyUnicode_FromString("function_trace");
     PyObject *module = PyImport_Import(module_name);
     if (module == nullptr) {
         PyErr_Print();
         std::cerr << "Fails to import the module.\n";
-        return 1;
+        exit(1);
     }
     Py_DECREF(module_name);
     std::cout << "module imported" << std::endl;
@@ -19,7 +17,7 @@ int main(int argc, char *argv[]) {
     if (dict == nullptr) {
         PyErr_Print();
         std::cerr << "Fails to get the dictionary.\n";
-        return 1;
+        exit(1);
     }
     Py_DECREF(module);
     std::cout << "module dictionary found" << std::endl;
@@ -28,7 +26,7 @@ int main(int argc, char *argv[]) {
     if (python_class == nullptr) {
         PyErr_Print();
         std::cerr << "Fails to get the Python class.\n";
-        return 1;
+        exit(1);
     }
     Py_DECREF(dict);
     std::cout << "class found" << std::endl;
@@ -49,12 +47,12 @@ int main(int argc, char *argv[]) {
     } else {
         std::cerr << "Python class not callable" << std::endl;
         Py_DECREF(python_class);
-        return 1;
+        exit(1);
     }
 
     if (py_trace_obj == nullptr) {
         std::cerr << "Fails to instantiate Python class" << std::endl;
-        return 1;
+        exit(1);
     }
     std::cout << "class instantiated" << std::endl;
 
@@ -62,7 +60,7 @@ int main(int argc, char *argv[]) {
     if (result == nullptr) {
         std::cerr << "Failed to get run_function_trace result" << std::endl;
         PyErr_Print();
-        return 1;
+        exit(1);
     }
     Py_DECREF(result);
 
@@ -70,7 +68,7 @@ int main(int argc, char *argv[]) {
     if (result == nullptr) {
         std::cerr << "Failed to get read_trace_from_disk result" << std::endl;
         PyErr_Print();
-        return 1;
+        exit(1);
     }
     Py_DECREF(result);
 
@@ -79,7 +77,7 @@ int main(int argc, char *argv[]) {
     if (is_before == nullptr) {
         std::cerr << "Failed to get is_instruction_after result" << std::endl;
         PyErr_Print();
-        return 1;
+        exit(1);
     }
 
     if (PyObject_IsTrue(is_before)) {
@@ -88,7 +86,12 @@ int main(int argc, char *argv[]) {
         std::cout << "Not before" << std::endl;
     }
     Py_DECREF(is_before);
-    
+}
+
+int main(int argc, char *argv[]) {
+    Py_Initialize();
+
+
 
     Py_Finalize();
     return 0;
