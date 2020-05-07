@@ -58,4 +58,4 @@ class InsTrace:
 
 if __name__ == '__main__':
     trace = InsTrace('~/go-repro/909_ziptest_exe2 ~/go-repro/909_ziptest/test.zip', pin='~/pin-3.11/pin')
-    print(trace.get_predictive_predecessors([0x409deb], 0x409e13))
+    print(trace.get_predictive_predecessors([0x409deb, 0x409d9d], 0x409da5))
