@@ -1,5 +1,6 @@
 {
-	"break_point": "*0x409394",
-	"reg": "rcx",
-	"out": "out.log"
+	"breakpoints": [
+        "mgc0.c:467",
+        "mgc0.c:485"
+    ]
 }

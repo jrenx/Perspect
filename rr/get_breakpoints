@@ -1,0 +1,20 @@
+source breakpoints.py
+
+set pagination off
+
+p $init_argument()
+
+set logging file breakpoints.log
+set logging overwrite on
+set logging redirect on
+set logging on
+
+while 1 == 1
+    p $update_file()
+    c
+    if $is_process_exit() == 1
+        loop_break
+    end
+end
+
+set logging off
