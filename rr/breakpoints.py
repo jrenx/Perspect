@@ -12,7 +12,7 @@ class InitArgument(gdb.Function):
         with open('config.json') as configFile:
             config = json.load(configFile)
 
-        breakpoints = config['break_point']
+        breakpoints = config['breakpoints']
 
         for br in breakpoints:
             gdb.execute("br {}".format(br))
