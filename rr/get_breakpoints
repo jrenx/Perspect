@@ -4,6 +4,8 @@ set pagination off
 
 p $init_argument()
 
+r
+
 set logging file breakpoints.log
 set logging overwrite on
 set logging redirect on
