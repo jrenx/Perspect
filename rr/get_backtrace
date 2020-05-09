@@ -1,0 +1,43 @@
+source breakpoints.py
+
+set pagination off
+
+p $init_argument()
+
+p $continue_multi()
+delete br 1
+
+
+
+p $set_trace_point()
+
+p $set_log_file()
+set logging overwrite on
+set logging redirect on
+set logging on
+
+reverse-cont
+p $get_reg_value()
+
+set logging off
+
+delete br 2
+p $watch_reg_value()
+
+
+
+p $set_log_file()
+set logging overwrite on
+set logging redirect on
+set logging on
+
+while 1 == 1
+    p $update_file()
+    reverse_cont
+    if $is_program_stop() == 1
+        loop_break
+    end
+end
+
+set logging off
+quit
