@@ -34,7 +34,7 @@ class UpdateFilePosition(gdb.Function):
         super(UpdateFilePosition, self).__init__('update_file')
 
     def invoke(self):
-        log_filename = gdb.convenience_variable('log_filename')
+        log_filename = str(gdb.convenience_variable('log_filename')).strip('"')
         with open(log_filename, 'r') as f:
             f.seek(0, 2)
             position = f.tell()
@@ -81,7 +81,7 @@ class GetRegValue(gdb.Function):
         reg = str(gdb.convenience_variable('reg')).strip('"')
         gdb.execute('i reg {}'.format(reg))
         gdb.flush()
-        log_filename = gdb.convenience_variable('log_filename')
+        log_filename = str(gdb.convenience_variable('log_filename')).strip('"')
         with open(log_filename, 'r') as f:
             position = gdb.convenience_variable('log_position')
             if position is not None:
@@ -130,7 +130,7 @@ class CheckProgramStop(gdb.Function):
         super(CheckProgramStop, self).__init__('is_program_stop')
 
     def invoke(self):
-        log_filename = gdb.convenience_variable('log_filename')
+        log_filename = str(gdb.convenience_variable('log_filename')).strip('"')
         with open(log_filename, 'r') as f:
             position = gdb.convenience_variable('log_position')
             if position is not None:
