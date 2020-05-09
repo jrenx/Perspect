@@ -39,4 +39,4 @@ def parse_break_points():
 
 if __name__ == '__main__':
     run_break_points(['mgc0.c:144', 'mgc0.c:150'])
-    parse_break_points()
+    print(parse_break_points())
