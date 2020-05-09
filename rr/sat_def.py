@@ -14,3 +14,6 @@ def run_break_points(breakpoints):
     return True
 
 
+if __name__ == '__main__':
+    run_break_points(['mgc0.c:144', 'mgc0.c:150'])
+
