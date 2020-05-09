@@ -39,4 +39,6 @@ def parse_break_points():
 
 if __name__ == '__main__':
     run_break_points(['mgc0.c:144', 'mgc0.c:150'])
-    print(parse_break_points())
+    taken, not_taken = parse_break_points()
+    print(str(len(taken)), "taken:", taken[:5])
+    print(str(len(not_taken)), "not taken:", not_taken[:5])
