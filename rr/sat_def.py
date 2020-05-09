@@ -3,6 +3,7 @@ import subprocess
 import os
 import re
 
+
 def run_break_points(breakpoints):
     json.dump({"breakpoints": breakpoints}, open('config.json', 'w'))
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
@@ -34,7 +35,6 @@ def parse_break_points():
                     last_break_num = 2
 
     return taken, not_taken
-
 
 
 if __name__ == '__main__':
