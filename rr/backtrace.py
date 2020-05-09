@@ -109,6 +109,9 @@ class SetTracePoint(gdb.Function):
         return 1
 
 
+SetTracePoint()
+
+
 class WatchRegValue(gdb.Function):
     def __init__(self):
         super(WatchRegValue, self).__init__('watch_reg_value')
@@ -120,27 +123,6 @@ class WatchRegValue(gdb.Function):
 
 
 WatchRegValue()
-
-
-class CheckProcessExit(gdb.Function):
-    def __init__(self):
-        super(CheckProcessExit, self).__init__('is_process_exit')
-
-    def invoke(self):
-        log_filename = gdb.convenience_variable('log_filename')
-        with open(log_filename, 'r') as f:
-            position = gdb.convenience_variable('log_position')
-            if position is not None:
-                position = int(position)
-                f.seek(position)
-            outs = f.readlines()
-        for line in outs:
-            if re.search(r'Inferior \d+ \(process \d+\) exited', line):
-                return 1
-        return 0
-
-
-CheckProcessExit()
 
 
 class CheckProgramStop(gdb.Function):
