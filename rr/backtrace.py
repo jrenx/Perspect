@@ -65,7 +65,7 @@ class SetLogFile(gdb.Function):
         super(SetLogFile, self).__init__('set_log_file')
 
     def invoke(self):
-        log_filename = gdb.convenience_variable('log_filename')
+        log_filename = str(gdb.convenience_variable('log_filename')).strip('"')
         gdb.execute('set logging file {}'.format(log_filename))
         return 1
 
