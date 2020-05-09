@@ -104,7 +104,7 @@ class SetTracePoint(gdb.Function):
         super(SetTracePoint, self).__init__('set_trace_point')
 
     def invoke(self):
-        trace_point = gdb.convenience_variable('trace_point').strip('"')
+        trace_point = str(gdb.convenience_variable('trace_point')).strip('"')
         gdb.execute("br *{}".format(trace_point))
         return 1
 
