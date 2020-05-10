@@ -28,11 +28,11 @@ def parse_break_points():
                 break_num = int(words[1].strip(','))
                 if break_num == 1:
                     if last_break_num == 1:
-                        not_taken.append(count)
+                        not_taken.append(count + 1)
                     last_break_num = 1
                     count += 1
                 elif break_num == 2:
-                    taken.append(count)
+                    taken.append(count + 1)
                     last_break_num = 2
 
     return taken, not_taken
@@ -84,7 +84,7 @@ def analyze_trace(taken_traces, not_taken_traces):
 
 
 def get_sat_def(target, branch, trace_point, reg):
-    run_break_points([target, branch])
+    run_break_points([branch, target])
     taken, not_taken = parse_break_points()
 
     # TODO: better sampling method
