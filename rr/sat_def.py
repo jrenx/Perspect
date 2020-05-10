@@ -2,6 +2,7 @@ import json
 import subprocess
 import os
 import re
+import random
 
 
 def run_break_points(breakpoints):
@@ -60,6 +61,48 @@ def parse_back_trace(log_filename):
     return traces
 
 
+def analyze_trace(taken_traces, not_taken_traces):
+    positive = set()
+    negative = set()
+
+    taken_functions = set()
+    for trace in taken_traces:
+        taken_functions.union(set(trace))
+    not_taken_functions = set()
+    for trace in not_taken_traces:
+        not_taken_functions.union(set(trace))
+
+    for func in taken_functions:
+        if func not in not_taken_functions:
+            positive.add(func)
+
+    for func in not_taken_functions:
+        if func not in taken_functions:
+            negative.add(func)
+
+    return positive, negative
+
+
+def get_sat_def(target, branch, trace_point, reg):
+    run_break_points([target, branch])
+    taken, not_taken = parse_break_points()
+
+    # TODO: better sampling method
+    taken_sample = random.sample(taken, 10)
+    not_taken_sample = random.sample(not_taken, 10)
+
+    taken_traces = []
+    not_taken_traces = []
+    for count in taken_sample:
+        run_back_trace(branch, count, trace_point, reg)
+        taken_traces.add(parse_back_trace('backtrace_{}.log'.format(count)))
+    for count in not_taken_sample:
+        run_back_trace(branch, count, trace_point, reg)
+        not_taken_traces.add(parse_back_trace('backtrace_{}.log'.format(count)))
+
+    return analyze_trace(taken_traces, not_taken_traces)
+
+
 if __name__ == '__main__':
     # test break points
     # run_break_points(['mgc0.c:144', 'mgc0.c:150'])
@@ -68,5 +111,8 @@ if __name__ == '__main__':
     # print(str(len(not_taken)), "not taken:", not_taken[:5])
 
     # test back trace
-    run_back_trace("mgc0.c:467", 100, "0x409c0c", "rbp")
-    print(parse_back_trace("backtrace_{}.log".format(100)))
+    # run_back_trace("mgc0.c:467", 100, "0x409c0c", "rbp")
+    # print(parse_back_trace("backtrace_{}.log".format(100)))
+
+    # test sat_def
+    print(get_sat_def('mgc0,c:467', 'mgc0.c:484', '0x409c0c', 'rbp'))
