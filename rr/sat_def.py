@@ -67,10 +67,10 @@ def analyze_trace(taken_traces, not_taken_traces):
 
     taken_functions = set()
     for trace in taken_traces:
-        taken_functions.union(set(trace))
+        taken_functions.update(set(trace))
     not_taken_functions = set()
     for trace in not_taken_traces:
-        not_taken_functions.union(set(trace))
+        not_taken_functions.update(set(trace))
 
     for func in taken_functions:
         if func not in not_taken_functions:
@@ -95,10 +95,10 @@ def get_sat_def(target, branch, trace_point, reg):
     not_taken_traces = []
     for count in taken_sample:
         run_back_trace(branch, count, trace_point, reg)
-        taken_traces = taken_traces.append(parse_back_trace('backtrace_{}.log'.format(count)))
+        taken_traces.append(parse_back_trace('backtrace_{}.log'.format(count)))
     for count in not_taken_sample:
         run_back_trace(branch, count, trace_point, reg)
-        not_taken_traces = not_taken_traces.append(parse_back_trace('backtrace_{}.log'.format(count)))
+        not_taken_traces.append(parse_back_trace('backtrace_{}.log'.format(count)))
 
     return analyze_trace(taken_traces, not_taken_traces)
 
