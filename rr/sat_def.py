@@ -95,10 +95,10 @@ def get_sat_def(target, branch, trace_point, reg):
     not_taken_traces = []
     for count in taken_sample:
         run_back_trace(branch, count, trace_point, reg)
-        taken_traces.add(parse_back_trace('backtrace_{}.log'.format(count)))
+        taken_traces.append(parse_back_trace('backtrace_{}.log'.format(count)))
     for count in not_taken_sample:
         run_back_trace(branch, count, trace_point, reg)
-        not_taken_traces.add(parse_back_trace('backtrace_{}.log'.format(count)))
+        not_taken_traces.append(parse_back_trace('backtrace_{}.log'.format(count)))
 
     return analyze_trace(taken_traces, not_taken_traces)
 
