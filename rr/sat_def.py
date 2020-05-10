@@ -66,5 +66,5 @@ if __name__ == '__main__':
     # print(str(len(not_taken)), "not taken:", not_taken[:5])
 
     # test back trace
-    run_back_trace("mgc0.c:467", 100, "0x409c0c", "rpb")
+    run_back_trace("mgc0.c:467", 100, "0x409c0c", "rbp")
     print(parse_back_trace("backtrace_{}.log".format(100)))
