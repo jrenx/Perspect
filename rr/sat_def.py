@@ -37,8 +37,34 @@ def parse_break_points():
     return taken, not_taken
 
 
+def run_back_trace(breakpoint, continue_count, trace_point, reg):
+    config = {"breakpoint": breakpoint, "continue_count": continue_count, "trace_point": trace_point, "reg": reg,
+              "log_filename": "backtrace_{}.log".format(continue_count)}
+    json.dump(config, open('config.json', 'w'))
+    rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    try:
+        rr_process.communicate('source get_breakpoints'.encode(), 60 * 10)
+    except subprocess.TimeoutExpired:
+        rr_process.kill()
+        return False
+    return True
+
+
+def parse_back_trace(log_filename):
+    traces = []
+    with open(log_filename) as log:
+        for line in log:
+            if re.search(r'\s+ \(\s*\) at \s*:\d+', line):
+                traces.append(line[line.rindex(os.linesep):])
+
+
 if __name__ == '__main__':
-    run_break_points(['mgc0.c:144', 'mgc0.c:150'])
-    taken, not_taken = parse_break_points()
-    print(str(len(taken)), "taken:", taken[:5])
-    print(str(len(not_taken)), "not taken:", not_taken[:5])
+    # test break points
+    # run_break_points(['mgc0.c:144', 'mgc0.c:150'])
+    # taken, not_taken = parse_break_points()
+    # print(str(len(taken)), "taken:", taken[:5])
+    # print(str(len(not_taken)), "not taken:", not_taken[:5])
+
+    # test back trace
+    run_back_trace("mgc0,c:467", 100, "0x409c0c", "rpb")
+    print(parse_back_trace("backtrace_{}.log".format(100)))
