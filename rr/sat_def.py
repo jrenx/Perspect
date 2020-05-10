@@ -43,7 +43,7 @@ def run_back_trace(breakpoint, continue_count, trace_point, reg):
     json.dump(config, open('config.json', 'w'))
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     try:
-        rr_process.communicate('source get_breakpoints'.encode(), 60 * 10)
+        rr_process.communicate('source get_backtrace'.encode(), 60 * 10)
     except subprocess.TimeoutExpired:
         rr_process.kill()
         return False
