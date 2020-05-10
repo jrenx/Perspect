@@ -56,7 +56,7 @@ def parse_back_trace(log_filename):
         for line in log:
             if re.search(r'.+ \(.*\) at .*:\d+', line):
                 line = line.strip()
-                traces.append(line[line.rindex('/'):])
+                traces.append(line[line.rindex('/') + 1:])
     return traces
 
 
