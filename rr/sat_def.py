@@ -65,20 +65,11 @@ def analyze_trace(taken_traces, not_taken_traces):
     positive = set()
     negative = set()
 
-    taken_functions = set()
-    for trace in taken_traces:
-        taken_functions.update(set(trace))
-    not_taken_functions = set()
-    for trace in not_taken_traces:
-        not_taken_functions.update(set(trace))
+    potential_set = set(taken_traces[0])
+    for i in range(1, len(taken_traces)):
+        potential_set.intersection_update(set(taken_traces[i]))
 
-    for func in taken_functions:
-        if func not in not_taken_functions:
-            positive.add(func)
-
-    for func in not_taken_functions:
-        if func not in taken_functions:
-            negative.add(func)
+    positive = potential_set
 
     return positive, negative
 
