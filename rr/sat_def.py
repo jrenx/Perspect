@@ -69,7 +69,9 @@ def analyze_trace(taken_traces, not_taken_traces):
     for i in range(1, len(taken_traces)):
         potential_set.intersection_update(set(taken_traces[i]))
 
-    positive = potential_set
+    for func in taken_traces[0]:
+        if func in potential_set:
+            positive.update({func})
 
     return positive, negative
 
