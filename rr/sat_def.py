@@ -72,6 +72,7 @@ def analyze_trace(taken_traces, not_taken_traces):
     for func in taken_traces[0]:
         if func in potential_set:
             positive.update({func})
+            break
 
     return positive, negative
 
