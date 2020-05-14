@@ -109,4 +109,4 @@ if __name__ == '__main__':
     # print(parse_back_trace("backtrace_{}.log".format(100)))
 
     # test sat_def
-    print(get_sat_def('mgc0.c:485', 'mgc0.c:467', '0x409c10', 'rbp'))
+    print(get_sat_def('mgc0.c:486', 'mgc0.c:468', '0x409c1f', 'rbx'))
