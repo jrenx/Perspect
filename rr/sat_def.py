@@ -38,8 +38,8 @@ def parse_break_points():
     return taken, not_taken
 
 
-def run_back_trace(breakpoint, continue_count, trace_point, reg):
-    config = {"breakpoint": breakpoint, "continue_count": continue_count, "trace_point": trace_point, "reg": reg,
+def run_back_trace(break_point, continue_count, trace_point, reg):
+    config = {"breakpoint": break_point, "continue_count": continue_count, "trace_point": trace_point, "reg": reg,
               "log_filename": "backtrace_{}.log".format(continue_count)}
     json.dump(config, open('config.json', 'w'))
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
