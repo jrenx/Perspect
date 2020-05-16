@@ -28,11 +28,11 @@ def parse_break_points():
                 break_num = int(words[1].strip(','))
                 if break_num == 1:
                     if last_break_num == 1:
-                        not_taken.append(count + 1)
+                        not_taken.append(count)
                     last_break_num = 1
                     count += 1
                 elif break_num == 2:
-                    taken.append(count + 1)
+                    taken.append(count)
                     last_break_num = 2
 
     return taken, not_taken
