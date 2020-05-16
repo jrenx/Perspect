@@ -1,0 +1,7 @@
+{
+    "breakpoint": "mgc0.c:467",
+    "continue_count": 10,
+    "trace_point": "0x409c0c",
+    "reg": "rbp",
+    "log_filename": "backtrace_10.log"
+}

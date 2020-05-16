@@ -1,0 +1,60 @@
+source result_parser.py
+
+set pagination off
+
+p $init_argument()
+set logging file result.log
+set logging overwrite on
+set logging redirect on
+set logging on
+p $set_breakpoint()
+set logging off
+
+if $is_br_success() == 0
+    echo Setting breakpoint failed
+    quit
+end
+
+r
+
+set logging file result.log
+set logging overwrite on
+set logging redirect on
+set logging on
+set $continue_count = 0
+while 1 == 1
+    set $continue_count = $continue_count + 1
+    p $update_file()
+    p $continue_multi()
+
+    if $is_process_exit() == 1
+        echo end of program detected
+        loop_break
+    end
+
+    p $update_file()
+    if $get_reg_value() == 0
+        echo Failed to get reg value
+        loop_break
+    end
+
+    disable br 1
+    p $watch_reg_value()
+
+    while 1 == 1
+        p $update_file()
+        reverse-cont
+        if $is_program_stop() == 1
+            loop_break
+        end
+        p $process_watch_output()
+    end
+
+    p $delete_watch_point()
+    enable br 1
+
+end
+set logging off
+set pagination on
+p $clean_up()
+quit
