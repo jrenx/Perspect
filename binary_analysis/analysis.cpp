@@ -199,15 +199,6 @@ Block *getBasicBlock2(Function *f, long unsigned int addr) {
   return target;
 }
 
-Instruction getInsn2(Block *b, long unsigned int addr) {
-  // This is actually coming from parseAPI
-  // Decode the instruction
-  //typedef std::map<Offset, InstructionAPI::Instruction::Ptr> Insns
-  //Insns insn;
-  return b->getInsn(addr);
-}
-
-
 Block *getImmediateDominator2(Function *f, long unsigned int addr) {
   Block *target = NULL;
   for (auto bit = f->blocks().begin(); bit != f->blocks().end(); ++bit) {
@@ -329,20 +320,22 @@ void locateBitVariables(GraphPtr slice, boost::unordered_set<Assignment::Ptr> &b
   //}
 }
 extern "C" {
-  void getImmedDom(char *progName, char *funcName, long unsigned int addr){
-    cout << progName << endl;
-    cout << funcName << endl;
-    cout << addr << endl;
+  long unsigned int getImmedDom(char *progName, char *funcName, long unsigned int addr){
+    cout << "[sa] prog: " << progName << endl;
+    cout << "[sa] func: " << funcName << endl;
+    cout << "[sa] addr: " << addr << endl;
     Function *func = getFunction(progName, funcName);
     Block *immedDom = getImmediateDominator2(func, addr);
-    Instruction ifCond = getIfCondition2(immedDom);
+    //Instruction ifCond = getIfConditionAddr2(immedDom);
+    cout << "[sa] immed dom: " << immedDom->last() << endl;
+    return immedDom->last();
 
   }
 
   void getImmedPred(char *progName, char *funcName, long unsigned int addr){
-    cout << progName << endl;
-    cout << funcName << endl;
-    cout << addr << endl;
+    cout << "[sa] prog: " << progName << endl;
+    cout << "[sa] func: " << funcName << endl;
+    cout << "[sa] addr: " << addr << endl;
     Function *func = getFunction(progName, funcName);
     Block *immedDom = getImmediateDominator2(func, addr);
     Instruction ifCond = getIfCondition2(immedDom);
@@ -350,13 +343,13 @@ extern "C" {
   }
 
   void backwardSlice(char *progName, char *funcName, long unsigned int addr){
-    cout << progName << endl;
-    cout << funcName << endl;
-    cout << addr << endl;
+    cout << "[sa] prog: " << progName << endl;
+    cout << "[sa] func: " << funcName << endl;
+    cout << "[sa] addr: " << addr << endl;
 
     Function *func = getFunction(progName, funcName);
     Block *bb = getBasicBlock2(func, addr);
-    Instruction ifCond = getInsn2(bb, addr);
+    Instruction ifCond = bb->getInsn(addr);
     GraphPtr slice = buildBackwardSlice(func, bb, ifCond);
 
     boost::unordered_set<Assignment::Ptr> bitVariables;

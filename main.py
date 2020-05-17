@@ -67,32 +67,43 @@ class Symptom():
         return "[Sym insn: " + str(self.insn) + " reg: " + str(self.reg) \
                 + " func: " + str(self.func) + "]"
 
-def analyze(sym, prog, q):
-    print "Analyzing " + str(sym)
-
-    # analyze the dataflow
-    if sym.reg != None:
-        addr = c_ulong(sym.insn)
-        func_name = c_char_p(sym.func)
-        prog_name = c_char_p(prog)
-        print addr
-        print func_name
-        print prog_name
-        lib.backwardSlice(prog_name, func_name, addr)
- 
-
-    # analyze the control flow
+def analyze_symptom_with_dataflow(sym, prog, q):
     addr = c_ulong(sym.insn)
     func_name = c_char_p(sym.func)
     prog_name = c_char_p(prog)
     print addr
     print func_name
     print prog_name
-    lib.getImmedDom(prog_name, func_name, addr)
-    #op = ADD()
-    #print op.is_add()
+    lib.backwardSlice(prog_name, func_name, addr)
 
-    # get the control flow dominator
+    # ask pin to watch every variable definition + every symptom + symptom's value change
+
+    # value not equal, then not predictive
+    # check for every definition, how many times does the symptom execute?
+    # if is multiplicative, use MUL, and need to find the context
+    # if is exclusive, use AND, and need to find the citeria
+ 
+
+def analyze(sym, prog, q):
+    print "Analyzing " + str(sym)
+
+    if sym.reg != None: 
+        # analyze the dataflow
+        analyze_symptom_with_dataflow(sym, prog, q)
+    else:
+        # analyze the control flow
+        addr = c_ulong(sym.insn)
+        func_name = c_char_p(sym.func)
+        prog_name = c_char_p(prog)
+        print "[main] prog: " + str(prog_name)
+        print "[main] func: " + str(func_name)
+        print "[main] addr: " + str(addr)
+        dom = lib.getImmedDom(prog_name, func_name, addr)
+        print "[main] immed dom: " + str(dom)
+        #op = ADD()
+        #print op.is_add()
+
+        # get the control flow dominator
 
 def analyze_loop(ssym, prog):
     #https://stackoverflow.com/questions/35206372/understanding-stacks-and-queues-in-python
