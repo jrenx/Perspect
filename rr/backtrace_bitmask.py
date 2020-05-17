@@ -202,7 +202,7 @@ GetBitmaskReg()
 
 
 class GetShiftReg(gdb.Function):
-    def __init_(self):
+    def __init__(self):
         super(GetShiftReg, self).__init__('get_shift_reg')
 
     def invoke(self):
