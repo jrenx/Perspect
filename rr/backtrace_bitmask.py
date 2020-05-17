@@ -176,7 +176,7 @@ SetShiftPoint()
 
 
 class GetBitmaskReg(gdb.Function):
-    def __init_(self):
+    def __init__(self):
         super(GetBitmaskReg, self).__init__('get_bitmask_reg')
 
     def invoke(self):
