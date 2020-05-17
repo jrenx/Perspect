@@ -68,13 +68,15 @@ class Symptom():
                 + " func: " + str(self.func) + "]"
 
 def analyze_symptom_with_dataflow(sym, prog, q):
+    reg_name = c_char_p("[x86_64::" + sym.reg + "]")
     addr = c_ulong(sym.insn)
     func_name = c_char_p(sym.func)
     prog_name = c_char_p(prog)
+    print reg_name
     print addr
     print func_name
     print prog_name
-    lib.backwardSlice(prog_name, func_name, addr)
+    lib.backwardSlice(prog_name, func_name, addr, reg_name)
 
     # ask pin to watch every variable definition + every symptom + symptom's value change
 

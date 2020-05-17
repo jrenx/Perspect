@@ -227,21 +227,34 @@ Instruction getIfCondition2(Block *b) {
 
 class CustomSlicer : public Slicer::Predicates {
 public:
+  char *regName = NULL;
+  bool filter = false;
   virtual bool endAtPoint(Assignment::Ptr ap) {
-    //cout << ap->format();
+    cout << "assignment: " << ap->format();
     //cout << "  ";
     //cout << ap->insn().readsMemory();
-    //cout << endl;
+    cout << endl;
+    filter = false;
     return ap->insn().readsMemory();
   }
 
+  //int i = 5;
   virtual bool addPredecessor(AbsRegion reg) {
-    //cout << reg.format() << endl;
+    cout << "predecessor reg: " <<  reg.format() << endl;
+    if (filter) {
+      if (reg.format().compare(regName) != 0) {
+	cout << "Filtering out" << endl;
+        return false;
+      }
+    }
     return true;
+    //i --;
+    //return i > 0;
+    //return false;
   }
 };
 
-GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn) {
+GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, char *regName) {
 
   // Convert the instruction to assignments
   AssignmentConverter ac(true, false);
@@ -251,12 +264,14 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn) {
   // An instruction can corresponds to multiple assignments
   Assignment::Ptr assign; //TODO, how to handle multiple ones?
   for (auto ait = assignments.begin(); ait != assignments.end(); ++ait) {
-    //cout << (*ait)->format() << endl;
+    cout << "assignment: " << (*ait)->format() << endl;
     assign = *ait;
   }
 
   Slicer s(assign, b, f, true, false);
   CustomSlicer cs;
+  cs.regName = regName;
+  cs.filter = true;
   GraphPtr slice = s.backwardSlice(cs);
   //cout << slice->size() << endl;
   string filePath("/home/anygroup/perf_debug_tool/binary_analysis/graph");
@@ -342,15 +357,16 @@ extern "C" {
     //TODO
   }
 
-  void backwardSlice(char *progName, char *funcName, long unsigned int addr){
+  void backwardSlice(char *progName, char *funcName, long unsigned int addr, char *regName){
     cout << "[sa] prog: " << progName << endl;
     cout << "[sa] func: " << funcName << endl;
     cout << "[sa] addr: " << addr << endl;
+    cout << "[sa] reg: " << regName << endl;
 
     Function *func = getFunction(progName, funcName);
     Block *bb = getBasicBlock2(func, addr);
     Instruction ifCond = bb->getInsn(addr);
-    GraphPtr slice = buildBackwardSlice(func, bb, ifCond);
+    GraphPtr slice = buildBackwardSlice(func, bb, ifCond, regName);
 
     boost::unordered_set<Assignment::Ptr> bitVariables;
     //locateBitVariables(slice, bitVariables);
@@ -387,7 +403,7 @@ int main() {
   Function *func = getFunction(progName, funcName);
   Block *immedDom = getImmediateDominator2(func, 0x40940c);
   Instruction ifCond = getIfCondition2(immedDom);
-  GraphPtr slice = buildBackwardSlice(func, immedDom, ifCond);
+  GraphPtr slice = buildBackwardSlice(func, immedDom, ifCond, NULL);
 
   boost::unordered_set<Assignment::Ptr> bitVariables;
   locateBitVariables(slice, bitVariables);
