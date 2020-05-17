@@ -4,7 +4,9 @@ import sys
 from subprocess import call
 from optparse import OptionParser
 from collections import deque
-
+from ctypes import *
+lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
+#https://stackoverflow.com/questions/145270/calling-c-c-from-python
 class Operator:
     def __init__(self):
         pass
@@ -63,35 +65,51 @@ class Symptom():
     #insn //Control flow
     #expression relation
     
-    def __init__(self, insn, reg):
+    def __init__(self, func, insn, reg):
+        self.func = func
         self.insn = insn
         self.reg = reg
 
     def __str__(self):
-        return "[Sym insn: " + self.insn + " reg: " + self.reg + "]"
+        return "[Sym insn: " + str(self.insn) + " reg: " + str(self.reg) \
+                + " func: " + str(self.func) + "]"
 
-def analyze(sym):
+def analyze(sym, prog):
     print "Analyzing " + str(sym)
+    addr = c_ulong(sym.insn)
+    func_name = c_char_p(sym.func)
+    prog_name = c_char_p(prog)
+    print addr
+    print func_name
+    print prog_name
+    lib.getImmedDom(prog_name, func_name, addr)
     #op = ADD()
     #print op.is_add()
 
-def analyze_loop(ssym):
+    # get the control flow dominator
+
+def analyze_loop(ssym, prog):
     #https://stackoverflow.com/questions/35206372/understanding-stacks-and-queues-in-python
     q = deque()
     q.append(ssym)
     while len(q) > 0:
         sym = q.popleft()
-        analyze(sym)
+        analyze(sym, prog)
 
 def main():
+    #python main.py -p 909_ziptest_exe -f scanblock -i 0x40940c
     #https://docs.python.org/2/library/optparse.html
     parser = OptionParser()
+    parser.add_option("-f", "--func", type="string", dest="func")
     parser.add_option("-i", "--insn", type="string", dest="insn")
     parser.add_option("-r", "--reg", type="string", dest="reg")
+    parser.add_option("-p", "--prog", type="string", dest="prog")
     (options, args) = parser.parse_args()
-    print "Instruction: " +  options.insn
-    print "Register: " + options.reg
-    analyze_loop(Symptom(options.insn, options.reg))
+    print "Program: " + str(options.prog)
+    print "Function: " + str(options.func)
+    print "Instruction: " +  str(options.insn)
+    print "Register: " + str(options.reg)
+    analyze_loop(Symptom(options.func, long(options.insn, 16), options.reg), options.prog)
 
 
 if __name__ == "__main__":

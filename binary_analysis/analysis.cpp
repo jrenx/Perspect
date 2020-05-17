@@ -302,7 +302,16 @@ void locateBitVariables(GraphPtr slice, boost::unordered_set<Assignment::Ptr> &b
   //  cout << (*it)->format() << endl;
   //}
 }
-
+extern "C" {
+  void getImmedDom(char *progName, char *funcName, long unsigned int addr){
+    cout << progName << endl;
+    cout << funcName << endl;
+    cout << addr << endl;
+    Function *func = getFunction(progName, funcName);
+    Block *immedDom = getImmediateDominator2(func, addr);
+    Instruction ifCond = findIfCondition2(immedDom);
+  }
+}
 int main() {
   // Set up information about the program to be instrumented 
   const char *progName = "909_ziptest_exe";
