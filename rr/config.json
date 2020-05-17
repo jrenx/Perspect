@@ -7,5 +7,6 @@
     "bitmask_point": "0x409c4b",
     "bitmask_reg": "rcx",
     "shift_point": "0x409c28",
-    "shift_reg": "cl"
+    "shift_reg": "cl",
+    "shift_direction": "left"
 }

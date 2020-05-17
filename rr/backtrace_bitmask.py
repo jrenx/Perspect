@@ -122,10 +122,13 @@ class SetTracePoint(gdb.Function):
 SetTracePoint()
 
 
-def shift_bitmask(bitmask_str, shift_str):
+def shift_bitmask(bitmask_str, shift_str, shift_direction):
     bitmask = int(bitmask_str, 16)
     shift = int(shift_str, 16)
-    bitmask = bitmask << shift
+    if shift_direction == 'left':
+        bitmask = bitmask << shift
+    elif shift_direction == 'right':
+        bitmask = bitmask >> shift
     return hex(bitmask)
 
 
@@ -137,7 +140,8 @@ class WatchRegValue(gdb.Function):
         reg_value = str(gdb.convenience_variable('reg_value')).strip('"')
         bitmask_value = str(gdb.convenience_variable('bitmask_reg_value')).strip('"')
         shift_value = str(gdb.convenience_variable('shift_reg_value')).strip('"')
-        bitmask = shift_bitmask(bitmask_value, shift_value)
+        shift_direction = str(gdb.convenience_variable('shift_direction')).strip('"')
+        bitmask = shift_bitmask(bitmask_value, shift_value, shift_direction)
         gdb.execute('watch -l *(long *){} mask {}'.format(reg_value, bitmask))
         return 1
 
