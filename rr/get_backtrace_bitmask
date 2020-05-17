@@ -10,29 +10,34 @@ delete br 1
 
 
 
+p $set_bitmask_point()
+reverse-cont
 p $set_log_file()
 set logging overwrite on
 set logging redirect on
 set logging on
-
-p $set_bitmask_point()
-reverse-cont
-p $update_file()
 p $get_bitmask_reg()
 delete br 2
+set logging off
 
 p $set_shift_point()
 reverse-cont
-p $update_file()
+p $set_log_file()
+set logging overwrite on
+set logging redirect on
+set logging on
 p $get_shift_reg()
 delete br 3
+set logging off
 
 p $set_trace_point()
 reverse-cont
-p $update_file()
+p $set_log_file()
+set logging overwrite on
+set logging redirect on
+set logging on
 p $get_reg_value()
 delete br 4
-
 set logging off
 
 
