@@ -41,16 +41,9 @@ class MUL(Operator):
 class Couple():
     # operator
     # expression or operand
-    def __init__(self):
-        pass
-
-    def add_operator(self, operator):
+    def __init__(self, operator, operand=None, relation=None):
         self.operator = operator
-
-    def add_operand(self, operand):
         self.operand = operand
-
-    def add_relation(self, relation):
         self.relation = relation
 
 class Relation():
@@ -65,7 +58,7 @@ class Symptom():
     #insn //Control flow
     #expression relation
     
-    def __init__(self, func, insn, reg):
+    def __init__(self, func, insn, reg=None):
         self.func = func
         self.insn = insn
         self.reg = reg
@@ -74,8 +67,21 @@ class Symptom():
         return "[Sym insn: " + str(self.insn) + " reg: " + str(self.reg) \
                 + " func: " + str(self.func) + "]"
 
-def analyze(sym, prog):
+def analyze(sym, prog, q):
     print "Analyzing " + str(sym)
+
+    # analyze the dataflow
+    if sym.reg != None:
+        addr = c_ulong(sym.insn)
+        func_name = c_char_p(sym.func)
+        prog_name = c_char_p(prog)
+        print addr
+        print func_name
+        print prog_name
+        lib.backwardSlice(prog_name, func_name, addr)
+ 
+
+    # analyze the control flow
     addr = c_ulong(sym.insn)
     func_name = c_char_p(sym.func)
     prog_name = c_char_p(prog)
@@ -94,11 +100,11 @@ def analyze_loop(ssym, prog):
     q.append(ssym)
     while len(q) > 0:
         sym = q.popleft()
-        analyze(sym, prog)
+        analyze(sym, prog, q)
 
 def main():
-    #python main.py -p 909_ziptest_exe -f scanblock -i 0x40940c
     #https://docs.python.org/2/library/optparse.html
+    #python main.py -f sweep -i 0x409dc4 -r r8 -p 909_ziptest_exe5
     parser = OptionParser()
     parser.add_option("-f", "--func", type="string", dest="func")
     parser.add_option("-i", "--insn", type="string", dest="insn")

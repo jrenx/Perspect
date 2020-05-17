@@ -143,7 +143,7 @@ BPatch_basicBlock *getImmediateDominator(BPatch_image *appImage, const char *fun
   return target->getImmediateDominator();
 }
 
-Instruction findIfCondition(BPatch_basicBlock *block) {
+Instruction getIfCondition(BPatch_basicBlock *block) {
   vector <Instruction> insns;
   block->getInstructions(insns);
   Instruction ret = *insns.rbegin();
@@ -182,6 +182,32 @@ Function *getFunction(const char *binaryPath, const char *funcName) {
   return NULL;
 }
 
+Block *getBasicBlock2(Function *f, long unsigned int addr) {
+  Block *target = NULL;
+  for (auto bit = f->blocks().begin(); bit != f->blocks().end(); ++bit) {
+    Block *b = *bit;
+    if (addr >= b->start() && addr < b->end()) { // "Address immediately following the last instruction in the block."
+      target = b;
+      break;
+    }
+  }
+
+  if (target == NULL) {
+    cerr << "Failed to find basic block for function" << f->name() << " @ " << addr << endl;
+    return NULL;
+  }
+  return target;
+}
+
+Instruction getInsn2(Block *b, long unsigned int addr) {
+  // This is actually coming from parseAPI
+  // Decode the instruction
+  //typedef std::map<Offset, InstructionAPI::Instruction::Ptr> Insns
+  //Insns insn;
+  return b->getInsn(addr);
+}
+
+
 Block *getImmediateDominator2(Function *f, long unsigned int addr) {
   Block *target = NULL;
   for (auto bit = f->blocks().begin(); bit != f->blocks().end(); ++bit) {
@@ -199,7 +225,7 @@ Block *getImmediateDominator2(Function *f, long unsigned int addr) {
   return f->getImmediateDominator(target);
 }
 
-Instruction findIfCondition2(Block *b) {
+Instruction getIfCondition2(Block *b) {
   // Decode the instruction
   const unsigned char *buf = (const unsigned char *) b->obj()->cs()->getPtrToInstruction(b->last());
   InstructionDecoder dec(buf, InstructionDecoder::maxInstructionLength, b->obj()->cs()->getArch());
@@ -224,7 +250,7 @@ public:
   }
 };
 
-GraphPtr buildSlice(Function *f, Block *b, Instruction insn) {
+GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn) {
 
   // Convert the instruction to assignments
   AssignmentConverter ac(true, false);
@@ -309,9 +335,51 @@ extern "C" {
     cout << addr << endl;
     Function *func = getFunction(progName, funcName);
     Block *immedDom = getImmediateDominator2(func, addr);
-    Instruction ifCond = findIfCondition2(immedDom);
+    Instruction ifCond = getIfCondition2(immedDom);
+
+  }
+
+  void getImmedPred(char *progName, char *funcName, long unsigned int addr){
+    cout << progName << endl;
+    cout << funcName << endl;
+    cout << addr << endl;
+    Function *func = getFunction(progName, funcName);
+    Block *immedDom = getImmediateDominator2(func, addr);
+    Instruction ifCond = getIfCondition2(immedDom);
+    //TODO
+  }
+
+  void backwardSlice(char *progName, char *funcName, long unsigned int addr){
+    cout << progName << endl;
+    cout << funcName << endl;
+    cout << addr << endl;
+
+    Function *func = getFunction(progName, funcName);
+    Block *bb = getBasicBlock2(func, addr);
+    Instruction ifCond = getInsn2(bb, addr);
+    GraphPtr slice = buildBackwardSlice(func, bb, ifCond);
+
+    boost::unordered_set<Assignment::Ptr> bitVariables;
+    //locateBitVariables(slice, bitVariables);
+
+    // get all the leaf nodes.
+    NodeIterator begin, end;
+    slice->entryNodes(begin, end);
+    //slice->allNodes(begin, end);
+    for(NodeIterator it = begin; it != end; ++it) {
+      SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(*it);
+      Assignment::Ptr assign = aNode->assign();
+      //cout << assign->format() << " " << assign->insn().format() << " " << assign->insn().getOperation().getID() << " " << endl;
+      if (assign->insn().readsMemory()) {
+        cout << assign->format() << " ";
+        cout << assign->insn().format() << " ";
+        cout << (bitVariables.find(assign) != bitVariables.end())  << " ";
+        cout << endl;
+      }
+    }
   }
 }
+
 int main() {
   // Set up information about the program to be instrumented 
   const char *progName = "909_ziptest_exe";
@@ -320,13 +388,13 @@ int main() {
   //BPatch_image *appImage = getImage(progName);
   //printAddrToLineMappings(appImage, funcName);
   //BPatch_basicBlock *immedDom = getImmediateDominator(appImage, funcName, 0x40940c);
-  //Instruction ifCond = findIfCondition(immedDom);
+  //Instruction ifCond = getIfCondition(immedDom);
   /***************************************************************/
 
   Function *func = getFunction(progName, funcName);
   Block *immedDom = getImmediateDominator2(func, 0x40940c);
-  Instruction ifCond = findIfCondition2(immedDom);
-  GraphPtr slice = buildSlice(func, immedDom, ifCond);
+  Instruction ifCond = getIfCondition2(immedDom);
+  GraphPtr slice = buildBackwardSlice(func, immedDom, ifCond);
 
   boost::unordered_set<Assignment::Ptr> bitVariables;
   locateBitVariables(slice, bitVariables);
