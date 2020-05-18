@@ -17,10 +17,7 @@ std::ofstream TraceFile;
 std::vector<unsigned long> addresses;
 std::vector<string> registers;
 
-std::map<string, REG> reg_map {
-        {"rbp", REG_RBP},
-        {"rsp", REG_RSP}
-};
+std::map<string, REG> reg_map;
 
 /* ===================================================================== */
 /* Commandline Switches */
@@ -127,6 +124,10 @@ int main (INT32 argc, CHAR *argv[])
 
     TraceFile << hex;
     TraceFile.setf(ios::showbase);
+
+    // Initialize reg_map
+    reg_map['rbp'] = REG_RBP;
+    reg_map['rsp'] = REG_RSP;
 
     // Register ImageLoad to be called when an image is loaded
     //
