@@ -126,8 +126,8 @@ int main (INT32 argc, CHAR *argv[])
     TraceFile.setf(ios::showbase);
 
     // Initialize reg_map
-    reg_map['rbp'] = REG_RBP;
-    reg_map['rsp'] = REG_RSP;
+    reg_map["rbp"] = REG_RBP;
+    reg_map["rsp"] = REG_RSP;
 
     // Register ImageLoad to be called when an image is loaded
     //
