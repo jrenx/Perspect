@@ -50,7 +50,7 @@ VOID start_log()
 
 /* ===================================================================== */
 
-VOID record_reg(ADDRINT pc, ADDRINT, reg)
+VOID record_reg(ADDRINT pc, ADDRINT reg)
 {
     TraceFile << pc << ": " << reg << endl;
 }
