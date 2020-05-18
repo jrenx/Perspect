@@ -7,6 +7,25 @@ from collections import deque
 from ctypes import *
 lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
 #https://stackoverflow.com/questions/145270/calling-c-c-from-python
+
+def backslice(sym, prog):
+    reg_name = c_char_p("[x86_64::" + sym.reg + "]")
+    addr = c_ulong(sym.insn)
+    func_name = c_char_p(sym.func)
+    prog_name = c_char_p(prog)
+    print reg_name
+    print addr
+    print func_name
+    print prog_name
+    print "Calling C"
+    lib.backwardSlice(prog_name, func_name, addr, reg_name)
+    print "Back from C"
+    f = open("result", "r")
+    ret = f.read().strip()
+    print "returned: " + ret
+    return ret
+
+
 class Operator:
     def __init__(self):
         pass
@@ -68,15 +87,7 @@ class Symptom():
                 + " func: " + str(self.func) + "]"
 
 def analyze_symptom_with_dataflow(sym, prog, q):
-    reg_name = c_char_p("[x86_64::" + sym.reg + "]")
-    addr = c_ulong(sym.insn)
-    func_name = c_char_p(sym.func)
-    prog_name = c_char_p(prog)
-    print reg_name
-    print addr
-    print func_name
-    print prog_name
-    lib.backwardSlice(prog_name, func_name, addr, reg_name)
+    ret = backslice(sym, prog)
 
     # ask pin to watch every variable definition + every symptom + symptom's value change
 

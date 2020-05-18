@@ -15,6 +15,8 @@
 #include "Graph.h"
 #include <boost/unordered_set.hpp>
 #include <boost/heap/priority_queue.hpp>
+#include <iostream>
+#include <fstream>
 
 using namespace std;
 using namespace Dyninst;
@@ -375,17 +377,33 @@ extern "C" {
     NodeIterator begin, end;
     slice->entryNodes(begin, end);
     //slice->allNodes(begin, end);
+    std::stringstream ss;
     for(NodeIterator it = begin; it != end; ++it) {
       SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(*it);
       Assignment::Ptr assign = aNode->assign();
       //cout << assign->format() << " " << assign->insn().format() << " " << assign->insn().getOperation().getID() << " " << endl;
+      ss << "|" << assign->addr() << ",";
       if (assign->insn().readsMemory()) {
         cout << assign->format() << " ";
         cout << assign->insn().format() << " ";
         cout << (bitVariables.find(assign) != bitVariables.end())  << " ";
         cout << endl;
+	std::set<Expression::Ptr> memReads;
+	assign->insn().getMemoryReadOperands(memReads);
+	cout << (*memReads.begin())->format() << endl;
+	ss << (*memReads.begin())->format();
+        //for (auto r = memReads.begin(); r != memReads.end(); ++r) {
+	//	cout << (*r)->eval() << endl;
+	//}
       }
     }
+    std::string tmp = ss.str(); 
+    cout << tmp;
+    std::ofstream out("result");
+    out << tmp;
+    out.close();
+    //const char* cstr = tmp.c_str();
+    //return cstr;
   }
 }
 
