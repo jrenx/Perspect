@@ -77,7 +77,7 @@ VOID ImageLoad(IMG img, VOID *v)
             RTN_Open(rtn);
             for (INS ins = RTN_InsHead(rtn); INS_Valid(ins); ins = INS_Next(ins))
             {
-                int index = get_ins_index(ins);
+                int index = get_ins_index(INS_Address(ins));
                 if (index != -1)
                 {
                     string reg = registers[index];
