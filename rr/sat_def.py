@@ -83,11 +83,11 @@ def get_last_def(taken_traces, not_taken_traces):
 
     for trace in taken_traces:
         if len(trace) > 0:
-            positive.update(set(trace[0]))
+            positive.update({trace[0]})
 
     for trace in not_taken_traces:
         if len(trace) > 0:
-            negative.update(set(trace[0]))
+            negative.update({trace[0]})
 
     return positive, negative
 
