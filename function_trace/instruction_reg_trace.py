@@ -23,6 +23,24 @@ class InsRegTrace:
         pin_program_list.extend(self.program)
         subprocess.call(' '.join(pin_program_list), shell=True)
 
+    def parse_break_points(self, branch, target):
+        count = -1
+        last_break = ""
+        taken = []
+        not_taken = []
+        with open("instruction_trace.out") as log:
+            for line in log:
+                if branch in line:
+                    if last_break == branch:
+                        not_taken.append(count)
+                    last_break = branch
+                    count += 1
+                elif target in line:
+                    taken.append(count)
+                    last_break = target
+
+        return taken, not_taken
+
 
 if __name__ == '__main__':
     trace = InsRegTrace('~/go-repro/909_ziptest_exe2 ~/go-repro/909_ziptest/test.zip', pin='~/pin-3.11/pin')
