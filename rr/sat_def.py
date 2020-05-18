@@ -77,6 +77,21 @@ def analyze_trace(taken_traces, not_taken_traces):
     return positive, negative
 
 
+def get_last_def(taken_traces, not_taken_traces):
+    positive = set()
+    negative = set()
+
+    for trace in taken_traces:
+        if len(trace) > 0:
+            positive.update(trace[0])
+
+    for trace in not_taken_traces:
+        if len(trace) > 0:
+            negative.update(trace[0])
+
+    return positive, negative
+
+
 def get_sat_def(target, branch, trace_point, reg):
     run_break_points([branch, target])
     taken, not_taken = parse_break_points()
@@ -95,6 +110,26 @@ def get_sat_def(target, branch, trace_point, reg):
         not_taken_traces.append(parse_back_trace('backtrace_{}.log'.format(count)))
 
     return analyze_trace(taken_traces, not_taken_traces)
+
+
+def get_def(target, branch, trace_point, reg):
+    run_break_points([branch, target])
+    taken, not_taken = parse_break_points()
+
+    # TODO: better sampling method
+    taken_sample = random.sample(taken, 10)
+    not_taken_sample = random.sample(not_taken, 10)
+
+    taken_traces = []
+    not_taken_traces = []
+    for count in taken_sample:
+        run_back_trace(branch, count, trace_point, reg)
+        taken_traces.append(parse_back_trace('backtrace_{}.log'.format(count)))
+    for count in not_taken_sample:
+        run_back_trace(branch, count, trace_point, reg)
+        not_taken_traces.append(parse_back_trace('backtrace_{}.log'.format(count)))
+
+    return get_last_def(taken_traces, not_taken_traces)
 
 
 if __name__ == '__main__':
