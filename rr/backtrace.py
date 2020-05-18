@@ -15,11 +15,13 @@ class InitArgument(gdb.Function):
         gdb.execute('br {}'.format(config['breakpoint']))
         trace_point = config['trace_point']
         reg = config['reg']
+        offset = config['offset']
         continue_count = config['continue_count']
         log_filename = config['log_filename']
 
         gdb.set_convenience_variable('trace_point', trace_point)
         gdb.set_convenience_variable('reg', reg)
+        gdb.set_convenience_variable('offset', offset)
         gdb.set_convenience_variable('continue_count', continue_count)
         gdb.set_convenience_variable('log_filename', log_filename)
 
@@ -112,13 +114,20 @@ class SetTracePoint(gdb.Function):
 SetTracePoint()
 
 
+def offset_reg(reg_str, offset_str):
+    reg = int(reg_str, 16)
+    offset = int(offset_str, 16)
+    return hex(reg + offset)
+
+
 class WatchRegValue(gdb.Function):
     def __init__(self):
         super(WatchRegValue, self).__init__('watch_reg_value')
 
     def invoke(self):
         reg_value = str(gdb.convenience_variable('reg_value')).strip('"')
-        gdb.execute('watch -l *(long *){}'.format(reg_value))
+        offset_value = str(gdb.convenience_variable('offset')).strip('"')
+        gdb.execute('watch -l *(long *){}'.format(offset_reg(reg_value, offset_value)))
         return 1
 
 

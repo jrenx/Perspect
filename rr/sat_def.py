@@ -38,9 +38,9 @@ def parse_break_points():
     return taken, not_taken
 
 
-def run_back_trace(break_point, continue_count, trace_point, reg):
+def run_back_trace(break_point, continue_count, trace_point, reg, offset):
     config = {"breakpoint": break_point, "continue_count": continue_count, "trace_point": trace_point, "reg": reg,
-              "log_filename": "backtrace_{}.log".format(continue_count)}
+              "offset": offset, "log_filename": "backtrace_{}.log".format(continue_count)}
     json.dump(config, open('config.json', 'w'))
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     try:
@@ -92,7 +92,7 @@ def get_last_def(taken_traces, not_taken_traces):
     return positive, negative
 
 
-def get_sat_def(target, branch, trace_point, reg):
+def get_sat_def(target, branch, trace_point, reg, offset="0x0"):
     run_break_points([branch, target])
     taken, not_taken = parse_break_points()
 
@@ -103,16 +103,16 @@ def get_sat_def(target, branch, trace_point, reg):
     taken_traces = []
     not_taken_traces = []
     for count in taken_sample:
-        run_back_trace(branch, count, trace_point, reg)
+        run_back_trace(branch, count, trace_point, reg, offset)
         taken_traces.append(parse_back_trace('backtrace_{}.log'.format(count)))
     for count in not_taken_sample:
-        run_back_trace(branch, count, trace_point, reg)
+        run_back_trace(branch, count, trace_point, reg, offset)
         not_taken_traces.append(parse_back_trace('backtrace_{}.log'.format(count)))
 
     return analyze_trace(taken_traces, not_taken_traces)
 
 
-def get_def(target, branch, trace_point, reg):
+def get_def(target, branch, trace_point, reg, offset="0x0"):
     run_break_points([branch, target])
     taken, not_taken = parse_break_points()
 
@@ -123,10 +123,10 @@ def get_def(target, branch, trace_point, reg):
     taken_traces = []
     not_taken_traces = []
     for count in taken_sample:
-        run_back_trace(branch, count, trace_point, reg)
+        run_back_trace(branch, count, trace_point, reg, offset)
         taken_traces.append(parse_back_trace('backtrace_{}.log'.format(count)))
     for count in not_taken_sample:
-        run_back_trace(branch, count, trace_point, reg)
+        run_back_trace(branch, count, trace_point, reg, offset)
         not_taken_traces.append(parse_back_trace('backtrace_{}.log'.format(count)))
 
     return get_last_def(taken_traces, not_taken_traces)
@@ -144,4 +144,4 @@ if __name__ == '__main__':
     # print(parse_back_trace("backtrace_{}.log".format(100)))
 
     # test sat_def
-    print(get_sat_def('mgc0.c:485', 'mgc0.c:467', '0x409c10', 'rbp'))
+    print(get_def('mgc0.c:485', 'mgc0.c:467', '0x409c10', 'rbp'))
