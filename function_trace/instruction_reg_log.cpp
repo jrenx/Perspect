@@ -17,7 +17,7 @@ std::ofstream TraceFile;
 std::vector<unsigned long> addresses;
 std::vector<string> registers;
 
-std::map<string, REG> reg_map = {
+std::map<string, REG> reg_map {
         {"rbp", REG_RBP},
         {"rsp", REG_RSP}
 };
