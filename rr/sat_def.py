@@ -117,8 +117,8 @@ def get_def(target, branch, trace_point, reg, offset="0x0"):
     taken, not_taken = parse_break_points()
 
     # TODO: better sampling method
-    taken_sample = random.sample(taken, 10)
-    not_taken_sample = random.sample(not_taken, 10)
+    taken_sample = random.sample(taken, min(10, len(taken)))
+    not_taken_sample = random.sample(not_taken, min(10, len(not_taken)))
 
     taken_traces = []
     not_taken_traces = []
@@ -144,4 +144,6 @@ if __name__ == '__main__':
     # print(parse_back_trace("backtrace_{}.log".format(100)))
 
     # test sat_def
-    print(get_def('mgc0.c:485', 'mgc0.c:467', '0x409c10', 'rbp'))
+    #print(get_def('mgc0.c:485', 'mgc0.c:467', '0x409c10', 'rbp'))
+    #print(get_def('*0x409daa', '*0x409da5', '0x409d98', 'rsp', '0x68'))
+    print(get_def('*0x409daa', '*0x409da5', '0x409e06', 'rsp', '0x68'))
