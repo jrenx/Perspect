@@ -76,6 +76,18 @@ def getFirstInstrInBB(insn, func, prog):
     if (DEBUG_CTYPE): print( "[main] first instr: " + str(f_insn))
     return f_insn
 
+def getInstrAfter(insn, func, prog):
+    addr = c_ulong(insn)
+    func_name = c_char_p(str.encode(func))
+    prog_name = c_char_p(str.encode(prog))
+    if (DEBUG_CTYPE): print( "[main] prog: " + str(prog_name))
+    if (DEBUG_CTYPE): print( "[main] func: " + str(func_name))
+    if (DEBUG_CTYPE): print( "[main] addr: " + str(addr))
+    f_insn = lib.getInstrAfter(prog_name, func_name, addr)
+    if (DEBUG_CTYPE): print( "[main] first instr: " + str(f_insn))
+    return f_insn
+
+
 
 def getLastInstrInBB(sym, prog):
     addr = c_ulong(sym.insn)
@@ -162,19 +174,11 @@ class Symptom():
                 + " func: " + str(self.func) + "]"
 
 def get_fake_target_and_branch(insn, func, prog):
-    first = getFirstInstrInBB(insn, func, prog)
-    fake_branch = None
-    fake_target = None
-    if first < insn:
-        fake_branch = first
-        fake_target = insn
-    else:
-        last = getLastInstrInBB(insn, func, prog)
-        if insn < last:
-            fake_branch = insn
-            fake_target = last
-        else:
-            raise Exception("BB just have one instr")
+    fake_branch = getInstrAfter(insn, func, prog)
+    fake_target = getInstrAfter(fake_branch, func, prog)
+    #fake_target = getLastInstrInBB(insn, func, prog)
+    if fake_branch >= fake_target:
+        print("[main] [warn] BB just have one instr? " + str(fake_branch) + " " + str(fake_target))
     fake_branch = hex(fake_branch)
     fake_target = hex(fake_target)
     return fake_branch, fake_target
@@ -189,7 +193,7 @@ def analyze_symptom_with_dataflow(sym, prog, q):
         #TODO, can only do this when is in same function
         fake_branch, fake_target = get_fake_target_and_branch \
                     (raw_insn, sym.func, prog)
-        print( "[main]: inputtng to RR: "  \
+        print( "[main] inputtng to RR: "  \
             + str(fake_target) + " " + str(fake_branch) + " " \
             + str(def_insn) + " " + str(def_reg) + " " + str(def_off))
         key = str(fake_target) + "_" + str(fake_branch) + "_" \

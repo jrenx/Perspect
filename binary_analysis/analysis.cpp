@@ -372,7 +372,32 @@ extern "C" {
     //Instruction ifCond = getIfConditionAddr2(immedDom);
     if(DEBUG_C) cout << "[sa] last instr: " << bb->last() << endl;
     return bb->last();
+  }
 
+  long unsigned int getInstrAfter(char *progName, char *funcName, long unsigned int addr){
+    if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
+    if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
+    if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
+    Function *func = getFunction(progName, funcName);
+    Block *bb = getBasicBlock2(func, addr);
+    Block::Insns insns;
+    bb->getInsns(insns);
+    long unsigned int nextInsn = addr;
+    bool return_next = false;
+    for (auto it = insns.begin(); it != insns.end(); it++) {
+      if (return_next) {
+        nextInsn = it->first;
+	break;
+      }
+      if (it->first == addr) {
+        return_next = true;
+      }
+    }
+    if (nextInsn == addr) 
+      nextInsn = bb->end();
+    //Instruction ifCond = getIfConditionAddr2(immedDom);
+    if(DEBUG_C) cout << "[sa] instr after: " << nextInsn << endl;
+    return nextInsn;
   }
 
   void getImmedPred(char *progName, char *funcName, long unsigned int addr){
