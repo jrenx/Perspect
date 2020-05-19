@@ -1,5 +1,6 @@
 from __future__ import division
 import os
+import os.path
 import sys
 from subprocess import call
 from optparse import OptionParser
@@ -10,6 +11,7 @@ from sat_def import *
 lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
 #https://stackoverflow.com/questions/145270/calling-c-c-from-python
 DEBUG_CTYPE = True
+rr_result_cache = {}
 
 def backslice(sym, prog):
     reg_name = c_char_p(str.encode("[x86_64::" + sym.reg + "]"))
@@ -150,13 +152,24 @@ def analyze_symptom_with_dataflow(sym, prog, q):
             fake_target = last
         else:
             raise Exception("BB just have one instr")
+    fake_branch = hex(fake_branch)
+    fake_target = hex(fake_target)
     for curr_def in ret_defs:
-        def_insn = curr_def[0]
+        def_insn = hex(int(curr_def[0]))
         def_reg = curr_def[1]
-        def_off = curr_def[2]
+        def_off = "0x" + curr_def[2]
         print( "[main]: inputtng to RR: "  \
-            + def_insn + " " + def_reg + " " + def_off)
-        #get_def(fake_target, fake_branch, def_insn, def_reg, def_off)
+            + str(fake_target) + " " + str(fake_branch) + " " \
+            + str(def_insn) + " " + str(def_reg) + " " + str(def_off))
+        key = str(fake_target) + "_" + str(fake_branch) + "_"+ str(def_insn) + "_" + \
+              str(def_reg) + "_" + str(def_off)
+        rr_result_defs = None
+        #if key in rr_result_cache:
+        #    rr_result_defs = rr_result_cache[key]
+        #else:
+        #    rr_result_defs = get_def(fake_target, fake_branch, \
+        #                             def_insn, def_reg, def_off)
+        #    rr_result_cache[key] = rr_result_defs
 
     # ask pin to watch
     # ask RR to watch
@@ -193,9 +206,29 @@ def analyze_loop(ssym, prog):
         sym = q.popleft()
         analyze(sym, prog, q)
 
+def parse_set(s):
+    segs = s.strip("{").strip("}").split(",")
+    l = []
+    for seg in segs:
+        l.append(seg.strip("'"))
+    return set(l)
+
 def main():
     #https://docs.python.org/2/library/optparse.html
     #python main.py -f sweep -i 0x409dc4 -r r8 -p 909_ziptest_exe5
+    if os.path.exists("rr_result_cache"):
+        f = open("rr_result_cache", "r")
+        lines = f.readlines()
+        for l in lines:
+            k = f.split("|")[0]
+            v = f.split("|")[1]
+            v.replace("set())", "{})")
+            v.replace("(set()", "({}")
+            v = v.strip("(").strip(")")
+            pair = (parse_set(v.split("},")[0]), \
+                    parse_set(v.split("},")[1]))
+            rr_result_cache[k] = pair
+
     parser = OptionParser()
     parser.add_option("-f", "--func", type="string", dest="func")
     parser.add_option("-i", "--insn", type="string", dest="insn")
@@ -207,6 +240,10 @@ def main():
     print( "[main] " + "Instruction: " +  str(options.insn))
     print( "[main] " + "Register: " + str(options.reg))
     analyze_loop(Symptom(options.func, int(options.insn, 16), options.reg), options.prog)
+
+    f = open("rr_result_cache", "w")
+    for k in rr_result_cache:
+        f.write(str(k) + "|" + str(rr_result_cache[k]) + "\n")
 
 
 if __name__ == "__main__":
