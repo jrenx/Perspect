@@ -88,6 +88,10 @@ class Symptom():
 
 def analyze_symptom_with_dataflow(sym, prog, q):
     ret = backslice(sym, prog)
+    # ask pin to watch
+    # ask RR to watch
+    # then ask pin to watch again 
+    # this should really be a loop
 
     # ask pin to watch every variable definition + every symptom + symptom's value change
 
