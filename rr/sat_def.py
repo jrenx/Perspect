@@ -118,12 +118,16 @@ def get_def(target, branch, trace_point, reg, offset="0x0"):
     taken, not_taken = parse_break_points()
     sample = 1
     # TODO: better sampling method
-    print(taken)
-    taken_sample = random.sample(taken[0:min(sample*3, len(taken))], min(sample, len(taken)))
-    print(taken_sample)
-    print(not_taken)
-    not_taken_sample = random.sample(not_taken[0:min(sample*3, len(not_taken))], min(sample, len(not_taken)))
-    print(not_taken_sample)
+    reduce_set = False
+    tmp_taken = tmp_not_taken = None
+    if reduce_set:
+        tmp_taken = taken[0:min(sample*3, len(taken))]
+        tmp_not_taken = not_taken[0:min(sample*3, len(not_taken))]
+    else:
+        tmp_taken = taken
+        tmp_not_taken = not_taken
+    taken_sample = random.sample(tmp_taken, min(sample, len(taken)))
+    not_taken_sample = random.sample(tmp_not_taken, min(sample, len(not_taken)))
 
     taken_traces = []
     not_taken_traces = []
