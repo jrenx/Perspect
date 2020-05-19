@@ -7,23 +7,68 @@ from collections import deque
 from ctypes import *
 lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
 #https://stackoverflow.com/questions/145270/calling-c-c-from-python
+DEBUG_CTYPE = True
 
 def backslice(sym, prog):
     reg_name = c_char_p("[x86_64::" + sym.reg + "]")
     addr = c_ulong(sym.insn)
     func_name = c_char_p(sym.func)
     prog_name = c_char_p(prog)
-    print reg_name
-    print addr
-    print func_name
-    print prog_name
-    print "Calling C"
+    if (DEBUG_CTYPE): print "[main] reg: "  + str(reg_name)
+    if (DEBUG_CTYPE): print "[main] addr: " + str(addr)
+    if (DEBUG_CTYPE): print "[main] func: " + str(func_name)
+    if (DEBUG_CTYPE): print "[main] prog: " + str(prog_name)
+    if (DEBUG_CTYPE): print "[main] : " + "Calling C"
     lib.backwardSlice(prog_name, func_name, addr, reg_name)
-    print "Back from C"
+    if (DEBUG_CTYPE): print "[main] : Back from C"
     f = open("result", "r")
     ret = f.read().strip()
-    print "returned: " + ret
-    return ret
+    if (DEBUG_CTYPE): print "[main] : returned: " + ret
+    #In the form: |4234758,RSP + 68|4234648,RSP + 68
+    segs = ret.split("|")
+    data_points = []
+    for seg in segs:
+        if seg.strip() == "":
+            continue
+        pc = seg.split(",")[0]
+        reg = seg.split(",")[1].split("+")[0].strip()
+        off = seg.split(",")[1].split("+")[1].strip()
+        data_points.append([pc, reg, off])
+    if (DEBUG_CTYPE): print data_points
+    return data_points
+
+def getImmedDom(sym, prog):
+    addr = c_ulong(sym.insn)
+    func_name = c_char_p(sym.func)
+    prog_name = c_char_p(prog)
+    if (DEBUG_CTYPE): print "[main] prog: " + str(prog_name)
+    if (DEBUG_CTYPE): print "[main] func: " + str(func_name)
+    if (DEBUG_CTYPE): print "[main] addr: " + str(addr)
+    dom = lib.getImmedDom(prog_name, func_name, addr)
+    if (DEBUG_CTYPE): print "[main] immed dom: " + str(dom)
+    return dom
+
+def getFirstInstrInBB(sym, prog):
+    addr = c_ulong(sym.insn)
+    func_name = c_char_p(sym.func)
+    prog_name = c_char_p(prog)
+    if (DEBUG_CTYPE): print "[main] prog: " + str(prog_name)
+    if (DEBUG_CTYPE): print "[main] func: " + str(func_name)
+    if (DEBUG_CTYPE): print "[main] addr: " + str(addr)
+    instr = lib.getFirstInstrInBB(prog_name, func_name, addr)
+    if (DEBUG_CTYPE): print "[main] first instr: " + str(instr)
+    return instr
+
+def getLastInstrInBB(sym, prog):
+    addr = c_ulong(sym.insn)
+    func_name = c_char_p(sym.func)
+    prog_name = c_char_p(prog)
+    if (DEBUG_CTYPE): print "[main] prog: " + str(prog_name)
+    if (DEBUG_CTYPE): print "[main] func: " + str(func_name)
+    if (DEBUG_CTYPE): print "[main] addr: " + str(addr)
+    instr = lib.getLastInstrInBB(prog_name, func_name, addr)
+    if (DEBUG_CTYPE): print "[main] first instr: " + str(instr)
+    return instr
 
 
 class Operator:
@@ -88,6 +133,20 @@ class Symptom():
 
 def analyze_symptom_with_dataflow(sym, prog, q):
     ret = backslice(sym, prog)
+    first = getFirstInstrInBB(sym, prog)
+    fake_branch = None
+    fake_target = None
+    if first < sym.insn:
+        fake_branch = first
+        fake_target = sym.insn
+    else:
+        last = getLastInstrInBB(sym, prog)
+        if sym.insn < last:
+            fake_branch = sym.insn
+            fake_target = last
+        else:
+            raise Exception("BB just have one instr")
+
     # ask pin to watch
     # ask RR to watch
     # then ask pin to watch again 
@@ -108,15 +167,8 @@ def analyze(sym, prog, q):
         # analyze the dataflow
         analyze_symptom_with_dataflow(sym, prog, q)
     else:
+        immedDom = getImmedDom(sym, prog)
         # analyze the control flow
-        addr = c_ulong(sym.insn)
-        func_name = c_char_p(sym.func)
-        prog_name = c_char_p(prog)
-        print "[main] prog: " + str(prog_name)
-        print "[main] func: " + str(func_name)
-        print "[main] addr: " + str(addr)
-        dom = lib.getImmedDom(prog_name, func_name, addr)
-        print "[main] immed dom: " + str(dom)
         #op = ADD()
         #print op.is_add()
 

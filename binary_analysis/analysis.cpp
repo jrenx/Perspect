@@ -349,6 +349,30 @@ extern "C" {
 
   }
 
+  long unsigned int getFirstInstrInBB(char *progName, char *funcName, long unsigned int addr){
+    cout << "[sa] prog: " << progName << endl;
+    cout << "[sa] func: " << funcName << endl;
+    cout << "[sa] addr: " << addr << endl;
+    Function *func = getFunction(progName, funcName);
+    Block *bb = getBasicBlock2(func, addr);
+    //Instruction ifCond = getIfConditionAddr2(immedDom);
+    cout << "[sa] first instr: " << bb->start() << endl;
+    return bb->start();
+
+  }
+
+  long unsigned int getLastInstrInBB(char *progName, char *funcName, long unsigned int addr){
+    cout << "[sa] prog: " << progName << endl;
+    cout << "[sa] func: " << funcName << endl;
+    cout << "[sa] addr: " << addr << endl;
+    Function *func = getFunction(progName, funcName);
+    Block *bb = getBasicBlock2(func, addr);
+    //Instruction ifCond = getIfConditionAddr2(immedDom);
+    cout << "[sa] last instr: " << bb->last() << endl;
+    return bb->last();
+
+  }
+
   void getImmedPred(char *progName, char *funcName, long unsigned int addr){
     cout << "[sa] prog: " << progName << endl;
     cout << "[sa] func: " << funcName << endl;
