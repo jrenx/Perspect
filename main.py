@@ -61,9 +61,21 @@ def getFirstInstrInBB(sym, prog):
     if (DEBUG_CTYPE): print( "[main] prog: " + str(prog_name))
     if (DEBUG_CTYPE): print( "[main] func: " + str(func_name))
     if (DEBUG_CTYPE): print( "[main] addr: " + str(addr))
-    instr = lib.getFirstInstrInBB(prog_name, func_name, addr)
-    if (DEBUG_CTYPE): print( "[main] first instr: " + str(instr))
-    return instr
+    f_insn = lib.getFirstInstrInBB(prog_name, func_name, addr)
+    if (DEBUG_CTYPE): print( "[main] first instr: " + str(f_insn))
+    return f_insn
+
+def getFirstInstrInBB(insn, func, prog):
+    addr = c_ulong(insn)
+    func_name = c_char_p(str.encode(func))
+    prog_name = c_char_p(str.encode(prog))
+    if (DEBUG_CTYPE): print( "[main] prog: " + str(prog_name))
+    if (DEBUG_CTYPE): print( "[main] func: " + str(func_name))
+    if (DEBUG_CTYPE): print( "[main] addr: " + str(addr))
+    f_insn = lib.getFirstInstrInBB(prog_name, func_name, addr)
+    if (DEBUG_CTYPE): print( "[main] first instr: " + str(f_insn))
+    return f_insn
+
 
 def getLastInstrInBB(sym, prog):
     addr = c_ulong(sym.insn)
@@ -72,9 +84,21 @@ def getLastInstrInBB(sym, prog):
     if (DEBUG_CTYPE): print( "[main] prog: " + str(prog_name))
     if (DEBUG_CTYPE): print( "[main] func: " + str(func_name))
     if (DEBUG_CTYPE): print( "[main] addr: " + str(addr))
-    instr = lib.getLastInstrInBB(prog_name, func_name, addr)
-    if (DEBUG_CTYPE): print( "[main] first instr: " + str(instr))
-    return instr
+    l_insn = lib.getLastInstrInBB(prog_name, func_name, addr)
+    if (DEBUG_CTYPE): print( "[main] first instr: " + str(l_insn))
+    return l_insn
+
+def getLastInstrInBB(insn, func, prog):
+    addr = c_ulong(insn)
+    func_name = c_char_p(str.encode(func))
+    prog_name = c_char_p(str.encode(prog))
+    if (DEBUG_CTYPE): print( "[main] prog: " + str(prog_name))
+    if (DEBUG_CTYPE): print( "[main] func: " + str(func_name))
+    if (DEBUG_CTYPE): print( "[main] addr: " + str(addr))
+    l_insn = lib.getLastInstrInBB(prog_name, func_name, addr)
+    if (DEBUG_CTYPE): print( "[main] first instr: " + str(l_insn))
+    return l_insn
+
 
 
 class Operator:
@@ -137,32 +161,40 @@ class Symptom():
         return "[Sym insn: " + str(self.insn) + " reg: " + str(self.reg) \
                 + " func: " + str(self.func) + "]"
 
-def analyze_symptom_with_dataflow(sym, prog, q):
-    ret_defs = backslice(sym, prog)
-    first = getFirstInstrInBB(sym, prog)
+def get_fake_target_and_branch(insn, func, prog):
+    first = getFirstInstrInBB(insn, func, prog)
     fake_branch = None
     fake_target = None
-    if first < sym.insn:
+    if first < insn:
         fake_branch = first
-        fake_target = sym.insn
+        fake_target = insn
     else:
-        last = getLastInstrInBB(sym, prog)
-        if sym.insn < last:
-            fake_branch = sym.insn
+        last = getLastInstrInBB(insn, func, prog)
+        if insn < last:
+            fake_branch = insn
             fake_target = last
         else:
             raise Exception("BB just have one instr")
     fake_branch = hex(fake_branch)
     fake_target = hex(fake_target)
+    return fake_branch, fake_target
+
+def analyze_symptom_with_dataflow(sym, prog, q):
+    ret_defs = backslice(sym, prog)
     for curr_def in ret_defs:
-        def_insn = hex(int(curr_def[0]))
-        def_reg = curr_def[1]
+        raw_insn = int(curr_def[0])
+        def_insn = hex(raw_insn)
+        def_reg = curr_def[1].lower()
         def_off = "0x" + curr_def[2]
+        #TODO, can only do this when is in same function
+        fake_branch, fake_target = get_fake_target_and_branch \
+                    (raw_insn, sym.func, prog)
         print( "[main]: inputtng to RR: "  \
             + str(fake_target) + " " + str(fake_branch) + " " \
             + str(def_insn) + " " + str(def_reg) + " " + str(def_off))
-        key = str(fake_target) + "_" + str(fake_branch) + "_"+ str(def_insn) + "_" + \
-              str(def_reg) + "_" + str(def_off)
+        key = str(fake_target) + "_" + str(fake_branch) + "_" \
+                + str(def_insn) + "_" + \
+                str(def_reg) + "_" + str(def_off)
         rr_result_defs = None
         #if key in rr_result_cache:
         #    rr_result_defs = rr_result_cache[key]
