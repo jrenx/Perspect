@@ -9,23 +9,23 @@ sys.path.append(os.path.abspath('./rr'))
 from sat_def import *
 lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
 #https://stackoverflow.com/questions/145270/calling-c-c-from-python
-DEBUG_CTYPE = False
+DEBUG_CTYPE = True
 
 def backslice(sym, prog):
-    reg_name = c_char_p("[x86_64::" + sym.reg + "]")
+    reg_name = c_wchar_p("[x86_64::" + sym.reg + "]")
     addr = c_ulong(sym.insn)
-    func_name = c_char_p(sym.func)
-    prog_name = c_char_p(prog)
-    if (DEBUG_CTYPE): print "[main] reg: "  + str(reg_name)
-    if (DEBUG_CTYPE): print "[main] addr: " + str(addr)
-    if (DEBUG_CTYPE): print "[main] func: " + str(func_name)
-    if (DEBUG_CTYPE): print "[main] prog: " + str(prog_name)
-    if (DEBUG_CTYPE): print "[main] : " + "Calling C"
+    func_name = c_wchar_p(sym.func)
+    prog_name = c_wchar_p(prog)
+    if (DEBUG_CTYPE): print( "[main] reg: "  + str(reg_name))
+    if (DEBUG_CTYPE): print( "[main] addr: " + str(addr))
+    if (DEBUG_CTYPE): print( "[main] func: " + str(func_name))
+    if (DEBUG_CTYPE): print( "[main] prog: " + str(prog_name))
+    if (DEBUG_CTYPE): print( "[main] : " + "Calling C")
     lib.backwardSlice(prog_name, func_name, addr, reg_name)
-    if (DEBUG_CTYPE): print "[main] : Back from C"
+    if (DEBUG_CTYPE): print( "[main] : Back from C")
     f = open("result", "r")
     ret = f.read().strip()
-    if (DEBUG_CTYPE): print "[main] : returned: " + ret
+    if (DEBUG_CTYPE): print( "[main] : returned: " + ret)
     #In the form: |4234758,RSP + 68|4234648,RSP + 68
     segs = ret.split("|")
     data_points = []
@@ -36,40 +36,40 @@ def backslice(sym, prog):
         reg = seg.split(",")[1].split("+")[0].strip()
         off = seg.split(",")[1].split("+")[1].strip()
         data_points.append([pc, reg, off])
-    if (DEBUG_CTYPE): print data_points
+    if (DEBUG_CTYPE): print( data_points)
     return data_points
 
 def getImmedDom(sym, prog):
     addr = c_ulong(sym.insn)
-    func_name = c_char_p(sym.func)
-    prog_name = c_char_p(prog)
-    if (DEBUG_CTYPE): print "[main] prog: " + str(prog_name)
-    if (DEBUG_CTYPE): print "[main] func: " + str(func_name)
-    if (DEBUG_CTYPE): print "[main] addr: " + str(addr)
+    func_name = c_wchar_p(sym.func)
+    prog_name = c_wchar_p(prog)
+    if (DEBUG_CTYPE): print( "[main] prog: " + str(prog_name))
+    if (DEBUG_CTYPE): print( "[main] func: " + str(func_name))
+    if (DEBUG_CTYPE): print( "[main] addr: " + str(addr))
     dom = lib.getImmedDom(prog_name, func_name, addr)
-    if (DEBUG_CTYPE): print "[main] immed dom: " + str(dom)
+    if (DEBUG_CTYPE): print( "[main] immed dom: " + str(dom))
     return dom
 
 def getFirstInstrInBB(sym, prog):
     addr = c_ulong(sym.insn)
-    func_name = c_char_p(sym.func)
-    prog_name = c_char_p(prog)
-    if (DEBUG_CTYPE): print "[main] prog: " + str(prog_name)
-    if (DEBUG_CTYPE): print "[main] func: " + str(func_name)
-    if (DEBUG_CTYPE): print "[main] addr: " + str(addr)
+    func_name = c_wchar_p(sym.func)
+    prog_name = c_wchar_p(prog)
+    if (DEBUG_CTYPE): print( "[main] prog: " + str(prog_name))
+    if (DEBUG_CTYPE): print( "[main] func: " + str(func_name))
+    if (DEBUG_CTYPE): print( "[main] addr: " + str(addr))
     instr = lib.getFirstInstrInBB(prog_name, func_name, addr)
-    if (DEBUG_CTYPE): print "[main] first instr: " + str(instr)
+    if (DEBUG_CTYPE): print( "[main] first instr: " + str(instr))
     return instr
 
 def getLastInstrInBB(sym, prog):
     addr = c_ulong(sym.insn)
-    func_name = c_char_p(sym.func)
-    prog_name = c_char_p(prog)
-    if (DEBUG_CTYPE): print "[main] prog: " + str(prog_name)
-    if (DEBUG_CTYPE): print "[main] func: " + str(func_name)
-    if (DEBUG_CTYPE): print "[main] addr: " + str(addr)
+    func_name = c_wchar_p(sym.func)
+    prog_name = c_wchar_p(prog)
+    if (DEBUG_CTYPE): print( "[main] prog: " + str(prog_name))
+    if (DEBUG_CTYPE): print( "[main] func: " + str(func_name))
+    if (DEBUG_CTYPE): print( "[main] addr: " + str(addr))
     instr = lib.getLastInstrInBB(prog_name, func_name, addr)
-    if (DEBUG_CTYPE): print "[main] first instr: " + str(instr)
+    if (DEBUG_CTYPE): print( "[main] first instr: " + str(instr))
     return instr
 
 
@@ -149,8 +149,12 @@ def analyze_symptom_with_dataflow(sym, prog, q):
         else:
             raise Exception("BB just have one instr")
     for curr_def in ret_defs:
-        print curr_def
-        #get_def(fake_target, fake_branch, )
+        def_insn = curr_def[0]
+        def_reg = curr_def[1]
+        def_off = curr_def[2]
+        print( "[main]: inputtng to RR: "  \
+            + def_insn + " " + def_reg + " " + def_off)
+        #get_def(fake_target, fake_branch, def_insn, def_reg, def_off)
 
     # ask pin to watch
     # ask RR to watch
@@ -166,7 +170,7 @@ def analyze_symptom_with_dataflow(sym, prog, q):
  
 
 def analyze(sym, prog, q):
-    print "[main] " + "Analyzing " + str(sym)
+    print( "[main] " + "Analyzing " + str(sym))
 
     if sym.reg != None: 
         # analyze the dataflow
@@ -196,11 +200,11 @@ def main():
     parser.add_option("-r", "--reg", type="string", dest="reg")
     parser.add_option("-p", "--prog", type="string", dest="prog")
     (options, args) = parser.parse_args()
-    print "[main] " + "Program: " + str(options.prog)
-    print "[main] " + "Function: " + str(options.func)
-    print "[main] " + "Instruction: " +  str(options.insn)
-    print "[main] " + "Register: " + str(options.reg)
-    analyze_loop(Symptom(options.func, long(options.insn, 16), options.reg), options.prog)
+    print( "[main] " + "Program: " + str(options.prog))
+    print( "[main] " + "Function: " + str(options.func))
+    print( "[main] " + "Instruction: " +  str(options.insn))
+    print( "[main] " + "Register: " + str(options.reg))
+    analyze_loop(Symptom(options.func, int(options.insn, 16), options.reg), options.prog)
 
 
 if __name__ == "__main__":
