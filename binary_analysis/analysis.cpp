@@ -26,6 +26,8 @@ using namespace DataflowAPI;
 
 /***************************************************************/
 BPatch bpatch;
+bool DEBUG_C = false;
+bool DEBUG_SLICE = false;
 
 typedef enum {
   create,
@@ -232,20 +234,20 @@ public:
   char *regName = NULL;
   bool filter = false;
   virtual bool endAtPoint(Assignment::Ptr ap) {
-    cout << "assignment: " << ap->format();
+    if(DEBUG_SLICE) cout << "[slice] " << "assignment: " << ap->format();
     //cout << "  ";
     //cout << ap->insn().readsMemory();
-    cout << endl;
+    if(DEBUG_SLICE) cout << endl;
     filter = false;
     return ap->insn().readsMemory();
   }
 
   //int i = 5;
   virtual bool addPredecessor(AbsRegion reg) {
-    cout << "predecessor reg: " <<  reg.format() << endl;
+    if(DEBUG_SLICE) cout << "[slice] " << "predecessor reg: " <<  reg.format() << endl;
     if (filter) {
       if (reg.format().compare(regName) != 0) {
-	cout << "Filtering out" << endl;
+	if(DEBUG_SLICE) cout << "[slice] " << "Filtering out" << endl;
         return false;
       }
     }
@@ -266,7 +268,7 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, char *regNa
   // An instruction can corresponds to multiple assignments
   Assignment::Ptr assign; //TODO, how to handle multiple ones?
   for (auto ait = assignments.begin(); ait != assignments.end(); ++ait) {
-    cout << "assignment: " << (*ait)->format() << endl;
+    if(DEBUG_SLICE) cout << "[slice] " << "assignment: " << (*ait)->format() << endl;
     assign = *ait;
   }
 
@@ -276,7 +278,7 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, char *regNa
   cs.filter = true;
   GraphPtr slice = s.backwardSlice(cs);
   //cout << slice->size() << endl;
-  string filePath("/home/anygroup/perf_debug_tool/binary_analysis/graph");
+  string filePath("/home/anygroup/perf_DEBUG_C_tool/binary_analysis/graph");
   slice->printDOT(filePath);
   return slice;
 }
@@ -302,18 +304,18 @@ void locateBitVariables(GraphPtr slice, boost::unordered_set<Assignment::Ptr> &b
     Assignment::Ptr assign = aNode->assign();
     entryID id = assign->insn().getOperation().getID();
     if (id == e_and) {
-      cout << "FOUND an AND instruction: ";
-      cout << assign->format() << " ";
-      cout << assign->insn().format() << endl;
+      if(DEBUG_SLICE) cout << "[slice] " << "FOUND an AND instruction: ";
+      if(DEBUG_SLICE) cout << "[slice] " << assign->format() << " ";
+      if(DEBUG_SLICE) cout << "[slice] " << assign->insn().format() << endl;
       bitVariables.insert(assign);
       continue;
     }
 
-    cout << "CHECKING instruction: ";
-    cout << assign->format() << " ";
-    cout << assign->insn().format() << " ";
-    cout << id << " ";
-    cout << endl;
+    if(DEBUG_SLICE) cout << "[slice] " << "CHECKING instruction: ";
+    if(DEBUG_SLICE) cout << "[slice] " << assign->format() << " ";
+    if(DEBUG_SLICE) cout << "[slice] " << assign->insn().format() << " ";
+    if(DEBUG_SLICE) cout << "[slice] " << id << " ";
+    if(DEBUG_SLICE) cout << endl;
 
     if (id != e_mov) continue; // FIXME: heuristic to only include direct moves ...
 
@@ -322,13 +324,13 @@ void locateBitVariables(GraphPtr slice, boost::unordered_set<Assignment::Ptr> &b
     for (NodeIterator it = oBegin; it != oEnd; ++it) {
       SliceNode::Ptr oNode = boost::static_pointer_cast<SliceNode>(*it);
       Assignment::Ptr oAssign = oNode->assign();
-      cout << "Predecessor: ";
-      cout << oAssign->format() << " ";
-      cout << oAssign->insn().format() << endl;
+      if(DEBUG_SLICE) cout << "[slice] " << "Predecessor: ";
+      if(DEBUG_SLICE) cout << "[slice] " << oAssign->format() << " ";
+      if(DEBUG_SLICE) cout << "[slice] " << oAssign->insn().format() << endl;
 
       if (bitVariables.find(oAssign) != bitVariables.end()) {
         bitVariables.insert(assign);
-        cout << "ADDING" << endl;
+        if(DEBUG_SLICE) cout << "[slice] " << "ADDING" << endl;
       }
     }
   }
@@ -338,45 +340,45 @@ void locateBitVariables(GraphPtr slice, boost::unordered_set<Assignment::Ptr> &b
 }
 extern "C" {
   long unsigned int getImmedDom(char *progName, char *funcName, long unsigned int addr){
-    cout << "[sa] prog: " << progName << endl;
-    cout << "[sa] func: " << funcName << endl;
-    cout << "[sa] addr: " << addr << endl;
+    if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
+    if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
+    if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
     Function *func = getFunction(progName, funcName);
     Block *immedDom = getImmediateDominator2(func, addr);
     //Instruction ifCond = getIfConditionAddr2(immedDom);
-    cout << "[sa] immed dom: " << immedDom->last() << endl;
+    if(DEBUG_C) cout << "[sa] immed dom: " << immedDom->last() << endl;
     return immedDom->last();
 
   }
 
   long unsigned int getFirstInstrInBB(char *progName, char *funcName, long unsigned int addr){
-    cout << "[sa] prog: " << progName << endl;
-    cout << "[sa] func: " << funcName << endl;
-    cout << "[sa] addr: " << addr << endl;
+    if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
+    if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
+    if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
     Function *func = getFunction(progName, funcName);
     Block *bb = getBasicBlock2(func, addr);
     //Instruction ifCond = getIfConditionAddr2(immedDom);
-    cout << "[sa] first instr: " << bb->start() << endl;
+    if(DEBUG_C) cout << "[sa] first instr: " << bb->start() << endl;
     return bb->start();
 
   }
 
   long unsigned int getLastInstrInBB(char *progName, char *funcName, long unsigned int addr){
-    cout << "[sa] prog: " << progName << endl;
-    cout << "[sa] func: " << funcName << endl;
-    cout << "[sa] addr: " << addr << endl;
+    if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
+    if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
+    if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
     Function *func = getFunction(progName, funcName);
     Block *bb = getBasicBlock2(func, addr);
     //Instruction ifCond = getIfConditionAddr2(immedDom);
-    cout << "[sa] last instr: " << bb->last() << endl;
+    if(DEBUG_C) cout << "[sa] last instr: " << bb->last() << endl;
     return bb->last();
 
   }
 
   void getImmedPred(char *progName, char *funcName, long unsigned int addr){
-    cout << "[sa] prog: " << progName << endl;
-    cout << "[sa] func: " << funcName << endl;
-    cout << "[sa] addr: " << addr << endl;
+    if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
+    if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
+    if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
     Function *func = getFunction(progName, funcName);
     Block *immedDom = getImmediateDominator2(func, addr);
     Instruction ifCond = getIfCondition2(immedDom);
@@ -384,10 +386,10 @@ extern "C" {
   }
 
   void backwardSlice(char *progName, char *funcName, long unsigned int addr, char *regName){
-    cout << "[sa] prog: " << progName << endl;
-    cout << "[sa] func: " << funcName << endl;
-    cout << "[sa] addr: " << addr << endl;
-    cout << "[sa] reg: " << regName << endl;
+    if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
+    if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
+    if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
+    if(DEBUG_C) cout << "[sa] reg: " << regName << endl;
 
     Function *func = getFunction(progName, funcName);
     Block *bb = getBasicBlock2(func, addr);
@@ -408,13 +410,13 @@ extern "C" {
       //cout << assign->format() << " " << assign->insn().format() << " " << assign->insn().getOperation().getID() << " " << endl;
       ss << "|" << assign->addr() << ",";
       if (assign->insn().readsMemory()) {
-        cout << assign->format() << " ";
-        cout << assign->insn().format() << " ";
-        cout << (bitVariables.find(assign) != bitVariables.end())  << " ";
-        cout << endl;
+        if(DEBUG_C) cout << "[sa]" << assign->format() << " ";
+        if(DEBUG_C) cout << "[sa]" << assign->insn().format() << " ";
+        if(DEBUG_C) cout << "[sa]" << (bitVariables.find(assign) != bitVariables.end())  << " ";
+        if(DEBUG_C) cout << "[sa]" << endl;
 	std::set<Expression::Ptr> memReads;
 	assign->insn().getMemoryReadOperands(memReads);
-	cout << (*memReads.begin())->format() << endl;
+	if(DEBUG_C) cout << (*memReads.begin())->format() << endl;
 	ss << (*memReads.begin())->format();
         //for (auto r = memReads.begin(); r != memReads.end(); ++r) {
 	//	cout << (*r)->eval() << endl;
@@ -422,7 +424,7 @@ extern "C" {
       }
     }
     std::string tmp = ss.str(); 
-    cout << tmp;
+    if(DEBUG_C) cout << "[sa]" << tmp;
     std::ofstream out("result");
     out << tmp;
     out.close();

@@ -5,9 +5,11 @@ from subprocess import call
 from optparse import OptionParser
 from collections import deque
 from ctypes import *
+sys.path.append(os.path.abspath('./rr'))
+from sat_def import *
 lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
 #https://stackoverflow.com/questions/145270/calling-c-c-from-python
-DEBUG_CTYPE = True
+DEBUG_CTYPE = False
 
 def backslice(sym, prog):
     reg_name = c_char_p("[x86_64::" + sym.reg + "]")
@@ -132,7 +134,7 @@ class Symptom():
                 + " func: " + str(self.func) + "]"
 
 def analyze_symptom_with_dataflow(sym, prog, q):
-    ret = backslice(sym, prog)
+    ret_defs = backslice(sym, prog)
     first = getFirstInstrInBB(sym, prog)
     fake_branch = None
     fake_target = None
@@ -146,6 +148,9 @@ def analyze_symptom_with_dataflow(sym, prog, q):
             fake_target = last
         else:
             raise Exception("BB just have one instr")
+    for curr_def in ret_defs:
+        print curr_def
+        #get_def(fake_target, fake_branch, )
 
     # ask pin to watch
     # ask RR to watch
@@ -161,7 +166,7 @@ def analyze_symptom_with_dataflow(sym, prog, q):
  
 
 def analyze(sym, prog, q):
-    print "Analyzing " + str(sym)
+    print "[main] " + "Analyzing " + str(sym)
 
     if sym.reg != None: 
         # analyze the dataflow
@@ -191,10 +196,10 @@ def main():
     parser.add_option("-r", "--reg", type="string", dest="reg")
     parser.add_option("-p", "--prog", type="string", dest="prog")
     (options, args) = parser.parse_args()
-    print "Program: " + str(options.prog)
-    print "Function: " + str(options.func)
-    print "Instruction: " +  str(options.insn)
-    print "Register: " + str(options.reg)
+    print "[main] " + "Program: " + str(options.prog)
+    print "[main] " + "Function: " + str(options.func)
+    print "[main] " + "Instruction: " +  str(options.insn)
+    print "[main] " + "Register: " + str(options.reg)
     analyze_loop(Symptom(options.func, long(options.insn, 16), options.reg), options.prog)
 
 
