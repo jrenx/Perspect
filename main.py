@@ -12,10 +12,12 @@ lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
 DEBUG_CTYPE = True
 
 def backslice(sym, prog):
-    reg_name = c_wchar_p("[x86_64::" + sym.reg + "]")
+    reg_name = c_char_p(str.encode("[x86_64::" + sym.reg + "]"))
+    #https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
+    #https://bugs.python.org/issue1701409
     addr = c_ulong(sym.insn)
-    func_name = c_wchar_p(sym.func)
-    prog_name = c_wchar_p(prog)
+    func_name = c_char_p(str.encode(sym.func))
+    prog_name = c_char_p(str.encode(prog))
     if (DEBUG_CTYPE): print( "[main] reg: "  + str(reg_name))
     if (DEBUG_CTYPE): print( "[main] addr: " + str(addr))
     if (DEBUG_CTYPE): print( "[main] func: " + str(func_name))
@@ -41,8 +43,8 @@ def backslice(sym, prog):
 
 def getImmedDom(sym, prog):
     addr = c_ulong(sym.insn)
-    func_name = c_wchar_p(sym.func)
-    prog_name = c_wchar_p(prog)
+    func_name = c_char_p(str.encode(sym.func))
+    prog_name = c_char_p(str.encode(prog))
     if (DEBUG_CTYPE): print( "[main] prog: " + str(prog_name))
     if (DEBUG_CTYPE): print( "[main] func: " + str(func_name))
     if (DEBUG_CTYPE): print( "[main] addr: " + str(addr))
@@ -52,8 +54,8 @@ def getImmedDom(sym, prog):
 
 def getFirstInstrInBB(sym, prog):
     addr = c_ulong(sym.insn)
-    func_name = c_wchar_p(sym.func)
-    prog_name = c_wchar_p(prog)
+    func_name = c_char_p(str.encode(sym.func))
+    prog_name = c_char_p(str.encode(prog))
     if (DEBUG_CTYPE): print( "[main] prog: " + str(prog_name))
     if (DEBUG_CTYPE): print( "[main] func: " + str(func_name))
     if (DEBUG_CTYPE): print( "[main] addr: " + str(addr))
@@ -63,8 +65,8 @@ def getFirstInstrInBB(sym, prog):
 
 def getLastInstrInBB(sym, prog):
     addr = c_ulong(sym.insn)
-    func_name = c_wchar_p(sym.func)
-    prog_name = c_wchar_p(prog)
+    func_name = c_char_p(str.encode(sym.func))
+    prog_name = c_char_p(str.encode(prog))
     if (DEBUG_CTYPE): print( "[main] prog: " + str(prog_name))
     if (DEBUG_CTYPE): print( "[main] func: " + str(func_name))
     if (DEBUG_CTYPE): print( "[main] addr: " + str(addr))
