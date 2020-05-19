@@ -1,0 +1,61 @@
+source backtrace_bitmask.py
+
+set pagination off
+
+p $init_argument()
+
+p $continue_multi()
+delete br 1
+
+
+
+
+p $set_bitmask_point()
+reverse-cont
+p $set_log_file()
+set logging overwrite on
+set logging redirect on
+set logging on
+p $get_bitmask_reg()
+delete br 2
+set logging off
+
+p $set_shift_point()
+reverse-cont
+p $set_log_file()
+set logging overwrite on
+set logging redirect on
+set logging on
+p $get_shift_reg()
+delete br 3
+set logging off
+
+p $set_trace_point()
+reverse-cont
+p $set_log_file()
+set logging overwrite on
+set logging redirect on
+set logging on
+p $get_reg_value()
+delete br 4
+set logging off
+
+
+p $watch_reg_value()
+
+
+p $set_log_file()
+set logging overwrite on
+set logging redirect on
+set logging on
+
+while 1 == 1
+    p $update_file()
+    reverse-cont
+    if $is_program_stop() == 1
+        loop_break
+    end
+end
+
+set logging off
+quit

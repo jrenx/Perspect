@@ -1,7 +1,12 @@
 {
-    "breakpoint": "mgc0.c:467",
+    "breakpoint": "*0x409c51",
     "continue_count": 10,
     "trace_point": "0x409c0c",
     "reg": "rbp",
-    "log_filename": "backtrace_10.log"
+    "log_filename": "backtrace_10.log",
+    "bitmask_point": "0x409c4e",
+    "bitmask_reg": "rcx",
+    "shift_point": "0x409c28",
+    "shift_reg": "cl",
+    "shift_direction": "left"
 }
