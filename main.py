@@ -291,8 +291,13 @@ def dataflow_helper(sym, defn, prog, arg, q, def_map):
     # TODO, technically should also check the value being set and used 
     #       to see if there is re-definition
     #       being lazy here just watch instructions.
+    defs = set()
+    for k in def_map:
+        defs.add(def_map[k].insn)
     trace = InsTrace(working_dir + prog + " " + arg, pin='~/pin-3.11/pin')
-    ret = trace.get_predictive_predecessors([0x409deb, 0x409d9d], 0x409da5)
+    print("[main][predictive] checking definitions " + str(defs) +\
+            " for symptom " + str(sym))
+    ret = trace.get_predictive_predecessors(list(defs), sym.insn)
     print(ret)
 
         
