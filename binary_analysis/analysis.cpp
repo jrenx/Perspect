@@ -274,8 +274,10 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, char *regNa
 
   Slicer s(assign, b, f, true, false);
   CustomSlicer cs;
-  cs.regName = regName;
-  cs.filter = true;
+  if (strcmp(regName, "") != 0) {
+    cs.regName = regName;
+    cs.filter = true;
+  }
   GraphPtr slice = s.backwardSlice(cs);
   //cout << slice->size() << endl;
   string filePath("/home/anygroup/perf_DEBUG_C_tool/binary_analysis/graph");

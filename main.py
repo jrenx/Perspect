@@ -42,12 +42,12 @@ def static_backslice(reg, insn, func, prog):
         pc = seg.split(",")[0]
         data = seg.split(",")[1]
 
-        reg = data.strip()
+        def_reg = data.strip()
         off = "0"
         if "+" in data:
-            reg = data.split("+")[0].strip()
+            def_reg = data.split("+")[0].strip()
             off = data.split("+")[1].strip()
-        data_points.append([pc, reg, off])
+        data_points.append([pc, def_reg, off])
     if (DEBUG_CTYPE): print( "[main] " + str(data_points))
     return data_points
 
@@ -71,6 +71,7 @@ def dynamic_backslice(reg, off, insn, func, prog):
         rr_result_defs = get_def(fake_target, fake_branch, \
                                  insn_str, reg, off)
         rr_result_cache[key] = rr_result_defs
+    return list(rr_result_defs[0].union(rr_result_defs[1]))
 
 
 def getImmedDom(sym, prog):
@@ -225,8 +226,8 @@ def dataflow_helper(reg, insn, func, prog, q):
     # if Yes, for every individual one, 
     #           check if is predictive, if is keep analyzing until isn't?
     print("[main][df] making a backward static slice")
-    ret_defs = static_backslice(reg, insn, func, prog)
-    for curr_def in ret_defs: 
+    static_defs = static_backslice(reg, insn, func, prog)
+    for curr_def in static_defs: 
         def_insn = int(curr_def[0])
         def_reg = curr_def[1].lower()
         def_off = "0x" + curr_def[2]
@@ -236,7 +237,10 @@ def dataflow_helper(reg, insn, func, prog, q):
         if def_insn == insn: 
             #static slice made no progress
             print("[main] making a backward dynamic slice")
-            dynamic_backslice(def_reg, def_off, def_insn, func, prog)
+            dynamic_defs = dynamic_backslice\
+                    (def_reg, def_off, def_insn, func, prog)
+            # TODO dynamically returend are all pure instructions,
+            # need to pass to dyninst to look for assignment
         
         # use PIN to watch
         # if predictive, recurse
