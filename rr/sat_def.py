@@ -58,7 +58,12 @@ def parse_back_trace(log_filename):
         for line in log:
             if re.search(r'.+ \(.*\) at .*:\d+', line):
                 line = line.strip()
-                traces.append(line[line.rindex('/') + 1:])
+                addr = line[line.rindex('/') + 1:]
+                try:
+                    addr = hex(int(line.split()[0], 16))
+                except ValueError:
+                    pass
+                traces.append(addr)
     return traces
 
 
@@ -155,4 +160,6 @@ if __name__ == '__main__':
     # test sat_def
     #print(get_def('mgc0.c:485', 'mgc0.c:467', '0x409c10', 'rbp'))
     #print(get_def('*0x409daa', '*0x409da5', '0x409d98', 'rsp', '0x68'))
-    print(get_def('*0x409daa', '*0x409da5', '0x409e06', 'rsp', '0x68'))
+    #print(get_def('*0x409daa', '*0x409da5', '0x409e06', 'rsp', '0x68'))
+    print(get_def('*0x409e13', '*0x409e0b', '0x409e06', 'rsp', '0x68'))
+    print(get_def('*0x409da5', '*0x409d9d', '0x409d98', 'rsp', '0x68'))
