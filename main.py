@@ -167,7 +167,7 @@ class SUB(Operator):
 class CAP(Operator):
     def __init__(self):
         pass
-    def is_interset(self):
+    def is_intersect(self):
         return True      
 #    def add_criteria
  
@@ -186,6 +186,29 @@ class Couple():
         self.operator = operator
         self.operand = operand
         self.relation = relation
+        if (self.operand is not None) and (self.relation is not None):
+            raise("Operand and relation cannot be set at the same time.")
+
+    def __str__(self):
+        s = ""
+        op = " "
+        if op is not None:
+            if self.operator.is_dot_product():
+                op = "X"
+            elif self.operator.is_intersect():
+                op = "&"
+            elif self.operator.is_minus():
+                op = "-"
+            elif self.operator.is_add():
+                op = "+"
+        s += op
+        if self.operand is not None:
+            s += str(self.operand)
+        if self.relation is not None:
+            s += str(self.relation)
+        s += " "
+        return s
+
 
 class Relation():
     def __init__(self):
@@ -194,6 +217,12 @@ class Relation():
     def add_couple(couple):
         self.list.append(couple)
 
+    def __str__(self):
+        s = "("
+        for cp in self.list:
+            s += str(cp)
+        s = ")"
+ 
 class Symptom():
     #reg //Dataflow
     #insn //Control flow
@@ -206,7 +235,7 @@ class Symptom():
         self.isstarting = False
 
     def __str__(self):
-        return "[Sym insn: " + str(self.insn) + " reg: " + str(self.reg) \
+        return "[Sym insn: " + str(hex(self.insn)) + " reg: " + str(self.reg) \
                 + " func: " + str(self.func) + "]"
 
 class Definition():
@@ -255,7 +284,10 @@ def dataflow_helper(sym, defn, prog, arg, q, def_map):
     # OR, 
     # if Yes, for every individual one, 
     #           check if is predictive, if is keep analyzing until isn't?
+    
     def_map.pop(str(defn)) 
+    local_map = {}
+    print()
     print("[main][df] current def map: " + str(def_map))
     defs = None
     if defn.isuse or (not defn.isstatic):
@@ -267,23 +299,42 @@ def dataflow_helper(sym, defn, prog, arg, q, def_map):
             def_off = "0x" + curr_def[2]
             new_def = Definition(defn.func, def_insn, def_reg, def_off)
             print("[main][df] creating new static def: " + str(new_def))
-            if str(new_def) not in def_map:
-                def_map[str(new_def)] = new_def
+            #if str(new_def) not in def_map:
+            local_map[str(new_def)] = new_def
  
     else:
         print("[main] making a backward dynamic slice")
-        dynamic_defs = dynamic_backslice(def_reg, def_off, \
-                                         def_insn, func, prog)
+        dynamic_defs = dynamic_backslice(defn.reg, defn.off, \
+                                         defn.insn, defn.func, prog)
         # dynamic definitions are just a bunch of instructions
         for curr_def in dynamic_defs:
             # dynamically returend are all pure instructions,
-            new_def = Definition(get_function(curr_def), \
+            new_def = Definition(get_function(curr_def, prog), \
                                      int(curr_def, 16))
             print("[main][df] creating new dynamic def: " + str(new_def))
-            if str(new_def) not in def_map:
-                def_map[str(new_def)] = new_def
+            #if str(new_def) not in def_map:
+            local_map[str(new_def)] = new_def
 
-    print("[main][df] current def map: " + str(def_map))
+    print("[main][df] local def map: " + str(local_map))
+
+    non_local_def = False
+    for k in local_map:
+        if local_map[k].func != defn.func:
+            print("[main][df] creating a symptom because \
+                    dataflow is no longer local.")
+            non_local_def = True
+            break
+
+    if non_local_def:
+        def_map[str(defn)] = defn
+        newSym = Symptom(defn.func, defn.insn, defn.reg) 
+        q.append(newSym)
+        cp = Couple(None, newSym)
+        expr = Relation()
+        expr.list.add(cp)
+        print("[main][df] non_local_def returning expression: " + str(expr))
+        return expr
+
     # use PIN to watch all current definitions #TODO, is there gonna be a problem?
     # for every definition, 
     #   if is not predictive anymore, create a new symptom, create an AND or MUL relation
@@ -291,16 +342,48 @@ def dataflow_helper(sym, defn, prog, arg, q, def_map):
     # TODO, technically should also check the value being set and used 
     #       to see if there is re-definition
     #       being lazy here just watch instructions.
+    local_defs = {}
     defs = set()
+    for k in local_map:
+        defs.add(local_map[k].insn)
+        local_defs[local_map[k].insn] = local_map[k]
     for k in def_map:
         defs.add(def_map[k].insn)
+
     trace = InsTrace(working_dir + prog + " " + arg, pin='~/pin-3.11/pin')
-    print("[main][predictive] checking definitions " + str(defs) +\
+    print("[main][predictive] checking definitions " + str([hex(d) for d in defs]) +\
             " for symptom " + str(sym))
     ret = trace.get_predictive_predecessors(list(defs), sym.insn)
     print(ret)
-    for insn in ret:
+    print(local_defs)
+    expr = Relation() 
+    for k in ret:
+        insn = int(k)
         result = ret[insn]
+        #print(insn)
+        if insn not in local_defs:
+            continue
+        if result == 1:
+            print("[main][df] Keep exploring the definition " \
+                    + str(local_defs[insn]))
+
+            new_def_map = {}
+            for k in def_map:
+                new_def_map[k] = def_map[k]
+            for k in local_map:
+                new_def_map[k] = local_map[k]
+
+            curr_expr = dataflow_helper(sym, local_defs[insn], \
+                                        prog, arg, q, new_def_map)
+            #TODO, between every expression should be an or operator
+        #if result == 
+            if len(expr.list) == 0:
+                cp = Couple(None, curr_expr)
+            else:
+                cp = Couple(ADD(), curr_expr)
+            expr.list.add(cp)
+        else:
+            print("Aiya what to do?")
 
         
 
@@ -341,6 +424,7 @@ def analyze(sym, prog, arg, q):
 
 def analyze_loop(ssym, prog, arg):
     #https://stackoverflow.com/questions/35206372/understanding-stacks-and-queues-in-python
+    # TODO, need to filter symptoms here
     q = deque()
     q.append(ssym)
     while len(q) > 0:
