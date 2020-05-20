@@ -8,17 +8,20 @@ from collections import deque
 from ctypes import *
 sys.path.append(os.path.abspath('./rr'))
 from sat_def import *
+sys.path.append(os.path.abspath('./function_trace'))
+from instruction_reg_trace import *
+from instruction_trace import *
 lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
 #https://stackoverflow.com/questions/145270/calling-c-c-from-python
 DEBUG_CTYPE = True
 rr_result_cache = {}
 
-def static_backslice(sym, prog):
-    reg_name = c_char_p(str.encode("[x86_64::" + sym.reg + "]"))
+def static_backslice(reg, insn, func, prog):
+    reg_name = c_char_p(str.encode("[x86_64::" + reg + "]"))
     #https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
     #https://bugs.python.org/issue1701409
-    addr = c_ulong(sym.insn)
-    func_name = c_char_p(str.encode(sym.func))
+    addr = c_ulong(insn)
+    func_name = c_char_p(str.encode(func))
     prog_name = c_char_p(str.encode(prog))
     if (DEBUG_CTYPE): print( "[main] reg: "  + str(reg_name))
     if (DEBUG_CTYPE): print( "[main] addr: " + str(addr))
@@ -37,22 +40,28 @@ def static_backslice(sym, prog):
         if seg.strip() == "":
             continue
         pc = seg.split(",")[0]
-        reg = seg.split(",")[1].split("+")[0].strip()
-        off = seg.split(",")[1].split("+")[1].strip()
+        data = seg.split(",")[1]
+
+        reg = data.strip()
+        off = "0"
+        if "+" in data:
+            reg = data.split("+")[0].strip()
+            off = data.split("+")[1].strip()
         data_points.append([pc, reg, off])
     if (DEBUG_CTYPE): print( "[main] " + str(data_points))
     return data_points
 
-def dynamic_backslice(): 
+def dynamic_backslice(reg, off, insn, func, prog): 
     #TODO, can only do this when is in same function?
     fake_branch, fake_target = get_fake_target_and_branch \
-                (raw_insn, sym.func, prog)
+                (insn, func, prog)
+    insn_str = hex(insn)
     print( "[main] inputtng to RR: "  \
         + str(fake_target) + " " + str(fake_branch) + " " \
-        + str(def_insn) + " " + str(def_reg) + " " + str(def_off))
+        + str(insn_str) + " " + str(reg) + " " + str(off))
     key = str(fake_target) + "_" + str(fake_branch) + "_" \
-            + str(def_insn) + "_" + \
-            str(def_reg) + "_" + str(def_off)
+            + str(insn_str) + "_" + \
+            str(reg) + "_" + str(off)
     rr_result_defs = None
     if key in rr_result_cache:
         print("[main] result is cached.")
@@ -60,7 +69,7 @@ def dynamic_backslice():
         print("[main] " + str(rr_result_defs))
     else:
         rr_result_defs = get_def(fake_target, fake_branch, \
-                                 def_insn, def_reg, def_off)
+                                 insn_str, reg, off)
         rr_result_cache[key] = rr_result_defs
 
 
@@ -205,7 +214,7 @@ def get_fake_target_and_branch(insn, func, prog):
     return fake_branch, fake_target
 
 
-def dataflow_helper(sym, prog, q):
+def dataflow_helper(reg, insn, func, prog, q):
     #basically keep slicing back until basically are forced to make a symptom
     # make a backward slice, does the slice advance from the current symptom?
     # if No,  watch using RR
@@ -215,24 +224,26 @@ def dataflow_helper(sym, prog, q):
     # OR, 
     # if Yes, for every individual one, 
     #           check if is predictive, if is keep analyzing until isn't?
-
-    ret_defs = static_backslice(sym, prog)
+    print("[main][df] making a backward static slice")
+    ret_defs = static_backslice(reg, insn, func, prog)
     for curr_def in ret_defs: 
-        raw_insn = int(curr_def[0])
-        def_insn = hex(raw_insn)
+        def_insn = int(curr_def[0])
         def_reg = curr_def[1].lower()
         def_off = "0x" + curr_def[2]
+        print("[main][df] analyzing def: " + str(def_reg) \
+                + "+" + str(def_off) + "@" + str(def_insn))
 
-        if raw_insn == sym.insn: 
+        if def_insn == insn: 
             #static slice made no progress
-            dynamic_backslice()
+            print("[main] making a backward dynamic slice")
+            dynamic_backslice(def_reg, def_off, def_insn, func, prog)
         
         # use PIN to watch
         # if predictive, recurse
 
 
 def analyze_symptom_with_dataflow(sym, prog, q):
-    dataflow_helper(sym, prog, q)
+    dataflow_helper(sym.reg, sym.insn, sym.func, prog, q)
 
     # ask pin to watch
     # ask RR to watch
