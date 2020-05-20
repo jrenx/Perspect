@@ -13,7 +13,7 @@ lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
 DEBUG_CTYPE = True
 rr_result_cache = {}
 
-def backslice(sym, prog):
+def static_backslice(sym, prog):
     reg_name = c_char_p(str.encode("[x86_64::" + sym.reg + "]"))
     #https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
     #https://bugs.python.org/issue1701409
@@ -42,6 +42,27 @@ def backslice(sym, prog):
         data_points.append([pc, reg, off])
     if (DEBUG_CTYPE): print( "[main] " + str(data_points))
     return data_points
+
+def dynamic_backslice(): 
+    #TODO, can only do this when is in same function?
+    fake_branch, fake_target = get_fake_target_and_branch \
+                (raw_insn, sym.func, prog)
+    print( "[main] inputtng to RR: "  \
+        + str(fake_target) + " " + str(fake_branch) + " " \
+        + str(def_insn) + " " + str(def_reg) + " " + str(def_off))
+    key = str(fake_target) + "_" + str(fake_branch) + "_" \
+            + str(def_insn) + "_" + \
+            str(def_reg) + "_" + str(def_off)
+    rr_result_defs = None
+    if key in rr_result_cache:
+        print("[main] result is cached.")
+        rr_result_defs = rr_result_cache[key]
+        print("[main] " + str(rr_result_defs))
+    else:
+        rr_result_defs = get_def(fake_target, fake_branch, \
+                                 def_insn, def_reg, def_off)
+        rr_result_cache[key] = rr_result_defs
+
 
 def getImmedDom(sym, prog):
     addr = c_ulong(sym.insn)
@@ -183,31 +204,35 @@ def get_fake_target_and_branch(insn, func, prog):
     fake_target = hex(fake_target)
     return fake_branch, fake_target
 
-def analyze_symptom_with_dataflow(sym, prog, q):
-    ret_defs = backslice(sym, prog)
-    for curr_def in ret_defs:
+
+def dataflow_helper(sym, prog, q):
+    #basically keep slicing back until basically are forced to make a symptom
+    # make a backward slice, does the slice advance from the current symptom?
+    # if No,  watch using RR
+    # if Yes, are all predictive 
+    #         if Yes, keep slicing between RR or static analysis
+    #         if No, which individual ones are predictive? 
+    # OR, 
+    # if Yes, for every individual one, 
+    #           check if is predictive, if is keep analyzing until isn't?
+
+    ret_defs = static_backslice(sym, prog)
+    for curr_def in ret_defs: 
         raw_insn = int(curr_def[0])
         def_insn = hex(raw_insn)
         def_reg = curr_def[1].lower()
         def_off = "0x" + curr_def[2]
-        #TODO, can only do this when is in same function
-        fake_branch, fake_target = get_fake_target_and_branch \
-                    (raw_insn, sym.func, prog)
-        print( "[main] inputtng to RR: "  \
-            + str(fake_target) + " " + str(fake_branch) + " " \
-            + str(def_insn) + " " + str(def_reg) + " " + str(def_off))
-        key = str(fake_target) + "_" + str(fake_branch) + "_" \
-                + str(def_insn) + "_" + \
-                str(def_reg) + "_" + str(def_off)
-        rr_result_defs = None
-        if key in rr_result_cache:
-            print("[main] result is cached.")
-            rr_result_defs = rr_result_cache[key]
-            print("[main] " + str(rr_result_defs))
-        else:
-            rr_result_defs = get_def(fake_target, fake_branch, \
-                                     def_insn, def_reg, def_off)
-            rr_result_cache[key] = rr_result_defs
+
+        if raw_insn == sym.insn: 
+            #static slice made no progress
+            dynamic_backslice()
+        
+        # use PIN to watch
+        # if predictive, recurse
+
+
+def analyze_symptom_with_dataflow(sym, prog, q):
+    dataflow_helper(sym, prog, q)
 
     # ask pin to watch
     # ask RR to watch
