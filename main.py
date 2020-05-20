@@ -2,6 +2,7 @@ from __future__ import division
 import os
 import os.path
 import sys
+import subprocess
 from subprocess import call
 from optparse import OptionParser
 from collections import deque
@@ -15,6 +16,8 @@ lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
 #https://stackoverflow.com/questions/145270/calling-c-c-from-python
 DEBUG_CTYPE = True
 rr_result_cache = {}
+
+# C function declarations
 
 def static_backslice(reg, insn, func, prog):
     reg_name = c_char_p(str.encode("[x86_64::" + reg + "]"))
@@ -142,7 +145,7 @@ def getLastInstrInBB(insn, func, prog):
     if (DEBUG_CTYPE): print( "[main] first instr: " + str(l_insn))
     return l_insn
 
-
+# class definitions
 
 class Operator:
     def __init__(self):
@@ -199,10 +202,36 @@ class Symptom():
         self.func = func
         self.insn = insn
         self.reg = reg
+        self.isstarting = False
 
     def __str__(self):
         return "[Sym insn: " + str(self.insn) + " reg: " + str(self.reg) \
                 + " func: " + str(self.func) + "]"
+
+class Definition():
+    def __init__(self, func, insn, reg=None, off=None):
+        self.func = func
+        self.insn = insn
+        self.reg = reg
+        self.off = off
+        if reg == None:
+            self.isstatic = False
+        else:
+            self.isstatic = True
+        self.isuse = False
+    
+
+    def __str__(self):
+        return str(self.insn) + "_" + str(self.reg) \
+                + "_" + str(self.off) + "_" + str(self.func)
+
+def get_function(insn, prog):
+    cmd = ['addr2line', '-e', prog, '-f', insn]
+    print("[main] running command: " + str(cmd))
+    result = subprocess.run(cmd, stdout=subprocess.PIPE)
+    func = result.stdout.decode('ascii').split()[0]
+    print("[main] command returned: " + str(func))
+    return func
 
 def get_fake_target_and_branch(insn, func, prog):
     fake_branch = getInstrAfter(insn, func, prog)
@@ -215,7 +244,7 @@ def get_fake_target_and_branch(insn, func, prog):
     return fake_branch, fake_target
 
 
-def dataflow_helper(reg, insn, func, prog, q):
+def dataflow_helper(defn, prog, q, def_map):
     #basically keep slicing back until basically are forced to make a symptom
     # make a backward slice, does the slice advance from the current symptom?
     # if No,  watch using RR
@@ -225,29 +254,48 @@ def dataflow_helper(reg, insn, func, prog, q):
     # OR, 
     # if Yes, for every individual one, 
     #           check if is predictive, if is keep analyzing until isn't?
-    print("[main][df] making a backward static slice")
-    static_defs = static_backslice(reg, insn, func, prog)
-    for curr_def in static_defs: 
-        def_insn = int(curr_def[0])
-        def_reg = curr_def[1].lower()
-        def_off = "0x" + curr_def[2]
-        print("[main][df] analyzing def: " + str(def_reg) \
-                + "+" + str(def_off) + "@" + str(def_insn))
+    def_map.pop(str(defn)) 
+    print("[main][df] current def map: " + str(def_map))
+    defs = None
+    if defn.isuse or (not defn.isstatic):
+        print("[main][df] making a backward static slice for : " + str(defn))
+        static_defs = static_backslice(defn.reg, defn.insn, defn.func, prog)
+        for curr_def in static_defs: 
+            def_insn = int(curr_def[0])
+            def_reg = curr_def[1].lower()
+            def_off = "0x" + curr_def[2]
+            new_def = Definition(defn.func, def_insn, def_reg, def_off)
+            print("[main][df] creating new static def: " + str(new_def))
+            if str(new_def) not in def_map:
+                def_map[str(new_def)] = new_def
+ 
+    else:
+        print("[main] making a backward dynamic slice")
+        dynamic_defs = dynamic_backslice(def_reg, def_off, \
+                                         def_insn, func, prog)
+        # dynamic definitions are just a bunch of instructions
+        for curr_def in dynamic_defs:
+            # dynamically returend are all pure instructions,
+            new_def = Definition(get_function(curr_def), \
+                                     int(curr_def, 16))
+            print("[main][df] creating new dynamic def: " + str(new_def))
+            if str(new_def) not in def_map:
+                def_map[str(new_def)] = new_def
 
-        if def_insn == insn: 
-            #static slice made no progress
-            print("[main] making a backward dynamic slice")
-            dynamic_defs = dynamic_backslice\
-                    (def_reg, def_off, def_insn, func, prog)
-            # TODO dynamically returend are all pure instructions,
-            # need to pass to dyninst to look for assignment
+    print("[main][df] current def map: " + str(def_map))
+    # use PIN to watch all current definitions #TODO, is there gonna be a problem?
+    # for every definition, 
+    #   if is not predictive anymore, create a new symptom, create an AND or MUL relation
+    #   otherwise, keep analyzing
         
-        # use PIN to watch
-        # if predictive, recurse
-
 
 def analyze_symptom_with_dataflow(sym, prog, q):
-    dataflow_helper(sym.reg, sym.insn, sym.func, prog, q)
+    defn = Definition(sym.func, sym.insn, sym.reg)
+    if sym.istarting: 
+        defn.isuse = True
+    def_map = {}
+    def_map[str(defn)] = defn
+    dataflow_helper(defn, prog, q, def_map)
 
     # ask pin to watch
     # ask RR to watch
@@ -335,7 +383,9 @@ def main():
     print( "[main] " + "Function: " + str(options.func))
     print( "[main] " + "Instruction: " +  str(options.insn))
     print( "[main] " + "Register: " + str(options.reg))
-    analyze_loop(Symptom(options.func, int(options.insn, 16), options.reg), options.prog)
+    starting_sym = Symptom(options.func, int(options.insn, 16), options.reg)
+    starting_sym.istarting = True
+    analyze_loop(starting_sym, options.prog)
 
     f = open("rr_result_cache", "w")
     for k in rr_result_cache:
