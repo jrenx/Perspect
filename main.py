@@ -14,6 +14,7 @@ from instruction_reg_trace import *
 from instruction_trace import *
 lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
 #https://stackoverflow.com/questions/145270/calling-c-c-from-python
+working_dir = "/home/anygroup/perf_debug_tool/"
 DEBUG_CTYPE = True
 rr_result_cache = {}
 
@@ -244,7 +245,7 @@ def get_fake_target_and_branch(insn, func, prog):
     return fake_branch, fake_target
 
 
-def dataflow_helper(defn, prog, q, def_map):
+def dataflow_helper(sym, defn, prog, arg, q, def_map):
     #basically keep slicing back until basically are forced to make a symptom
     # make a backward slice, does the slice advance from the current symptom?
     # if No,  watch using RR
@@ -287,15 +288,22 @@ def dataflow_helper(defn, prog, q, def_map):
     # for every definition, 
     #   if is not predictive anymore, create a new symptom, create an AND or MUL relation
     #   otherwise, keep analyzing
+    # TODO, technically should also check the value being set and used 
+    #       to see if there is re-definition
+    #       being lazy here just watch instructions.
+    trace = InsTrace(working_dir + prog + " " + arg, pin='~/pin-3.11/pin')
+    ret = trace.get_predictive_predecessors([0x409deb, 0x409d9d], 0x409da5)
+    print(ret)
+
         
 
-def analyze_symptom_with_dataflow(sym, prog, q):
+def analyze_symptom_with_dataflow(sym, prog, arg, q):
     defn = Definition(sym.func, sym.insn, sym.reg)
     if sym.istarting: 
         defn.isuse = True
     def_map = {}
     def_map[str(defn)] = defn
-    dataflow_helper(defn, prog, q, def_map)
+    dataflow_helper(sym, defn, prog, arg, q, def_map)
 
     # ask pin to watch
     # ask RR to watch
@@ -310,12 +318,12 @@ def analyze_symptom_with_dataflow(sym, prog, q):
     # if is exclusive, use AND, and need to find the citeria
  
 
-def analyze(sym, prog, q):
+def analyze(sym, prog, arg, q):
     print( "[main] " + "Analyzing " + str(sym))
 
     if sym.reg != None: 
         # analyze the dataflow
-        analyze_symptom_with_dataflow(sym, prog, q)
+        analyze_symptom_with_dataflow(sym, prog, arg, q)
     else:
         immedDom = getImmedDom(sym, prog)
         # analyze the control flow
@@ -324,13 +332,13 @@ def analyze(sym, prog, q):
 
         # get the control flow dominator
 
-def analyze_loop(ssym, prog):
+def analyze_loop(ssym, prog, arg):
     #https://stackoverflow.com/questions/35206372/understanding-stacks-and-queues-in-python
     q = deque()
     q.append(ssym)
     while len(q) > 0:
         sym = q.popleft()
-        analyze(sym, prog, q)
+        analyze(sym, prog, arg, q)
 
 def parse_set(s):
     segs = s.strip("{").strip("}").split(",")
@@ -378,14 +386,16 @@ def main():
     parser.add_option("-i", "--insn", type="string", dest="insn")
     parser.add_option("-r", "--reg", type="string", dest="reg")
     parser.add_option("-p", "--prog", type="string", dest="prog")
+    parser.add_option("-a", "--arg", type="string", dest="arg")
     (options, args) = parser.parse_args()
     print( "[main] " + "Program: " + str(options.prog))
+    print( "[main] " + "Argument: " + str(options.arg))
     print( "[main] " + "Function: " + str(options.func))
     print( "[main] " + "Instruction: " +  str(options.insn))
     print( "[main] " + "Register: " + str(options.reg))
     starting_sym = Symptom(options.func, int(options.insn, 16), options.reg)
     starting_sym.istarting = True
-    analyze_loop(starting_sym, options.prog)
+    analyze_loop(starting_sym, options.prog, options.arg)
 
     f = open("rr_result_cache", "w")
     for k in rr_result_cache:
