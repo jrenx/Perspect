@@ -1,6 +1,7 @@
 import subprocess
 import os
 
+working_dir = "/home/anygroup/perf_debug_tool/function_trace/"
 
 class InsTrace:
 
@@ -11,10 +12,10 @@ class InsTrace:
 
     def run_function_trace(self, predecessors, successor):
         if self.is_32:
-            obj_file = os.path.join('obj-ia32', 'instruction_log.so')
+            obj_file = os.path.join('obj-ia32', working_dir + 'instruction_log.so')
         else:
-            obj_file = os.path.join('obj-intel64', 'instruction_log.so')
-        pin_program_list = [self.pin, '-t', obj_file, '-o', 'instruction_trace.out']
+            obj_file = os.path.join('obj-intel64', working_dir + 'instruction_log.so')
+        pin_program_list = [self.pin, '-t', obj_file, '-o', working_dir + 'instruction_trace.out']
         for pred in predecessors:
             pin_program_list.extend(['-i', pred])
         pin_program_list.extend(['-i', successor])
@@ -27,7 +28,7 @@ class InsTrace:
         ret = 0
         pred_cnt = 0
         succ_cnt = 0
-        with open('instruction_trace.out') as file:
+        with open(working_dir + 'instruction_trace.out') as file:
             for line in file:
                 if 'start' in line or 'eof' in line:
                     continue
