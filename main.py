@@ -299,6 +299,8 @@ def dataflow_helper(sym, defn, prog, arg, q, def_map):
             " for symptom " + str(sym))
     ret = trace.get_predictive_predecessors(list(defs), sym.insn)
     print(ret)
+    for insn in ret:
+        result = ret[insn]
 
         
 
