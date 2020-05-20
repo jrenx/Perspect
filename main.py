@@ -40,7 +40,7 @@ def backslice(sym, prog):
         reg = seg.split(",")[1].split("+")[0].strip()
         off = seg.split(",")[1].split("+")[1].strip()
         data_points.append([pc, reg, off])
-    if (DEBUG_CTYPE): print( data_points)
+    if (DEBUG_CTYPE): print( "[main] " + str(data_points))
     return data_points
 
 def getImmedDom(sym, prog):
@@ -200,12 +200,14 @@ def analyze_symptom_with_dataflow(sym, prog, q):
                 + str(def_insn) + "_" + \
                 str(def_reg) + "_" + str(def_off)
         rr_result_defs = None
-        #if key in rr_result_cache:
-        #    rr_result_defs = rr_result_cache[key]
-        #else:
-        #    rr_result_defs = get_def(fake_target, fake_branch, \
-        #                             def_insn, def_reg, def_off)
-        #    rr_result_cache[key] = rr_result_defs
+        if key in rr_result_cache:
+            print("[main] result is cached.")
+            rr_result_defs = rr_result_cache[key]
+            print("[main] " + str(rr_result_defs))
+        else:
+            rr_result_defs = get_def(fake_target, fake_branch, \
+                                     def_insn, def_reg, def_off)
+            rr_result_cache[key] = rr_result_defs
 
     # ask pin to watch
     # ask RR to watch
@@ -249,6 +251,22 @@ def parse_set(s):
         l.append(seg.strip("'"))
     return set(l)
 
+def parse_set(s):
+    print("[main] parsing 3 " + str(s))
+    s = s.strip()
+    s = s.strip("{")
+    s = s.strip("}")
+    segs = s.split(",")
+    print("[main] parsing 4 " + str(segs))
+    l = []
+    for seg in segs:
+        curr = seg.strip("'")
+        if curr == "":
+            continue
+        print("[main] parsing 4 " + str(curr))
+        l.append(curr)
+    return set(l)
+
 def main():
     #https://docs.python.org/2/library/optparse.html
     #python main.py -f sweep -i 0x409dc4 -r r8 -p 909_ziptest_exe5
@@ -256,11 +274,13 @@ def main():
         f = open("rr_result_cache", "r")
         lines = f.readlines()
         for l in lines:
-            k = f.split("|")[0]
-            v = f.split("|")[1]
-            v.replace("set())", "{})")
-            v.replace("(set()", "({}")
+            k = l.split("|")[0].strip()
+            v = l.split("|")[1].strip()
+            v = v.replace("set())", "{})")
+            v = v.replace("(set()", "({}")
+            print("[main] parsing 1 " + str(v))
             v = v.strip("(").strip(")")
+            print("[main] parsing 2 " + str(v))
             pair = (parse_set(v.split("},")[0]), \
                     parse_set(v.split("},")[1]))
             rr_result_cache[k] = pair
