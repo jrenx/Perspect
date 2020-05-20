@@ -11,9 +11,9 @@ class InsRegTrace:
 
     def run_function_trace(self, ins_reg_map):
         if self.is_32:
-            obj_file = os.path.join('obj-ia32', 'instruction_log.so')
+            obj_file = os.path.join('obj-ia32', 'instruction_reg_log.so')
         else:
-            obj_file = os.path.join('obj-intel64', 'instruction_log.so')
+            obj_file = os.path.join('obj-intel64', 'instruction_reg_log.so')
         pin_program_list = [self.pin, '-t', obj_file, '-o', 'instruction_trace.out']
 
         for ins, reg in ins_reg_map.items():
