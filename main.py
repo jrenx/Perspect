@@ -155,27 +155,27 @@ class Operator:
 class ADD(Operator):
     def __init__(self):
         pass
-    def is_add(self):
-        return True
+#    def is_add(self):
+#        return True
 
 class SUB(Operator):
     def __init__(self):
         pass
-    def is_minus(self):
-        return True
+#    def is_minus(self):
+#        return True
  
 class CAP(Operator):
     def __init__(self):
         pass
-    def is_intersect(self):
-        return True      
+#    def is_intersect(self):
+#        return True      
 #    def add_criteria
  
 class MUL(Operator):
     def __init__(self):
         pass
-    def is_dot_product(self):
-        return True      
+#    def is_dot_product(self):
+#        return True      
     def add_context(self, insn):
         self.insn = insn
 
@@ -192,14 +192,14 @@ class Couple():
     def __str__(self):
         s = ""
         op = " "
-        if op is not None:
-            if self.operator.is_dot_product():
+        if self.operator is not None:
+            if isinstance(self.operator, MUL):
                 op = "X"
-            elif self.operator.is_intersect():
+            elif isinstance(self.operator, CAP):
                 op = "&"
-            elif self.operator.is_minus():
+            elif isinstance(self.operator, SUB):
                 op = "-"
-            elif self.operator.is_add():
+            elif isinstance(self.operator, ADD):
                 op = "+"
         s += op
         if self.operand is not None:
@@ -221,7 +221,8 @@ class Relation():
         s = "("
         for cp in self.list:
             s += str(cp)
-        s = ")"
+        s += ")"
+        return s
  
 class Symptom():
     #reg //Dataflow
@@ -349,13 +350,12 @@ def dataflow_helper(sym, defn, prog, arg, q, def_map):
         local_defs[local_map[k].insn] = local_map[k]
     for k in def_map:
         defs.add(def_map[k].insn)
-
+    
     trace = InsTrace(working_dir + prog + " " + arg, pin='~/pin-3.11/pin')
     print("[main][predictive] checking definitions " + str([hex(d) for d in defs]) +\
             " for symptom " + str(sym))
     ret = trace.get_predictive_predecessors(list(defs), sym.insn)
-    print(ret)
-    print(local_defs)
+    print("[main][predictive] result: " + str(ret))
     expr = Relation() 
     for k in ret:
         insn = int(k)
@@ -363,9 +363,12 @@ def dataflow_helper(sym, defn, prog, arg, q, def_map):
         #print(insn)
         if insn not in local_defs:
             continue
-        if result == 1:
+
+        curr_def = local_defs[insn]
+        curr_expr = None
+        if result[0] == "same":
             print("[main][df] Keep exploring the definition " \
-                    + str(local_defs[insn]))
+                    + str(curr_def))
 
             new_def_map = {}
             for k in def_map:
@@ -373,19 +376,38 @@ def dataflow_helper(sym, defn, prog, arg, q, def_map):
             for k in local_map:
                 new_def_map[k] = local_map[k]
 
-            curr_expr = dataflow_helper(sym, local_defs[insn], \
+            curr_expr = dataflow_helper(sym, curr_def, \
                                         prog, arg, q, new_def_map)
             #TODO, between every expression should be an or operator
         #if result == 
-            if len(expr.list) == 0:
-                cp = Couple(None, curr_expr)
-            else:
-                cp = Couple(ADD(), curr_expr)
-            expr.list.add(cp)
+        elif result[0] == "less":
+            newSym = Symptom(curr_def.func, curr_def.insn, curr_def.reg) 
+            q.append(newSym)
+            cp0 = Couple(None, sym)
+            cp1 = Couple(CAP(), newSym)
+            curr_expr = Relation()
+            curr_expr.list.append(cp0)
+            curr_expr.list.append(cp1)
+        elif result[0] == "more":
+            newSym = Symptom(curr_def.func, curr_def.insn, curr_def.reg) 
+            q.append(newSym)
+            cp0 = Couple(None, sym)
+            cp1 = Couple(MUL(), newSym)
+            curr_expr = Relation()
+            curr_expr.list.append(cp0)
+            curr_expr.list.append(cp1)
         else:
-            print("Aiya what to do?")
+            raise("Unexpected result: " + str(result))
 
-        
+        print("[main][df] Got new sub-relation: " + str(curr_expr))
+
+        cp = None
+        if len(expr.list) == 0:
+            cp = Couple(None, curr_expr)
+        else:
+            cp = Couple(ADD(), curr_expr)
+        expr.list.append(cp)
+    return expr
 
 def analyze_symptom_with_dataflow(sym, prog, arg, q):
     defn = Definition(sym.func, sym.insn, sym.reg)
@@ -393,7 +415,8 @@ def analyze_symptom_with_dataflow(sym, prog, arg, q):
         defn.isuse = True
     def_map = {}
     def_map[str(defn)] = defn
-    dataflow_helper(sym, defn, prog, arg, q, def_map)
+    expr = dataflow_helper(sym, defn, prog, arg, q, def_map)
+    print("[main][df] Got new relation: " + str(expr))
 
     # ask pin to watch
     # ask RR to watch
