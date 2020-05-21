@@ -32,22 +32,26 @@ class BitTrace(InsRegTrace):
     def __init__(self, program, is_32=False, pin='pin'):
         super(BitTrace, self).__init__(program, is_32, pin)
 
-    def get_trace(self, bit_points, target, branch):
+    def get_trace(self, bit_points, target, branch_point):
         ins_reg_map = dict()
         for bit_point in bit_points:
             ins_reg_map.update({bit_point.point: "pc", bit_point.addr_point: bit_point.addr_reg,
                                 bit_point.shift_point: bit_point.shift_reg})
+        ins_reg_map.update({branch_point.point: "pc", branch_point.addr_point: branch_point.addr_reg,
+                            branch_point.shift_point: branch_point.shift_reg})
         ins_reg_map.update({target: "pc"})
-        ins_reg_map.update({branch: "pc"})
         super(BitTrace, self).run_function_trace(ins_reg_map)
 
-    def parse_bit_trace(self, bit_points, target, branch):
+    def parse_bit_trace(self, bit_points, target, branch_point):
         # Creat map from pc to bit_point
         pc_map = dict()
         for bit_point in bit_points:
             pc_map[bit_point.point] = bit_point
             pc_map[bit_point.addr_point] = bit_point
             pc_map[bit_point.shift_point] = bit_point
+        pc_map[branch_point.point] = branch_point
+        pc_map[branch_point.addr_point] = branch_point
+        pc_map[branch_point.shift_point] = branch_point
 
         traces = []
         curr_bitpoint_value = None
@@ -60,10 +64,6 @@ class BitTrace(InsRegTrace):
                         traces.append(curr_bitpoint_value)
                         curr_bitpoint_value = None
                     traces.append(target)
-                elif addr == branch:
-                    traces.append(curr_bitpoint_value)
-                    curr_bitpoint_value = None
-                    traces.append(branch)
                 else:
                     bit_point = pc_map[addr]
                     if curr_bitpoint_value is not None and curr_bitpoint_value.bit_point == bit_point:
