@@ -1,3 +1,4 @@
+from __future__ import division
 import subprocess
 import os
 
@@ -50,13 +51,73 @@ class InsTrace:
                     pred_cnt = 0
         return ret
 
+    def get_predictive_predecessor2(self, predecessor, successor):
+        # return 1 for 1-to-1, n for 1-to-n, 0 for others
+        same = True
+        less = None
+        more = None
+        p_pred_cnt = -1
+        p_succ_cnt = -1
+        pred_cnt = 0
+        succ_cnt = 0
+        last_is_succ = None
+        #print("predecessor: " + hex(predecessor))
+        #print("successor:   " + hex(successor))
+        with open(working_dir + 'instruction_trace.out') as file:
+            for line in file:
+                if 'start' in line or 'eof' in line:
+                    continue
+                addr = int(line, 16)
+
+                if addr == successor:
+                    succ_cnt += 1
+                    last_is_succ = True
+                else:
+                    #print("succ: " + str(succ_cnt))
+                    #print("pred: " + str(pred_cnt))
+                    if (last_is_succ is True or addr != predecessor) \
+                            and pred_cnt != 0:
+                        if p_pred_cnt != -1:
+                            if pred_cnt != p_pred_cnt or \
+                               succ_cnt != p_succ_cnt:
+                                same = False
+                        p_pred_cnt = pred_cnt
+                        p_succ_cnt = succ_cnt
+
+                        
+                        # More has priority over less
+                        if succ_cnt > pred_cnt:
+                            more = True
+                        elif succ_cnt < pred_cnt:
+                            if more is not True:
+                                less = True
+
+                    last_is_succ = False
+                    if addr == predecessor:
+                        pred_cnt = 1
+                        succ_cnt = 0
+                    else:
+                        succ_cnt = 0
+                        pred_cnt = 0
+        ratio = p_succ_cnt/p_pred_cnt
+
+        ret = ""
+        if same: 
+            ret += "same"
+        if less:
+            ret += "less"
+        if more:
+            ret += "more"
+
+        return (ret, ratio)
+
     def get_predictive_predecessors(self, predecessors, successor):
         self.run_function_trace([hex(pred) for pred in predecessors], hex(successor))
         ret = {}
         for pred in predecessors:
-            ret[pred] = self.get_predictive_predecessor(pred, successor)
+            ret[pred] = self.get_predictive_predecessor2(pred, successor)
         return ret
 
 if __name__ == '__main__':
-    trace = InsTrace('~/go-repro/909_ziptest_exe2 ~/go-repro/909_ziptest/test.zip', pin='~/pin-3.11/pin')
+    trace = InsTrace('/home/anygroup/perf_debug_tool/909_ziptest_exe6 /home/anygroup/perf_debug_tool/test.zip', pin='~/pin-3.11/pin')
     print(trace.get_predictive_predecessors([0x409deb, 0x409d9d], 0x409da5))
