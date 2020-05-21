@@ -25,6 +25,11 @@ class BitPointValue:
         if not isinstance(other, BitPointValue):
             return False
         return self.bit_point == other.bit_point and self.addr_value == other.addr_value and self.shift_value == other.shift_value
+    
+    def same_value(self, other):
+        if not isinstance(other, BitPointValue):
+            return False
+        return self.addr_value == other.addr_value and self.shift_value == other.shift_value
 
 
 class BitTrace(InsRegTrace):
@@ -87,6 +92,50 @@ class BitTrace(InsRegTrace):
 
         return traces
 
+    def split_branch(self, traces, target, branch_point):
+        trace_index = 0
+        last_branch_index = -1
+        taken = []
+        not_taken = []
+
+        for trace in traces:
+            if not isinstance(trace, BitPointValue) and trace == target:
+                if last_branch_index != -1:
+                    taken.append(last_branch_index)
+                    last_branch_index = -1
+            elif trace.bit_point == branch_point:
+                if last_branch_index != -1:
+                    not_taken.append(last_branch_index)
+                    last_branch_index = trace_index
+                else:
+                    last_branch_index = trace_index
+            trace_index += 1
+        return taken, not_taken
+
+    def analyze_trace(self, traces, bit_points, target, branch_point):
+        taken_indexes, not_taken_indexes = self.split_branch(traces, target, branch_point)
+
+        positive_bitpoints = set()
+        negative_bitpoints = set()
+
+        for taken_index in taken_indexes:
+            branch_point = traces[taken_indexes].bit_point
+            for index in range(taken_index - 1, -1, -1):
+                trace = traces[index]
+                if branch_point.same_value(trace):
+                    positive_bitpoints.add(trace.bit_point)
+                    break
+
+        for not_taken_index in not_taken_indexes:
+            branch_point = traces[not_taken_indexes].bit_point
+            for index in range(not_taken_index - 1, -1, -1):
+                trace = traces[index]
+                if branch_point.same_value(trace):
+                    negative_bitpoints.add(trace.bit_point)
+                    break
+
+        return positive_bitpoints, negative_bitpoints
+        
 
 if __name__ == '__main__':
-    trace = BitTrace('~/go-repro/909_ziptest_exe2 ~/go-repro/909_ziptest/test.zip', pin='~/pin-3.11/pin')
+    bitTrace = BitTrace('~/go-repro/909_ziptest_exe2 ~/go-repro/909_ziptest/test.zip', pin='~/pin-3.11/pin')
