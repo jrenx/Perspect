@@ -234,6 +234,7 @@ class Symptom():
         self.insn = insn
         self.reg = reg
         self.isstarting = False
+        self.relation = None
 
     def __str__(self):
         return "[Sym insn: " + str(hex(self.insn)) + " reg: " + str(self.reg) \
@@ -381,18 +382,22 @@ def dataflow_helper(sym, defn, prog, arg, q, def_map):
             #TODO, between every expression should be an or operator
         #if result == 
         elif result[0] == "less":
-            newSym = Symptom(curr_def.func, curr_def.insn, curr_def.reg) 
-            q.append(newSym)
-            cp0 = Couple(None, sym)
-            cp1 = Couple(CAP(), newSym)
+            newDfSym = Symptom(curr_def.func, curr_def.insn, curr_def.reg) 
+            q.append(newDfSym)
+            newCfSym = Symptom(sym.func, sym.insn)
+            q.append(newCfSym)
+            cp0 = Couple(None, newCfSym)
+            cp1 = Couple(CAP(), newDfSym)
             curr_expr = Relation()
             curr_expr.list.append(cp0)
             curr_expr.list.append(cp1)
         elif result[0] == "more":
-            newSym = Symptom(curr_def.func, curr_def.insn, curr_def.reg) 
-            q.append(newSym)
-            cp0 = Couple(None, sym)
-            cp1 = Couple(MUL(), newSym)
+            newDfSym = Symptom(curr_def.func, curr_def.insn, curr_def.reg) 
+            q.append(newDfSym)
+            newCfSym = Symptom(sym.func, sym.insn)
+            q.append(newCfSym)
+            cp0 = Couple(None, newCfSym)
+            cp1 = Couple(MUL(), newDfSym)
             curr_expr = Relation()
             curr_expr.list.append(cp0)
             curr_expr.list.append(cp1)
@@ -417,6 +422,8 @@ def analyze_symptom_with_dataflow(sym, prog, arg, q):
     def_map[str(defn)] = defn
     expr = dataflow_helper(sym, defn, prog, arg, q, def_map)
     print("[main][df] Got new relation: " + str(expr))
+    print()
+    sym.relation = expr
 
     # ask pin to watch
     # ask RR to watch
@@ -430,15 +437,36 @@ def analyze_symptom_with_dataflow(sym, prog, arg, q):
     # if is multiplicative, use MUL, and need to find the context
     # if is exclusive, use AND, and need to find the citeria
  
+def analyze_symptom(sym, prog, arg, q):
+    immedDom = getImmedDom(sym, prog)
+    print("[main][predictive] checking dom " + str(hex(immedDom)) \
+            + " for " + str(hex(sym.insn)))
+    trace = InsTrace(working_dir + prog + " " + arg, pin='~/pin-3.11/pin')
+    ret = trace.get_predictive_predecessors([immedDom], sym.insn)
+    print("[main][predictive] result: " + str(ret))
+    if ret[immedDom][0] == "same":
+       newSym = Symptom(sym.func, immedDom) 
+       q.append(newSym)
 
-def analyze(sym, prog, arg, q):
+
+
+def analyze(sym, prog, arg, q, m, mask):
+    print()
     print( "[main] " + "Analyzing " + str(sym))
+    if str(sym) in m:
+        print("[main] Symptom already analyzed, " + str(sym) + "returning ...") 
+        return
+    if sym.insn in mask:
+        print("[main] Symptom ignored, " + str(sym) + "returning ...") 
+        return
 
     if sym.reg != None: 
         # analyze the dataflow
         analyze_symptom_with_dataflow(sym, prog, arg, q)
     else:
-        immedDom = getImmedDom(sym, prog)
+        analyze_symptom(sym, prog, arg, q)
+
+    m[str(sym)] = sym
         # analyze the control flow
         #op = ADD()
         #print op.is_add()
@@ -448,11 +476,15 @@ def analyze(sym, prog, arg, q):
 def analyze_loop(ssym, prog, arg):
     #https://stackoverflow.com/questions/35206372/understanding-stacks-and-queues-in-python
     # TODO, need to filter symptoms here
+
     q = deque()
     q.append(ssym)
+    m = {}
+    mask = [0x409bd3, 0x409e37] #hack for now
     while len(q) > 0:
+        print("[main] analysis queue size: " + str(len(q)))
         sym = q.popleft()
-        analyze(sym, prog, arg, q)
+        analyze(sym, prog, arg, q, m, mask)
 
 def parse_set(s):
     segs = s.strip("{").strip("}").split(",")
