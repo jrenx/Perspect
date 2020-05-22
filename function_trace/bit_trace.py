@@ -17,6 +17,9 @@ class BitPoint:
     def __hash__(self):
         return ', '.join([self.point, self.addr_point, self.addr_reg, self.shift_point, self.shift_reg]).__hash__()
 
+    def __str__(self):
+        return self.point
+
 
 class BitPointValue:
     def __init__(self, bit_point, addr_value, shift_value):
@@ -131,7 +134,7 @@ class BitTrace(InsRegTrace):
             branch_point_value = traces[taken_index]
             for index in range(taken_index - 1, -1, -1):
                 trace = traces[index]
-                if branch_point_value.same_value(trace):
+                if branch_point_value.same_value(trace) and branch_point_value.bit_point != branch_point:
                     positive_bitpoints.add(trace.bit_point)
                     break
 
