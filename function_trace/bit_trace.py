@@ -15,7 +15,7 @@ class BitPoint:
         return self.point == other.point and self.addr_point == other.addr_point and self.addr_reg == other.addr_reg and self.shift_point == other.shift_point and self.shift_reg == other.shift_reg
 
     def __hash__(self):
-        return ', '.join(self.point, self.addr_point, self.addr_reg, self.shift_point, self.shift_reg)
+        return ', '.join([self.point, self.addr_point, self.addr_reg, self.shift_point, self.shift_reg])
 
 
 class BitPointValue:
