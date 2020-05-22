@@ -79,7 +79,7 @@ class BitTrace(InsRegTrace):
                         elif bit_point.point == addr:
                             pass
                         else:
-                            raise ValueError("wrong address")
+                            raise ValueError("wrong address: " + addr)
                     elif curr_bitpoint_value is None:
                         curr_bitpoint_value = BitPointValue(bit_point, None, None)
                     else:
@@ -92,7 +92,7 @@ class BitTrace(InsRegTrace):
                         elif bit_point.point == addr:
                             pass
                         else:
-                            raise ValueError("wrong address")
+                            raise ValueError("wrong address: " + addr)
 
         return traces
 
