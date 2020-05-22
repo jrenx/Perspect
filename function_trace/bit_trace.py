@@ -160,5 +160,7 @@ if __name__ == '__main__':
 
     bitTrace.get_trace(bitpoints, target, branch_point)
     traces = bitTrace.parse_bit_trace(bitpoints, target, branch_point)
-    print(bitTrace.analyze_trace(traces, bitpoints, target, branch_point))
+    positive, negative = bitTrace.analyze_trace(traces, bitpoints, target, branch_point)
+    print("positive:", [str(p) for p in positive])
+    print("negative: ", [str(p) for p in negative])
 
