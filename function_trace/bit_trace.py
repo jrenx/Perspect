@@ -139,3 +139,14 @@ class BitTrace(InsRegTrace):
 
 if __name__ == '__main__':
     bitTrace = BitTrace('~/go-repro/909_ziptest_exe2 ~/go-repro/909_ziptest/test.zip', pin='~/pin-3.11/pin')
+    target = '0x409c70'
+    branch_point = BitPoint('0x409c41', '0x409c0c', 'rbp', '0x409c13', 'rbx')
+    bitpoints = []
+    bitpoints.append(BitPoint('0x40a6aa', '0x40a647', 'rsi', '0x40a64e', 'rbp'))
+    bitpoints.append(BitPoint('0x40a7a2', '0x40a75b', 'rbp', '0x40a75f', 'rdx'))
+    bitpoints.append(BitPoint('0x40a996', '0x40a962', 'rbx', '0x40a966', 'rdx'))
+
+    bitTrace.get_trace(bitpoints, target, branch_point)
+    traces = bitTrace.parse_bit_trace(bitpoints, target, branch_point)
+    print(bitTrace.analyze_trace(traces, bitpoints, target, branch_point))
+
