@@ -70,11 +70,15 @@ class InsTrace:
                 addr = int(line, 16)
 
                 if addr == successor:
+                    if last_is_succ is False:
+                        succ_cnt = 0
                     succ_cnt += 1
                     last_is_succ = True
                 else:
-                    #print("succ: " + str(succ_cnt))
-                    #print("pred: " + str(pred_cnt))
+                    print("succ: " + str(succ_cnt))
+                    print("pred: " + str(pred_cnt))
+                    print("p succ: " + str(p_succ_cnt))
+                    print("p pred: " + str(p_pred_cnt))
                     if (last_is_succ is True or addr != predecessor) \
                             and pred_cnt != 0:
                         if p_pred_cnt != -1:
@@ -83,18 +87,22 @@ class InsTrace:
                                 same = False
                         p_pred_cnt = pred_cnt
                         p_succ_cnt = succ_cnt
-
-                        
+                              
                         # More has priority over less
                         if succ_cnt > pred_cnt:
                             more = True
                         elif succ_cnt < pred_cnt:
                             if more is not True:
                                 less = True
+                        pred_cnt = 0
+                        succ_cnt = 0
+
 
                     last_is_succ = False
                     if addr == predecessor:
-                        pred_cnt = 1
+                        if last_is_succ is True:
+                            pred_cnt = 0
+                        pred_cnt += 1
                         succ_cnt = 0
                     else:
                         succ_cnt = 0
@@ -115,9 +123,15 @@ class InsTrace:
         self.run_function_trace([hex(pred) for pred in predecessors], hex(successor))
         ret = {}
         for pred in predecessors:
+            print("Analyzing predecessor: " + str(hex(pred)))
             ret[pred] = self.get_predictive_predecessor2(pred, successor)
         return ret
 
 if __name__ == '__main__':
     trace = InsTrace('/home/anygroup/perf_debug_tool/909_ziptest_exe6 /home/anygroup/perf_debug_tool/test.zip', pin='~/pin-3.11/pin')
-    print(trace.get_predictive_predecessors([0x409deb, 0x409d9d], 0x409da5))
+    #print(trace.get_predictive_predecessors([0x409d98, 0x409e06], 0x409daa))
+    #print(trace.get_predictive_predecessors([0x409deb, 0x409d9d], 0x409da5))
+    #print(trace.get_predictive_predecessors([0x409d47], 0x409daa)) #488, 500
+    print(trace.get_predictive_predecessors([0x409c84], 0x409d47)) #472, 488
+    #print(trace.get_predictive_predecessors([0x409c55], 0x409d47)) #467, 472
+    #print(trace.get_predictive_predecessors([0x409c55], 0x409c84)) #467, 472
