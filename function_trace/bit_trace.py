@@ -62,6 +62,8 @@ class BitTrace(InsRegTrace):
         curr_bitpoint_value = None
         with open('instruction_trace.out') as trace_file:
             for line in trace_file:
+                if 'eof' in line:
+                    break
                 addr = line.split()[0].strip(':')
                 reg = line.split()[1]
                 if addr == target:
