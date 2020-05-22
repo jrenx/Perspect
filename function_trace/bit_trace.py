@@ -134,7 +134,7 @@ class BitTrace(InsRegTrace):
             branch_point_value = traces[taken_index]
             for index in range(taken_index - 1, -1, -1):
                 trace = traces[index]
-                if branch_point_value.same_value(trace) and branch_point_value.bit_point != branch_point:
+                if branch_point_value.same_value(trace) and branch_point_value.bit_point != trace.bit_point:
                     positive_bitpoints.add(trace.bit_point)
                     break
 
@@ -142,7 +142,7 @@ class BitTrace(InsRegTrace):
             branch_point_value = traces[not_taken_index]
             for index in range(not_taken_index - 1, -1, -1):
                 trace = traces[index]
-                if branch_point_value.same_value(trace) and branch_point_value.bit_point != branch_point:
+                if branch_point_value.same_value(trace) and branch_point_value.bit_point != trace.bit_point:
                     negative_bitpoints.add(trace.bit_point)
                     break
 
