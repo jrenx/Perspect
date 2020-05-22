@@ -128,6 +128,9 @@ int main (INT32 argc, CHAR *argv[])
     // Initialize reg_map
     reg_map["rbp"] = REG_RBP;
     reg_map["rsp"] = REG_RSP;
+    reg_map["rdx"] = REG_RDX;
+    reg_map["rbx"] = REG_RBX;
+    reg_map["rsi"] = REG_RSI;
 
     // Register ImageLoad to be called when an image is loaded
     //
