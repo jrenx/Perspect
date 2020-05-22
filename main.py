@@ -1,6 +1,7 @@
 from __future__ import division
 import os
 import os.path
+import re
 import sys
 import subprocess
 from subprocess import call
@@ -22,15 +23,17 @@ rr_result_cache = {}
 
 def static_backslice(reg, insn, func, prog):
     reg_name = c_char_p(str.encode("[x86_64::" + reg + "]"))
+    if reg == "":
+        reg_name = c_char_p(str.encode(reg))
     #https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
     #https://bugs.python.org/issue1701409
     addr = c_ulong(insn)
     func_name = c_char_p(str.encode(func))
     prog_name = c_char_p(str.encode(prog))
-    if (DEBUG_CTYPE): print( "[main] reg: "  + str(reg_name))
-    if (DEBUG_CTYPE): print( "[main] addr: " + str(addr))
-    if (DEBUG_CTYPE): print( "[main] func: " + str(func_name))
-    if (DEBUG_CTYPE): print( "[main] prog: " + str(prog_name))
+    if (DEBUG_CTYPE): print( "[main] reg: "  + str(reg))
+    if (DEBUG_CTYPE): print( "[main] addr: " + str(hex(insn)))
+    if (DEBUG_CTYPE): print( "[main] func: " + str(func))
+    if (DEBUG_CTYPE): print( "[main] prog: " + str(prog))
     if (DEBUG_CTYPE): print( "[main] : " + "Calling C")
     lib.backwardSlice(prog_name, func_name, addr, reg_name)
     if (DEBUG_CTYPE): print( "[main] : Back from C")
@@ -60,8 +63,8 @@ def dynamic_backslice(reg, off, insn, func, prog):
     fake_branch, fake_target = get_fake_target_and_branch \
                 (insn, func, prog)
     insn_str = hex(insn)
-    print( "[main] inputtng to RR: "  \
-        + str(fake_target) + " " + str(fake_branch) + " " \
+    print( "[main] inputtng to RR to call get_def: "  \
+        + str(hex(fake_target)) + " " + str(hex(fake_branch)) + " " \
         + str(insn_str) + " " + str(reg) + " " + str(off))
     key = str(fake_target) + "_" + str(fake_branch) + "_" \
             + str(insn_str) + "_" + \
@@ -73,6 +76,26 @@ def dynamic_backslice(reg, off, insn, func, prog):
         print("[main] " + str(rr_result_defs))
     else:
         rr_result_defs = get_def(fake_target, fake_branch, \
+                                 insn_str, reg, off)
+        rr_result_cache[key] = rr_result_defs
+    return list(rr_result_defs[0].union(rr_result_defs[1]))
+
+def dynamic_backslice_sat_unsat(target, branch, reg, off, insn): 
+    #TODO, can only do this when is in same function?
+    insn_str = hex(insn)
+    print( "[main] inputtng to RR to call sat_def: "  \
+        + str(hex(target)) + " " + str(hex(branch)) + " " \
+        + str(insn_str) + " " + str(reg) + " " + str(off))
+    key = str(target) + "_" + str(branch) + "_" \
+            + str(insn_str) + "_" + \
+            str(reg) + "_" + str(off)
+    rr_result_defs = None
+    if key in rr_result_cache:
+        print("[main] result is cached.")
+        rr_result_defs = rr_result_cache[key]
+        print("[main] " + str(rr_result_defs))
+    else:
+        rr_result_defs = get_sat_def(target, branch, \
                                  insn_str, reg, off)
         rr_result_cache[key] = rr_result_defs
     return list(rr_result_defs[0].union(rr_result_defs[1]))
@@ -445,8 +468,27 @@ def analyze_symptom(sym, prog, arg, q):
     ret = trace.get_predictive_predecessors([immedDom], sym.insn)
     print("[main][predictive] result: " + str(ret))
     if ret[immedDom][0] == "same":
-       newSym = Symptom(sym.func, immedDom) 
-       q.append(newSym)
+        newSym = Symptom(sym.func, immedDom) 
+        q.append(newSym)
+    elif ret[immedDom][0] == "less":
+        branch = immedDom 
+        static_defs = static_backslice("", branch, sym.func, prog)
+        for curr_def in static_defs: 
+            def_insn = int(curr_def[0])
+            def_reg = curr_def[1].lower()
+            if not re.search('[a-zA-Z]', def_reg):
+                # TODO, a bug to fix later, why is dyninst treating 
+                # a using const as a memory read?
+                continue
+            def_off = "0x" + curr_def[2]
+            new_def = Definition(sym.func, def_insn, def_reg, def_off)
+            print("[main][df] creating new static def: " + str(new_def))
+            #if str(new_def) not in def_map:
+ 
+            dynamic_backslice_sat_unsat(branch, sym.insn, def_reg, def_off, def_insn)
+    else:
+        raise("Unhandled case.")
+
 
 
 

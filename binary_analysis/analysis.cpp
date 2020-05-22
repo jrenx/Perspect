@@ -26,8 +26,8 @@ using namespace DataflowAPI;
 
 /***************************************************************/
 BPatch bpatch;
-bool DEBUG_C = false;
-bool DEBUG_SLICE = false;
+bool DEBUG_C = true;
+bool DEBUG_SLICE = true;
 
 typedef enum {
   create,
@@ -247,7 +247,8 @@ public:
     if(DEBUG_SLICE) cout << "[slice] " << "predecessor reg: " <<  reg.format() << endl;
     if (filter) {
       if (reg.format().compare(regName) != 0) {
-	if(DEBUG_SLICE) cout << "[slice] " << "Filtering out" << endl;
+	if(DEBUG_SLICE) cout << "[slice] " << "Filtering against " << regName << 
+	       				      " filter out: " << reg.format() << endl;
         return false;
       }
     }
@@ -435,15 +436,15 @@ extern "C" {
       SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(*it);
       Assignment::Ptr assign = aNode->assign();
       //cout << assign->format() << " " << assign->insn().format() << " " << assign->insn().getOperation().getID() << " " << endl;
-      ss << "|" << assign->addr() << ",";
       if (assign->insn().readsMemory()) {
         if(DEBUG_C) cout << "[sa]" << assign->format() << " ";
-        if(DEBUG_C) cout << "[sa]" << assign->insn().format() << " ";
-        if(DEBUG_C) cout << "[sa]" << (bitVariables.find(assign) != bitVariables.end())  << " ";
-        if(DEBUG_C) cout << "[sa]" << endl;
+        if(DEBUG_C) cout << "insn: " << assign->insn().format() << " ";
+        if(DEBUG_C) cout << "is bit var: " << (bitVariables.find(assign) != bitVariables.end())  << " ";
+        if(DEBUG_C) cout << endl;
 	std::set<Expression::Ptr> memReads;
 	assign->insn().getMemoryReadOperands(memReads);
-	if(DEBUG_C) cout << (*memReads.begin())->format() << endl;
+	if(DEBUG_C) cout << "[sa] Memory read: " << (*memReads.begin())->format() << endl;
+        ss << "|" << assign->addr() << ",";
 	ss << (*memReads.begin())->format();
         //for (auto r = memReads.begin(); r != memReads.end(); ++r) {
 	//	cout << (*r)->eval() << endl;
