@@ -200,10 +200,16 @@ class BitTrace(InsRegTrace):
 if __name__ == '__main__':
     bitTrace = BitTrace('/home/anygroup/perf_debug_tool/909_ziptest_exe6 /home/anygroup/perf_debug_tool/test.zip', pin='~/pin-3.11/pin')
     #target = '0x409c70'
-    target = '0x409c84'
+    
+    #target = '0x409c84' #472
+    target = '0x409c55' #467
+    
     #branch_point = BitPoint('0x409c41', '0x409c0c', 'rbp', '0x409c13', 'rbx')
     #TODO, in the future, should allow printing the register at the use site or even branch site?
-    branch_point = BitPoint('0x409c55', '0x409c51', 'rbp', '0x409c41', 'cl')
+
+    #branch_point = BitPoint('0x409c55', '0x409c51', 'rbp', '0x409c41', 'cl') #467
+    branch_point = BitPoint('0x409c36', '0x409c32', 'rbp', '0x409c2e', 'cl') #467
+    #branch_point = BitPoint('0x409c36', '0x409c24', 'rbp', '0x409c28', 'cl') #467
     bitpoints = []
     bitpoints.append(BitPoint('0x40a6aa', '0x40a658', 'rsi', '0x40a662', 'cl')) #TODO missing the final point
     bitpoints.append(BitPoint('0x40a7a2', '0x40a75b', 'rbp', '0x40a75f', 'rdx')) #TODO missing the final point
