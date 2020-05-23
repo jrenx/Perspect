@@ -22,6 +22,8 @@ rr_result_cache = {}
 
 def static_backslice(reg, insn, func, prog):
     reg_name = c_char_p(str.encode("[x86_64::" + reg + "]"))
+    if reg == "":
+        reg_name = c_char_p(str.encode(reg))
     #https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
     #https://bugs.python.org/issue1701409
     addr = c_ulong(insn)
@@ -77,6 +79,28 @@ def dynamic_backslice(reg, off, insn, func, prog):
         rr_result_cache[key] = rr_result_defs
     return list(rr_result_defs[0].union(rr_result_defs[1]))
 
+def dynamic_backslice2(branch, target, reg, off, insn): 
+    #TODO, can only do this when is in same function?
+    insn_str = hex(insn)
+    target_str = "*" + hex(target)
+    branch_str = "*" + hex(branch)
+    print( "[main] inputtng to RR2: "  \
+        + str(target_str) + " " + str(branch_str) + " " \
+        + str(insn_str) + " " + str(reg) + " " + str(off))
+    key = str(target_str) + "_" + str(branch_str) + "_" \
+            + str(insn_str) + "_" + \
+            str(reg) + "_" + str(off)
+    rr_result_defs = None
+    if key in rr_result_cache:
+        print("[main] result is cached.")
+        rr_result_defs = rr_result_cache[key]
+        print("[main] " + str(rr_result_defs))
+    else:
+        rr_result_defs = get_def(target_str, branch_str, \
+                                 insn_str, reg, off)
+        #rr_result_defs = get_def('*0x409da5', '*0x409d9d', '0x409d98', 'rsp', '0x68')
+        rr_result_cache[key] = rr_result_defs
+    return list(rr_result_defs[0].union(rr_result_defs[1]))
 
 def getImmedDom(sym, prog):
     addr = c_ulong(sym.insn)
@@ -445,8 +469,27 @@ def analyze_symptom(sym, prog, arg, q):
     ret = trace.get_predictive_predecessors([immedDom], sym.insn)
     print("[main][predictive] result: " + str(ret))
     if ret[immedDom][0] == "same":
-       newSym = Symptom(sym.func, immedDom) 
-       q.append(newSym)
+        newSym = Symptom(sym.func, immedDom) 
+        q.append(newSym)
+    elif ret[immedDom][0] == "less":
+        print("[main][analyze symptom] sym happens less often than immed dom")
+        branch = immedDom
+        static_defs = static_backslice("", branch, sym.func, prog)
+        for curr_def in static_defs:
+            def_insn = int(curr_def[0])
+            def_reg = curr_def[1].lower()
+            if not re.search('[a-zA-Z]', def_reg):
+                # TODO, a bug to fix later, why is dyninst treating 
+                # a using const as a memory read?
+                continue
+            def_off = "0x" + curr_def[2]
+            new_def = Definition(sym.func, def_insn, def_reg, def_off)
+            print("[main][df] creating new static def: " + str(new_def))
+            #if str(new_def) not in def_map:
+            ret = dynamic_backslice2(branch, sym.insn, def_reg, def_off, def_insn)
+            #TODO unfortunate hardcode as bit variable recognition not done.
+            if def_insn == 
+            print(ret)
 
 
 

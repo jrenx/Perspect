@@ -75,10 +75,10 @@ class InsTrace:
                     succ_cnt += 1
                     last_is_succ = True
                 else:
-                    print("succ: " + str(succ_cnt))
-                    print("pred: " + str(pred_cnt))
-                    print("p succ: " + str(p_succ_cnt))
-                    print("p pred: " + str(p_pred_cnt))
+                    #print("succ: " + str(succ_cnt))
+                    #print("pred: " + str(pred_cnt))
+                    #print("p succ: " + str(p_succ_cnt))
+                    #print("p pred: " + str(p_pred_cnt))
                     if (last_is_succ is True or addr != predecessor) \
                             and pred_cnt != 0:
                         if p_pred_cnt != -1:
@@ -112,7 +112,7 @@ class InsTrace:
         ret = ""
         if same: 
             ret += "same"
-        if less:
+        if not more and less:
             ret += "less"
         if more:
             ret += "more"
@@ -123,7 +123,7 @@ class InsTrace:
         self.run_function_trace([hex(pred) for pred in predecessors], hex(successor))
         ret = {}
         for pred in predecessors:
-            print("Analyzing predecessor: " + str(hex(pred)))
+            #print("Analyzing predecessor: " + str(hex(pred)))
             ret[pred] = self.get_predictive_predecessor2(pred, successor)
         return ret
 
