@@ -161,11 +161,11 @@ class BitTrace(InsRegTrace):
 
         for taken_index in taken_indexes:
             branch_point_value = traces[taken_index]
-            print("Positive Checking branch: " + str(taken_index))
 
             pos = None
             for index in range(taken_index - 1, -1, -1):
                 trace = traces[index]
+                print("Positive Checking branch: " + str(index))
                 if branch_point_value.same_value(trace) and branch_point_value.bit_point != trace.bit_point:
                     pos = trace.bit_point
                     print("Positive   found at: " + str(index))
@@ -178,11 +178,11 @@ class BitTrace(InsRegTrace):
 
         for not_taken_index in not_taken_indexes:
             branch_point_value = traces[not_taken_index]
-            print("Negative Checking branch: " + str(taken_index))
 
             neg = None
             for index in range(not_taken_index - 1, -1, -1):
                 trace = traces[index]
+                print("Negative Checking branch: " + str(index))
                 if branch_point_value.same_value(trace) and branch_point_value.bit_point != trace.bit_point:
                     neg = trace.bit_point
                     print("Negative   found at: " + str(index))
@@ -208,12 +208,14 @@ if __name__ == '__main__':
     #TODO, in the future, should allow printing the register at the use site or even branch site?
 
     #branch_point = BitPoint('0x409c55', '0x409c51', 'rbp', '0x409c41', 'cl') #467
-    branch_point = BitPoint('0x409c36', '0x409c32', 'rbp', '0x409c2e', 'cl') #467
-    #branch_point = BitPoint('0x409c36', '0x409c24', 'rbp', '0x409c28', 'cl') #467
+    branch_point = BitPoint('0x409c36', '0x409c32', 'rbp', '0x409c2e', 'cl') #464
+
     bitpoints = []
     bitpoints.append(BitPoint('0x40a6aa', '0x40a658', 'rsi', '0x40a662', 'cl')) #TODO missing the final point
-    bitpoints.append(BitPoint('0x40a7a2', '0x40a75b', 'rbp', '0x40a75f', 'rdx')) #TODO missing the final point
-    bitpoints.append(BitPoint('0x40a996', '0x40a962', 'rbx', '0x40a966', 'rdx'))
+    bitpoints.append(BitPoint('0x40a7a2', '0x40a78b', 'rbp', '0x40a792', 'cl')) #TODO missing the final point
+
+    #TODO, should use proper 
+    bitpoints.append(BitPoint('0x40a996', '0x40a989', 'rbx', '0x40a990', 'cl'))
 
     bitpoints.append(BitPoint('0x409d28', '0x409d25', 'rbp', '0x409d08', 'cl')) #DONE at use site
     bitpoints.append(BitPoint('0x409c6a', '0x409c67', 'rbp', '0x409c64', 'cl')) #DONE at use site
