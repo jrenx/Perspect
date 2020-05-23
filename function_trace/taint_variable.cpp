@@ -95,8 +95,9 @@ VOID WriteMem(UINT64 insAddr, std::string insDis, UINT32 opCount, REG reg_r, UIN
     }
 
     if (checkAlreadyRegTainted(reg_r)){
-        std::cout << std::hex << "[WRITE in " << addr << "]\t" << insAddr << ": " << insDis << std::endl;
-        addMemTainted(addr);
+        UINT64 origin = regsTainted.find(reg_r)->second;
+        std::cout << std::hex << "[WRITE in " << addr << ": " << origin << "]\t" << insAddr << ": " << insDis << std::endl;
+        addMemTainted(addr, reg_r);
     }
 }
 
@@ -109,13 +110,13 @@ VOID spreadRegTaint(UINT64 insAddr, std::string insDis, UINT32 opCount, REG reg_
         if (checkAlreadyRegTainted(reg_w) && (!REG_valid(reg_r) || !checkAlreadyRegTainted(reg_r))){
             std::cout << "[SPREAD]\t\t" << insAddr << ": " << insDis << std::endl;
             UINT64 origin = regsTainted.find(reg_w)->second;
-            std::cout << "\t\t\toutput: "<< REG_StringShort(reg_w) <<": " << std::hex << origin << " | input: " << (REG_valid(reg_r) ? REG_StringShort(reg_r) : "constant") << std::endl;
+            std::cout << "\t\t\toutput: "<< REG_StringShort(reg_w) << ": " << std::hex << origin << " | input: " << (REG_valid(reg_r) ? REG_StringShort(reg_r) : "constant") << std::endl;
             removeRegTainted(reg_w);
         }
         else if (!checkAlreadyRegTainted(reg_w) && checkAlreadyRegTainted(reg_r)){
             std::cout << "[SPREAD]\t\t" << insAddr << ": " << insDis << std::endl;
             UINT64 origin = regsTainted.find(reg_r)->second;
-            std::cout << "\t\t\toutput: " << REG_StringShort(reg_w) << " | input: "<< REG_StringShort(reg_r <<": " << std::hex << origin) << std::endl;
+            std::cout << "\t\t\toutput: " << REG_StringShort(reg_w) << " | input: "<< REG_StringShort(reg_r) << ": " << std::hex << origin << std::endl;
             taintReg(reg_w, origin);
         }
     }
