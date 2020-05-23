@@ -12,11 +12,13 @@ from sat_def import *
 sys.path.append(os.path.abspath('./function_trace'))
 from instruction_reg_trace import *
 from instruction_trace import *
+from bit_trace import *
 lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
 #https://stackoverflow.com/questions/145270/calling-c-c-from-python
 working_dir = "/home/anygroup/perf_debug_tool/"
 DEBUG_CTYPE = True
 rr_result_cache = {}
+bitpoints = {}
 
 # C function declarations
 
@@ -488,8 +490,9 @@ def analyze_symptom(sym, prog, arg, q):
             #if str(new_def) not in def_map:
             ret = dynamic_backslice2(branch, sym.insn, def_reg, def_off, def_insn)
             #TODO unfortunate hardcode as bit variable recognition not done.
-            #if def_insn == 
-            print(ret)
+            print("[main][def] result returned by dyanmic slice: " + str(ret))
+            if def_insn == 0x409c24:
+                print("LOL")
 
 
 
@@ -569,6 +572,15 @@ def main():
             pair = (parse_set(v.split("},")[0]), \
                     parse_set(v.split("},")[1]))
             rr_result_cache[k] = pair
+
+    bitpoints[0x409d28] = BitPoint('0x409d28', '0x409d28', 'rbp', '0x409d08', 'cl') #DONE at use site
+    bitpoints[0x409c6a] = BitPoint('0x409c6a', '0x409c6a', 'rbp', '0x409c64', 'cl') #DONE at use site
+    bitpoints[0x409418] = BitPoint('0x409418', '0x409418', 'r9' , '0x409415', 'cl') #DONE at use site
+    bitpoints[0x40a6aa] = BitPoint('0x40a6aa', '0x40a647', 'rsi', '0x40a64e', 'rbp') #DONE
+    bitpoints[0x40a7a2] = BitPoint('0x40a7a2', '0x40a75b', 'rbp', '0x40a75f', 'rdx') #DONE 
+    bitpoints[0x40a996] = BitPoint('0x40a996', '0x40a962', 'rbx', '0x40a966', 'rdx') #DONE
+    #bitpoints[0x40aaad] = BitPoint('0x40aaad', '0x40aaad', 'rax', '0x40a966', 'rdx')
+    bitpoints[0x40abcc] = BitPoint('0x40abcc', '0x40abcc', 'rbp', '0x40abb9', 'cl') #DONE at use site
 
     parser = OptionParser()
     parser.add_option("-f", "--func", type="string", dest="func")
