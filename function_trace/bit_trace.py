@@ -135,9 +135,9 @@ class BitTrace(InsRegTrace):
         last_branch_index = -1
         taken = []
         not_taken = []
-        print("split branch")
+        print("split branch, trace length: " + str(len(traces)))
         for trace in traces:
-            print(str(trace))
+            print(str(trace_index) + " " + str(trace))
             if not isinstance(trace, BitPointValue) and trace == target:
                 if last_branch_index != -1:
                     taken.append(last_branch_index)
@@ -149,8 +149,8 @@ class BitTrace(InsRegTrace):
                 else:
                     last_branch_index = trace_index
             trace_index += 1
-        print(str(taken))
-        print(str(not_taken))
+        #print(str(taken))
+        #print(str(not_taken))
         return taken, not_taken
 
     def analyze_trace(self, traces, bit_points, target, branch_point):
@@ -161,19 +161,38 @@ class BitTrace(InsRegTrace):
 
         for taken_index in taken_indexes:
             branch_point_value = traces[taken_index]
+            print("Positive Checking branch: " + str(taken_index))
+
+            pos = None
             for index in range(taken_index - 1, -1, -1):
                 trace = traces[index]
                 if branch_point_value.same_value(trace) and branch_point_value.bit_point != trace.bit_point:
-                    positive_bitpoints.add(trace.bit_point)
+                    pos = trace.bit_point
+                    print("Positive   found at: " + str(index))
                     break
+            if pos is None:
+                print("positive WARN: def point not found")
+            else:
+                positive_bitpoints.add(pos)
+                print("Positive trace point: " + str(pos))
 
         for not_taken_index in not_taken_indexes:
             branch_point_value = traces[not_taken_index]
+            print("Negative Checking branch: " + str(taken_index))
+
+            neg = None
             for index in range(not_taken_index - 1, -1, -1):
                 trace = traces[index]
                 if branch_point_value.same_value(trace) and branch_point_value.bit_point != trace.bit_point:
-                    negative_bitpoints.add(trace.bit_point)
+                    neg = trace.bit_point
+                    print("Negative   found at: " + str(index))
                     break
+
+            if neg is None:
+                print("Negative WARN: def point not found")
+            else:
+                negative_bitpoints.add(trace.bit_point)
+                print("Negative trace point: " + str(trace.bit_point))
 
         return positive_bitpoints, negative_bitpoints
         
@@ -184,9 +203,9 @@ if __name__ == '__main__':
     target = '0x409c84'
     #branch_point = BitPoint('0x409c41', '0x409c0c', 'rbp', '0x409c13', 'rbx')
     #TODO, in the future, should allow printing the register at the use site or even branch site?
-    branch_point = BitPoint('0x409c55', '0x409c51', 'rbp', '0x409c4e', 'cl')
+    branch_point = BitPoint('0x409c55', '0x409c51', 'rbp', '0x409c41', 'cl')
     bitpoints = []
-    bitpoints.append(BitPoint('0x40a6aa', '0x40a647', 'rsi', '0x40a64e', 'rbp')) #TODO missing the final point
+    bitpoints.append(BitPoint('0x40a6aa', '0x40a658', 'rsi', '0x40a662', 'cl')) #TODO missing the final point
     bitpoints.append(BitPoint('0x40a7a2', '0x40a75b', 'rbp', '0x40a75f', 'rdx')) #TODO missing the final point
     bitpoints.append(BitPoint('0x40a996', '0x40a962', 'rbx', '0x40a966', 'rdx'))
 
