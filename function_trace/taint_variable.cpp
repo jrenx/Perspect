@@ -15,13 +15,13 @@ std::list<REG> regsTainted;
 
 INT32 Usage()
 {
-    cerr << "This tool taint the memory read and write" << end;
+    cerr << "This tool taint the memory read and write" << endl;
     return -1;
 }
 
 bool checkAlreadyRegTainted(REG reg)
 {
-    list<REG>::iterator i;
+    std::list<REG>::iterator i;
 
     for(i = regsTainted.begin(); i != regsTainted.end(); i++){
         if (*i == reg){
@@ -58,58 +58,14 @@ bool taintReg(REG reg)
 
 bool removeRegTainted(REG reg)
 {
-    switch(reg){
-
-        case REG_RAX:  regsTainted.remove(REG_RAX);
-        case REG_EAX:  regsTainted.remove(REG_EAX);
-        case REG_AX:   regsTainted.remove(REG_AX);
-        case REG_AH:   regsTainted.remove(REG_AH);
-        case REG_AL:   regsTainted.remove(REG_AL);
-            break;
-
-        case REG_RBX:  regsTainted.remove(REG_RBX);
-        case REG_EBX:  regsTainted.remove(REG_EBX);
-        case REG_BX:   regsTainted.remove(REG_BX);
-        case REG_BH:   regsTainted.remove(REG_BH);
-        case REG_BL:   regsTainted.remove(REG_BL);
-            break;
-
-        case REG_RCX:  regsTainted.remove(REG_RCX);
-        case REG_ECX:  regsTainted.remove(REG_ECX);
-        case REG_CX:   regsTainted.remove(REG_CX);
-        case REG_CH:   regsTainted.remove(REG_CH);
-        case REG_CL:   regsTainted.remove(REG_CL);
-            break;
-
-        case REG_RDX:  regsTainted.remove(REG_RDX);
-        case REG_EDX:  regsTainted.remove(REG_EDX);
-        case REG_DX:   regsTainted.remove(REG_DX);
-        case REG_DH:   regsTainted.remove(REG_DH);
-        case REG_DL:   regsTainted.remove(REG_DL);
-            break;
-
-        case REG_RDI:  regsTainted.remove(REG_RDI);
-        case REG_EDI:  regsTainted.remove(REG_EDI);
-        case REG_DI:   regsTainted.remove(REG_DI);
-        case REG_DIL:  regsTainted.remove(REG_DIL);
-            break;
-
-        case REG_RSI:  regsTainted.remove(REG_RSI);
-        case REG_ESI:  regsTainted.remove(REG_ESI);
-        case REG_SI:   regsTainted.remove(REG_SI);
-        case REG_SIL:  regsTainted.remove(REG_SIL);
-            break;
-
-        default:
-            return false;
-    }
+    regsTainted.remove(reg);
     std::cout << "\t\t\t" << REG_StringShort(reg) << " is now freed" << std::endl;
     return true;
 }
 
 VOID ReadMem(UINT64 insAddr, std::string insDis, UINT32 opCount, REG reg_r, UINT64 memOp)
 {
-    list<UINT64>::iterator i;
+    std::list<UINT64>::iterator i;
     UINT64 addr = memOp;
 
     if (opCount != 2)
@@ -131,7 +87,7 @@ VOID ReadMem(UINT64 insAddr, std::string insDis, UINT32 opCount, REG reg_r, UINT
 
 VOID WriteMem(UINT64 insAddr, std::string insDis, UINT32 opCount, REG reg_r, UINT64 memOp)
 {
-    list<UINT64>::iterator i;
+    std::list<UINT64>::iterator i;
     UINT64 addr = memOp;
 
     if (opCount != 2)
