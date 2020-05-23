@@ -1,4 +1,4 @@
-from .instruction_reg_trace import InsRegTrace
+from instruction_reg_trace import InsRegTrace
 
 
 class BitPoint:

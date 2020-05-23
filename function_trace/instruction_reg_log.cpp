@@ -131,6 +131,22 @@ int main (INT32 argc, CHAR *argv[])
     reg_map["rdx"] = REG_RDX;
     reg_map["rbx"] = REG_RBX;
     reg_map["rsi"] = REG_RSI;
+    reg_map["cl"] = REG_CL;
+    //reg_map["r1"] = REG_R1;
+    //reg_map["r2"] = REG_R2;
+    //reg_map["r3"] = REG_R3;
+    //reg_map["r4"] = REG_R4;
+    //reg_map["r5"] = REG_R5;
+    //reg_map["r6"] = REG_R6;
+    //reg_map["r7"] = REG_R7;
+    reg_map["r8"] = REG_R8;
+    reg_map["r9"] = REG_R9;
+    reg_map["r10"] = REG_R10;
+    reg_map["r11"] = REG_R11;
+    reg_map["r12"] = REG_R12;
+    reg_map["r13"] = REG_R13;
+    reg_map["r14"] = REG_R14;
+    reg_map["r15"] = REG_R15;
 
     // Register ImageLoad to be called when an image is loaded
     //
