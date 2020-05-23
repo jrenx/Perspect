@@ -26,6 +26,7 @@ class BitPointValue:
         self.bit_point = bit_point
         self.addr_value = addr_value
         self.shift_value = shift_value
+        self.pc_value = None
 
     def __eq__(self, other):
         if not isinstance(other, BitPointValue):
@@ -37,6 +38,11 @@ class BitPointValue:
             return False
         return self.addr_value == other.addr_value and self.shift_value == other.shift_value
 
+    def __str__(self):
+        return "bit point: insn: " + str(self.bit_point) \
+                + " addr: " + str(self.addr_value) \
+                + " shift: " + str(self.shift_value) \
+                + " pc: " + str(self.pc_value)
 
 class BitTrace(InsRegTrace):
 
@@ -72,6 +78,7 @@ class BitTrace(InsRegTrace):
                     break
                 addr = line.split()[0].strip(':')
                 reg = line.split()[1]
+                print("checking " + line)
                 if addr == target:
                     if curr_bitpoint_value is not None:
                         traces.append(curr_bitpoint_value)
@@ -79,28 +86,47 @@ class BitTrace(InsRegTrace):
                     traces.append(target)
                 else:
                     bit_point = pc_map[addr]
+                    #print("         Current bit point addr: " + str(bit_point))
+
+                    if curr_bitpoint_value is not None and curr_bitpoint_value.bit_point != bit_point:
+                        curr_bitpoint_value = BitPointValue(bit_point, None, None)
+                        print("ERROR")
+
+                    if curr_bitpoint_value is None:
+                        curr_bitpoint_value = BitPointValue(bit_point, None, None)
+
                     if curr_bitpoint_value is not None and curr_bitpoint_value.bit_point == bit_point:
                         if bit_point.addr_point == addr:
                             curr_bitpoint_value.addr_value = reg
                         elif bit_point.shift_point == addr:
                             curr_bitpoint_value.shift_value = reg
                         elif bit_point.point == addr:
-                            pass
+                            curr_bitpoint_value.pc_value = reg
                         else:
                             raise ValueError("wrong address: " + addr)
-                    elif curr_bitpoint_value is None:
-                        curr_bitpoint_value = BitPointValue(bit_point, None, None)
-                    else:
-                        traces.append(curr_bitpoint_value)
-                        curr_bitpoint_value = BitPointValue(bit_point, None, None)
-                        if bit_point.addr_point == addr:
-                            curr_bitpoint_value.addr_value = reg
-                        elif bit_point.shift_point == addr:
-                            curr_bitpoint_value.shift_value = reg
-                        elif bit_point.point == addr:
-                            pass
-                        else:
-                            raise ValueError("wrong address: " + addr)
+
+                        print("         Current bit point: " + str(curr_bitpoint_value))
+                        if curr_bitpoint_value.addr_value  is not None and \
+                                curr_bitpoint_value.shift_value is not None and \
+                                curr_bitpoint_value.pc_value is not None:
+                            print()
+                            print(" ===> Appending bit point: " + str(curr_bitpoint_value))
+                            #print(" ===> Current size of trace: " + str(len(traces)))
+                            traces.append(curr_bitpoint_value)
+                            curr_bitpoint_value = None
+
+                #print("checked " + line)
+                    #else:
+                    #    traces.append(curr_bitpoint_value)
+                    #    curr_bitpoint_value = BitPointValue(bit_point, None, None)
+                    #    if bit_point.addr_point == addr:
+                    #        curr_bitpoint_value.addr_value = reg
+                    #    elif bit_point.shift_point == addr:
+                    #        curr_bitpoint_value.shift_value = reg
+                    #    elif bit_point.point == addr:
+                    #        pass
+                    #    else:
+                    #        raise ValueError("wrong address: " + addr)
 
         return traces
 
@@ -109,8 +135,9 @@ class BitTrace(InsRegTrace):
         last_branch_index = -1
         taken = []
         not_taken = []
-
+        print("split branch")
         for trace in traces:
+            print(str(trace))
             if not isinstance(trace, BitPointValue) and trace == target:
                 if last_branch_index != -1:
                     taken.append(last_branch_index)
@@ -122,6 +149,8 @@ class BitTrace(InsRegTrace):
                 else:
                     last_branch_index = trace_index
             trace_index += 1
+        print(str(taken))
+        print(str(not_taken))
         return taken, not_taken
 
     def analyze_trace(self, traces, bit_points, target, branch_point):
@@ -150,13 +179,24 @@ class BitTrace(InsRegTrace):
         
 
 if __name__ == '__main__':
-    bitTrace = BitTrace('~/go-repro/909_ziptest_exe2 ~/go-repro/909_ziptest/test.zip', pin='~/pin-3.11/pin')
-    target = '0x409c70'
-    branch_point = BitPoint('0x409c41', '0x409c0c', 'rbp', '0x409c13', 'rbx')
+    bitTrace = BitTrace('/home/anygroup/perf_debug_tool/909_ziptest_exe6 /home/anygroup/perf_debug_tool/test.zip', pin='~/pin-3.11/pin')
+    #target = '0x409c70'
+    target = '0x409c84'
+    #branch_point = BitPoint('0x409c41', '0x409c0c', 'rbp', '0x409c13', 'rbx')
+    #TODO, in the future, should allow printing the register at the use site or even branch site?
+    branch_point = BitPoint('0x409c55', '0x409c51', 'rbp', '0x409c4e', 'cl')
     bitpoints = []
-    bitpoints.append(BitPoint('0x40a6aa', '0x40a647', 'rsi', '0x40a64e', 'rbp'))
-    bitpoints.append(BitPoint('0x40a7a2', '0x40a75b', 'rbp', '0x40a75f', 'rdx'))
+    bitpoints.append(BitPoint('0x40a6aa', '0x40a647', 'rsi', '0x40a64e', 'rbp')) #TODO missing the final point
+    bitpoints.append(BitPoint('0x40a7a2', '0x40a75b', 'rbp', '0x40a75f', 'rdx')) #TODO missing the final point
     bitpoints.append(BitPoint('0x40a996', '0x40a962', 'rbx', '0x40a966', 'rdx'))
+
+    bitpoints.append(BitPoint('0x409d28', '0x409d25', 'rbp', '0x409d08', 'cl')) #DONE at use site
+    bitpoints.append(BitPoint('0x409c6a', '0x409c67', 'rbp', '0x409c64', 'cl')) #DONE at use site
+    bitpoints.append(BitPoint('0x409418', '0x409415', 'r9' , '0x40940b', 'cl')) #DONE at use site
+    bitpoints.append(BitPoint('0x40abcc', '0x40abbf', 'rbp', '0x40abb9', 'cl')) #DONE at use site #TODO missing the final point
+    #bitpoints[0x40aaad] = BitPoint('0x40aaad', '0x40aaad', 'rax', '0x40a966', 'rdx')
+
+
 
     bitTrace.get_trace(bitpoints, target, branch_point)
     traces = bitTrace.parse_bit_trace(bitpoints, target, branch_point)
