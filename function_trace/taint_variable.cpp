@@ -50,7 +50,7 @@ bool taintReg(REG reg)
         return false;
     }
 
-    regsTainted.pushfront(reg);
+    regsTainted.push_front(reg);
 
     std::cout << "\t\t\t" << REG_StringShort(reg) << " is now tainted" << std::endl;
     return true;
