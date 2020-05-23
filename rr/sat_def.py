@@ -161,5 +161,6 @@ if __name__ == '__main__':
     #print(get_def('mgc0.c:485', 'mgc0.c:467', '0x409c10', 'rbp'))
     #print(get_def('*0x409daa', '*0x409da5', '0x409d98', 'rsp', '0x68'))
     #print(get_def('*0x409daa', '*0x409da5', '0x409e06', 'rsp', '0x68'))
-    print(get_def('*0x409e13', '*0x409e0b', '0x409e06', 'rsp', '0x68'))
-    print(get_def('*0x409da5', '*0x409d9d', '0x409d98', 'rsp', '0x68'))
+    #print(get_def('*0x409e13', '*0x409e0b', '0x409e06', 'rsp', '0x68'))
+    #print(get_def('*0x409da5', '*0x409d9d', '0x409d98', 'rsp', '0x68'))
+    print(get_def('*0x409c84', '*0x409c55', '0x409c24', 'rbp', '0x0'))
