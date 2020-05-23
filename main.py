@@ -82,8 +82,8 @@ def dynamic_backslice(reg, off, insn, func, prog):
 def dynamic_backslice2(branch, target, reg, off, insn): 
     #TODO, can only do this when is in same function?
     insn_str = hex(insn)
-    target_str = "*" + hex(target)
-    branch_str = "*" + hex(branch)
+    target_str = hex(target)
+    branch_str = hex(branch)
     print( "[main] inputtng to RR2: "  \
         + str(target_str) + " " + str(branch_str) + " " \
         + str(insn_str) + " " + str(reg) + " " + str(off))
@@ -96,7 +96,7 @@ def dynamic_backslice2(branch, target, reg, off, insn):
         rr_result_defs = rr_result_cache[key]
         print("[main] " + str(rr_result_defs))
     else:
-        rr_result_defs = get_def(target_str, branch_str, \
+        rr_result_defs = get_sat_def(target_str, branch_str, \
                                  insn_str, reg, off)
         #rr_result_defs = get_def('*0x409da5', '*0x409d9d', '0x409d98', 'rsp', '0x68')
         rr_result_cache[key] = rr_result_defs
@@ -488,7 +488,7 @@ def analyze_symptom(sym, prog, arg, q):
             #if str(new_def) not in def_map:
             ret = dynamic_backslice2(branch, sym.insn, def_reg, def_off, def_insn)
             #TODO unfortunate hardcode as bit variable recognition not done.
-            if def_insn == 
+            #if def_insn == 
             print(ret)
 
 
