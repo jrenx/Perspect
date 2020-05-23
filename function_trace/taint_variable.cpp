@@ -24,7 +24,7 @@ VOID removeMemTainted(UINT64 addr)
 {
     std::map<UINT64, UINT64>::iterator it = addressTainted.find(addr);
     UINT64 origin = it->second;
-    addressTainted.remove(it);
+    addressTainted.erase(it);
     std::cout << std::hex << "\t\t\t" << addr << ": " << origin << " is now freed" << std::endl;
 }
 
@@ -51,7 +51,7 @@ bool removeRegTainted(REG reg)
 {
     std::map<REG, UINT64>::iterator it = regsTainted.find(reg);
     UINT64 origin = it->second;
-    regsTainted.remove(reg);
+    regsTainted.erase(it);
     std::cout << "\t\t\t" << REG_StringShort(reg) << ": " << std::hex << origin << " is now freed" << std::endl;
     return true;
 }
@@ -116,7 +116,7 @@ VOID spreadRegTaint(UINT64 insAddr, std::string insDis, UINT32 opCount, REG reg_
             std::cout << "[SPREAD]\t\t" << insAddr << ": " << insDis << std::endl;
             UINT64 origin = regsTainted.find(reg_r)->second;
             std::cout << "\t\t\toutput: " << REG_StringShort(reg_w) << " | input: "<< REG_StringShort(reg_r <<": " << std::hex << origin) << std::endl;
-            taintReg(reg_w);
+            taintReg(reg_w, origin);
         }
     }
 }
@@ -128,7 +128,7 @@ VOID Instruction(INS ins, VOID *v)
         INS_InsertCall(
                 ins, IPOINT_BEFORE, (AFUNPTR)ReadMem,
                 IARG_ADDRINT, INS_Address(ins),
-                IARG_PTR, new string(INS_Disassemble(ins)),
+                IARG_PTR, new std::string(INS_Disassemble(ins)),
                 IARG_UINT32, INS_OperandCount(ins),
                 IARG_UINT32, INS_OperandReg(ins, 0),
                 IARG_MEMORYOP_EA, 0,
@@ -138,7 +138,7 @@ VOID Instruction(INS ins, VOID *v)
         INS_InsertCall(
                 ins, IPOINT_BEFORE, (AFUNPTR)WriteMem,
                 IARG_ADDRINT, INS_Address(ins),
-                IARG_PTR, new string(INS_Disassemble(ins)),
+                IARG_PTR, new std::string(INS_Disassemble(ins)),
                 IARG_UINT32, INS_OperandCount(ins),
                 IARG_UINT32, INS_OperandReg(ins, 1),
                 IARG_MEMORYOP_EA, 0,
@@ -148,7 +148,7 @@ VOID Instruction(INS ins, VOID *v)
         INS_InsertCall(
                 ins, IPOINT_BEFORE, (AFUNPTR)spreadRegTaint,
                 IARG_ADDRINT, INS_Address(ins),
-                IARG_PTR, new string(INS_Disassemble(ins)),
+                IARG_PTR, new std::string(INS_Disassemble(ins)),
                 IARG_UINT32, INS_OperandCount(ins),
                 IARG_UINT32, INS_RegR(ins, 0),
                 IARG_UINT32, INS_RegW(ins, 0),
