@@ -2,105 +2,98 @@
 #include <asm/unistd.h>
 #include <fstream>
 #include <iostream>
-#include <list>
 #include <map>
-using std::hex;
-using std::cerr;
-using std::string;
-using std::ios;
-using std::endl;
 
-std::list<UINT64> addressTainted;
-std::list<REG> regsTainted;
+
+std::map<UINT64, UINT64> addressTainted;
+std::map<REG, UINT64> regsTainted;
 
 INT32 Usage()
 {
-    cerr << "This tool taint the memory read and write" << endl;
+    std::cerr << "This tool taint the memory read and write" << std::endl;
     return -1;
 }
 
 bool checkAlreadyRegTainted(REG reg)
 {
-    std::list<REG>::iterator i;
-
-    for(i = regsTainted.begin(); i != regsTainted.end(); i++){
-        if (*i == reg){
-            return true;
-        }
-    }
-    return false;
+    std::map<REG, UINT64>::iterator it = regsTainted.find(reg);
+    return it != regsTainted.end();
 }
 
 VOID removeMemTainted(UINT64 addr)
 {
-    addressTainted.remove(addr);
-    std::cout << std::hex << "\t\t\t" << addr << " is now freed" << std::endl;
+    std::map<UINT64, UINT64>::iterator it = addressTainted.find(addr);
+    UINT64 origin = it->second;
+    addressTainted.remove(it);
+    std::cout << std::hex << "\t\t\t" << addr << ": " << origin << " is now freed" << std::endl;
 }
 
-VOID addMemTainted(UINT64 addr)
+VOID addMemTainted(UINT64 addr, UINT64 origin)
 {
-    addressTainted.push_back(addr);
-    std::cout << std::hex << "\t\t\t" << addr << " is now tainted" << std::endl;
+    addressTainted[addr] = origin;
+    std::cout << std::hex << "\t\t\t" << addr << ": " << origin << " is now tainted" << std::endl;
 }
 
-bool taintReg(REG reg)
+bool taintReg(REG reg, UINT64 origin)
 {
     if (checkAlreadyRegTainted(reg) == true){
-        std::cout << "\t\t\t" << REG_StringShort(reg) << " is already tainted" << std::endl;
+        std::cout << "\t\t\t" << REG_StringShort(reg) << ": " << std::hex << origin << " is already tainted" << std::endl;
         return false;
     }
 
-    regsTainted.push_front(reg);
+    regsTainted[reg] = origin;
 
-    std::cout << "\t\t\t" << REG_StringShort(reg) << " is now tainted" << std::endl;
+    std::cout << "\t\t\t" << REG_StringShort(reg) << ": " << origin << " is now tainted" << std::endl;
     return true;
 }
 
 bool removeRegTainted(REG reg)
 {
+    std::map<REG, UINT64>::iterator it = regsTainted.find(reg);
+    UINT64 origin = it->second;
     regsTainted.remove(reg);
-    std::cout << "\t\t\t" << REG_StringShort(reg) << " is now freed" << std::endl;
+    std::cout << "\t\t\t" << REG_StringShort(reg) << ": " << std::hex << origin << " is now freed" << std::endl;
     return true;
 }
 
 VOID ReadMem(UINT64 insAddr, std::string insDis, UINT32 opCount, REG reg_r, UINT64 memOp)
 {
-    std::list<UINT64>::iterator i;
     UINT64 addr = memOp;
 
     if (opCount != 2)
         return;
 
-    for(i = addressTainted.begin(); i != addressTainted.end(); i++){
-        if (addr == *i){
-            std::cout << std::hex << "[READ in " << addr << "]\t" << insAddr << ": " << insDis << std::endl;
-            taintReg(reg_r);
-            return ;
-        }
+    std::map<UINT64, UINT64>::iterator it = addressTainted.find(addr);
+
+    if (it != addressTainted.end()) {
+        std::cout << std::hex << "[READ in " << addr << ": " << it->second << "]\t" << insAddr << ": " << insDis << std::endl;
+        taintReg(reg_r, it->second);
+        return;
     }
+
     /* if mem != tained and reg == taint => free the reg */
     if (checkAlreadyRegTainted(reg_r)){
-        std::cout << std::hex << "[READ in " << addr << "]\t" << insAddr << ": " << insDis << std::endl;
+        UINT64 origin = regsTainted.find(reg_r)->second;
+        std::cout << std::hex << "[READ in " << addr << ": " << origin << "]\t" << insAddr << ": " << insDis << std::endl;
         removeRegTainted(reg_r);
     }
 }
 
 VOID WriteMem(UINT64 insAddr, std::string insDis, UINT32 opCount, REG reg_r, UINT64 memOp)
 {
-    std::list<UINT64>::iterator i;
     UINT64 addr = memOp;
 
     if (opCount != 2)
         return;
 
-    for(i = addressTainted.begin(); i != addressTainted.end(); i++){
-        if (addr == *i){
-            std::cout << std::hex << "[WRITE in " << addr << "]\t" << insAddr << ": " << insDis << std::endl;
-            if (!REG_valid(reg_r) || !checkAlreadyRegTainted(reg_r))
-                removeMemTainted(addr);
-            return ;
-        }
+    std::map<UINT64, UINT64>::iterator it = addressTainted.find(addr);
+    if (it != addressTainted.end()) {
+        std::cout << std::hex << "[WRITE in " << addr << ": " << it->second << "]\t" << insAddr << ": " << insDis << std::endl;
+        if (!REG_valid(reg_r) || !checkAlreadyRegTainted(reg_r))
+            removeMemTainted(addr);
+        return;
     }
+
     if (checkAlreadyRegTainted(reg_r)){
         std::cout << std::hex << "[WRITE in " << addr << "]\t" << insAddr << ": " << insDis << std::endl;
         addMemTainted(addr);
@@ -115,26 +108,19 @@ VOID spreadRegTaint(UINT64 insAddr, std::string insDis, UINT32 opCount, REG reg_
     if (REG_valid(reg_w)){
         if (checkAlreadyRegTainted(reg_w) && (!REG_valid(reg_r) || !checkAlreadyRegTainted(reg_r))){
             std::cout << "[SPREAD]\t\t" << insAddr << ": " << insDis << std::endl;
-            std::cout << "\t\t\toutput: "<< REG_StringShort(reg_w) << " | input: " << (REG_valid(reg_r) ? REG_StringShort(reg_r) : "constant") << std::endl;
+            UINT64 origin = regsTainted.find(reg_w)->second;
+            std::cout << "\t\t\toutput: "<< REG_StringShort(reg_w) <<": " << std::hex << origin << " | input: " << (REG_valid(reg_r) ? REG_StringShort(reg_r) : "constant") << std::endl;
             removeRegTainted(reg_w);
         }
         else if (!checkAlreadyRegTainted(reg_w) && checkAlreadyRegTainted(reg_r)){
             std::cout << "[SPREAD]\t\t" << insAddr << ": " << insDis << std::endl;
-            std::cout << "\t\t\toutput: " << REG_StringShort(reg_w) << " | input: "<< REG_StringShort(reg_r) << std::endl;
+            UINT64 origin = regsTainted.find(reg_r)->second;
+            std::cout << "\t\t\toutput: " << REG_StringShort(reg_w) << " | input: "<< REG_StringShort(reg_r <<": " << std::hex << origin) << std::endl;
             taintReg(reg_w);
         }
     }
 }
 
-VOID followData(UINT64 insAddr, std::string insDis, REG reg)
-{
-    if (!REG_valid(reg))
-        return;
-
-    if (checkAlreadyRegTainted(reg)){
-        std::cout << "[FOLLOW]\t\t" << insAddr << ": " << insDis << std::endl;
-    }
-}
 
 VOID Instruction(INS ins, VOID *v)
 {
@@ -168,15 +154,6 @@ VOID Instruction(INS ins, VOID *v)
                 IARG_UINT32, INS_RegW(ins, 0),
                 IARG_END);
     }
-
-    if (INS_OperandCount(ins) > 1 && INS_OperandIsReg(ins, 0)){
-        INS_InsertCall(
-                ins, IPOINT_BEFORE, (AFUNPTR)followData,
-                IARG_ADDRINT, INS_Address(ins),
-                IARG_PTR, new string(INS_Disassemble(ins)),
-                IARG_UINT32, INS_RegR(ins, 0),
-                IARG_END);
-    }
 }
 
 static unsigned int tryksOpen;
@@ -196,7 +173,7 @@ VOID Syscall_entry(THREADID thread_id, CONTEXT *ctx, SYSCALL_STANDARD std, void 
         size  = static_cast<UINT64>((PIN_GetSyscallArgument(ctx, std, 2)));
 
         for (i = 0; i < size; i++)
-            addressTainted.push_back(start+i);
+            addressTainted[start+i] = start;
 
         std::cout << "[TAINT]\t\t\tbytes tainted from " << std::hex << "0x" << start << " to 0x" << start+size << " (via read)"<< std::endl;
     }
