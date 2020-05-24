@@ -201,14 +201,28 @@ class BitTrace(InsRegTrace):
 
         return positive_bitpoints, negative_bitpoints
 
+    def map_str(self, m):
+        s = ""
+        for k in m:
+            s += str(k)
+            s += ":"
+            s += str(m[k]) 
+            s += ","
+        return s
+
     def filter_positive_and_negative(self, positive, negative, traces, bit_points, target, branch): 
         true_negative_map = {}
         part_negative_map = {}
         doub_negative_map = {}
         for neg in negative:
             true_negative_map[neg] = False
-            part_negative_map[neg] = True
+            part_negative_map[neg] = False
             doub_negative_map[neg] = False
+
+        print("init true negative map: " + self.map_str(true_negative_map))
+        print("init part negative map: " + self.map_str(part_negative_map))
+        print("init doub negative map: " + self.map_str(doub_negative_map))
+ 
 
         for index in range(len(traces) - 1, -1, -1):
             trace = traces[index]
@@ -220,8 +234,8 @@ class BitTrace(InsRegTrace):
             neg = trace
             if DEBUG3: print("found negative: " + str(trace))
             overwrites_pos = False
-            for index in range(index - 1, -1, -1):
-                trace = traces[index]
+            for index1 in range(index - 1, -1, -1):
+                trace = traces[index1]
                 if neg.same_value(trace):
                     if DEBUG3: print("     Writing to same var")
                     if trace.bit_point in negative:
@@ -239,7 +253,7 @@ class BitTrace(InsRegTrace):
                         true_negative_map[neg.bit_point] = True
                         break
             if not overwrites_pos:
-                part_negative_map[str(neg.bit_point)] = False
+                part_negative_map[neg.bit_point] = True
                 if DEBUG3: print("     Current negative never overwrites positive " + str(neg))
                 if DEBUG3: print("     Current negative never overwrites positive " + str(neg)) #TODO, some frees don't have corresponding allocs, probably those ones we couldn't parse
 
@@ -254,35 +268,37 @@ class BitTrace(InsRegTrace):
                 continue
             if trace.bit_point not in positive:
                 continue
-            pos = trace
             if DEBUG3: print("found positive: " + str(trace))
+            pos = trace
 
             consecutive_positives = []
-            for index in range(index - 1, -1, -1):
-                trace = traces[index]
+            for index1 in range(index - 1, -1, -1):
+                trace = traces[index1]
                 if not pos.same_value(trace):
                     continue
                 #if DEBUG3: print("     Writing to same var")
                 if trace.bit_point in positive:
-                    if DEBUG3: print("     Positive does not directly overwrite positive")
+                    if DEBUG3: print("     Positive follows positive")
                     #TODO, this counds as double positive
                     if trace.bit_point != pos.bit_point:
-                        if DEBUG3: print("     Positive shadowed by another positive " + str(trace))
+                        if DEBUG3: print("     at " + str(index) + " " + str(index1)\
+                                + " Positive shadowed by another positive " + str(trace))
                     else:
-                        if DEBUG3: print("     Current positive has doubles " + str(trace)) #TODO, some frees don't have corresponding allocs, find a bunch called tgt for no reason... is this duplicate freeing? but double free not allowed!!!
-                    doub_positive_map[str(pos.bit_point)] = True
-                    consecutive_positives.append(str(pos.bit_point))
+                        if DEBUG3: print("     at " + str(index) + " " + str(index1)\
+                                + " Current positive has doubles " + str(trace)) #TODO, some frees don't have corresponding allocs, find a bunch called tgt for no reason... is this duplicate freeing? but double free not allowed!!!
+                    doub_positive_map[pos.bit_point] = True
+                    consecutive_positives.append(pos.bit_point)
                     #break
-                elif str(trace.bit_point) in negative:
+                elif trace.bit_point in negative:
                     break
-            if DEBUG3: print(" current common positives: " + str(consecutive_positives))
+            #if DEBUG3: print(" current common positives: " + str(consecutive_positives))
             if common_positives is None:
                 common_positives = set(consecutive_positives)
             else:
                 common_positives = common_positives.intersection(set(consecutive_positives))
-            if DEBUG3: print(" updated common positives: " + str(common_positives))
+            #if DEBUG3: print(" updated common positives: " + str(common_positives))
 
-        print("doub positive map: " + str(doub_positive_map))
+        print("doub positive map: " + self.map_str(doub_positive_map))
         print("common positive map: " + str(common_positives))
         if len(common_positives) == 0:
             ret_pos = positive
@@ -290,9 +306,9 @@ class BitTrace(InsRegTrace):
             ret_pos = [common_positives]
 
         ret_neg = []
-        print("true negative map: " + str(true_negative_map))
-        print("part negative map: " + str(part_negative_map))
-        print("doub negative map: " + str(doub_negative_map))
+        print("true negative map: " + self.map_str(true_negative_map))
+        print("part negative map: " + self.map_str(part_negative_map))
+        print("doub negative map: " + self.map_str(doub_negative_map))
         for k in true_negative_map:
             if true_negative_map[k]:
                 ret_neg.append(k)
