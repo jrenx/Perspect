@@ -2,7 +2,7 @@ from instruction_reg_trace import InsRegTrace
 
 working_dir = "/home/anygroup/perf_debug_tool/function_trace/"
 DEBUG2 = False
-DEBUG3 = False
+DEBUG3 = True
 class BitPoint:
     def __init__(self, point, addr_point, addr_reg, shift_point, shift_reg):
         self.point = point
@@ -209,12 +209,13 @@ class BitTrace(InsRegTrace):
             true_negative_map[neg] = False
             part_negative_map[neg] = True
             doub_negative_map[neg] = False
+
         for index in range(len(traces) - 1, -1, -1):
             trace = traces[index]
-            if DEBUG3: print(str(trace))
+            if DEBUG3: print("Checking " + str(trace))
             if not isinstance(trace, BitPointValue):
                 continue
-            if str(trace.bit_point) not in negative:
+            if trace.bit_point not in negative:
                 continue
             neg = trace
             if DEBUG3: print("found negative: " + str(trace))
@@ -223,56 +224,70 @@ class BitTrace(InsRegTrace):
                 trace = traces[index]
                 if neg.same_value(trace):
                     if DEBUG3: print("     Writing to same var")
-                    if str(trace.bit_point) in negative:
+                    if trace.bit_point in negative:
                         if DEBUG3: print("     Negative does not directly overwrite positive")
                         #TODO, this counds as double negative
-                        if str(trace.bit_point) != str(neg.bit_point):
-                            if DEBUG3: print("     Negative shadowed by another negative")
+                        if trace.bit_point != neg.bit_point:
+                            print("     Negative shadowed by another negative")
                             break
 
-                        print("     Current negative has doubles " + str(neg)) #TODO, some frees don't have corresponding allocs, find a bunch called tgt for no reason... is this duplicate freeing? but double free not allowed!!!
-                        doub_negative_map[str(neg.bit_point)] = True
-                    elif str(trace.bit_point) in positive:
+                        if DEBUG3: print("     Current negative has doubles " + str(neg)) #TODO, some frees don't have corresponding allocs, find a bunch called tgt for no reason... is this duplicate freeing? but double free not allowed!!!
+                        doub_negative_map[neg.bit_point] = True
+                    elif trace.bit_point in positive:
                         if DEBUG3: print("     Negative directly overwrite positive")
                         overwrites_pos = True
-                        true_negative_map[str(neg.bit_point)] = True
+                        true_negative_map[neg.bit_point] = True
                         break
             if not overwrites_pos:
                 part_negative_map[str(neg.bit_point)] = False
                 if DEBUG3: print("     Current negative never overwrites positive " + str(neg))
-                print("     Current negative never overwrites positive " + str(neg)) #TODO, some frees don't have corresponding allocs, probably those ones we couldn't parse
+                if DEBUG3: print("     Current negative never overwrites positive " + str(neg)) #TODO, some frees don't have corresponding allocs, probably those ones we couldn't parse
 
         doub_positive_map = {}
+        common_positives = None
         for pos in positive:
             doub_positive_map[pos] = False
         for index in range(len(traces) - 1, -1, -1):
             trace = traces[index]
-            if DEBUG3: print(str(trace))
+            #if DEBUG3: print(str(trace))
             if not isinstance(trace, BitPointValue):
                 continue
-            if str(trace.bit_point) not in positive:
+            if trace.bit_point not in positive:
                 continue
             pos = trace
             if DEBUG3: print("found positive: " + str(trace))
+
+            consecutive_positives = []
             for index in range(index - 1, -1, -1):
                 trace = traces[index]
                 if not pos.same_value(trace):
                     continue
-                if DEBUG3: print("     Writing to same var")
-                if str(trace.bit_point) in positive:
+                #if DEBUG3: print("     Writing to same var")
+                if trace.bit_point in positive:
                     if DEBUG3: print("     Positive does not directly overwrite positive")
                     #TODO, this counds as double positive
-                    if str(trace.bit_point) != str(pos.bit_point):
-                        print("     Positive shadowed by another positive " + str(trace))
+                    if trace.bit_point != pos.bit_point:
+                        if DEBUG3: print("     Positive shadowed by another positive " + str(trace))
                     else:
-                        print("     Current positive has doubles " + str(trace)) #TODO, some frees don't have corresponding allocs, find a bunch called tgt for no reason... is this duplicate freeing? but double free not allowed!!!
+                        if DEBUG3: print("     Current positive has doubles " + str(trace)) #TODO, some frees don't have corresponding allocs, find a bunch called tgt for no reason... is this duplicate freeing? but double free not allowed!!!
                     doub_positive_map[str(pos.bit_point)] = True
-                    break
+                    consecutive_positives.append(str(pos.bit_point))
+                    #break
                 elif str(trace.bit_point) in negative:
                     break
+            if DEBUG3: print(" current common positives: " + str(consecutive_positives))
+            if common_positives is None:
+                common_positives = set(consecutive_positives)
+            else:
+                common_positives = common_positives.intersection(set(consecutive_positives))
+            if DEBUG3: print(" updated common positives: " + str(common_positives))
 
         print("doub positive map: " + str(doub_positive_map))
-        ret_pos = positive
+        print("common positive map: " + str(common_positives))
+        if len(common_positives) == 0:
+            ret_pos = positive
+        else:
+            ret_pos = [common_positives]
 
         ret_neg = []
         print("true negative map: " + str(true_negative_map))
@@ -287,14 +302,14 @@ if __name__ == '__main__':
     bitTrace = BitTrace('/home/anygroup/perf_debug_tool/909_ziptest_exe6 /home/anygroup/perf_debug_tool/test.zip', pin='~/pin-3.11/pin')
     #target = '0x409c70'
     
-    #target = '0x409c84' #472
-    target = '0x409c55' #467
+    target = '0x409c84' #472
+    #target = '0x409c55' #467
     
     #branch_point = BitPoint('0x409c41', '0x409c0c', 'rbp', '0x409c13', 'rbx')
     #TODO, in the future, should allow printing the register at the use site or even branch site?
 
-    #branch_point = BitPoint('0x409c55', '0x409c51', 'rbp', '0x409c41', 'cl') #467
-    branch_point = BitPoint('0x409c36', '0x409c32', 'rbp', '0x409c2e', 'cl') #464
+    branch_point = BitPoint('0x409c55', '0x409c51', 'rbp', '0x409c41', 'cl') #467
+    #branch_point = BitPoint('0x409c36', '0x409c32', 'rbp', '0x409c2e', 'cl') #464
 
     bitpoints = []
     bitpoints.append(BitPoint('0x40a6aa', '0x40a658', 'rsi', '0x40a662', 'cl')) #TODO missing the final point
@@ -316,9 +331,9 @@ if __name__ == '__main__':
     print("Got traces:")
     for t in traces:
         print(str(t))
-    #positive, negative = bitTrace.analyze_trace(traces, bitpoints, target, branch_point)
-    positive = ['0x409418', '0x409c6a', '0x40a6aa']
-    negative = ['0x409d28', '0x40a7a2', '0x40a996']
+    positive, negative = bitTrace.analyze_trace(traces, bitpoints, target, branch_point)
+    #positive = [0x409418, 0x409c6a, 0x40a6aa]
+    #negative = [0x409d28, 0x40a7a2, 0x40a996]
     print("positive:", [str(p) for p in positive])
     print("negative: ", [str(p) for p in negative])
     negative = bitTrace.filter_positive_and_negative(positive, negative, traces, bitpoints, target, branch_point)
