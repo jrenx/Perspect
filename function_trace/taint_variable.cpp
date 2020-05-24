@@ -172,7 +172,7 @@ VOID MarkRegion(ADDRINT start) {
         addressTainted[startAddr + i] = startAddr;
     }
 
-    TraceFile << "[TAINT]\t\t\tbytes tainted from " << std::hex <<  startAddr << " to " << startAddr + mallocSize << " (via pread64)"<< std::endl;
+    TraceFile << "[TAINT]\t\t\tbytes tainted from " << std::hex <<  startAddr << " to " << startAddr + mallocSize << " (via mallocgc)"<< std::endl;
     mallocSize = 0;
 }
 
