@@ -226,7 +226,7 @@ class BitTrace(InsRegTrace):
 
         for index in range(len(traces) - 1, -1, -1):
             trace = traces[index]
-            if DEBUG3: print("Checking " + str(trace))
+            #if DEBUG3: print("Checking " + str(trace))
             if not isinstance(trace, BitPointValue):
                 continue
             if trace.bit_point not in negative:
@@ -272,6 +272,7 @@ class BitTrace(InsRegTrace):
             pos = trace
 
             consecutive_positives = []
+            consecutive_positives.append(str(trace.bit_point))
             for index1 in range(index - 1, -1, -1):
                 trace = traces[index1]
                 if not pos.same_value(trace):
@@ -287,16 +288,16 @@ class BitTrace(InsRegTrace):
                         if DEBUG3: print("     at " + str(index) + " " + str(index1)\
                                 + " Current positive has doubles " + str(trace)) #TODO, some frees don't have corresponding allocs, find a bunch called tgt for no reason... is this duplicate freeing? but double free not allowed!!!
                     doub_positive_map[pos.bit_point] = True
-                    consecutive_positives.append(pos.bit_point)
+                    consecutive_positives.append(str(trace.bit_point))
                     #break
                 elif trace.bit_point in negative:
                     break
-            #if DEBUG3: print(" current common positives: " + str(consecutive_positives))
+            if DEBUG3: print(" current common positives: " + str(set(consecutive_positives)))
             if common_positives is None:
                 common_positives = set(consecutive_positives)
             else:
                 common_positives = common_positives.intersection(set(consecutive_positives))
-            #if DEBUG3: print(" updated common positives: " + str(common_positives))
+            if DEBUG3: print(" updated common positives: " + str(common_positives))
 
         print("doub positive map: " + self.map_str(doub_positive_map))
         print("common positive map: " + str(common_positives))
@@ -312,20 +313,20 @@ class BitTrace(InsRegTrace):
         for k in true_negative_map:
             if true_negative_map[k]:
                 ret_neg.append(k)
-        return ret_neg
+        return ret_pos, ret_neg
 
 if __name__ == '__main__':
     bitTrace = BitTrace('/home/anygroup/perf_debug_tool/909_ziptest_exe6 /home/anygroup/perf_debug_tool/test.zip', pin='~/pin-3.11/pin')
     #target = '0x409c70'
     
-    target = '0x409c84' #472
-    #target = '0x409c55' #467
-    
+    #target = '0x409c84' #472
+    target = '0x409c55' #467
+
     #branch_point = BitPoint('0x409c41', '0x409c0c', 'rbp', '0x409c13', 'rbx')
     #TODO, in the future, should allow printing the register at the use site or even branch site?
 
-    branch_point = BitPoint('0x409c55', '0x409c51', 'rbp', '0x409c41', 'cl') #467
-    #branch_point = BitPoint('0x409c36', '0x409c32', 'rbp', '0x409c2e', 'cl') #464
+    #branch_point = BitPoint('0x409c55', '0x409c51', 'rbp', '0x409c41', 'cl') #467
+    branch_point = BitPoint('0x409c36', '0x409c32', 'rbp', '0x409c2e', 'cl') #464
 
     bitpoints = []
     bitpoints.append(BitPoint('0x40a6aa', '0x40a658', 'rsi', '0x40a662', 'cl')) #TODO missing the final point
@@ -351,7 +352,9 @@ if __name__ == '__main__':
     #positive = [0x409418, 0x409c6a, 0x40a6aa]
     #negative = [0x409d28, 0x40a7a2, 0x40a996]
     print("positive:", [str(p) for p in positive])
+    print("positive:" + str(positive))
     print("negative: ", [str(p) for p in negative])
-    negative = bitTrace.filter_positive_and_negative(positive, negative, traces, bitpoints, target, branch_point)
+    print("negative: " + str(negative))
+    positive, negative = bitTrace.filter_positive_and_negative(positive, negative, traces, bitpoints, target, branch_point)
     print("positive:", [str(p) for p in positive])
     print("negative: ", [str(p) for p in negative])
