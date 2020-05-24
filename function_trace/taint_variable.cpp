@@ -157,10 +157,6 @@ VOID Instruction(INS ins, VOID *v)
     }
 }
 
-static unsigned int tryksOpen;
-
-#define TRICKS(){if (tryksOpen++ == 0)return;}
-
 VOID Syscall_entry(THREADID thread_id, CONTEXT *ctx, SYSCALL_STANDARD std, void *v)
 {
     unsigned int i;
