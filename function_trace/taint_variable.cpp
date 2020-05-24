@@ -159,29 +159,39 @@ VOID Instruction(INS ins, VOID *v)
     }
 }
 
-VOID Syscall_entry(THREADID thread_id, CONTEXT *ctx, SYSCALL_STANDARD std, void *v)
+UINT64 mallocSize;
+
+VOID SetSize(ADDRINT size) {
+    mallocSize = static_cast<UINT64>(size);
+}
+
+VOID MarkRegion(ADDRINT start) {
+    startAddr = static_cast<UINT64>(start);
+
+    for (unsigned  int i = 0; i < mallocSize; i++) {
+        addressTainted[startAddr + i] = startAddr;
+    }
+
+    TraceFile << "[TAINT]\t\t\tbytes tainted from " << std::hex <<  startAddr << " to " << startAddr + mallocSize << " (via pread64)"<< std::endl;
+    mallocSize = 0;
+}
+
+VOID ImageLoad(IMG img, VOID *v)
 {
-    unsigned int i;
-    UINT64 start, size;
+    for (SEC sec = IMG_SecHead(img); SEC_Valid(sec); sec = SEC_Next(sec))
+    {
+        RTN mallocRTN = RTN_FindByName(img, "mallocgc");
+        if (RTN_Valid(mallocRTN)) {
+            RTN_Open(mallocRtn);
 
-    if (PIN_GetSyscallNumber(ctx, std) == __NR_read){
+            RTN_InsertCall(mallocRtn, IPOINT_BEFORE, (AFUNPTR)SetSize,
+                           IARG_FUNCARG_ENTRYPOINT_VALUE, 0,
+                           IARG_END);
+            RTN_InsertCall(mallocRtn, IPOINT_AFTER, (AFUNPTR)MarkRegion,
+                           IARG_FUNCRET_EXITPOINT_VALUE, IARG_END);
 
-        start = static_cast<UINT64>((PIN_GetSyscallArgument(ctx, std, 1)));
-        size  = static_cast<UINT64>((PIN_GetSyscallArgument(ctx, std, 2)));
-
-        for (i = 0; i < size; i++)
-            addressTainted[start+i] = start;
-
-        TraceFile << "[TAINT]\t\t\tbytes tainted from " << std::hex <<  start << " to " << start+size << " (via read)"<< std::endl;
-    } else if (PIN_GetSyscallNumber(ctx, std) == __NR_pread64){
-
-        start = static_cast<UINT64>((PIN_GetSyscallArgument(ctx, std, 1)));
-        size  = static_cast<UINT64>((PIN_GetSyscallArgument(ctx, std, 2)));
-
-        for (i = 0; i < size; i++)
-            addressTainted[start+i] = start;
-
-        TraceFile << "[TAINT]\t\t\tbytes tainted from " << std::hex <<  start << " to " << start+size << " (via pread64)"<< std::endl;
+            RTN_Close(mallocRtn);
+        }
     }
 }
 
@@ -202,7 +212,7 @@ int main(int argc, char *argv[])
     TraceFile.setf(std::ios::showbase);
 
     PIN_SetSyntaxIntel();
-    PIN_AddSyscallEntryFunction(Syscall_entry, 0);
+    IMG_AddInstrumentFunction(ImageLoad, 0);
     INS_AddInstrumentFunction(Instruction, 0);
     PIN_AddFiniFunction(Fini, 0);
     PIN_StartProgram();
