@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
     }
 
     TraceFile.open(KnobOutputFile.Value().c_str());
-    TraceFile.setf(std::showbase);
+    TraceFile.setf(std::ios::showbase);
 
     PIN_SetSyntaxIntel();
     PIN_AddSyscallEntryFunction(Syscall_entry, 0);
