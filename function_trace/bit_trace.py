@@ -1,6 +1,6 @@
 from instruction_reg_trace import InsRegTrace
 
-
+working_dir = "/home/anygroup/perf_debug_tool/function_trace/"
 class BitPoint:
     def __init__(self, point, addr_point, addr_reg, shift_point, shift_reg):
         self.point = point
@@ -72,7 +72,7 @@ class BitTrace(InsRegTrace):
 
         traces = []
         curr_bitpoint_value = None
-        with open('instruction_trace.out') as trace_file:
+        with open(working_dir + 'instruction_trace.out') as trace_file:
             for line in trace_file:
                 if 'eof' in line:
                     break
