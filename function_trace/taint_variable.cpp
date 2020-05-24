@@ -4,7 +4,7 @@
 #include <iostream>
 #include <map>
 
-KNOB<string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool", "o", "taint.out", "specify trace file name");
+KNOB<std::string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool", "o", "taint.out", "specify trace file name");
 
 std::ofstream TraceFile;
 std::map<UINT64, UINT64> addressTainted;
@@ -162,7 +162,7 @@ VOID Instruction(INS ins, VOID *v)
 VOID Syscall_entry(THREADID thread_id, CONTEXT *ctx, SYSCALL_STANDARD std, void *v)
 {
     unsigned int i;
-    UINT64 start, size, off;
+    UINT64 start, size;
 
     if (PIN_GetSyscallNumber(ctx, std) == __NR_read){
 
@@ -187,7 +187,7 @@ VOID Syscall_entry(THREADID thread_id, CONTEXT *ctx, SYSCALL_STANDARD std, void 
 
 VOID Fini(INT32 code, VOID *v)
 {
-    TraceFile << "# eof" << endl;
+    TraceFile << "# eof" << std::endl;
 
     TraceFile.close();
 }
@@ -199,9 +199,7 @@ int main(int argc, char *argv[])
     }
 
     TraceFile.open(KnobOutputFile.Value().c_str());
-
-    TraceFile << hex;
-    TraceFile.setf(ios::showbase);
+    TraceFile.setf(std::showbase);
 
     PIN_SetSyntaxIntel();
     PIN_AddSyscallEntryFunction(Syscall_entry, 0);
