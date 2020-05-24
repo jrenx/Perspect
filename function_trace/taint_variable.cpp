@@ -180,17 +180,20 @@ VOID ImageLoad(IMG img, VOID *v)
 {
     for (SEC sec = IMG_SecHead(img); SEC_Valid(sec); sec = SEC_Next(sec))
     {
-        RTN mallocRTN = RTN_FindByName(img, "mallocgc");
-        if (RTN_Valid(mallocRTN)) {
-            RTN_Open(mallocRTN);
+        for (RTN rtn = SEC_RtnHead(sec); RTN_Valid(rtn); rtn = RTN_Next(rtn))
+        {
+            if (RTN_Name(rtn).compare("mallocgc") == 0)
+            {
+                RTN_Open(mallocRTN);
 
-            RTN_InsertCall(mallocRTN, IPOINT_BEFORE, (AFUNPTR)SetSize,
-                           IARG_FUNCARG_ENTRYPOINT_VALUE, 0,
-                           IARG_END);
-            RTN_InsertCall(mallocRTN, IPOINT_AFTER, (AFUNPTR)MarkRegion,
-                           IARG_FUNCRET_EXITPOINT_VALUE, IARG_END);
+                RTN_InsertCall(mallocRTN, IPOINT_BEFORE, (AFUNPTR)SetSize,
+                               IARG_FUNCARG_ENTRYPOINT_VALUE, 0,
+                               IARG_END);
+                RTN_InsertCall(mallocRTN, IPOINT_AFTER, (AFUNPTR)MarkRegion,
+                               IARG_FUNCRET_EXITPOINT_VALUE, IARG_END);
 
-            RTN_Close(mallocRTN);
+                RTN_Close(mallocRTN);
+            }
         }
     }
 }
