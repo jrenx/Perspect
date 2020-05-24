@@ -199,9 +199,11 @@ class BitTrace(InsRegTrace):
         return positive_bitpoints, negative_bitpoints
 
     def keep_true_negatives(self, positive, negative, traces, bit_points, target, branch): 
-        negative_map = {}
+        true_negative_map = {}
+        part_negative_map = {}
         for neg in negative:
-            negative_map[neg] = False
+            true_negative_map[neg] = False
+            part_negative_map[neg] = True
         for index in range(len(traces) - 1, -1, -1):
             trace = traces[index]
             if DEBUG3: print(str(trace))
@@ -224,14 +226,17 @@ class BitTrace(InsRegTrace):
                         elif str(trace.bit_point) in positive:
                             if DEBUG3: print("     Negative directly overwrite positive")
                             overwrites_pos = True
-                            negative_map[str(neg.bit_point)] = True
+                            true_negative_map[str(neg.bit_point)] = True
                             break
                 if not overwrites_pos:
+                    part_negative_map[str(neg.bit_point)] = False
                     if DEBUG3: print("     Current negative never overwrites positive " + str(neg))
+                    print("     Current negative never overwrites positive " + str(neg)) #TODO, some frees don't have corresponding allocs, probably those ones we couldn't parse
         ret_neg = []
-        print(str(negative_map))
-        for k in negative_map:
-            if negative_map[k]:
+        print("true negative map: " + str(true_negative_map))
+        print("part negative map: " + str(part_negative_map))
+        for k in true_negative_map:
+            if true_negative_map[k]:
                 ret_neg.append(k)
         return ret_neg
 
