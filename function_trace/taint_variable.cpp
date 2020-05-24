@@ -4,7 +4,9 @@
 #include <iostream>
 #include <map>
 
+KNOB<string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool", "o", "taint.out", "specify trace file name");
 
+std::ofstream TraceFile;
 std::map<UINT64, UINT64> addressTainted;
 std::map<REG, UINT64> regsTainted;
 
@@ -25,25 +27,25 @@ VOID removeMemTainted(UINT64 addr)
     std::map<UINT64, UINT64>::iterator it = addressTainted.find(addr);
     UINT64 origin = it->second;
     addressTainted.erase(it);
-    std::cout << std::hex << "\t\t\t" << addr << ": " << origin << " is now freed" << std::endl;
+    TraceFile << std::hex << "\t\t\t" << addr << ": " << origin << " is now freed" << std::endl;
 }
 
 VOID addMemTainted(UINT64 addr, UINT64 origin)
 {
     addressTainted[addr] = origin;
-    std::cout << std::hex << "\t\t\t" << addr << ": " << origin << " is now tainted" << std::endl;
+    TraceFile << std::hex << "\t\t\t" << addr << ": " << origin << " is now tainted" << std::endl;
 }
 
 bool taintReg(REG reg, UINT64 origin)
 {
     if (checkAlreadyRegTainted(reg) == true){
-        std::cout << "\t\t\t" << REG_StringShort(reg) << ": " << std::hex << origin << " is already tainted" << std::endl;
+        TraceFile << "\t\t\t" << REG_StringShort(reg) << ": " << std::hex << origin << " is already tainted" << std::endl;
         return false;
     }
 
     regsTainted[reg] = origin;
 
-    std::cout << "\t\t\t" << REG_StringShort(reg) << ": " << std:: hex<< origin << " is now tainted" << std::endl;
+    TraceFile << "\t\t\t" << REG_StringShort(reg) << ": " << std:: hex<< origin << " is now tainted" << std::endl;
     return true;
 }
 
@@ -52,7 +54,7 @@ bool removeRegTainted(REG reg)
     std::map<REG, UINT64>::iterator it = regsTainted.find(reg);
     UINT64 origin = it->second;
     regsTainted.erase(it);
-    std::cout << "\t\t\t" << REG_StringShort(reg) << ": " << std::hex << origin << " is now freed" << std::endl;
+    TraceFile << "\t\t\t" << REG_StringShort(reg) << ": " << std::hex << origin << " is now freed" << std::endl;
     return true;
 }
 
@@ -66,7 +68,7 @@ VOID ReadMem(UINT64 insAddr, std::string insDis, UINT32 opCount, REG reg_r, UINT
     std::map<UINT64, UINT64>::iterator it = addressTainted.find(addr);
 
     if (it != addressTainted.end()) {
-        std::cout << std::hex << "[READ in " << addr << ": " << it->second << "]\t" << insAddr << ": " << insDis << std::endl;
+        TraceFile << std::hex << "[READ in " << addr << ": " << it->second << "]\t" << insAddr << ": " << insDis << std::endl;
         taintReg(reg_r, it->second);
         return;
     }
@@ -74,7 +76,7 @@ VOID ReadMem(UINT64 insAddr, std::string insDis, UINT32 opCount, REG reg_r, UINT
     /* if mem != tained and reg == taint => free the reg */
     if (checkAlreadyRegTainted(reg_r)){
         UINT64 origin = regsTainted.find(reg_r)->second;
-        std::cout << std::hex << "[READ in " << addr << ": " << origin << "]\t" << insAddr << ": " << insDis << std::endl;
+        TraceFile << std::hex << "[READ in " << addr << ": " << origin << "]\t" << insAddr << ": " << insDis << std::endl;
         removeRegTainted(reg_r);
     }
 }
@@ -88,7 +90,7 @@ VOID WriteMem(UINT64 insAddr, std::string insDis, UINT32 opCount, REG reg_r, UIN
 
     std::map<UINT64, UINT64>::iterator it = addressTainted.find(addr);
     if (it != addressTainted.end()) {
-        std::cout << std::hex << "[WRITE in " << addr << ": " << it->second << "]\t" << insAddr << ": " << insDis << std::endl;
+        TraceFile << std::hex << "[WRITE in " << addr << ": " << it->second << "]\t" << insAddr << ": " << insDis << std::endl;
         if (!REG_valid(reg_r) || !checkAlreadyRegTainted(reg_r))
             removeMemTainted(addr);
         return;
@@ -96,7 +98,7 @@ VOID WriteMem(UINT64 insAddr, std::string insDis, UINT32 opCount, REG reg_r, UIN
 
     if (checkAlreadyRegTainted(reg_r)){
         UINT64 origin = regsTainted.find(reg_r)->second;
-        std::cout << std::hex << "[WRITE in " << addr << ": " << origin << "]\t" << insAddr << ": " << insDis << std::endl;
+        TraceFile << std::hex << "[WRITE in " << addr << ": " << origin << "]\t" << insAddr << ": " << insDis << std::endl;
         addMemTainted(addr, reg_r);
     }
 }
@@ -108,15 +110,15 @@ VOID spreadRegTaint(UINT64 insAddr, std::string insDis, UINT32 opCount, REG reg_
 
     if (REG_valid(reg_w)){
         if (checkAlreadyRegTainted(reg_w) && (!REG_valid(reg_r) || !checkAlreadyRegTainted(reg_r))){
-            std::cout << "[SPREAD]\t\t" << insAddr << ": " << insDis << std::endl;
+            TraceFile << "[SPREAD]\t\t" << insAddr << ": " << insDis << std::endl;
             UINT64 origin = regsTainted.find(reg_w)->second;
-            std::cout << "\t\t\toutput: "<< REG_StringShort(reg_w) << ": " << std::hex << origin << " | input: " << (REG_valid(reg_r) ? REG_StringShort(reg_r) : "constant") << std::endl;
+            TraceFile << "\t\t\toutput: "<< REG_StringShort(reg_w) << ": " << std::hex << origin << " | input: " << (REG_valid(reg_r) ? REG_StringShort(reg_r) : "constant") << std::endl;
             removeRegTainted(reg_w);
         }
         else if (!checkAlreadyRegTainted(reg_w) && checkAlreadyRegTainted(reg_r)){
-            std::cout << "[SPREAD]\t\t" << insAddr << ": " << insDis << std::endl;
+            TraceFile << "[SPREAD]\t\t" << insAddr << ": " << insDis << std::endl;
             UINT64 origin = regsTainted.find(reg_r)->second;
-            std::cout << "\t\t\toutput: " << REG_StringShort(reg_w) << " | input: "<< REG_StringShort(reg_r) << ": " << std::hex << origin << std::endl;
+            TraceFile << "\t\t\toutput: " << REG_StringShort(reg_w) << " | input: "<< REG_StringShort(reg_r) << ": " << std::hex << origin << std::endl;
             taintReg(reg_w, origin);
         }
     }
@@ -170,19 +172,24 @@ VOID Syscall_entry(THREADID thread_id, CONTEXT *ctx, SYSCALL_STANDARD std, void 
         for (i = 0; i < size; i++)
             addressTainted[start+i] = start;
 
-        std::cout << "[TAINT]\t\t\tbytes tainted from " << std::hex << "0x" << start << " to 0x" << start+size << " (via read)"<< std::endl;
+        TraceFile << "[TAINT]\t\t\tbytes tainted from " << std::hex <<  start << " to " << start+size << " (via read)"<< std::endl;
     } else if (PIN_GetSyscallNumber(ctx, std) == __NR_pread64){
 
         start = static_cast<UINT64>((PIN_GetSyscallArgument(ctx, std, 1)));
         size  = static_cast<UINT64>((PIN_GetSyscallArgument(ctx, std, 2)));
-        off   = static_cast<UINT64>((PIN_GetSyscallArgument(ctx, std, 2)));
-        start += off;
 
         for (i = 0; i < size; i++)
             addressTainted[start+i] = start;
 
-        std::cout << "[TAINT]\t\t\tbytes tainted from " << std::hex << "0x" << start << " to 0x" << start+size << " (via pread64)"<< std::endl;
+        TraceFile << "[TAINT]\t\t\tbytes tainted from " << std::hex <<  start << " to " << start+size << " (via pread64)"<< std::endl;
     }
+}
+
+VOID Fini(INT32 code, VOID *v)
+{
+    TraceFile << "# eof" << endl;
+
+    TraceFile.close();
 }
 
 int main(int argc, char *argv[])
@@ -191,9 +198,15 @@ int main(int argc, char *argv[])
         return Usage();
     }
 
+    TraceFile.open(KnobOutputFile.Value().c_str());
+
+    TraceFile << hex;
+    TraceFile.setf(ios::showbase);
+
     PIN_SetSyntaxIntel();
     PIN_AddSyscallEntryFunction(Syscall_entry, 0);
     INS_AddInstrumentFunction(Instruction, 0);
+    PIN_AddFiniFunction(Fini, 0);
     PIN_StartProgram();
 
     return 0;
