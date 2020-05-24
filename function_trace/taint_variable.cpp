@@ -159,11 +159,11 @@ VOID Instruction(INS ins, VOID *v)
     }
 }
 
-//UINT64 mallocSize;
-//
-//VOID SetSize(ADDRINT size) {
-//    mallocSize = static_cast<UINT64>(size);
-//}
+UINT64 mallocSize;
+
+VOID SetSize(ADDRINT size) {
+    mallocSize = static_cast<UINT64>(size);
+}
 
 VOID MarkRegion(ADDRINT start) {
     UINT64 startAddr = static_cast<UINT64>(start);
@@ -174,7 +174,7 @@ VOID MarkRegion(ADDRINT start) {
     addressTainted[startAddr] = startAddr;
 
     TraceFile << "[TAINT]\t\t\tbytes tainted from " << std::hex <<  startAddr << " to " << startAddr + mallocSize << " (via mallocgc)"<< std::endl;
-//    mallocSize = 0;
+    mallocSize = 0;
 }
 
 VOID ImageLoad(IMG img, VOID *v)
@@ -187,9 +187,9 @@ VOID ImageLoad(IMG img, VOID *v)
             {
                 RTN_Open(rtn);
 
-//                RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR)SetSize,
-//                               IARG_FUNCARG_ENTRYPOINT_VALUE, 0,
-//                               IARG_END);
+                RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR)SetSize,
+                               IARG_FUNCARG_ENTRYPOINT_VALUE, 0,
+                               IARG_END);
                 RTN_InsertCall(rtn, IPOINT_AFTER, (AFUNPTR)MarkRegion,
                                IARG_FUNCRET_EXITPOINT_VALUE, IARG_END);
 
