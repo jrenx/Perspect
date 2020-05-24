@@ -166,7 +166,7 @@ VOID SetSize(ADDRINT size) {
 }
 
 VOID MarkRegion(ADDRINT start) {
-    startAddr = static_cast<UINT64>(start);
+    UINT64 startAddr = static_cast<UINT64>(start);
 
     for (unsigned  int i = 0; i < mallocSize; i++) {
         addressTainted[startAddr + i] = startAddr;
@@ -182,15 +182,15 @@ VOID ImageLoad(IMG img, VOID *v)
     {
         RTN mallocRTN = RTN_FindByName(img, "mallocgc");
         if (RTN_Valid(mallocRTN)) {
-            RTN_Open(mallocRtn);
+            RTN_Open(mallocRTN);
 
-            RTN_InsertCall(mallocRtn, IPOINT_BEFORE, (AFUNPTR)SetSize,
+            RTN_InsertCall(mallocRTN, IPOINT_BEFORE, (AFUNPTR)SetSize,
                            IARG_FUNCARG_ENTRYPOINT_VALUE, 0,
                            IARG_END);
-            RTN_InsertCall(mallocRtn, IPOINT_AFTER, (AFUNPTR)MarkRegion,
+            RTN_InsertCall(mallocRTN, IPOINT_AFTER, (AFUNPTR)MarkRegion,
                            IARG_FUNCRET_EXITPOINT_VALUE, IARG_END);
 
-            RTN_Close(mallocRtn);
+            RTN_Close(mallocRTN);
         }
     }
 }
