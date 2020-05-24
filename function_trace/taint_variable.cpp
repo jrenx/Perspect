@@ -184,15 +184,15 @@ VOID ImageLoad(IMG img, VOID *v)
         {
             if (RTN_Name(rtn).compare("mallocgc") == 0)
             {
-                RTN_Open(mallocRTN);
+                RTN_Open(rtn);
 
-                RTN_InsertCall(mallocRTN, IPOINT_BEFORE, (AFUNPTR)SetSize,
+                RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR)SetSize,
                                IARG_FUNCARG_ENTRYPOINT_VALUE, 0,
                                IARG_END);
-                RTN_InsertCall(mallocRTN, IPOINT_AFTER, (AFUNPTR)MarkRegion,
+                RTN_InsertCall(rtn, IPOINT_AFTER, (AFUNPTR)MarkRegion,
                                IARG_FUNCRET_EXITPOINT_VALUE, IARG_END);
 
-                RTN_Close(mallocRTN);
+                RTN_Close(rtn);
             }
         }
     }
