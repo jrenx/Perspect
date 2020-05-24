@@ -1,6 +1,8 @@
 from instruction_reg_trace import InsRegTrace
 
 working_dir = "/home/anygroup/perf_debug_tool/function_trace/"
+DEBUG2 = False
+DEBUG3 = False
 class BitPoint:
     def __init__(self, point, addr_point, addr_reg, shift_point, shift_reg):
         self.point = point
@@ -78,7 +80,7 @@ class BitTrace(InsRegTrace):
                     break
                 addr = line.split()[0].strip(':')
                 reg = line.split()[1]
-                print("checking " + line)
+                if DEBUG2: print("checking " + line)
                 if addr == target:
                     if curr_bitpoint_value is not None:
                         traces.append(curr_bitpoint_value)
@@ -90,7 +92,7 @@ class BitTrace(InsRegTrace):
 
                     if curr_bitpoint_value is not None and curr_bitpoint_value.bit_point != bit_point:
                         curr_bitpoint_value = BitPointValue(bit_point, None, None)
-                        print("ERROR")
+                        if DEBUG2: print("ERROR")
 
                     if curr_bitpoint_value is None:
                         curr_bitpoint_value = BitPointValue(bit_point, None, None)
@@ -105,12 +107,12 @@ class BitTrace(InsRegTrace):
                         else:
                             raise ValueError("wrong address: " + addr)
 
-                        print("         Current bit point: " + str(curr_bitpoint_value))
+                        if DEBUG2: print("         Current bit point: " + str(curr_bitpoint_value))
                         if curr_bitpoint_value.addr_value  is not None and \
                                 curr_bitpoint_value.shift_value is not None and \
                                 curr_bitpoint_value.pc_value is not None:
-                            print()
-                            print(" ===> Appending bit point: " + str(curr_bitpoint_value))
+                            if DEBUG2: print()
+                            if DEBUG2: print(" ===> Appending bit point: " + str(curr_bitpoint_value))
                             #print(" ===> Current size of trace: " + str(len(traces)))
                             traces.append(curr_bitpoint_value)
                             curr_bitpoint_value = None
@@ -168,13 +170,13 @@ class BitTrace(InsRegTrace):
                 #print("Positive Checking branch: " + str(index))
                 if branch_point_value.same_value(trace) and branch_point_value.bit_point != trace.bit_point:
                     pos = trace.bit_point
-                    print("Positive   found at: " + str(index) + " " + str(trace))
+                    if DEBUG2: print("Positive   found at: " + str(index) + " " + str(trace))
                     break
             if pos is None:
-                print("positive WARN: def point not found")
+                if DEBUG2: print("positive WARN: def point not found")
             else:
                 positive_bitpoints.add(pos)
-                print("Positive trace point: " + str(pos))
+                if DEBUG2: print("Positive trace point: " + str(pos))
 
         for not_taken_index in not_taken_indexes:
             branch_point_value = traces[not_taken_index]
@@ -185,17 +187,53 @@ class BitTrace(InsRegTrace):
                 #print("Negative Checking branch: " + str(index))
                 if branch_point_value.same_value(trace) and branch_point_value.bit_point != trace.bit_point:
                     neg = trace.bit_point
-                    print("Negative   found at: " + str(index) + " " + str(trace))
+                    if DEBUG2: print("Negative   found at: " + str(index) + " " + str(trace))
                     break
 
             if neg is None:
-                print("Negative WARN: def point not found")
+                if DEBUG2: print("Negative WARN: def point not found")
             else:
                 negative_bitpoints.add(trace.bit_point)
-                print("Negative trace point: " + str(trace.bit_point))
+                if DEBUG2: print("Negative trace point: " + str(trace.bit_point))
 
         return positive_bitpoints, negative_bitpoints
-        
+
+    def keep_true_negatives(self, positive, negative, traces, bit_points, target, branch): 
+        negative_map = {}
+        for neg in negative:
+            negative_map[neg] = False
+        for index in range(len(traces) - 1, -1, -1):
+            trace = traces[index]
+            if DEBUG3: print(str(trace))
+            if not isinstance(trace, BitPointValue):
+                continue
+            if str(trace.bit_point) in negative:
+                neg = trace
+                if DEBUG3: print("found negative: " + str(trace))
+                overwrites_pos = False
+                for index in range(index - 1, -1, -1):
+                    trace = traces[index]
+                    if neg.same_value(trace):
+                        if DEBUG3: print("     Writing to same var")
+                        if str(trace.bit_point) in negative:
+                            if DEBUG3: print("     Negative does not directly overwrite positive")
+                            #TODO, this counds as double negative
+                            if str(trace.bit_point) != str(neg.bit_point):
+                                if DEBUG3: print("     Negative shadowed by another negative")
+                                break
+                        elif str(trace.bit_point) in positive:
+                            if DEBUG3: print("     Negative directly overwrite positive")
+                            overwrites_pos = True
+                            negative_map[str(neg.bit_point)] = True
+                            break
+                if not overwrites_pos:
+                    if DEBUG3: print("     Current negative never overwrites positive " + str(neg))
+        ret_neg = []
+        print(str(negative_map))
+        for k in negative_map:
+            if negative_map[k]:
+                ret_neg.append(k)
+        return ret_neg
 
 if __name__ == '__main__':
     bitTrace = BitTrace('/home/anygroup/perf_debug_tool/909_ziptest_exe6 /home/anygroup/perf_debug_tool/test.zip', pin='~/pin-3.11/pin')
@@ -227,7 +265,11 @@ if __name__ == '__main__':
 
     bitTrace.get_trace(bitpoints, target, branch_point)
     traces = bitTrace.parse_bit_trace(bitpoints, target, branch_point)
-    positive, negative = bitTrace.analyze_trace(traces, bitpoints, target, branch_point)
+    #positive, negative = bitTrace.analyze_trace(traces, bitpoints, target, branch_point)
+    positive = ['0x409418', '0x409c6a', '0x40a6aa']
+    negative = ['0x409d28', '0x40a7a2', '0x40a996']
     print("positive:", [str(p) for p in positive])
     print("negative: ", [str(p) for p in negative])
-
+    negative = bitTrace.keep_true_negatives(positive, negative, traces, bitpoints, target, branch_point)
+    print("positive:", [str(p) for p in positive])
+    print("negative: ", [str(p) for p in negative])
