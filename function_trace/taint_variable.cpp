@@ -164,7 +164,7 @@ static unsigned int tryksOpen;
 VOID Syscall_entry(THREADID thread_id, CONTEXT *ctx, SYSCALL_STANDARD std, void *v)
 {
     unsigned int i;
-    UINT64 start, size;
+    UINT64 start, size, off;
 
     if (PIN_GetSyscallNumber(ctx, std) == __NR_read){
 
@@ -172,6 +172,32 @@ VOID Syscall_entry(THREADID thread_id, CONTEXT *ctx, SYSCALL_STANDARD std, void 
 
         start = static_cast<UINT64>((PIN_GetSyscallArgument(ctx, std, 1)));
         size  = static_cast<UINT64>((PIN_GetSyscallArgument(ctx, std, 2)));
+
+        for (i = 0; i < size; i++)
+            addressTainted[start+i] = start;
+
+        std::cout << "[TAINT]\t\t\tbytes tainted from " << std::hex << "0x" << start << " to 0x" << start+size << " (via read)"<< std::endl;
+    } else if (PIN_GetSyscallNumber(ctx, std) == __NR_pread){
+
+        TRICKS(); /* tricks to ignore the first open */
+
+        start = static_cast<UINT64>((PIN_GetSyscallArgument(ctx, std, 1)));
+        size  = static_cast<UINT64>((PIN_GetSyscallArgument(ctx, std, 2)));
+        off   = static_cast<UINT64>((PIN_GetSyscallArgument(ctx, std, 2)));
+        start += off;
+
+        for (i = 0; i < size; i++)
+            addressTainted[start+i] = start;
+
+        std::cout << "[TAINT]\t\t\tbytes tainted from " << std::hex << "0x" << start << " to 0x" << start+size << " (via read)"<< std::endl;
+    } else if (PIN_GetSyscallNumber(ctx, std) == __NR_pread64){
+
+        TRICKS(); /* tricks to ignore the first open */
+
+        start = static_cast<UINT64>((PIN_GetSyscallArgument(ctx, std, 1)));
+        size  = static_cast<UINT64>((PIN_GetSyscallArgument(ctx, std, 2)));
+        off   = static_cast<UINT64>((PIN_GetSyscallArgument(ctx, std, 2)));
+        start += off;
 
         for (i = 0; i < size; i++)
             addressTainted[start+i] = start;
