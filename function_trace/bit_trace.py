@@ -165,10 +165,10 @@ class BitTrace(InsRegTrace):
             pos = None
             for index in range(taken_index - 1, -1, -1):
                 trace = traces[index]
-                print("Positive Checking branch: " + str(index))
+                #print("Positive Checking branch: " + str(index))
                 if branch_point_value.same_value(trace) and branch_point_value.bit_point != trace.bit_point:
                     pos = trace.bit_point
-                    print("Positive   found at: " + str(index))
+                    print("Positive   found at: " + str(index) + " " + str(trace))
                     break
             if pos is None:
                 print("positive WARN: def point not found")
@@ -182,10 +182,10 @@ class BitTrace(InsRegTrace):
             neg = None
             for index in range(not_taken_index - 1, -1, -1):
                 trace = traces[index]
-                print("Negative Checking branch: " + str(index))
+                #print("Negative Checking branch: " + str(index))
                 if branch_point_value.same_value(trace) and branch_point_value.bit_point != trace.bit_point:
                     neg = trace.bit_point
-                    print("Negative   found at: " + str(index))
+                    print("Negative   found at: " + str(index) + " " + str(trace))
                     break
 
             if neg is None:
