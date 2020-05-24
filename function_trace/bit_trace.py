@@ -214,32 +214,66 @@ class BitTrace(InsRegTrace):
             if DEBUG3: print(str(trace))
             if not isinstance(trace, BitPointValue):
                 continue
-            if str(trace.bit_point) in negative:
-                neg = trace
-                if DEBUG3: print("found negative: " + str(trace))
-                overwrites_pos = False
-                for index in range(index - 1, -1, -1):
-                    trace = traces[index]
-                    if neg.same_value(trace):
-                        if DEBUG3: print("     Writing to same var")
-                        if str(trace.bit_point) in negative:
-                            if DEBUG3: print("     Negative does not directly overwrite positive")
-                            #TODO, this counds as double negative
-                            if str(trace.bit_point) != str(neg.bit_point):
-                                if DEBUG3: print("     Negative shadowed by another negative")
-                                break
-
-                            print("     Current negative has doubles " + str(neg)) #TODO, some frees don't have corresponding allocs, find a bunch called tgt for no reason... is this duplicate freeing? but double free not allowed!!!
-                            doub_negative_map[str(neg.bit_point)] = True
-                        elif str(trace.bit_point) in positive:
-                            if DEBUG3: print("     Negative directly overwrite positive")
-                            overwrites_pos = True
-                            true_negative_map[str(neg.bit_point)] = True
+            if str(trace.bit_point) not in negative:
+                continue
+            neg = trace
+            if DEBUG3: print("found negative: " + str(trace))
+            overwrites_pos = False
+            for index in range(index - 1, -1, -1):
+                trace = traces[index]
+                if neg.same_value(trace):
+                    if DEBUG3: print("     Writing to same var")
+                    if str(trace.bit_point) in negative:
+                        if DEBUG3: print("     Negative does not directly overwrite positive")
+                        #TODO, this counds as double negative
+                        if str(trace.bit_point) != str(neg.bit_point):
+                            if DEBUG3: print("     Negative shadowed by another negative")
                             break
-                if not overwrites_pos:
-                    part_negative_map[str(neg.bit_point)] = False
-                    if DEBUG3: print("     Current negative never overwrites positive " + str(neg))
-                    print("     Current negative never overwrites positive " + str(neg)) #TODO, some frees don't have corresponding allocs, probably those ones we couldn't parse
+
+                        print("     Current negative has doubles " + str(neg)) #TODO, some frees don't have corresponding allocs, find a bunch called tgt for no reason... is this duplicate freeing? but double free not allowed!!!
+                        doub_negative_map[str(neg.bit_point)] = True
+                    elif str(trace.bit_point) in positive:
+                        if DEBUG3: print("     Negative directly overwrite positive")
+                        overwrites_pos = True
+                        true_negative_map[str(neg.bit_point)] = True
+                        break
+            if not overwrites_pos:
+                part_negative_map[str(neg.bit_point)] = False
+                if DEBUG3: print("     Current negative never overwrites positive " + str(neg))
+                print("     Current negative never overwrites positive " + str(neg)) #TODO, some frees don't have corresponding allocs, probably those ones we couldn't parse
+
+        doub_positive_map = {}
+        for pos in positive:
+            doub_positive_map[pos] = False
+        for index in range(len(traces) - 1, -1, -1):
+            trace = traces[index]
+            if DEBUG3: print(str(trace))
+            if not isinstance(trace, BitPointValue):
+                continue
+            if str(trace.bit_point) not in positive:
+                continue
+            pos = trace
+            if DEBUG3: print("found positive: " + str(trace))
+            for index in range(index - 1, -1, -1):
+                trace = traces[index]
+                if not pos.same_value(trace):
+                    continue
+                if DEBUG3: print("     Writing to same var")
+                if str(trace.bit_point) in positive:
+                    if DEBUG3: print("     Positive does not directly overwrite positive")
+                    #TODO, this counds as double positive
+                    if str(trace.bit_point) != str(pos.bit_point):
+                        print("     Positive shadowed by another positive " + str(trace))
+                    else:
+                        print("     Current positive has doubles " + str(trace)) #TODO, some frees don't have corresponding allocs, find a bunch called tgt for no reason... is this duplicate freeing? but double free not allowed!!!
+                    doub_positive_map[str(pos.bit_point)] = True
+                    break
+                elif str(trace.bit_point) in negative:
+                    break
+
+        print("doub positive map: " + str(doub_positive_map))
+        ret_pos = positive
+
         ret_neg = []
         print("true negative map: " + str(true_negative_map))
         print("part negative map: " + str(part_negative_map))
