@@ -91,8 +91,11 @@ class BitTrace(InsRegTrace):
                     #print("         Current bit point addr: " + str(bit_point))
 
                     if curr_bitpoint_value is not None and curr_bitpoint_value.bit_point != bit_point:
+                        print("ERROR")
+                        curr_bitpoint_value.pc_value = curr_bitpoint_value.bit_point
+                        print(" ===> Appending partial bit point: " + str(curr_bitpoint_value))
+                        traces.append(curr_bitpoint_value)
                         curr_bitpoint_value = BitPointValue(bit_point, None, None)
-                        if DEBUG2: print("ERROR")
 
                     if curr_bitpoint_value is None:
                         curr_bitpoint_value = BitPointValue(bit_point, None, None)
@@ -198,12 +201,14 @@ class BitTrace(InsRegTrace):
 
         return positive_bitpoints, negative_bitpoints
 
-    def keep_true_negatives(self, positive, negative, traces, bit_points, target, branch): 
+    def filter_positive_and_negative(self, positive, negative, traces, bit_points, target, branch): 
         true_negative_map = {}
         part_negative_map = {}
+        doub_negative_map = {}
         for neg in negative:
             true_negative_map[neg] = False
             part_negative_map[neg] = True
+            doub_negative_map[neg] = False
         for index in range(len(traces) - 1, -1, -1):
             trace = traces[index]
             if DEBUG3: print(str(trace))
@@ -223,6 +228,9 @@ class BitTrace(InsRegTrace):
                             if str(trace.bit_point) != str(neg.bit_point):
                                 if DEBUG3: print("     Negative shadowed by another negative")
                                 break
+
+                            print("     Current negative has doubles " + str(neg)) #TODO, some frees don't have corresponding allocs, find a bunch called tgt for no reason... is this duplicate freeing? but double free not allowed!!!
+                            doub_negative_map[str(neg.bit_point)] = True
                         elif str(trace.bit_point) in positive:
                             if DEBUG3: print("     Negative directly overwrite positive")
                             overwrites_pos = True
@@ -235,6 +243,7 @@ class BitTrace(InsRegTrace):
         ret_neg = []
         print("true negative map: " + str(true_negative_map))
         print("part negative map: " + str(part_negative_map))
+        print("doub negative map: " + str(doub_negative_map))
         for k in true_negative_map:
             if true_negative_map[k]:
                 ret_neg.append(k)
@@ -270,11 +279,14 @@ if __name__ == '__main__':
 
     bitTrace.get_trace(bitpoints, target, branch_point)
     traces = bitTrace.parse_bit_trace(bitpoints, target, branch_point)
+    print("Got traces:")
+    for t in traces:
+        print(str(t))
     #positive, negative = bitTrace.analyze_trace(traces, bitpoints, target, branch_point)
     positive = ['0x409418', '0x409c6a', '0x40a6aa']
     negative = ['0x409d28', '0x40a7a2', '0x40a996']
     print("positive:", [str(p) for p in positive])
     print("negative: ", [str(p) for p in negative])
-    negative = bitTrace.keep_true_negatives(positive, negative, traces, bitpoints, target, branch_point)
+    negative = bitTrace.filter_positive_and_negative(positive, negative, traces, bitpoints, target, branch_point)
     print("positive:", [str(p) for p in positive])
     print("negative: ", [str(p) for p in negative])
