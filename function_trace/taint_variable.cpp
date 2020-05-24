@@ -211,6 +211,8 @@ int main(int argc, char *argv[])
         return Usage();
     }
 
+    PIN_InitSymbolsAlt(IFUNC_SYMBOLS);
+
     TraceFile.open(KnobOutputFile.Value().c_str());
     TraceFile.setf(std::ios::showbase);
 
