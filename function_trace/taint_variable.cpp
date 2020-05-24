@@ -182,7 +182,7 @@ VOID ImageLoad(IMG img, VOID *v)
     {
         for (RTN rtn = SEC_RtnHead(sec); RTN_Valid(rtn); rtn = RTN_Next(rtn))
         {
-            if (RTN_Name(rtn).compare("mallocgc") == 0)
+            if (RTN_Name(rtn).compare("runtime.mallocgc") == 0)
             {
                 RTN_Open(rtn);
 
