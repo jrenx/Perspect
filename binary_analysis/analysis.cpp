@@ -239,19 +239,43 @@ public:
     //cout << ap->insn().readsMemory();
     if(DEBUG_SLICE) cout << endl;
     filter = false;
-    return ap->insn().readsMemory();
+    if (ap->insn().readsMemory()) {
+   	std::set<Expression::Ptr> memReads;
+	ap->insn().getMemoryReadOperands(memReads);
+	if(DEBUG_C) cout << "[sa] Memory read: " << (*memReads.begin())->format() << endl;
+	std::string readStr = (*memReads.begin())->format();
+	if (std::any_of(std::begin(readStr), std::end(readStr), ::isalpha)){
+	  if (DEBUG_C) cout << "[sa] is a true memory read." << endl;
+	  return true;
+	}
+	if (DEBUG_C) cout << "[sa] is not a true memory read." << endl;
+	return false;
+    } else {
+      return false;
+    }
   }
 
   //int i = 5;
   virtual bool addPredecessor(AbsRegion reg) {
-    if(DEBUG_SLICE) cout << "[slice] " << "predecessor reg: " <<  reg.format() << endl;
+    std:string regStr = reg.format();
+    if(DEBUG_SLICE) cout << "[slice] " << "predecessor reg: " << regStr << endl;
     if (filter) {
       if (reg.format().compare(regName) != 0) {
 	if(DEBUG_SLICE) cout << "[slice] " << "Filtering against " << regName << 
-	       				      " filter out: " << reg.format() << endl;
+	       				      " filter out: " << regStr << endl;
         return false;
       }
     }
+
+    if (std::any_of(std::begin(regStr), std::end(regStr), ::isalpha)){
+      if (DEBUG_C) cout << "[sa] is a true reg: " << regStr << endl;
+      return true;
+    } else {
+      if (DEBUG_C) cout << "[sa] is not a true reg: " << regStr << endl;
+      return false;
+    }
+
+
     return true;
     //i --;
     //return i > 0;
@@ -281,7 +305,7 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, char *regNa
   }
   GraphPtr slice = s.backwardSlice(cs);
   //cout << slice->size() << endl;
-  string filePath("/home/anygroup/perf_DEBUG_C_tool/binary_analysis/graph");
+  string filePath("/home/anygroup/perf_debug_tool/binary_analysis/graph");
   slice->printDOT(filePath);
   return slice;
 }
@@ -444,8 +468,11 @@ extern "C" {
 	std::set<Expression::Ptr> memReads;
 	assign->insn().getMemoryReadOperands(memReads);
 	if(DEBUG_C) cout << "[sa] Memory read: " << (*memReads.begin())->format() << endl;
-        ss << "|" << assign->addr() << ",";
-	ss << (*memReads.begin())->format();
+	std::string readStr = (*memReads.begin())->format();
+	if (std::any_of(std::begin(readStr), std::end(readStr), ::isalpha)){
+          ss << "|" << assign->addr() << ",";
+	  ss << readStr;
+	}
         //for (auto r = memReads.begin(); r != memReads.end(); ++r) {
 	//	cout << (*r)->eval() << endl;
 	//}
