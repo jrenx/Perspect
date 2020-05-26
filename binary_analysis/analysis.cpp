@@ -455,7 +455,9 @@ extern "C" {
     NodeIterator begin, end;
     slice->entryNodes(begin, end);
     //slice->allNodes(begin, end);
-    std::stringstream ss;
+    //
+    std::ofstream out("result");
+    //std::stringstream ss;
     for(NodeIterator it = begin; it != end; ++it) {
       SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(*it);
       Assignment::Ptr assign = aNode->assign();
@@ -470,18 +472,17 @@ extern "C" {
 	if(DEBUG_C) cout << "[sa] Memory read: " << (*memReads.begin())->format() << endl;
 	std::string readStr = (*memReads.begin())->format();
 	if (std::any_of(std::begin(readStr), std::end(readStr), ::isalpha)){
-          ss << "|" << assign->addr() << ",";
-	  ss << readStr;
+          out << "|" << assign->addr() << ",";
+	  out << readStr;
 	}
         //for (auto r = memReads.begin(); r != memReads.end(); ++r) {
 	//	cout << (*r)->eval() << endl;
 	//}
       }
     }
-    std::string tmp = ss.str(); 
-    if(DEBUG_C) cout << "[sa]" << tmp;
-    std::ofstream out("result");
-    out << tmp;
+    //std::string tmp = ss.str(); 
+    //if(DEBUG_C) cout << "[sa]" << tmp;
+    //out << tmp;
     out.close();
     //const char* cstr = tmp.c_str();
     //return cstr;

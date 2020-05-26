@@ -7,9 +7,9 @@ from subprocess import call
 from optparse import OptionParser
 from collections import deque
 from ctypes import *
-sys.path.append(os.path.abspath('./rr'))
+#sys.path.append(os.path.abspath('./rr'))
 from sat_def import *
-sys.path.append(os.path.abspath('./function_trace'))
+#sys.path.append(os.path.abspath('./function_trace'))
 from instruction_reg_trace import *
 from instruction_trace import *
 from bit_trace import *
@@ -93,16 +93,23 @@ def dynamic_backslice2(branch, target, reg, off, insn):
             + str(insn_str) + "_" + \
             str(reg) + "_" + str(off)
     rr_result_defs = None
-    if key in rr_result_cache:
-        print("[main] result is cached.")
-        rr_result_defs = rr_result_cache[key]
-        print("[main] " + str(rr_result_defs))
-    else:
-        rr_result_defs = get_sat_def(target_str, branch_str, \
-                                 insn_str, reg, off)
-        #rr_result_defs = get_def('*0x409da5', '*0x409d9d', '0x409d98', 'rsp', '0x68')
-        rr_result_cache[key] = rr_result_defs
-    return list(rr_result_defs[0].union(rr_result_defs[1]))
+    ret = []
+    try:
+        if key in rr_result_cache:
+            print("[main] result is cached.")
+            rr_result_defs = rr_result_cache[key]
+            print("[main] " + str(rr_result_defs))
+        else:
+            rr_result_defs = get_sat_def(target_str, branch_str, \
+                                     insn_str, reg, off)
+            #rr_result_defs = get_def('*0x409da5', '*0x409d9d', '0x409d98', 'rsp', '0x68')
+            rr_result_cache[key] = rr_result_defs
+        ret = list(rr_result_defs[0].union(rr_result_defs[1]))
+    except:
+        print("Unexpected error:", sys.exc_info()[0])
+        
+    return ret
+
 
 def getImmedDom(sym, prog):
     addr = c_ulong(sym.insn)
@@ -263,8 +270,13 @@ class Symptom():
         self.relation = None
 
     def __str__(self):
-        return "[Sym insn: " + str(hex(self.insn)) + " reg: " + str(self.reg) \
+        ss = ""
+        try:
+            ss = "[Sym insn: " + str(hex(self.insn)) + " reg: " + str(self.reg) \
                 + " func: " + str(self.func) + "]"
+        except:
+            pass
+        return ss
 
 class Definition():
     def __init__(self, func, insn, reg=None, off=None):
@@ -284,7 +296,7 @@ class Definition():
                 + "_" + str(self.off) + "_" + str(self.func)
 
 def get_function(insn, prog):
-    cmd = ['addr2line', '-e', prog, '-f', insn]
+    cmd = ['addr2line', '-e', prog, '-f', hex(insn)]
     print("[main] running command: " + str(cmd))
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
     func = result.stdout.decode('ascii').split()[0]
@@ -477,7 +489,9 @@ def analyze_symptom(sym, prog, arg, q):
         print("[main][analyze symptom] sym happens less often than immed dom")
         branch = immedDom
         static_defs = static_backslice("", branch, sym.func, prog)
+        r = Relation()
         for curr_def in static_defs:
+            r1 = Relation()
             def_insn = int(curr_def[0])
             def_reg = curr_def[1].lower()
             if not re.search('[a-zA-Z]', def_reg):
@@ -493,10 +507,39 @@ def analyze_symptom(sym, prog, arg, q):
             print("[main][def] result returned by dyanmic slice: " + str(ret))
             if def_insn == 0x409c24:
                 print("LOL")
+                pos = None 
+                neg = None
+                if immedDom == 0x409c55:
+                    pos, neg = get_rel464()
+                elif immedDom == 0x409c84:
+                    pos, neg = get_rel467()
+                print("[main][def] positive: " + str(pos))
+                print("[main][def] negative: " + str(neg))
+                for p in pos:
+                    if isinstance(p, BitPoint):
+                        p = int(p.point, 16)
+                    print("[main][def] pos " + str(p))
+                    func = get_function(p, prog)
+                    ssym = Symptom(func, p, None) 
+                    q.append(ssym)
+                    c = Couple(ADD(), ssym)
+                    r1.list.append(c)
+                for n in neg:
+                    if isinstance(n, BitPoint):
+                        n = int(n.point, 16)
+                    print("[main][def] pos " + str(n))
+                    func = get_function(n, prog)
+                    ssym = Symptom(func, n, None) 
+                    q.append(ssym)
+                    c = Couple(SUB(), ssym)
+                    r1.list.append(c)
+        
+            r.list.append(Couple(ADD(), r1))
+        sym.relation = r
+        return r 
 
 
-
-def analyze(sym, prog, arg, q, m, mask):
+def analyze(sym, prog, arg, q, m, mask, count):
     print()
     print( "[main] " + "Analyzing " + str(sym))
     if str(sym) in m:
@@ -505,7 +548,8 @@ def analyze(sym, prog, arg, q, m, mask):
     if sym.insn in mask:
         print("[main] Symptom ignored, " + str(sym) + "returning ...") 
         return
-
+    count += 1
+    print("[stat] analyzed " + str(count) + " symptoms")
     if sym.reg != None: 
         # analyze the dataflow
         analyze_symptom_with_dataflow(sym, prog, arg, q)
@@ -527,10 +571,12 @@ def analyze_loop(ssym, prog, arg):
     q.append(ssym)
     m = {}
     mask = [0x409bd3, 0x409e37] #hack for now
+    mask = []
+    count = 0
     while len(q) > 0:
         print("[main] analysis queue size: " + str(len(q)))
         sym = q.popleft()
-        analyze(sym, prog, arg, q, m, mask)
+        analyze(sym, prog, arg, q, m, mask, count)
 
 def parse_set(s):
     segs = s.strip("{").strip("}").split(",")
