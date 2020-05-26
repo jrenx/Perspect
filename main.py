@@ -296,7 +296,9 @@ class Definition():
                 + "_" + str(self.off) + "_" + str(self.func)
 
 def get_function(insn, prog):
-    cmd = ['addr2line', '-e', prog, '-f', hex(insn)]
+    if not isinstance(insn, str):
+        insn = hex(insn)
+    cmd = ['addr2line', '-e', prog, '-f', insn]
     print("[main] running command: " + str(cmd))
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
     func = result.stdout.decode('ascii').split()[0]
@@ -538,16 +540,18 @@ def analyze_symptom(sym, prog, arg, q):
         sym.relation = r
         return r 
 
-
-def analyze(sym, prog, arg, q, m, mask, count):
+def analyze(sym, prog, arg, q, m, mask):
     print()
     print( "[main] " + "Analyzing " + str(sym))
+    if sym is None:
+        return
     if str(sym) in m:
         print("[main] Symptom already analyzed, " + str(sym) + "returning ...") 
         return
     if sym.insn in mask:
         print("[main] Symptom ignored, " + str(sym) + "returning ...") 
         return
+    global count
     count += 1
     print("[stat] analyzed " + str(count) + " symptoms")
     if sym.reg != None: 
@@ -572,11 +576,10 @@ def analyze_loop(ssym, prog, arg):
     m = {}
     mask = [0x409bd3, 0x409e37] #hack for now
     mask = []
-    count = 0
     while len(q) > 0:
         print("[main] analysis queue size: " + str(len(q)))
         sym = q.popleft()
-        analyze(sym, prog, arg, q, m, mask, count)
+        analyze(sym, prog, arg, q, m, mask)
 
 def parse_set(s):
     segs = s.strip("{").strip("}").split(",")
@@ -604,6 +607,8 @@ def parse_set(s):
 def main():
     #https://docs.python.org/2/library/optparse.html
     #python main.py -f sweep -i 0x409dc4 -r r8 -p 909_ziptest_exe5
+    global count
+    count = 0
     if os.path.exists("rr_result_cache"):
         f = open("rr_result_cache", "r")
         lines = f.readlines()
