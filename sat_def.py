@@ -4,7 +4,7 @@ import os
 import re
 import random
 
-working_dir = "/home/anygroup/perf_debug_tool/rr/"
+working_dir = "/home/anygroup/perf_debug_tool/"
 
 def run_break_points(breakpoints):
     json.dump({"breakpoints": breakpoints}, open(working_dir + 'config.json', 'w'))
@@ -70,7 +70,8 @@ def parse_back_trace(log_filename):
 def analyze_trace(taken_traces, not_taken_traces):
     positive = set()
     negative = set()
-
+    print("taken trace size: " + str(len(taken_traces)))
+    print("not taken trace size: " + str(len(not_taken_traces)))
     potential_set = set(taken_traces[0])
     for i in range(1, len(taken_traces)):
         potential_set.intersection_update(set(taken_traces[i]))
@@ -99,13 +100,17 @@ def get_last_def(taken_traces, not_taken_traces):
 
 
 def get_sat_def(target, branch, trace_point, reg, offset="0x0"):
+    print("In get sat def: target " + target + " branch " + branch + " trace point "\
+            + trace_point + " register " + reg + " offset " + offset)
     run_break_points([branch, target])
     taken, not_taken = parse_break_points()
 
     # TODO: better sampling method
-    taken_sample = random.sample(taken, 10)
-    not_taken_sample = random.sample(not_taken, 10)
-
+    sample = 1
+    taken_sample = random.sample(taken, min(len(taken), sample))
+    not_taken_sample = random.sample(not_taken, min(len(not_taken), sample))
+    print("taken sample " + str(taken_sample))
+    print("not taken sample " + str(not_taken_sample))
     taken_traces = []
     not_taken_traces = []
     for count in taken_sample:
@@ -119,6 +124,8 @@ def get_sat_def(target, branch, trace_point, reg, offset="0x0"):
 
 
 def get_def(target, branch, trace_point, reg, offset="0x0"):
+    print("In get sat def: target " + target + " branch " + branch + " trace point "\
+            + trace_point + " register " + reg + " offset " + offset)
     run_break_points([branch, target])
     taken, not_taken = parse_break_points()
     sample = 1

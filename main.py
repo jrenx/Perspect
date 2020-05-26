@@ -76,7 +76,7 @@ def dynamic_backslice(reg, off, insn, func, prog):
         rr_result_defs = rr_result_cache[key]
         print("[main] " + str(rr_result_defs))
     else:
-        rr_result_defs = get_def(fake_target, fake_branch, \
+        rr_result_defs = get_def('*' + fake_target, '*' + fake_branch, \
                                  insn_str, reg, off)
         rr_result_cache[key] = rr_result_defs
     return list(rr_result_defs[0].union(rr_result_defs[1]))
@@ -86,6 +86,9 @@ def dynamic_backslice2(branch, target, reg, off, insn):
     insn_str = hex(insn)
     target_str = hex(target)
     branch_str = hex(branch)
+    if insn_str == '0x409bbc':
+        target_str = '0x409bc2'
+        branch_str = '0x409bbf'
     print( "[main] inputtng to RR2: "  \
         + str(target_str) + " " + str(branch_str) + " " \
         + str(insn_str) + " " + str(reg) + " " + str(off))
@@ -94,19 +97,19 @@ def dynamic_backslice2(branch, target, reg, off, insn):
             str(reg) + "_" + str(off)
     rr_result_defs = None
     ret = []
-    try:
-        if key in rr_result_cache:
-            print("[main] result is cached.")
-            rr_result_defs = rr_result_cache[key]
-            print("[main] " + str(rr_result_defs))
-        else:
-            rr_result_defs = get_sat_def(target_str, branch_str, \
-                                     insn_str, reg, off)
-            #rr_result_defs = get_def('*0x409da5', '*0x409d9d', '0x409d98', 'rsp', '0x68')
-            rr_result_cache[key] = rr_result_defs
-        ret = list(rr_result_defs[0].union(rr_result_defs[1]))
-    except:
-        print("Unexpected error:", sys.exc_info()[0])
+    #try:
+    if key in rr_result_cache:
+        print("[main] result is cached.")
+        rr_result_defs = rr_result_cache[key]
+        print("[main] " + str(rr_result_defs))
+    else:
+        rr_result_defs = get_sat_def('*' + target_str, '*' + branch_str, \
+                                 insn_str, reg, off)
+        #rr_result_defs = get_def('*0x409da5', '*0x409d9d', '0x409d98', 'rsp', '0x68')
+        rr_result_cache[key] = rr_result_defs
+    ret = list(rr_result_defs[0].union(rr_result_defs[1]))
+    #except:
+    #    print("Unexpected error:", sys.exc_info()[0])
         
     return ret
 
