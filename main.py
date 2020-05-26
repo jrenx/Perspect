@@ -264,18 +264,24 @@ class Symptom():
     
     def __init__(self, func, insn, reg=None):
         self.func = func
-        self.insn = insn
+        if isinstance(insn, str):
+            self.insn = int(insn, 16)
+        else:
+            self.insn = insn
         self.reg = reg
         self.isstarting = False
         self.relation = None
 
     def __str__(self):
-        ss = ""
-        try:
-            ss = "[Sym insn: " + str(hex(self.insn)) + " reg: " + str(self.reg) \
+        #ss = ""
+        #try:
+        print(self.insn)
+        print(self.reg)
+        print(self.func)
+        ss = "[Sym insn: " + str(hex(self.insn)) + " reg: " + str(self.reg) \
                 + " func: " + str(self.func) + "]"
-        except:
-            pass
+        #except:
+        #    pass
         return ss
 
 class Definition():
