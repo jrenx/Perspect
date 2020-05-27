@@ -10,7 +10,7 @@ def run_break_points(breakpoints):
     json.dump({"breakpoints": breakpoints}, open(working_dir + 'config.json', 'w'))
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     try:
-        rr_process.communicate(('source ' + working_dir + 'get_breakpoints').encode(), 60 * 10)
+        rr_process.communicate(('source ' + working_dir + 'get_breakpoints').encode(), timeout=300)
     except subprocess.TimeoutExpired:
         rr_process.kill()
         return False
@@ -105,10 +105,19 @@ def get_sat_def(target, branch, trace_point, reg, offset="0x0"):
     run_break_points([branch, target])
     taken, not_taken = parse_break_points()
 
-    # TODO: better sampling method
     sample = 1
-    taken_sample = random.sample(taken, min(len(taken), sample))
-    not_taken_sample = random.sample(not_taken, min(len(not_taken), sample))
+    # TODO: better sampling method
+    reduce_set = True
+    tmp_taken = tmp_not_taken = None
+    if reduce_set:
+        tmp_taken = taken[0:min(sample*3, len(taken))]
+        tmp_not_taken = not_taken[0:min(sample*3, len(not_taken))]
+    else:
+        tmp_taken = taken
+        tmp_not_taken = not_taken
+    taken_sample = random.sample(tmp_taken, min(sample, len(taken)))
+    not_taken_sample = random.sample(tmp_not_taken, min(sample, len(not_taken)))
+
     print("taken sample " + str(taken_sample))
     print("not taken sample " + str(not_taken_sample))
     taken_traces = []
@@ -128,9 +137,10 @@ def get_def(target, branch, trace_point, reg, offset="0x0"):
             + trace_point + " register " + reg + " offset " + offset)
     run_break_points([branch, target])
     taken, not_taken = parse_break_points()
+
     sample = 1
     # TODO: better sampling method
-    reduce_set = False
+    reduce_set = True
     tmp_taken = tmp_not_taken = None
     if reduce_set:
         tmp_taken = taken[0:min(sample*3, len(taken))]

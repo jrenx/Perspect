@@ -1,6 +1,6 @@
 from instruction_reg_trace import InsRegTrace
 
-working_dir = "/home/anygroup/perf_debug_tool/function_trace/"
+working_dir = "/home/anygroup/perf_debug_tool/"
 DEBUG2 = False
 DEBUG3 = False
 class BitPoint:

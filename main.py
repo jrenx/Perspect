@@ -55,6 +55,9 @@ def static_backslice(reg, insn, func, prog):
         if "+" in data:
             def_reg = data.split("+")[0].strip()
             off = data.split("+")[1].strip()
+        if '*' in def_reg:
+            print("Is an expression too difficult for RR to handle")
+            continue
         data_points.append([pc, def_reg, off])
     if (DEBUG_CTYPE): print( "[main] " + str(data_points))
     return data_points
