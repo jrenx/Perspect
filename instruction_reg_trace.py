@@ -1,7 +1,7 @@
 import subprocess
 import os
 
-working_dir = "/home/anygroup/perf_debug_tool/"
+working_dir = "/home/anygroup/perf_debug_tool/function_trace/"
 
 class InsRegTrace:
 
