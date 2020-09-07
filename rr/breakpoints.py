@@ -13,7 +13,11 @@ class InitArgument(gdb.Function):
             config = json.load(configFile)
 
         breakpoints = config['breakpoints']
+        trace_point = config['trace_point']
+        trace_reg = config['trace_reg']
 
+        gdb.execute("br {}".format(trace_point))
+        gdb.execute("commands 1\ni reg {}\nend".format(trace_reg))
         for br in breakpoints:
             gdb.execute("br {}".format(br))
 
