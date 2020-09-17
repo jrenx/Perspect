@@ -45,13 +45,12 @@ class RunBreakCommands(gdb.Function):
 
         for line in outs:
             match = re.match(r'Breakpoint (\d+),', line)
-            if match and len(match.group()) == 2:
-                break_num = int(match.group(1)) - 1
-                if break_num < len(regs):
-                    gdb.execute('i reg {}'.format(regs[break_num]))
-                    return 1
-            else:
+            if not match:
                 continue
+            break_num = int(match.group(0).split()[1][:-1]) - 1
+            if break_num < len(regs):
+                gdb.execute('i reg {}'.format(regs[break_num]))
+                return 1
         return 0
 
 
