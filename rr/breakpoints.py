@@ -28,7 +28,7 @@ InitArgument()
 
 class RunBreakCommands(gdb.Function):
     def __init__(self):
-        super(CheckProcessExit, self).__init__('run_break_commands')
+        super(RunBreakCommands, self).__init__('run_break_commands')
 
     def invoke(self):
         with open('config.json') as configFile:
