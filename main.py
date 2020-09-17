@@ -525,7 +525,9 @@ def analyze_symptom(sym, prog, arg, q):
                 neg = None
                 if immedDom == 0x409c55:
                     pos, neg = get_rel464()
+                    pos, neg = get_rel467()
                 elif immedDom == 0x409c84:
+                    pos, neg = get_rel464()
                     pos, neg = get_rel467()
                 print("[main][def] positive: " + str(pos))
                 print("[main][def] negative: " + str(neg))

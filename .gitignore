@@ -1,0 +1,5 @@
+function_trace/obj-intel64/*
+binary_analysis/*.o
+binary_analysis/*.so
+binary_analysis/analysis
+rr/config.json
