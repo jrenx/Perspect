@@ -12,6 +12,7 @@ set logging on
 while 1 == 1
     p $update_file()
     c
+    p $run_break_commands()
     if $is_process_exit() == 1
         loop_break
     end

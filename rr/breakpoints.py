@@ -13,11 +13,10 @@ class InitArgument(gdb.Function):
             config = json.load(configFile)
 
         breakpoints = config['breakpoints']
-        trace_point = config['trace_point']
-        trace_reg = config['trace_reg']
+        reg_points = config['reg_points']
 
-        gdb.execute("br {}".format(trace_point))
-        gdb.execute("commands 1\ni reg {}\nend".format(trace_reg))
+        for br in reg_points:
+            gdb.execute("br {}".format(br))
         for br in breakpoints:
             gdb.execute("br {}".format(br))
 
@@ -25,6 +24,38 @@ class InitArgument(gdb.Function):
 
 
 InitArgument()
+
+
+class RunBreakCommands(gdb.Function):
+    def __init__(self):
+        super(CheckProcessExit, self).__init__('run_break_commands')
+
+    def invoke(self):
+        with open('config.json') as configFile:
+            config = json.load(configFile)
+
+        regs = config['regs']
+
+        with open('breakpoints.log', 'r') as f:
+            position = gdb.convenience_variable('log_position')
+            if position is not None:
+                position = int(position)
+                f.seek(position)
+            outs = f.readlines()
+
+        for line in outs:
+            match = re.match(r'Breakpoint (\d+),', line)
+            if match and len(match.group()) == 2:
+                break_num = int(match.group(1)) - 1
+                if break_num < len(regs):
+                    gdb.execute('i reg {}'.format(regs[break_num]))
+                    return 1
+            else:
+                continue
+        return 0
+
+
+RunBreakCommands()
 
 
 class CheckProcessExit(gdb.Function):
