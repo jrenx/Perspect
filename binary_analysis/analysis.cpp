@@ -234,6 +234,8 @@ public:
   char *regName = NULL;
   bool filter = false;
   virtual bool endAtPoint(Assignment::Ptr ap) {
+    if(DEBUG_C|DEBUG_SLICE) cout << endl;
+    if(DEBUG_C|DEBUG_SLICE) cout << "[slice] Should continue slicing the assignment?" << endl;
     if(DEBUG_SLICE) cout << "[slice] " << "assignment: " << ap->format();
     //cout << "  ";
     //cout << ap->insn().readsMemory();
@@ -258,6 +260,8 @@ public:
   //int i = 5;
   virtual bool addPredecessor(AbsRegion reg) {
     std:string regStr = reg.format();
+    if(DEBUG_C || DEBUG_SLICE) cout << endl;
+    if(DEBUG_C|DEBUG_SLICE) cout << "[slice] Should add the dataflow predecessor?" << endl;
     if(DEBUG_SLICE) cout << "[slice] " << "predecessor reg: " << regStr << endl;
     if (filter) {
       if (reg.format().compare(regName) != 0) {
@@ -291,11 +295,13 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, char *regNa
   ac.convert(insn, b->last(), f, b, assignments);
 
   // An instruction can corresponds to multiple assignments
+  if(DEBUG_SLICE) cout << "[slice] " << " Finding all assignments of the instruction: " << endl;
   Assignment::Ptr assign; //TODO, how to handle multiple ones?
   for (auto ait = assignments.begin(); ait != assignments.end(); ++ait) {
     if(DEBUG_SLICE) cout << "[slice] " << "assignment: " << (*ait)->format() << endl;
     assign = *ait;
   }
+  if(DEBUG_SLICE) cout << endl;
 
   Slicer s(assign, b, f, true, false);
   CustomSlicer cs;
@@ -367,9 +373,12 @@ void locateBitVariables(GraphPtr slice, boost::unordered_set<Assignment::Ptr> &b
 }
 extern "C" {
   long unsigned int getImmedDom(char *progName, char *funcName, long unsigned int addr){
+    if(DEBUG_C) cout << "[sa] ================================" << endl;
+    if(DEBUG_C) cout << "[sa] Getting the immediate control flow dominator: " << endl;
     if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
     if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
     if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
+    if(DEBUG_C) cout << endl;
     Function *func = getFunction(progName, funcName);
     Block *immedDom = getImmediateDominator2(func, addr);
     //Instruction ifCond = getIfConditionAddr2(immedDom);
@@ -379,9 +388,12 @@ extern "C" {
   }
 
   long unsigned int getFirstInstrInBB(char *progName, char *funcName, long unsigned int addr){
+    if(DEBUG_C) cout << "[sa] ================================" << endl;
+    if(DEBUG_C) cout << "[sa] Getting the first instruction of the basic block: " << endl; 
     if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
     if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
     if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
+    if(DEBUG_C) cout << endl;
     Function *func = getFunction(progName, funcName);
     Block *bb = getBasicBlock2(func, addr);
     //Instruction ifCond = getIfConditionAddr2(immedDom);
@@ -391,9 +403,12 @@ extern "C" {
   }
 
   long unsigned int getLastInstrInBB(char *progName, char *funcName, long unsigned int addr){
+    if(DEBUG_C) cout << "[sa] ================================" << endl;
+    if(DEBUG_C) cout << "[sa] Getting the last instruction of the basic block: " << endl; 
     if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
     if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
     if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
+    if(DEBUG_C) cout << endl;
     Function *func = getFunction(progName, funcName);
     Block *bb = getBasicBlock2(func, addr);
     //Instruction ifCond = getIfConditionAddr2(immedDom);
@@ -402,9 +417,12 @@ extern "C" {
   }
 
   long unsigned int getInstrAfter(char *progName, char *funcName, long unsigned int addr){
+    if(DEBUG_C) cout << "[sa] ================================" << endl;
+    if(DEBUG_C) cout << "[sa] Getting the instruction after: " << endl; 
     if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
     if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
     if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
+    if(DEBUG_C) cout << endl;
     Function *func = getFunction(progName, funcName);
     Block *bb = getBasicBlock2(func, addr);
     Block::Insns insns;
@@ -428,9 +446,12 @@ extern "C" {
   }
 
   void getImmedPred(char *progName, char *funcName, long unsigned int addr){
+    if(DEBUG_C) cout << "[sa] ================================" << endl;
+    if(DEBUG_C) cout << "[sa] Getting the immediate control flow predecessor: " << endl;
     if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
     if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
     if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
+    if(DEBUG_C) cout << endl;
     Function *func = getFunction(progName, funcName);
     Block *immedDom = getImmediateDominator2(func, addr);
     Instruction ifCond = getIfCondition2(immedDom);
@@ -438,10 +459,13 @@ extern "C" {
   }
 
   void backwardSlice(char *progName, char *funcName, long unsigned int addr, char *regName){
+    if(DEBUG_C) cout << "[sa] ================================" << endl;
+    if(DEBUG_C) cout << "[sa] Making a backward slice: " << endl;
     if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
     if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
     if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
     if(DEBUG_C) cout << "[sa] reg: " << regName << endl;
+    if(DEBUG_C) cout << endl;
 
     Function *func = getFunction(progName, funcName);
     Block *bb = getBasicBlock2(func, addr);
@@ -458,6 +482,8 @@ extern "C" {
     //
     std::ofstream out("result");
     //std::stringstream ss;
+    if(DEBUG_C) cout << endl;
+    if(DEBUG_C) cout << "[sa] Result slice: " << endl;
     for(NodeIterator it = begin; it != end; ++it) {
       SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(*it);
       Assignment::Ptr assign = aNode->assign();
@@ -486,6 +512,7 @@ extern "C" {
     out.close();
     //const char* cstr = tmp.c_str();
     //return cstr;
+    if(DEBUG_C) cout << endl;
   }
 }
 
