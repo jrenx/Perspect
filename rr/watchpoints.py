@@ -13,10 +13,11 @@ class InitArgument(gdb.Function):
             config = json.load(configFile)
 
         breakpoints = config['breakpoints']
-        reg_points = config['reg_points']
+        watchpoints = config['watchpoints']
 
-        for br in reg_points:
-            gdb.execute("br {}".format(br))
+        for wp in watchpoints:
+            gdb.execute("watch -l *(long *){}".format(wp))
+
         for br in breakpoints:
             gdb.execute("br {}".format(br))
 
@@ -26,43 +27,12 @@ class InitArgument(gdb.Function):
 InitArgument()
 
 
-class RunBreakCommands(gdb.Function):
-    def __init__(self):
-        super(RunBreakCommands, self).__init__('run_break_commands')
-
-    def invoke(self):
-        with open('config.json') as configFile:
-            config = json.load(configFile)
-
-        regs = config['regs']
-
-        with open('breakpoints.log', 'r') as f:
-            position = gdb.convenience_variable('log_position')
-            if position is not None:
-                position = int(position)
-                f.seek(position)
-            outs = f.readlines()
-
-        for line in outs:
-            match = re.match(r'Breakpoint (\d+),', line)
-            if not match:
-                continue
-            break_num = int(match.group(0).split()[1][:-1]) - 1
-            if break_num < len(regs):
-                gdb.execute('i reg {}'.format(regs[break_num]))
-                return 1
-        return 0
-
-
-RunBreakCommands()
-
-
 class CheckProcessExit(gdb.Function):
     def __init__(self):
         super(CheckProcessExit, self).__init__('is_process_exit')
 
     def invoke(self):
-        with open('breakpoints.log', 'r') as f:
+        with open('watchpoints.log', 'r') as f:
             position = gdb.convenience_variable('log_position')
             if position is not None:
                 position = int(position)
@@ -84,7 +54,7 @@ class UpdateFilePosition(gdb.Function):
         super(UpdateFilePosition, self).__init__('update_file')
 
     def invoke(self):
-        with open('breakpoints.log', 'r') as f:
+        with open('watchpoints.log', 'r') as f:
             f.seek(0, 2)
             position = f.tell()
         gdb.set_convenience_variable('log_position', position)

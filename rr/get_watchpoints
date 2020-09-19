@@ -1,10 +1,10 @@
-source breakpoints.py
+source watchpoints.py
 
 set pagination off
 
 p $init_argument()
 
-set logging file breakpoints.log
+set logging file watchpoints.log
 set logging overwrite on
 set logging redirect on
 set logging on
@@ -12,7 +12,6 @@ set logging on
 while 1 == 1
     p $update_file()
     c
-    p $run_break_commands()
     if $is_process_exit() == 1
         loop_break
     end

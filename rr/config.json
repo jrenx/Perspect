@@ -1,12 +1,17 @@
 {
-    "breakpoint": "*0x409c51",
-    "continue_count": 10,
-    "trace_point": "0x409c0c",
-    "reg": "rbp",
-    "log_filename": "backtrace_10.log",
-    "bitmask_point": "0x409c4e",
-    "bitmask_reg": "rcx",
-    "shift_point": "0x409c28",
-    "shift_reg": "cl",
-    "shift_direction": "left"
+    "breakpoints": ["*0x409c51"],
+    "reg_points": ["*0x409c0c", "*0x409c4e", "*0x409c28" ],
+    "regs" : ["rbp", "rcx", "cl"],
+    "_comments": {
+	    "continue_count": 10,
+	    "trace_point": "*0x409c0c",
+	    "trace_reg": "rbp",
+	    "reg": "rbp",
+	    "log_filename": "backtrace_10.log",
+	    "bitmask_point": "0x409c4e",
+	    "bitmask_reg": "rcx",
+	    "shift_point": "0x409c28",
+	    "shift_reg": "cl",
+	    "shift_direction": "left"
+    }
 }
