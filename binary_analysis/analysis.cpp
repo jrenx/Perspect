@@ -14,6 +14,7 @@
 #include "CFG.h"
 #include "Graph.h"
 #include <boost/unordered_set.hpp>
+#include <boost/unordered_map.hpp>
 #include <boost/heap/priority_queue.hpp>
 #include <iostream>
 #include <fstream>
@@ -316,14 +317,16 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, char *regNa
   return slice;
 }
 
-void locateBitVariables(GraphPtr slice, boost::unordered_set<Assignment::Ptr> &bitVariables) {
+void locateBitVariables(GraphPtr slice, 
+		boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables) {
   boost::heap::priority_queue<Node::Ptr> q;
 
   NodeIterator begin, end;
-  slice->exitNodes(begin, end);
+  slice->exitNodes(begin, end);//Exit nods are the root nodes.
   for (NodeIterator it = begin; it != end; ++it)
     q.push(*it);
 
+  boost::unordered_set<Assignment::Ptr> visitedVariables;
   while (!q.empty()) {
     Node::Ptr node = q.top();
     q.pop();
@@ -336,34 +339,85 @@ void locateBitVariables(GraphPtr slice, boost::unordered_set<Assignment::Ptr> &b
     SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(node);
     Assignment::Ptr assign = aNode->assign();
     entryID id = assign->insn().getOperation().getID();
-    if (id == e_and) {
-      if(DEBUG_SLICE) cout << "[slice] " << "FOUND an AND instruction: ";
-      if(DEBUG_SLICE) cout << "[slice] " << assign->format() << " ";
-      if(DEBUG_SLICE) cout << "[slice] " << assign->insn().format() << endl;
-      bitVariables.insert(assign);
+
+    if (visitedVariables.find(assign) != visitedVariables.end()) {
+      if(DEBUG_SLICE) cout << "[slice] " << "Already visited." << endl;
       continue;
     }
+    visitedVariables.insert(assign);
 
-    if(DEBUG_SLICE) cout << "[slice] " << "CHECKING instruction: ";
+    if(DEBUG_SLICE) cout << "[slice] " << "CHECKING instruction for bit variable: ";
     if(DEBUG_SLICE) cout << "[slice] " << assign->format() << " ";
     if(DEBUG_SLICE) cout << "[slice] " << assign->insn().format() << " ";
     if(DEBUG_SLICE) cout << "[slice] " << id << " ";
     if(DEBUG_SLICE) cout << endl;
+    //for(auto bit = bitVariables.begin(); bit != bitVariables.end(); ++bit){
+    //  cout << *bit << endl;
+    //}
 
-    if (id != e_mov) continue; // FIXME: heuristic to only include direct moves ...
+    if (id == e_and) {
+      if(DEBUG_SLICE) cout << "[slice] " << "FOUND an AND instruction, considered a mask: ";
+      if(DEBUG_SLICE) cout << "[slice] " << assign->format() << " ";
+      if(DEBUG_SLICE) cout << "[slice] " << assign->insn().format() << endl;
+      
+      std::vector<AbsRegion> regions;
+      for(auto iit = assign->inputs().begin(); iit != assign->inputs().end(); ++iit) {
+        regions.push_back(*iit);
+      }
+      bitVariables.insert({assign, regions});
+      continue;
+    }
 
+    //if (id != e_mov) continue; // FIXME: heuristic to only include direct moves ...
+
+    bool predeIsBit = false;
     NodeIterator oBegin, oEnd;
     node->outs(oBegin, oEnd);
     for (NodeIterator it = oBegin; it != oEnd; ++it) {
       SliceNode::Ptr oNode = boost::static_pointer_cast<SliceNode>(*it);
       Assignment::Ptr oAssign = oNode->assign();
-      if(DEBUG_SLICE) cout << "[slice] " << "Predecessor: ";
+      if(DEBUG_SLICE) cout << "[slice] " << "Dataflow predecessor: ";
       if(DEBUG_SLICE) cout << "[slice] " << oAssign->format() << " ";
       if(DEBUG_SLICE) cout << "[slice] " << oAssign->insn().format() << endl;
-
+      
       if (bitVariables.find(oAssign) != bitVariables.end()) {
-        bitVariables.insert(assign);
-        if(DEBUG_SLICE) cout << "[slice] " << "ADDING" << endl;
+        if(DEBUG_SLICE) cout << "[slice] " << "Assignment might involve a bit variable" << endl;
+	std::vector<AbsRegion> regions = bitVariables[oAssign];
+        if(DEBUG_SLICE) cout << "[slice] " << "Current out " << assign->out() << endl;
+        if (std::find(regions.begin(), regions.end(), assign->out()) != regions.end()) {
+          predeIsBit = true;
+          if(DEBUG_SLICE) cout << "[slice] " << "Assignment involves a bit variable" << endl;
+        }
+      }
+    }
+
+    if (predeIsBit) {
+      switch(id) {
+        case e_mov: {
+	    cout << "[slice] encountered mov instruction: " << assign->format() << " " << assign->insn().format() << endl;
+	    std::vector<AbsRegion> regions;
+            for(auto iit = assign->inputs().begin(); iit != assign->inputs().end(); ++iit) {
+              regions.push_back(*iit);
+            }
+	    bitVariables.insert({assign, regions});
+          }
+	  break;
+	case e_shr:
+	case e_shl_sal: {
+	    cout << "[slice] encountered shift instruction: " << assign->format() << " " << assign->insn().format() << endl;
+	    std::vector<AbsRegion> regions;
+	    if (assign->inputs().size() == 2) {
+              regions.push_back(assign->inputs()[1]);
+	    } else if (assign->inputs().size() == 1) {
+              regions.push_back(assign->inputs()[0]);
+	    } else {
+	      cout << "[warn][slice] Unhandle number of inputs. " << endl;
+	    }
+	    bitVariables.insert({assign, regions});
+	  }
+	  break;
+	default:
+	  cout << "[warn][slice] Unhandled case: " << assign->format() << " " << assign->insn().format() << endl;
       }
     }
   }
@@ -371,6 +425,7 @@ void locateBitVariables(GraphPtr slice, boost::unordered_set<Assignment::Ptr> &b
   //  cout << (*it)->format() << endl;
   //}
 }
+
 extern "C" {
   long unsigned int getImmedDom(char *progName, char *funcName, long unsigned int addr){
     if(DEBUG_C) cout << "[sa] ================================" << endl;
@@ -472,8 +527,8 @@ extern "C" {
     Instruction ifCond = bb->getInsn(addr);
     GraphPtr slice = buildBackwardSlice(func, bb, ifCond, regName);
 
-    boost::unordered_set<Assignment::Ptr> bitVariables;
-    //locateBitVariables(slice, bitVariables);
+    boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariables;
+    locateBitVariables(slice, bitVariables);
 
     // get all the leaf nodes.
     NodeIterator begin, end;
@@ -491,7 +546,8 @@ extern "C" {
       if (assign->insn().readsMemory()) {
         if(DEBUG_C) cout << "[sa]" << assign->format() << " ";
         if(DEBUG_C) cout << "insn: " << assign->insn().format() << " ";
-        if(DEBUG_C) cout << "is bit var: " << (bitVariables.find(assign) != bitVariables.end())  << " ";
+	bool isBitVar = bitVariables.find(assign) != bitVariables.end();
+        if(DEBUG_C) cout << "is bit var: " << isBitVar  << " ";
         if(DEBUG_C) cout << endl;
 	std::set<Expression::Ptr> memReads;
 	assign->insn().getMemoryReadOperands(memReads);
@@ -518,20 +574,23 @@ extern "C" {
 
 int main() {
   // Set up information about the program to be instrumented 
-  const char *progName = "909_ziptest_exe";
-  const char *funcName = "scanblock";
+  char *progName = "909_ziptest_exe6";
+  //const char *funcName = "scanblock";
+  char *funcName = "sweep";
 
   //BPatch_image *appImage = getImage(progName);
   //printAddrToLineMappings(appImage, funcName);
   //BPatch_basicBlock *immedDom = getImmediateDominator(appImage, funcName, 0x40940c);
   //Instruction ifCond = getIfCondition(immedDom);
   /***************************************************************/
+  char *regName = "";
+  backwardSlice(progName, funcName, 0x409c55, regName);
+  //Function *func = getFunction(progName, funcName);
+  //Block *immedDom = getImmediateDominator2(func, 0x40940c);
+  //Instruction ifCond = getIfCondition2(immedDom);
+  //GraphPtr slice = buildBackwardSlice(func, immedDom, ifCond, NULL);
 
-  Function *func = getFunction(progName, funcName);
-  Block *immedDom = getImmediateDominator2(func, 0x40940c);
-  Instruction ifCond = getIfCondition2(immedDom);
-  GraphPtr slice = buildBackwardSlice(func, immedDom, ifCond, NULL);
-
+  /*
   boost::unordered_set<Assignment::Ptr> bitVariables;
   locateBitVariables(slice, bitVariables);
 
@@ -550,4 +609,5 @@ int main() {
       cout << endl;
     }
   }
+  */
 }
