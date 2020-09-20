@@ -317,43 +317,153 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, char *regNa
   return slice;
 }
 
-void locateBitVariables(GraphPtr slice, 
-		boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables) {
-  boost::heap::priority_queue<Node::Ptr> q;
+void getReversePostOrderListHelper(Node::Ptr node,
+		std::vector<Node::Ptr> *list) {
+  NodeIterator iBegin, iEnd;
+  node->ins(iBegin, iEnd);
+  // Checking through successors.
+  for (NodeIterator it = iBegin; it != iEnd; ++it) {
+    SliceNode::Ptr iNode = boost::static_pointer_cast<SliceNode>(*it);
+    getReversePostOrderListHelper(iNode, list);
+  }
+
+  list->push_back(node);
+}
+
+void getReversePostOrderList(GraphPtr slice,
+		std::vector<Node::Ptr> *list) {
 
   NodeIterator begin, end;
   slice->exitNodes(begin, end);//Exit nods are the root nodes.
-  for (NodeIterator it = begin; it != end; ++it)
-    q.push(*it);
+  for (NodeIterator it = begin; it != end; ++it) {
+    getReversePostOrderListHelper(*it, list);
+  }
+}
 
-  boost::unordered_set<Assignment::Ptr> visitedVariables;
-  while (!q.empty()) {
-    Node::Ptr node = q.top();
-    q.pop();
+void locateBitVariables(GraphPtr slice, 
+		boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
+                boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
+                boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations
+		) {
 
-    NodeIterator iBegin, iEnd;
-    node->ins(iBegin, iEnd);
-    for (NodeIterator it = iBegin; it != iEnd; ++it)
-      q.push(*it);
+  // Enqueue all the root nodes of the dataflow graph.
+  // Need to do reverse post order.
+  std::vector<Node::Ptr> list;
+  getReversePostOrderList(slice, &list);
+  std::reverse(list.begin(), list.end());
 
+  //boost::unordered_set<Assignment::Ptr> visitedVariables;
+  for(auto it = list.begin(); it != list.end(); ++it) {
+    Node::Ptr node = *it;
     SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(node);
     Assignment::Ptr assign = aNode->assign();
     entryID id = assign->insn().getOperation().getID();
 
+    /*
     if (visitedVariables.find(assign) != visitedVariables.end()) {
       if(DEBUG_SLICE) cout << "[slice] " << "Already visited." << endl;
       continue;
     }
     visitedVariables.insert(assign);
+    */
 
     if(DEBUG_SLICE) cout << "[slice] " << "CHECKING instruction for bit variable: ";
     if(DEBUG_SLICE) cout << "[slice] " << assign->format() << " ";
     if(DEBUG_SLICE) cout << "[slice] " << assign->insn().format() << " ";
     if(DEBUG_SLICE) cout << "[slice] " << id << " ";
     if(DEBUG_SLICE) cout << endl;
-    //for(auto bit = bitVariables.begin(); bit != bitVariables.end(); ++bit){
-    //  cout << *bit << endl;
-    //}
+
+    bool predeIsIgnored = false;
+    bool predeIsBitVar = false;
+    
+    std::vector<Assignment::Ptr> operations; 
+
+    NodeIterator oBegin, oEnd;
+    node->outs(oBegin, oEnd);
+    // Checking through predecessors.
+    for (NodeIterator it = oBegin; it != oEnd; ++it) {
+      SliceNode::Ptr oNode = boost::static_pointer_cast<SliceNode>(*it);
+      Assignment::Ptr oAssign = oNode->assign();
+      if(DEBUG_SLICE) cout << "[slice] " << "Dataflow predecessor: ";
+      if(DEBUG_SLICE) cout << "[slice] " << oAssign->format() << " ";
+      if(DEBUG_SLICE) cout << "[slice] " << oAssign->insn().format() << endl;
+      
+      if (bitVariablesToIgnore.find(oAssign) != bitVariables.end()) {
+        if(DEBUG_SLICE) cout << "[slice] " << "Assignment might involve a bit variable that should be ignored." << endl;
+	std::vector<AbsRegion> regions = bitVariablesToIgnore[oAssign];
+        if (std::find(regions.begin(), regions.end(), assign->out()) != regions.end()) {
+          predeIsIgnored = true;
+          if(DEBUG_SLICE) cout << "[slice] " << "Assignment involves a bit variable that should be ignored." << endl;
+	  break;
+        }
+      }
+
+      if (predeIsIgnored) {
+      	break;
+      }
+
+      if (bitVariables.find(oAssign) != bitVariables.end()) {
+        if(DEBUG_SLICE) cout << "[slice] " << "Assignment might involve a bit variable." << endl;
+	std::vector<AbsRegion> regions = bitVariables[oAssign];
+        if(DEBUG_SLICE) cout << "[slice] " << "Current out " << assign->out() << endl;
+        if (std::find(regions.begin(), regions.end(), assign->out()) != regions.end()) {
+          predeIsBitVar = true;
+          if(DEBUG_SLICE) cout << "[slice] " << "Assignment involves a bit variable." << endl;
+	  operations = bitOperations[oAssign];
+	  break;
+        }
+      }
+    }
+
+    if (predeIsIgnored) {
+      std::vector<AbsRegion> regions;
+      for(auto iit = assign->inputs().begin(); iit != assign->inputs().end(); ++iit) {
+        regions.push_back(*iit);
+      }
+      bitVariablesToIgnore.insert({assign, regions});
+      continue;
+    }
+
+    if (predeIsBitVar) {
+      switch(id) {
+        case e_mov: {
+	    cout << "[slice] encountered mov instruction: " << assign->format() << " " << assign->insn().format() << endl;
+	    std::vector<AbsRegion> regions;
+            for(auto iit = assign->inputs().begin(); iit != assign->inputs().end(); ++iit) {
+              regions.push_back(*iit);
+            }
+	    bitVariables.insert({assign, regions});
+            bitOperations.insert({assign, operations});
+          }
+	  break;
+	case e_and:
+	case e_shr:
+	case e_sar:
+	case e_shl_sal: {
+	    cout << "[slice] encountered shift or and instruction: " << assign->format() << " " << assign->insn().format() << endl;
+	    std::vector<AbsRegion> regions;
+	    if (assign->inputs().size() == 2) {
+              regions.push_back(assign->inputs()[1]);
+
+	      std::vector<AbsRegion> regionsToIgnore;
+              regionsToIgnore.push_back(assign->inputs()[0]);
+	      bitVariablesToIgnore.insert({assign, regionsToIgnore});
+
+	    } else if (assign->inputs().size() == 1) {
+              regions.push_back(assign->inputs()[0]);
+	    } else {
+	      cout << "[warn][slice] Unhandle number of inputs. " << endl;
+	    }
+	    bitVariables.insert({assign, regions});
+	    operations.push_back(assign);
+            bitOperations.insert({assign, operations});
+	  }
+	  break;
+	default:
+	  cout << "[warn][slice] Unhandled case: " << assign->format() << " " << assign->insn().format() << endl;
+      }
+      continue;
+    }
 
     if (id == e_and) {
       if(DEBUG_SLICE) cout << "[slice] " << "FOUND an AND instruction, considered a mask: ";
@@ -365,60 +475,12 @@ void locateBitVariables(GraphPtr slice,
         regions.push_back(*iit);
       }
       bitVariables.insert({assign, regions});
+ 
+      std::vector<Assignment::Ptr> operations;
+      operations.push_back(assign);
+      bitOperations.insert({assign, operations});
+
       continue;
-    }
-
-    //if (id != e_mov) continue; // FIXME: heuristic to only include direct moves ...
-
-    bool predeIsBit = false;
-    NodeIterator oBegin, oEnd;
-    node->outs(oBegin, oEnd);
-    for (NodeIterator it = oBegin; it != oEnd; ++it) {
-      SliceNode::Ptr oNode = boost::static_pointer_cast<SliceNode>(*it);
-      Assignment::Ptr oAssign = oNode->assign();
-      if(DEBUG_SLICE) cout << "[slice] " << "Dataflow predecessor: ";
-      if(DEBUG_SLICE) cout << "[slice] " << oAssign->format() << " ";
-      if(DEBUG_SLICE) cout << "[slice] " << oAssign->insn().format() << endl;
-      
-      if (bitVariables.find(oAssign) != bitVariables.end()) {
-        if(DEBUG_SLICE) cout << "[slice] " << "Assignment might involve a bit variable" << endl;
-	std::vector<AbsRegion> regions = bitVariables[oAssign];
-        if(DEBUG_SLICE) cout << "[slice] " << "Current out " << assign->out() << endl;
-        if (std::find(regions.begin(), regions.end(), assign->out()) != regions.end()) {
-          predeIsBit = true;
-          if(DEBUG_SLICE) cout << "[slice] " << "Assignment involves a bit variable" << endl;
-        }
-      }
-    }
-
-    if (predeIsBit) {
-      switch(id) {
-        case e_mov: {
-	    cout << "[slice] encountered mov instruction: " << assign->format() << " " << assign->insn().format() << endl;
-	    std::vector<AbsRegion> regions;
-            for(auto iit = assign->inputs().begin(); iit != assign->inputs().end(); ++iit) {
-              regions.push_back(*iit);
-            }
-	    bitVariables.insert({assign, regions});
-          }
-	  break;
-	case e_shr:
-	case e_shl_sal: {
-	    cout << "[slice] encountered shift instruction: " << assign->format() << " " << assign->insn().format() << endl;
-	    std::vector<AbsRegion> regions;
-	    if (assign->inputs().size() == 2) {
-              regions.push_back(assign->inputs()[1]);
-	    } else if (assign->inputs().size() == 1) {
-              regions.push_back(assign->inputs()[0]);
-	    } else {
-	      cout << "[warn][slice] Unhandle number of inputs. " << endl;
-	    }
-	    bitVariables.insert({assign, regions});
-	  }
-	  break;
-	default:
-	  cout << "[warn][slice] Unhandled case: " << assign->format() << " " << assign->insn().format() << endl;
-      }
     }
   }
   //for (auto it = bitVariables.begin(); it != bitVariables.end(); ++it) {
@@ -528,7 +590,9 @@ extern "C" {
     GraphPtr slice = buildBackwardSlice(func, bb, ifCond, regName);
 
     boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariables;
-    locateBitVariables(slice, bitVariables);
+    boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariablesToIgnore;
+    boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> bitOperations;
+    locateBitVariables(slice, bitVariables, bitVariablesToIgnore, bitOperations);
 
     // get all the leaf nodes.
     NodeIterator begin, end;
@@ -546,9 +610,23 @@ extern "C" {
       if (assign->insn().readsMemory()) {
         if(DEBUG_C) cout << "[sa]" << assign->format() << " ";
         if(DEBUG_C) cout << "insn: " << assign->insn().format() << " ";
+
 	bool isBitVar = bitVariables.find(assign) != bitVariables.end();
         if(DEBUG_C) cout << "is bit var: " << isBitVar  << " ";
+        //if(DEBUG_C) cout << endl;
+	
+	bool isIgnoredBitVar = bitVariablesToIgnore.find(assign) != bitVariablesToIgnore.end();
+        if(DEBUG_C) cout << "is ignored bit var: " << isIgnoredBitVar  << " ";
         if(DEBUG_C) cout << endl;
+
+	if (isBitVar) {
+          std::vector<Assignment::Ptr> operations = bitOperations[assign];
+          if (DEBUG_C) cout << "[sa] bit operations: " << endl;
+	  for (auto oit = operations.begin(); oit != operations.end(); ++oit) {
+	    if (DEBUG_C) cout << "	" << (*oit)->format() << (*oit)->insn().format() << endl;
+	  }
+	}
+
 	std::set<Expression::Ptr> memReads;
 	assign->insn().getMemoryReadOperands(memReads);
 	if(DEBUG_C) cout << "[sa] Memory read: " << (*memReads.begin())->format() << endl;
