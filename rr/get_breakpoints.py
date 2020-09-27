@@ -43,7 +43,7 @@ def parse_breakpoint(breakpoints, reg_points):
                     curr_br_num = -1
                 else:
                     curr_br_num = br_num
-            else:
+            elif curr_br_num != -1:
                 if 'memory error' in line:
                     result.append((reg_points[curr_br_num], None))
                     curr_br_num = -1
