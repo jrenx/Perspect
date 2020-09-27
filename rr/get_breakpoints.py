@@ -9,7 +9,7 @@ def run_breakpoint(breakpoints, reg_points, regs, deref):
               'reg_points': reg_points,
               'regs': regs,
               'deref': deref}
-    json.dump(config, open(os.path.join(os.getcwd() + 'config.json'), 'w'))
+    json.dump(config, open(os.path.join(os.getcwd(), 'config.json'), 'w'))
 
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     try:
