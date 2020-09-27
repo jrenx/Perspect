@@ -59,7 +59,7 @@ def parse_breakpoint(breakpoints, reg_points):
 
 if __name__ == '__main__':
     breakpoints = ['*0x409c84', '*0x409c55']
-    reg_points = ['0x409c24']
+    reg_points = ['*0x409c24']
     regs = ['rbp']
     run_breakpoint(breakpoints, reg_points, regs, False)
     trace = parse_breakpoint(breakpoints, reg_points)
