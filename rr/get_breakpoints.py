@@ -35,7 +35,7 @@ def parse_breakpoint(breakpoints, reg_points):
     with open(os.path.join(os.getcwd(), "breakpoints.log"), 'r') as log:
         for line in log:
             if re.search(r'Breakpoint \d+,', line):
-                br_num = int(line.split()[1])
+                br_num = int(line.split()[1].strip(','))
                 if br_num >= len(reg_points):
                     if curr_br_num != -1:
                         raise ValueError('reg point with no value')
