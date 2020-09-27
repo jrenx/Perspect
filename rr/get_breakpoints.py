@@ -13,7 +13,7 @@ def run_breakpoint(breakpoints, reg_points, regs, deref):
 
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     try:
-        rr_process.communicate((os.path.join('source ', os.getcwd(), 'get_breakpoints')).encode(), timeout=300)
+        rr_process.communicate(('source' + os.path.join(os.getcwd(), 'get_breakpoints')).encode(), timeout=300)
     except subprocess.TimeoutExpired:
         rr_process.kill()
         return False
