@@ -50,7 +50,7 @@ def parse_breakpoint(breakpoints, reg_points):
                 elif len(line.split()) == 3 and line.startswith('$'):
                     result.append((reg_points[curr_br_num], line.split()[2]))
                     curr_br_num = -1
-                elif len(line.split()) == 3 and line.split()[1].isalpha():
+                elif len(line.split()) == 3 and line.split()[0].isalpha():
                     result.append((reg_points[curr_br_num], line.split()[1]))
                     curr_br_num = -1
 
