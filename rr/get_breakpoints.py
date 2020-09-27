@@ -63,3 +63,5 @@ if __name__ == '__main__':
     regs = ['rbp']
     run_breakpoint(breakpoints, reg_points, regs, False)
     trace = parse_breakpoint(breakpoints, reg_points)
+    print(trace[:10])
+    print(trace[-10:])
