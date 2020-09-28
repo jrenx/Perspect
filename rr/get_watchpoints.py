@@ -41,7 +41,7 @@ def parse_watchpoint(breakpoints, watchpoints):
                 if curr_watch_num != -1:
                     raise ValueError('watchpoint with no source location')
                 curr_watch_num = int(line.split()[2].strip(':')) - 1
-            elif line.startswith('pc') and len(line.split()) == 3:
+            elif curr_watch_num != -1 and line.startswith('pc') and len(line.split()) == 3:
                 addr = line.split()[1]
                 result.append((watchpoints[curr_watch_num], addr))
                 curr_watch_num = -1
