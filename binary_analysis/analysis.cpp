@@ -648,6 +648,33 @@ extern "C" {
     //return cstr;
     if(DEBUG_C) cout << endl;
   }
+
+
+  void getRegsWritten(char *progName, char *funcName, long unsigned int addr){
+    if(DEBUG_C) cout << "[sa] ================================" << endl;
+    if(DEBUG_C) cout << "[sa] Getting the registers written to by the instruction: " << endl;
+    if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
+    if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
+    if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
+    if(DEBUG_C) cout << endl;
+
+    Function *func = getFunction(progName, funcName);
+    Block *bb = getBasicBlock2(func, addr);
+    Instruction insn = bb->getInsn(addr);
+
+    std::set<RegisterAST::Ptr> writtenRegs;
+    insn.getWriteSet(writtenRegs);
+
+    std::ofstream out("result");
+    //std::stringstream ss;
+    for (auto it = writtenRegs.begin(); it != writtenRegs.end(); it++) {
+      if(DEBUG_C) cout << "[sa] Register written: " << (*it)->getID().name() << endl;
+      out << "|"; //<< addr << ",";
+      out << (*it)->getID().name();
+    }
+    out.close();
+  }
+
 }
 
 int main() {
@@ -662,7 +689,8 @@ int main() {
   //Instruction ifCond = getIfCondition(immedDom);
   /***************************************************************/
   char *regName = "";
-  backwardSlice(progName, funcName, 0x409c55, regName);
+  //backwardSlice(progName, funcName, 0x409c55, regName);
+  getRegsWritten(progName, funcName, 0x409c55);
   //Function *func = getFunction(progName, funcName);
   //Block *immedDom = getImmediateDominator2(func, 0x40940c);
   //Instruction ifCond = getIfCondition2(immedDom);
