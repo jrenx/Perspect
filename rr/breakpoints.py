@@ -35,6 +35,7 @@ class RunBreakCommands(gdb.Function):
             config = json.load(configFile)
 
         regs = config['regs']
+        step = config['step']
         deref = config['deref']
 
         with open('breakpoints.log', 'r') as f:
@@ -50,6 +51,8 @@ class RunBreakCommands(gdb.Function):
                 continue
             break_num = int(match.group(0).split()[1][:-1]) - 1
             if break_num < len(regs):
+                if step:
+                    gdb.execute('si')
                 if deref:
                     try:
                         gdb.execute('p/x *((long *) ${})'.format(regs[break_num]))

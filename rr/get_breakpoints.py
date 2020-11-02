@@ -4,10 +4,11 @@ import os
 import re
 
 
-def run_breakpoint(breakpoints, reg_points, regs, deref):
+def run_breakpoint(breakpoints, reg_points, regs, step, deref):
     config = {'breakpoints': breakpoints,
               'reg_points': reg_points,
               'regs': regs,
+              'step': step,
               'deref': deref}
     json.dump(config, open(os.path.join(os.getcwd(), 'config.json'), 'w'))
 
@@ -61,7 +62,7 @@ if __name__ == '__main__':
     breakpoints = ['*0x409c84', '*0x409c55']
     reg_points = ['*0x409c24']
     regs = ['rbp']
-    run_breakpoint(breakpoints, reg_points, regs, False)
+    run_breakpoint(breakpoints, reg_points, regs, False, False)
     trace = parse_breakpoint(breakpoints, reg_points)
     print(trace[:10])
     print(trace[-10:])
