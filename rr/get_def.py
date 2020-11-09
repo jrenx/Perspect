@@ -106,7 +106,7 @@ def get_def(branch, taken, reg_point, reg, offset='0x0', iter=10):
     # First pass
     print("Running breakpoint for first pass")
     run_breakpoint([branch, taken], [reg_point], [reg], False, False)
-    breakpoint_trace = parse_breakpoint([branch, taken], [reg_point])
+    breakpoint_trace = parse_breakpoint([branch, taken], [reg_point], False)
     taken_indices, not_taken_indices = filter_branch(branch, taken, breakpoint_trace)
     print("First pass finished")
 

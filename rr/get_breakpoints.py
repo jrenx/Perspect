@@ -21,14 +21,13 @@ def run_breakpoint(breakpoints, reg_points, regs, step, deref):
     return True
 
 
-def parse_breakpoint(breakpoints, reg_points):
+def parse_breakpoint(breakpoints, reg_points, deref):
     """
     Parse the result log file into a list of pairs.
     :param breakpoints: list of breakpoints with no register read
     :param reg_points: list of breakpoints that requires read register value or follow the value
     :return: list of pair (breakpoint_addr, value). value is None if breakpoint_addr in breakpoints.
-    value is the register value if deref is False when process is run.
-    value is the value stored in address of register value if deref is True when process is run.
+    value is the register value if deref is False. value is a pair of (address, value) if deref is True.
     """
     result = []
     curr_br_num = -1
@@ -63,6 +62,6 @@ if __name__ == '__main__':
     reg_points = ['*0x409c24']
     regs = ['rbp']
     run_breakpoint(breakpoints, reg_points, regs, False, False)
-    trace = parse_breakpoint(breakpoints, reg_points)
+    trace = parse_breakpoint(breakpoints, reg_points, False)
     print(trace[:10])
     print(trace[-10:])

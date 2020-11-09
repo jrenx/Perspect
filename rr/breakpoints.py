@@ -53,13 +53,12 @@ class RunBreakCommands(gdb.Function):
             if break_num < len(regs):
                 if step:
                     gdb.execute('si')
+                gdb.execute('i reg {}'.format(regs[break_num]))
                 if deref:
                     try:
                         gdb.execute('p/x *((long *) ${})'.format(regs[break_num]))
                     except gdb.MemoryError:
                         print("memory error")
-                else:
-                    gdb.execute('i reg {}'.format(regs[break_num]))
                 return 1
         return 0
 
