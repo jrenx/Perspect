@@ -31,6 +31,7 @@ def parse_breakpoint(breakpoints, reg_points, deref):
     """
     result = []
     curr_br_num = -1
+    value = None
 
     with open(os.path.join(os.getcwd(), "breakpoints.log"), 'r') as log:
         for line in log:
@@ -41,18 +42,28 @@ def parse_breakpoint(breakpoints, reg_points, deref):
                         raise ValueError('reg point with no value')
                     result.append((breakpoints[br_num - len(reg_points)], None))
                     curr_br_num = -1
+                    value = None
                 else:
                     curr_br_num = br_num
             elif curr_br_num != -1:
                 if 'memory error' in line:
                     result.append((reg_points[curr_br_num], None))
                     curr_br_num = -1
+                    value = None
                 elif len(line.split()) == 3 and line.startswith('$'):
-                    result.append((reg_points[curr_br_num], line.split()[2]))
+                    if deref and value is not None:
+                        result.append((reg_points[curr_br_num], (value, line.split()[2])))
+                    else:
+                        result.append((reg_points[curr_br_num], line.split()[2]))
                     curr_br_num = -1
+                    value = None
                 elif len(line.split()) == 3 and line.split()[0].isalpha():
-                    result.append((reg_points[curr_br_num], line.split()[1]))
-                    curr_br_num = -1
+                    if deref:
+                        value = line.split()[1]
+                    else:
+                        result.append((reg_points[curr_br_num], line.split()[1]))
+                        curr_br_num = -1
+                        value = None
 
     return result
 
