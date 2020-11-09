@@ -26,8 +26,8 @@ def parse_breakpoint(breakpoints, reg_points, deref):
     Parse the result log file into a list of pairs.
     :param breakpoints: list of breakpoints with no register read
     :param reg_points: list of breakpoints that requires read register value or follow the value
-    :return: list of pair (breakpoint_addr, value). value is None if breakpoint_addr in breakpoints.
-    value is the register value if deref is False. value is a pair of (address, value) if deref is True.
+    :return: list of pair (breakpoint_addr, reg_vale, deref_value). reg_value and deref_value is None
+    if info not available.
     """
     result = []
     curr_br_num = -1
@@ -40,7 +40,7 @@ def parse_breakpoint(breakpoints, reg_points, deref):
                 if br_num >= len(reg_points):
                     if curr_br_num != -1:
                         raise ValueError('reg point with no value')
-                    result.append((breakpoints[br_num - len(reg_points)], None))
+                    result.append((breakpoints[br_num - len(reg_points)], None, None))
                     curr_br_num = -1
                     value = None
                 else:
@@ -52,16 +52,16 @@ def parse_breakpoint(breakpoints, reg_points, deref):
                     value = None
                 elif len(line.split()) == 3 and line.startswith('$'):
                     if deref and value is not None:
-                        result.append((reg_points[curr_br_num], (value, line.split()[2])))
+                        result.append((reg_points[curr_br_num], value, line.split()[2]))
                     else:
-                        result.append((reg_points[curr_br_num], line.split()[2]))
+                        result.append((reg_points[curr_br_num], line.split()[2], None))
                     curr_br_num = -1
                     value = None
                 elif len(line.split()) == 3 and line.split()[0].isalpha():
                     if deref:
                         value = line.split()[1]
                     else:
-                        result.append((reg_points[curr_br_num], line.split()[1]))
+                        result.append((reg_points[curr_br_num], line.split()[1], None))
                         curr_br_num = -1
                         value = None
 

@@ -17,7 +17,7 @@ def filter_branch(branch_point, taken_point, trace):
     taken_indices = []
     not_taken_indices = []
 
-    for i, (point, value) in enumerate(trace):
+    for i, (point, value, _) in enumerate(trace):
         if point == branch_point and value is None:
             if i + 1 < len(trace) and trace[i + 1][0] == taken_point and trace[i + 1][1] is None:
                 taken_indices.append(i)
