@@ -98,6 +98,47 @@ def analyze_trace(taken_traces, not_taken_traces):
     return positive, negative
 
 
+def check_write(reg_point, branch_point, taken_point, trace):
+    """
+    Check whether there is unknown writes to address pointed by register
+    :param reg_point: instruction address to check the register
+    :param branch_point: instruction where the branch happens
+    :param taken_point: instruction denotes that the branch is taken
+    :param trace: the trace that contains list of (addr, reg_value, value)
+    pairs as returned by parse_breakpoint
+    :return: two lists of into traces that points to taken branches and not
+    taken branches whose register has unknown write
+    """
+    reg_map = {}
+    taken = []
+    not_taken = []
+    unknown_write = False
+
+    for i, (addr, reg, value) in enumerate(trace):
+        if reg is None and addr == branch_point:
+            if unknown_write:
+                if i + 1 < len(trace) and trace[i + 1][0] == taken_point and trace[i + 1][1] is None:
+                    taken.append(i)
+                else:
+                    not_taken.append(i)
+                unknown_write = False
+            continue
+        if addr == reg_point:
+            if reg not in reg_map or reg_map[reg] != value:
+                unknown_write = True
+            else:
+                unknown_write = False
+        else:
+            reg_map[reg] = value
+            unknown_write = False
+
+    return taken, not_taken
+
+
+def get_written_reg(instruction):
+    raise NotImplementedError
+
+
 def get_def(branch, taken, reg_point, reg, offset='0x0', iter=10):
 
     positive = set()
@@ -135,6 +176,31 @@ def get_def(branch, taken, reg_point, reg, offset='0x0', iter=10):
 
         # Third pass
         print("Running third pass for {} times".format(i + 1))
+        reg_points = [reg_point]
+        regs = [reg]
+        for instruction in positive:
+            regs.append(get_written_reg(instruction))
+            reg_points.append(instruction)
+        for instruction in negative:
+            regs.append(get_written_reg(instruction))
+            reg_points.append(instruction)
+        run_breakpoint([branch, taken], reg_points, regs, True, True)
+        breakpoint_trace = parse_breakpoint([branch, taken], reg_points, True)
+        taken_indices, not_taken_indices = check_write(reg_point, branch, taken, breakpoint_trace)
         print("Third pass finished")
 
+        branch_indices = random.sample(taken_indices, 4) + random.sample(not_taken_indices, 4)
+        watchpoints = [offset_reg(get_reg_from_branch(index, [reg_point], breakpoint_trace)[reg_point], offset)
+                   for index in branch_indices]
+        watchpoint_taken_indices = range(0, 4)
+        watchpoint_not_taken_indices = range(4, 8)
+
     return positive, negative
+
+
+if __name__ == '__main__':
+    branch = '*0x409c84'
+    taken = '*0x409c55'
+    reg_point = '*0x409c24'
+    regs = 'rbp'
+    positive, negative = get_def(branch, taken, reg_point)
