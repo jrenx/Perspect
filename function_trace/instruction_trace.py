@@ -60,7 +60,7 @@ class InsTrace:
         p_succ_cnt = -1
         pred_cnt = 0
         succ_cnt = 0
-        last_is_succ = None
+        last_is_succ = False
         #print("predecessor: " + hex(predecessor))
         #print("successor:   " + hex(successor))
         with open(working_dir + 'instruction_trace.out') as file:
@@ -70,52 +70,32 @@ class InsTrace:
                 addr = int(line, 16)
 
                 if addr == successor:
-                # current one is a successor
                     if last_is_succ is False:
-                        # last one is the predecessor, 
-                        # clear the historical sequence of successors
-                        succ_cnt = 0
-                    succ_cnt += 1
-                    last_is_succ = True
-                else:
-                # current one is a predecessor
-                    print("succ: " + str(succ_cnt))
-                    print("pred: " + str(pred_cnt))
-                    print("p succ: " + str(p_succ_cnt))
-                    print("p pred: " + str(p_pred_cnt))
-                    if (last_is_succ is True or addr != predecessor) \
-                            and pred_cnt != 0:
-                        # Last one was a successor, current one is not
-                        #  and at least one predecessor occurred in the last 
-                        #  successor (s) and target predecessor (tp) sequence
-                        # then check that the current s-tp ratio 
-                        #  is the same as the last ratio seen
-                        if p_pred_cnt != -1:
+                        if p_pred_cnt > -1:
+                            assert p_succ_cnt > -1
                             if pred_cnt != p_pred_cnt or \
                                succ_cnt != p_succ_cnt:
                                 same = False
-                        p_pred_cnt = pred_cnt
-                        p_succ_cnt = succ_cnt
-                              
-                        # More has priority over less
-                        if succ_cnt > pred_cnt:
-                            more = True
-                        elif succ_cnt < pred_cnt:
-                            if more is not True:
-                                less = True
-                        pred_cnt = 0
+                            p_pred_cnt = pred_cnt
+                            p_succ_cnt = succ_cnt
+
+                            # More has priority over less
+                            if succ_cnt > pred_cnt:
+                                more = True
+                            elif succ_cnt < pred_cnt:
+                                if more is not True:
+                                    less = True
                         succ_cnt = 0
-
-
+                        pred_cnt = 0
+                    succ_cnt += 1
+                    last_is_pred = False
+                else if addr == predecessor:
+                    pred_cnt += 1
                     last_is_succ = False
-                    if addr == predecessor:
-                        #if last_is_succ is True:
-                        #    pred_cnt = 0
-                        pred_cnt += 1
-                        #succ_cnt = 0
-                    #else:
-                    #    succ_cnt = 0
-                    #    pred_cnt = 0
+                else:
+                    last_is_succ = False
+
+
         ratio = p_succ_cnt/p_pred_cnt
 
         ret = ""
