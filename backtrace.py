@@ -4,12 +4,15 @@ import re
 import os
 
 
+working_dir = os.getcwd()
+rr_dir = os.path.join(os.getcwd(), 'rr')
+
 class InitArgument(gdb.Function):
     def __init__(self):
         super(InitArgument, self).__init__('init_argument')
 
     def invoke(self):
-        with open('config.json') as configFile:
+        with open(os.path.join(rr_dir, 'config.json')) as configFile:
             config = json.load(configFile)
 
         gdb.execute('br {}'.format(config['breakpoint']))

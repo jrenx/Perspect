@@ -3,6 +3,8 @@ import json
 import re
 import os
 
+working_dir = os.getcwd()
+rr_dir = os.path.join(os.getcwd(), 'rr')
 
 class InitArgument(gdb.Function):
     def __init__(self):

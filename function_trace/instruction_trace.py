@@ -100,13 +100,13 @@ class InsTrace:
 
                     last_is_succ = False
                     if addr == predecessor:
-                        if last_is_succ is True:
-                            pred_cnt = 0
+                        #if last_is_succ is True:
+                        #    pred_cnt = 0
                         pred_cnt += 1
                         succ_cnt = 0
-                    else:
-                        succ_cnt = 0
-                        pred_cnt = 0
+                    #else:
+                    #    succ_cnt = 0
+                    #    pred_cnt = 0
         ratio = p_succ_cnt/p_pred_cnt
 
         ret = ""

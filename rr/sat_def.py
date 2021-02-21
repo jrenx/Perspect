@@ -4,15 +4,19 @@ import os
 import re
 import random
 
-working_dir = "/home/anygroup/perf_debug_tool/rr/"
+#working_dir = "/home/anygroup/perf_debug_tool/"
+working_dir = os.getcwd()
+rr_dir = os.path.join(os.getcwd(), 'rr')
 
 def run_break_points(breakpoints):
-    json.dump({"breakpoints": breakpoints}, open(working_dir + 'config.json', 'w'))
+    json.dump({"breakpoints": breakpoints}, open('config.json', 'w'))
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    print("Started RR.")
     try:
-        rr_process.communicate(('source ' + working_dir + 'get_breakpoints').encode(), 60 * 10)
+        rr_process.communicate(('source ' + os.path.join(rr_dir, 'get_breakpoints')).encode(), timeout=300)
     except subprocess.TimeoutExpired:
         rr_process.kill()
+        print("Timeout error encountered.")
         return False
     return True
 
@@ -22,7 +26,7 @@ def parse_break_points():
     last_break_num = 0
     taken = []
     not_taken = []
-    with open(working_dir + "breakpoints.log") as log:
+    with open('breakpoints.log') as log:
         for line in log:
             if re.search(r'Breakpoint \d+,', line):
                 words = line.split()
@@ -42,10 +46,10 @@ def parse_break_points():
 def run_back_trace(break_point, continue_count, trace_point, reg, offset):
     config = {"breakpoint": break_point, "continue_count": continue_count, "trace_point": trace_point, "reg": reg,
               "offset": offset, "log_filename": "backtrace_{}.log".format(continue_count)}
-    json.dump(config, open(working_dir + 'config.json', 'w'))
+    json.dump(config, open('config.json', 'w'))
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     try:
-        rr_process.communicate(('source ' + working_dir + 'get_backtrace').encode(), 60 * 10)
+        rr_process.communicate(('source ' + os.path.join(rr_dir, 'get_backtrace')).encode(), 60 * 10)
     except subprocess.TimeoutExpired:
         rr_process.kill()
         return False
@@ -70,7 +74,8 @@ def parse_back_trace(log_filename):
 def analyze_trace(taken_traces, not_taken_traces):
     positive = set()
     negative = set()
-
+    print("taken trace size: " + str(len(taken_traces)))
+    print("not taken trace size: " + str(len(not_taken_traces)))
     potential_set = set(taken_traces[0])
     for i in range(1, len(taken_traces)):
         potential_set.intersection_update(set(taken_traces[i]))
@@ -99,31 +104,47 @@ def get_last_def(taken_traces, not_taken_traces):
 
 
 def get_sat_def(target, branch, trace_point, reg, offset="0x0"):
+    print("In get sat def: target " + target + " branch " + branch + " trace point "\
+            + trace_point + " register " + reg + " offset " + offset)
     run_break_points([branch, target])
     taken, not_taken = parse_break_points()
 
+    sample = 1
     # TODO: better sampling method
-    taken_sample = random.sample(taken, 10)
-    not_taken_sample = random.sample(not_taken, 10)
+    reduce_set = True
+    tmp_taken = tmp_not_taken = None
+    if reduce_set:
+        tmp_taken = taken[0:min(sample*3, len(taken))]
+        tmp_not_taken = not_taken[0:min(sample*3, len(not_taken))]
+    else:
+        tmp_taken = taken
+        tmp_not_taken = not_taken
+    taken_sample = random.sample(tmp_taken, min(sample, len(taken)))
+    not_taken_sample = random.sample(tmp_not_taken, min(sample, len(not_taken)))
 
+    print("taken sample " + str(taken_sample))
+    print("not taken sample " + str(not_taken_sample))
     taken_traces = []
     not_taken_traces = []
     for count in taken_sample:
         run_back_trace(branch, count, trace_point, reg, offset)
-        taken_traces.append(parse_back_trace(working_dir + 'backtrace_{}.log'.format(count)))
+        taken_traces.append(parse_back_trace('backtrace_{}.log'.format(count)))
     for count in not_taken_sample:
         run_back_trace(branch, count, trace_point, reg, offset)
-        not_taken_traces.append(parse_back_trace(working_dir + 'backtrace_{}.log'.format(count)))
+        not_taken_traces.append(parse_back_trace('backtrace_{}.log'.format(count)))
 
     return analyze_trace(taken_traces, not_taken_traces)
 
 
 def get_def(target, branch, trace_point, reg, offset="0x0"):
+    print("In get sat def: target " + target + " branch " + branch + " trace point "\
+            + trace_point + " register " + reg + " offset " + offset)
     run_break_points([branch, target])
     taken, not_taken = parse_break_points()
+
     sample = 1
     # TODO: better sampling method
-    reduce_set = False
+    reduce_set = True
     tmp_taken = tmp_not_taken = None
     if reduce_set:
         tmp_taken = taken[0:min(sample*3, len(taken))]
@@ -138,10 +159,10 @@ def get_def(target, branch, trace_point, reg, offset="0x0"):
     not_taken_traces = []
     for count in taken_sample:
         run_back_trace(branch, count, trace_point, reg, offset)
-        taken_traces.append(parse_back_trace(working_dir + 'backtrace_{}.log'.format(count)))
+        taken_traces.append(parse_back_trace('backtrace_{}.log'.format(count)))
     for count in not_taken_sample:
         run_back_trace(branch, count, trace_point, reg, offset)
-        not_taken_traces.append(parse_back_trace(working_dir + 'backtrace_{}.log'.format(count)))
+        not_taken_traces.append(parse_back_trace('backtrace_{}.log'.format(count)))
 
     return get_last_def(taken_traces, not_taken_traces)
 

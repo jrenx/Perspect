@@ -7,7 +7,7 @@ from subprocess import call
 from optparse import OptionParser
 from collections import deque
 from ctypes import *
-#sys.path.append(os.path.abspath('./rr'))
+sys.path.append(os.path.abspath('./rr'))
 from sat_def import *
 #sys.path.append(os.path.abspath('./function_trace'))
 from instruction_reg_trace import *
@@ -23,6 +23,8 @@ bitpoints = {}
 # C function declarations
 
 def static_backslice(reg, insn, func, prog):
+    print()
+    print( "[main] taking a static backslice: ")
     reg_name = c_char_p(str.encode("[x86_64::" + reg + "]"))
     if reg == "":
         reg_name = c_char_p(str.encode(reg))
@@ -281,9 +283,9 @@ class Symptom():
     def __str__(self):
         #ss = ""
         #try:
-        print(self.insn)
-        print(self.reg)
-        print(self.func)
+        #print(self.insn)
+        #print(self.reg)
+        #print(self.func)
         ss = "[Sym insn: " + str(hex(self.insn)) + " reg: " + str(self.reg) \
                 + " func: " + str(self.func) + "]"
         #except:
