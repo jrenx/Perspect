@@ -70,17 +70,26 @@ class InsTrace:
                 addr = int(line, 16)
 
                 if addr == successor:
+                # current one is a successor
                     if last_is_succ is False:
+                        # last one is the predecessor, 
+                        # clear the historical sequence of successors
                         succ_cnt = 0
                     succ_cnt += 1
                     last_is_succ = True
                 else:
-                    #print("succ: " + str(succ_cnt))
-                    #print("pred: " + str(pred_cnt))
-                    #print("p succ: " + str(p_succ_cnt))
-                    #print("p pred: " + str(p_pred_cnt))
+                # current one is a predecessor
+                    print("succ: " + str(succ_cnt))
+                    print("pred: " + str(pred_cnt))
+                    print("p succ: " + str(p_succ_cnt))
+                    print("p pred: " + str(p_pred_cnt))
                     if (last_is_succ is True or addr != predecessor) \
                             and pred_cnt != 0:
+                        # Last one was a successor, current one is not
+                        #  and at least one predecessor occurred in the last 
+                        #  successor (s) and target predecessor (tp) sequence
+                        # then check that the current s-tp ratio 
+                        #  is the same as the last ratio seen
                         if p_pred_cnt != -1:
                             if pred_cnt != p_pred_cnt or \
                                succ_cnt != p_succ_cnt:
@@ -103,7 +112,7 @@ class InsTrace:
                         #if last_is_succ is True:
                         #    pred_cnt = 0
                         pred_cnt += 1
-                        succ_cnt = 0
+                        #succ_cnt = 0
                     #else:
                     #    succ_cnt = 0
                     #    pred_cnt = 0
@@ -123,7 +132,7 @@ class InsTrace:
         self.run_function_trace([hex(pred) for pred in predecessors], hex(successor))
         ret = {}
         for pred in predecessors:
-            #print("Analyzing predecessor: " + str(hex(pred)))
+            print("Analyzing predecessor: " + str(hex(pred)))
             ret[pred] = self.get_predictive_predecessor2(pred, successor)
         return ret
 
