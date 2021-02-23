@@ -2,6 +2,8 @@ import sys
 import subprocess
 import os
 
+pin_dir = os.path.dirname(os.path.realpath(__file__))
+DEBUG = True
 
 class TraceCollector:
 
@@ -16,19 +18,27 @@ class TraceCollector:
         return fucntion_name in self.traces
 
     def is_trace_on_disk(self, function_name):
-        return os.path.isfile('{}.out'.format(function_name))
+        return os.path.isfile(os.path.join(pin_dir, '{}.out'.format(function_name)))
 
     def read_trace_from_disk(self, function_name):
-        self.traces[function_name] = self.parse_function_trace('{}.out'.format(function_name))
+        self.traces[function_name] = self.parse_function_trace(os.path.join(pin_dir, '{}.out'.format(function_name)))
 
     def run_function_trace(self, function_name):
         if self.is_32:
-            obj_file = os.path.join('obj-ia32', 'function_trace.so')
+            obj_file = os.path.join(pin_dir, 'obj-ia32', 'function_trace.so')
         else:
-            obj_file = os.path.join('obj-intel64', 'function_trace.so')
-        pin_program_list = [self.pin, '-t', obj_file, '-f', function_name, '-o', '{}.out'.format(function_name), '--']
+            obj_file = os.path.join(pin_dir, 'obj-intel64', 'function_trace.so')
+        pin_program_list = [self.pin, '-t', obj_file, '-f', function_name, '-o', os.path.join(pin_dir, '{}.out'.format(function_name)), '--']
         pin_program_list.extend(self.program)
-        subprocess.call(' '.join(pin_program_list), shell=True)
+        pin_cmd = ' '.join(pin_program_list)
+        if (DEBUG): print("Invoking pin with: " + pin_cmd)
+        subprocess.call(pin_cmd, shell=True)
+
+    def cleanup(self, function_name):
+        out_file = os.path.join(pin_dir, '{}.out'.format(function_name))
+        cmd = ' '.join(['rm', out_file])
+        subprocess.call(cmd, shell=True)
+
 
     def is_instruction_after(self, function_name, before, after):
         traces = self.traces[function_name]

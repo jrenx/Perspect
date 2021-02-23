@@ -1,6 +1,8 @@
 from instruction_reg_trace import InsRegTrace
+import os
 
-working_dir = "/home/anygroup/perf_debug_tool/function_trace/"
+pin_dir = os.path.dirname(os.path.realpath(__file__))
+
 DEBUG2 = False
 DEBUG3 = True
 class BitPoint:
@@ -74,7 +76,7 @@ class BitTrace(InsRegTrace):
 
         traces = []
         curr_bitpoint_value = None
-        with open(working_dir + 'instruction_trace.out') as trace_file:
+        with open(os.path.join(pin_dir, 'instruction_trace.out')) as trace_file:
             for line in trace_file:
                 if 'eof' in line:
                     break
@@ -316,7 +318,7 @@ class BitTrace(InsRegTrace):
         return ret_pos, ret_neg
 
 if __name__ == '__main__':
-    bitTrace = BitTrace('/home/anygroup/perf_debug_tool/909_ziptest_exe6 /home/anygroup/perf_debug_tool/test.zip', pin='~/pin-3.11/pin')
+    bitTrace = BitTrace('/home/anygroup/perf_debug_tool/909_ziptest_exe9 /home/anygroup/perf_debug_tool/test.zip', pin='~/pin-3.11/pin')
     #target = '0x409c70'
     
     #target = '0x409c84' #472

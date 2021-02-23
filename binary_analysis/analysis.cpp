@@ -679,7 +679,7 @@ extern "C" {
 
 int main() {
   // Set up information about the program to be instrumented 
-  char *progName = "909_ziptest_exe6";
+  char *progName = "909_ziptest_exe9";
   //const char *funcName = "scanblock";
   char *funcName = "sweep";
 

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <map>
 
-KNOB<std::string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool", "o", "taint.out", "specify trace file name");
+KNOB<std::string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool", "o", "pin/taint.out", "specify trace file name");
 
 std::ofstream TraceFile;
 std::map<UINT64, UINT64> addressTainted;

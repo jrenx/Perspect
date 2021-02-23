@@ -1,5 +1,14 @@
-function_trace/obj-intel64/*
+pin/obj-intel64/*
+pin/__pycache__/*
+pin/__init__.py
+pin/*.pyc
 binary_analysis/*.o
 binary_analysis/*.so
 binary_analysis/analysis
 rr/config.json
+rr/__pycache__/*
+rr/__init__.py
+rr/*.pyc
+__pycache__/*
+__init__.py
+*.pyc

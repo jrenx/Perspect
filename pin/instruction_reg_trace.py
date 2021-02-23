@@ -1,7 +1,7 @@
 import subprocess
 import os
 
-working_dir = "/home/anygroup/perf_debug_tool/function_trace/"
+pin_dir = os.path.dirname(os.path.realpath(__file__))
 
 class InsRegTrace:
 
@@ -12,10 +12,10 @@ class InsRegTrace:
 
     def run_function_trace(self, ins_reg_map):
         if self.is_32:
-            obj_file = os.path.join(working_dir, 'obj-ia32', 'instruction_reg_log.so')
+            obj_file = os.path.join(pin_dir, 'obj-ia32', 'instruction_reg_log.so')
         else:
-            obj_file = os.path.join(working_dir, 'obj-intel64', 'instruction_reg_log.so')
-        pin_program_list = [self.pin, '-t', obj_file, '-o', working_dir + 'instruction_trace.out']
+            obj_file = os.path.join(pin_dir, 'obj-intel64', 'instruction_reg_log.so')
+        pin_program_list = [self.pin, '-t', obj_file, '-o', os.path.join(pin_dir, 'instruction_trace.out')]
 
         for ins, reg in ins_reg_map.items():
             pin_program_list.extend(['-i', ins, '-r', reg])
@@ -29,7 +29,7 @@ class InsRegTrace:
         last_break = ""
         taken = []
         not_taken = []
-        with open(working_dir + "instruction_trace.out") as log:
+        with open(os.path.join(pin_dir, "instruction_trace.out")) as log:
             for line in log:
                 if branch in line:
                     if last_break == branch:

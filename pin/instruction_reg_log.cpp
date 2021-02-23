@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <map>
 using std::hex;
 using std::cerr;
 using std::string;
@@ -14,13 +15,17 @@ using std::endl;
 
 std::ofstream TraceFile;
 std::vector<unsigned long> addresses;
+std::vector<string> registers;
+
+std::map<string, REG> reg_map;
 
 /* ===================================================================== */
 /* Commandline Switches */
 /* ===================================================================== */
 
-KNOB<string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool", "o", "ftrace.out", "specify trace file name");
+KNOB<string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool", "o", "pin/ftrace.out", "specify trace file name");
 KNOB<string> KnobInstructionArgs(KNOB_MODE_APPEND, "pintool", "i", "0x0", "specify instructions to trace");
+KNOB<string> KnobRegisterArgs(KNOB_MODE_APPEND, "pintool", "r", "pc", "specify register for instruction");
 
 /* ===================================================================== */
 /* Print Help Message                                                    */
@@ -42,20 +47,20 @@ VOID start_log()
 
 /* ===================================================================== */
 
-VOID record_pc(ADDRINT pc)
+VOID record_reg(ADDRINT pc, ADDRINT reg)
 {
-    TraceFile << pc << endl;
+    TraceFile << pc << ": " << reg << endl;
 }
 
 /* ===================================================================== */
 
-bool is_ins_traced(ADDRINT pc)
+int get_ins_index(ADDRINT pc)
 {
     for (std::vector<unsigned long>::iterator it = addresses.begin(); it != addresses.end(); ++it)
     {
-        if (*it == pc) return true;
+        if (*it == pc) return std::distance(addresses.begin(), it);
     }
-    return false;
+    return -1;
 }
 
 /* ===================================================================== */
@@ -69,9 +74,15 @@ VOID ImageLoad(IMG img, VOID *v)
             RTN_Open(rtn);
             for (INS ins = RTN_InsHead(rtn); INS_Valid(ins); ins = INS_Next(ins))
             {
-                if (is_ins_traced(INS_Address(ins)))
+                int index = get_ins_index(INS_Address(ins));
+                if (index != -1)
                 {
-                    INS_InsertCall(ins, IPOINT_BEFORE, AFUNPTR(record_pc), IARG_INST_PTR, IARG_END);
+                    string reg = registers[index];
+                    if (reg == "pc") {
+                        INS_InsertCall(ins, IPOINT_BEFORE, AFUNPTR(record_reg), IARG_INST_PTR, IARG_INST_PTR, IARG_END);
+                    } else {
+                        INS_InsertCall(ins, IPOINT_BEFORE, AFUNPTR(record_reg), IARG_INST_PTR, IARG_REG_VALUE, reg_map[reg], IARG_END);
+                    }
                 }
             }
             RTN_Close(rtn);
@@ -105,10 +116,37 @@ int main (INT32 argc, CHAR *argv[])
         addresses.push_back(addr);
     }
 
+    for (UINT32 i = 0; i < KnobRegisterArgs.NumberOfValues(); ++ i) {
+        registers.push_back(KnobRegisterArgs.Value(i));
+    }
+
     TraceFile.open(KnobOutputFile.Value().c_str());
 
     TraceFile << hex;
     TraceFile.setf(ios::showbase);
+
+    // Initialize reg_map
+    reg_map["rbp"] = REG_RBP;
+    reg_map["rsp"] = REG_RSP;
+    reg_map["rdx"] = REG_RDX;
+    reg_map["rbx"] = REG_RBX;
+    reg_map["rsi"] = REG_RSI;
+    reg_map["cl"] = REG_CL;
+    //reg_map["r1"] = REG_R1;
+    //reg_map["r2"] = REG_R2;
+    //reg_map["r3"] = REG_R3;
+    //reg_map["r4"] = REG_R4;
+    //reg_map["r5"] = REG_R5;
+    //reg_map["r6"] = REG_R6;
+    //reg_map["r7"] = REG_R7;
+    reg_map["r8"] = REG_R8;
+    reg_map["r9"] = REG_R9;
+    reg_map["r10"] = REG_R10;
+    reg_map["r11"] = REG_R11;
+    reg_map["r12"] = REG_R12;
+    reg_map["r13"] = REG_R13;
+    reg_map["r14"] = REG_R14;
+    reg_map["r15"] = REG_R15;
 
     // Register ImageLoad to be called when an image is loaded
     //
