@@ -144,7 +144,7 @@ def trace_function(function, path, prog, arg):
     trace = TraceCollector(os.path.join(path, prog) + " " + arg, pin='~/pin-3.11/pin')
     trace.run_function_trace(function)
     trace.read_trace_from_disk(function)
-    trace.cleanup(function)
+    #trace.cleanup(function)
     return trace.traces[function]
 
 ################################################################

@@ -12,15 +12,19 @@ class InsTrace:
         self.is_32 = is_32
         self.pin = pin
 
-    def run_function_trace(self, predecessors, successor):
+    '''
+        Invokes PIN to watch given set of instructions.
+        Every time the instruction is executed,
+        PIN will print the address(pc) of the instruction in the output file.
+    '''
+    def run_instruction_trace(self, instructions):
         if self.is_32:
             obj_file = os.path.join(pin_dir, 'obj-ia32', 'instruction_log.so')
         else:
             obj_file = os.path.join(pin_dir, 'obj-intel64', 'instruction_log.so')
         pin_program_list = [self.pin, '-t', obj_file, '-o', os.path.join(pin_dir, 'instruction_trace.out')]
-        for pred in predecessors:
-            pin_program_list.extend(['-i', pred])
-        pin_program_list.extend(['-i', successor])
+        for insn in instructions:
+            pin_program_list.extend(['-i', insn])
         pin_program_list.append('--')
         pin_program_list.extend(self.program)
         pin_cmd = ' '.join(pin_program_list)
@@ -117,12 +121,14 @@ class InsTrace:
         return (ret, ratio)
 
     def get_predictive_predecessors(self, predecessors, successor):
-        self.run_function_trace([hex(pred) for pred in predecessors], hex(successor))
+        instructions = [hex(pred) for pred in predecessors]
+        instructions.append(hex(successor))
+        self.run_instruction_trace(instructions)
         ret = {}
         for pred in predecessors:
             print("Analyzing predecessor: " + str(hex(pred)) + " for successor " + str(successor))
             ret[pred] = self.get_predictive_predecessor2(pred, successor)
-        self.cleanup()
+        #self.cleanup()
         return ret
 
 if __name__ == '__main__':
