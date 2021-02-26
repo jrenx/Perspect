@@ -36,6 +36,41 @@ typedef enum {
   open
 } accessType_t;
 
+
+BPatch_addressSpace *startInstrumenting(accessType_t accessType, const char *name, int pid, const char *argv[]);
+BPatch_image *getImage(const char *progName);
+
+void printLineInfo(BPatch_basicBlock *block);
+void printAddrToLineMappings(BPatch_image *appImage, const char *funcName);
+
+void getControlFlowPredecessors(boost::unordered_set<BPatch_basicBlock *> &predecessors,
+		BPatch_image *appImage, const char *funcName, long unsigned int addr);
+
+BPatch_basicBlock *getImmediateDominator(BPatch_image *appImage, const char *funcName, long unsigned int addr);
+Block *getImmediateDominator2(Function *f, long unsigned int addr);
+
+BPatch_function *getFunction(BPatch_image *appImage, const char *funcName);
+Function *getFunction2(const char *binaryPath, const char *funcName);
+
+Instruction getIfCondition(BPatch_basicBlock *block);
+Instruction getIfCondition2(Block *b);
+
+BPatch_basicBlock *getBasicBlock(BPatch_flowGraph *fg, long unsigned int addr);
+Block *getBasicBlock2(Function *f, long unsigned int addr);
+
+GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, char *regName);
+
+void getReversePostOrderListHelper(Node::Ptr node, std::vector<Node::Ptr> *list);
+ 
+void getReversePostOrderList(GraphPtr slice, std::vector<Node::Ptr> *list);
+
+void locateBitVariables(GraphPtr slice, 
+		boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
+                boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
+                boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations
+		);
+
+
 // Attach, create, or open a file for rewriting
 BPatch_addressSpace *startInstrumenting(accessType_t accessType, const char *name, int pid, const char *argv[]) {
   BPatch_addressSpace *handle = NULL;
@@ -113,39 +148,33 @@ void printAddrToLineMappings(BPatch_image *appImage, const char *funcName) {
   }
 }
 
+void getControlFlowPredecessors(boost::unordered_set<BPatch_basicBlock *> &allPredes,
+		BPatch_image *appImage, const char *funcName, long unsigned int addr) {
+  BPatch_flowGraph *fg = getFunction(appImage, funcName)->getCFG();
+  BPatch_basicBlock *bb = getBasicBlock(fg, addr);
+  std::queue<BPatch_basicBlock *> worklist; // TODO change to a boost queue?
+  worklist.push(bb);
+  while (worklist.size() > 0) {
+    cout << "Checking predecessor ..." << endl;
+    BPatch_basicBlock *curr = worklist.front();
+    worklist.pop();
+    printLineInfo(curr);  
+    if (allPredes.find(curr) != allPredes.end()) {
+      continue;
+    }
+    allPredes.insert(curr);
+    BPatch_Vector<BPatch_basicBlock *> predes;
+    curr->getSources(predes);
+    for (int i=0; i<predes.size(); i++)
+      worklist.push(predes[i]);
+  }
+}
+
+
 BPatch_basicBlock *getImmediateDominator(BPatch_image *appImage, const char *funcName, long unsigned int addr) {
 
-  vector < BPatch_function * > functions;
-  appImage->findFunction(funcName, functions);
-  if (functions.size() == 0) {
-    fprintf(stderr, "Loading function %s failed.\n", funcName);
-    return NULL;
-  } else if (functions.size() > 1) {
-    fprintf(stderr, "More than one function with name %s, using one.\n", funcName);
-  }
-
-  BPatch_flowGraph *fg = functions[0]->getCFG();
-
-  set <BPatch_basicBlock *> blocks;
-  fg->getAllBasicBlocks(blocks);
-
-  BPatch_basicBlock *target = NULL;
-  for (auto blockIter = blocks.begin();
-       blockIter != blocks.end();
-       ++blockIter) {
-    BPatch_basicBlock *block = *blockIter;
-    printLineInfo(block);
-    if (addr >= block->getStartAddress() && addr <= block->getEndAddress()) { //TODO inclusive?
-      target = block;
-      break;
-    }
-  }
-
-  if (target == NULL) {
-    fprintf(stderr, "Failed to find basic block for function %s @ %lx.\n", funcName, addr);
-    return NULL;
-  }
-  return target->getImmediateDominator();
+  BPatch_flowGraph *fg = getFunction(appImage, funcName)->getCFG();
+  return getBasicBlock(fg, addr)->getImmediateDominator();
 }
 
 Instruction getIfCondition(BPatch_basicBlock *block) {
@@ -156,8 +185,21 @@ Instruction getIfCondition(BPatch_basicBlock *block) {
   return ret;
 }
 /***************************************************************/
+BPatch_function *getFunction(BPatch_image *appImage, const char *funcName){
+  vector < BPatch_function * > functions;
+  appImage->findFunction(funcName, functions);
+  if (functions.size() == 0) {
+    fprintf(stderr, "Loading function %s failed.\n", funcName);
+    return NULL;
+  } else if (functions.size() > 1) {
+    fprintf(stderr, "More than one function with name %s, using one.\n", funcName);
+  }
+  return functions[0]; // TODO is this gonna be a problem?
+}
 
-Function *getFunction(const char *binaryPath, const char *funcName) {
+
+
+Function *getFunction2(const char *binaryPath, const char *funcName) {
   SymtabAPI::Symtab *symTab;
   string binaryPathStr(binaryPath);
   string funcNameStr(funcName);
@@ -185,6 +227,29 @@ Function *getFunction(const char *binaryPath, const char *funcName) {
     }
   }
   return NULL;
+}
+
+BPatch_basicBlock *getBasicBlock(BPatch_flowGraph *fg, long unsigned int addr) {
+  set <BPatch_basicBlock *> blocks;
+  fg->getAllBasicBlocks(blocks);
+
+  BPatch_basicBlock *target = NULL;
+  for (auto blockIter = blocks.begin();
+       blockIter != blocks.end();
+       ++blockIter) {
+    BPatch_basicBlock *block = *blockIter;
+    printLineInfo(block);
+    if (addr >= block->getStartAddress() && addr <= block->getEndAddress()) { //TODO inclusive?
+      target = block;
+      break;
+    }
+  }
+
+  if (target == NULL) {
+    fprintf(stderr, "Failed to find basic block @ %lx.\n", addr);
+    return NULL;
+  }
+  return target;
 }
 
 Block *getBasicBlock2(Function *f, long unsigned int addr) {
@@ -496,13 +561,35 @@ extern "C" {
     if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
     if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
     if(DEBUG_C) cout << endl;
-    Function *func = getFunction(progName, funcName);
+    Function *func = getFunction2(progName, funcName);
     Block *immedDom = getImmediateDominator2(func, addr);
     //Instruction ifCond = getIfConditionAddr2(immedDom);
     if(DEBUG_C) cout << "[sa] immed dom: " << immedDom->last() << endl;
     return immedDom->last();
 
   }
+
+  void getAllPredes(char *progName, char *funcName, long unsigned int addr){
+    if(DEBUG_C) cout << "[sa] ================================" << endl;
+    if(DEBUG_C) cout << "[sa] Getting all control flow predecessors: " << endl;
+    if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
+    if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
+    if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
+    if(DEBUG_C) cout << endl;
+    BPatch_image *appImage = getImage(progName);
+    boost::unordered_set<BPatch_basicBlock *> predes;
+    getControlFlowPredecessors(predes, appImage, funcName, addr);
+ 
+    std::ofstream out("result");
+    for(auto it = predes.begin(); it != predes.end(); ++it)
+          out << "|" << (*it)->getStartAddress();
+    out.close();
+    if(DEBUG_C) cout << "[sa] all predecessors: ";
+    if(DEBUG_C) cout << endl;
+    return;
+
+  }
+
 
   long unsigned int getFirstInstrInBB(char *progName, char *funcName, long unsigned int addr){
     if(DEBUG_C) cout << "[sa] ================================" << endl;
@@ -511,7 +598,7 @@ extern "C" {
     if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
     if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
     if(DEBUG_C) cout << endl;
-    Function *func = getFunction(progName, funcName);
+    Function *func = getFunction2(progName, funcName);
     Block *bb = getBasicBlock2(func, addr);
     //Instruction ifCond = getIfConditionAddr2(immedDom);
     if(DEBUG_C) cout << "[sa] first instr: " << bb->start() << endl;
@@ -526,7 +613,7 @@ extern "C" {
     if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
     if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
     if(DEBUG_C) cout << endl;
-    Function *func = getFunction(progName, funcName);
+    Function *func = getFunction2(progName, funcName);
     Block *bb = getBasicBlock2(func, addr);
     //Instruction ifCond = getIfConditionAddr2(immedDom);
     if(DEBUG_C) cout << "[sa] last instr: " << bb->last() << endl;
@@ -540,7 +627,7 @@ extern "C" {
     if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
     if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
     if(DEBUG_C) cout << endl;
-    Function *func = getFunction(progName, funcName);
+    Function *func = getFunction2(progName, funcName);
     Block *bb = getBasicBlock2(func, addr);
     Block::Insns insns;
     bb->getInsns(insns);
@@ -569,7 +656,7 @@ extern "C" {
     if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
     if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
     if(DEBUG_C) cout << endl;
-    Function *func = getFunction(progName, funcName);
+    Function *func = getFunction2(progName, funcName);
     Block *immedDom = getImmediateDominator2(func, addr);
     Instruction ifCond = getIfCondition2(immedDom);
     //TODO
@@ -584,7 +671,7 @@ extern "C" {
     if(DEBUG_C) cout << "[sa] reg: " << regName << endl;
     if(DEBUG_C) cout << endl;
 
-    Function *func = getFunction(progName, funcName);
+    Function *func = getFunction2(progName, funcName);
     Block *bb = getBasicBlock2(func, addr);
     Instruction ifCond = bb->getInsn(addr);
     GraphPtr slice = buildBackwardSlice(func, bb, ifCond, regName);
@@ -658,7 +745,7 @@ extern "C" {
     if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
     if(DEBUG_C) cout << endl;
 
-    Function *func = getFunction(progName, funcName);
+    Function *func = getFunction2(progName, funcName);
     Block *bb = getBasicBlock2(func, addr);
     Instruction insn = bb->getInsn(addr);
 
@@ -682,16 +769,22 @@ int main() {
   char *progName = "909_ziptest_exe9";
   //const char *funcName = "scanblock";
   char *funcName = "sweep";
+  long unsigned int addr = 0x409c55;
 
-  //BPatch_image *appImage = getImage(progName);
+  BPatch_image *appImage = getImage(progName);
   //printAddrToLineMappings(appImage, funcName);
   //BPatch_basicBlock *immedDom = getImmediateDominator(appImage, funcName, 0x40940c);
   //Instruction ifCond = getIfCondition(immedDom);
   /***************************************************************/
-  char *regName = "";
+  //char *regName = "";
+  //
+  //boost::unordered_set<BPatch_basicBlock *> predes;
+  //getControlFlowPredecessors(predes, appImage, funcName, addr);
+  //
+  getAllPredes(progName, funcName, addr);
   //backwardSlice(progName, funcName, 0x409c55, regName);
-  getRegsWritten(progName, funcName, 0x409c55);
-  //Function *func = getFunction(progName, funcName);
+  //getRegsWritten(progName, funcName, 0x409c55);
+  //Function *func = getFunction2(progName, funcName);
   //Block *immedDom = getImmediateDominator2(func, 0x40940c);
   //Instruction ifCond = getIfCondition2(immedDom);
   //GraphPtr slice = buildBackwardSlice(func, immedDom, ifCond, NULL);
