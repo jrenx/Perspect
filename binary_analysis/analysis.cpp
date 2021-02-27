@@ -18,6 +18,7 @@
 #include <boost/heap/priority_queue.hpp>
 #include <iostream>
 #include <fstream>
+#include "cJSON.h"
 
 using namespace std;
 using namespace Dyninst;
@@ -43,7 +44,7 @@ BPatch_image *getImage(const char *progName);
 void printLineInfo(BPatch_basicBlock *block);
 void printAddrToLineMappings(BPatch_image *appImage, const char *funcName);
 
-void getControlFlowPredecessors(boost::unordered_set<BPatch_basicBlock *> &predecessors,
+void getAllControlFlowPredecessors(boost::unordered_set<BPatch_basicBlock *> &predecessors,
 		BPatch_image *appImage, const char *funcName, long unsigned int addr);
 
 BPatch_basicBlock *getImmediateDominator(BPatch_image *appImage, const char *funcName, long unsigned int addr);
@@ -70,6 +71,7 @@ void locateBitVariables(GraphPtr slice,
                 boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations
 		);
 
+cJSON * printBBsToJsonHelper(BPatch_basicBlock * bb);
 
 // Attach, create, or open a file for rewriting
 BPatch_addressSpace *startInstrumenting(accessType_t accessType, const char *name, int pid, const char *argv[]) {
@@ -111,15 +113,25 @@ BPatch_image *getImage(const char *progName) {
   return appImage;
 }
 
+void printInsnInfo(BPatch_basicBlock *block) {
+  std::vector<std::pair<Dyninst::InstructionAPI::Instruction,Address>> insns;
+  block->getInstructions(insns);
+  for (auto it = insns.begin(); it != insns.end(); ++it) {
+    Address addr = (*it).second;
+    fprintf(stdout, "  address: %lx.\n", addr);
+  }
+}
+
 void printLineInfo(BPatch_basicBlock *block) {
-  fprintf(stdout, "start %lx end %lx\n", block->getStartAddress(), block->getEndAddress());
-  BPatch_Vector < BPatch_sourceBlock * > sourceBlocks;
+  fprintf(stdout, " start %lx end %lx\n", block->getStartAddress(), block->getLastInsnAddress());
+  BPatch_Vector<BPatch_sourceBlock*> sourceBlocks;
   block->getSourceBlocks(sourceBlocks);
   for (int i = 0; i < sourceBlocks.size(); i++) {
+    fprintf(stdout, "  source block: %u.\n", i);
     BPatch_Vector<unsigned short> lines;
     sourceBlocks[i]->getSourceLines(lines);
     for (int j = 0; j < lines.size(); j++) {
-      fprintf(stdout, "source line: %u.\n", lines[j]);
+      fprintf(stdout, "  source line: %u.\n", lines[j]);
     }
   }
 }
@@ -148,7 +160,7 @@ void printAddrToLineMappings(BPatch_image *appImage, const char *funcName) {
   }
 }
 
-void getControlFlowPredecessors(boost::unordered_set<BPatch_basicBlock *> &allPredes,
+void getAllControlFlowPredecessors(boost::unordered_set<BPatch_basicBlock *> &allPredes,
 		BPatch_image *appImage, const char *funcName, long unsigned int addr) {
   BPatch_flowGraph *fg = getFunction(appImage, funcName)->getCFG();
   BPatch_basicBlock *bb = getBasicBlock(fg, addr);
@@ -158,15 +170,21 @@ void getControlFlowPredecessors(boost::unordered_set<BPatch_basicBlock *> &allPr
     cout << "Checking predecessor ..." << endl;
     BPatch_basicBlock *curr = worklist.front();
     worklist.pop();
-    printLineInfo(curr);  
+    printLineInfo(curr);
+    printInsnInfo(curr);
     if (allPredes.find(curr) != allPredes.end()) {
+      cout << "Already visited " << endl;
       continue;
     }
     allPredes.insert(curr);
     BPatch_Vector<BPatch_basicBlock *> predes;
     curr->getSources(predes);
-    for (int i=0; i<predes.size(); i++)
+    for (int i=0; i<predes.size(); i++) {
       worklist.push(predes[i]);
+      cout << "Adding predecessor to queue..." << endl;
+      printLineInfo(predes[i]);
+      printInsnInfo(predes[i]);
+    }
   }
 }
 
@@ -569,6 +587,17 @@ extern "C" {
 
   }
 
+cJSON *printBBsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> bbs) {
+    cJSON *json_bbs  = cJSON_CreateArray();
+    for (int i=0; i<bbs.size(); i++) {
+      BPatch_basicBlock *bb = bbs[i];
+      cJSON *json_bb  = cJSON_CreateObject();
+      cJSON_AddNumberToObject(json_bb, "id", bb->getBlockNumber());
+      cJSON_AddItemToArray(json_bbs, json_bb);
+    }
+    return json_bbs;
+  }
+
   void getAllPredes(char *progName, char *funcName, long unsigned int addr){
     if(DEBUG_C) cout << "[sa] ================================" << endl;
     if(DEBUG_C) cout << "[sa] Getting all control flow predecessors: " << endl;
@@ -578,13 +607,33 @@ extern "C" {
     if(DEBUG_C) cout << endl;
     BPatch_image *appImage = getImage(progName);
     boost::unordered_set<BPatch_basicBlock *> predes;
-    getControlFlowPredecessors(predes, appImage, funcName, addr);
- 
+    getAllControlFlowPredecessors(predes, appImage, funcName, addr);
+
     std::ofstream out("result");
-    for(auto it = predes.begin(); it != predes.end(); ++it)
-          out << "|" << (*it)->getStartAddress();
+    cJSON *json_bbs = cJSON_CreateArray();
+    for(auto it = predes.begin(); it != predes.end(); ++it) {
+      //out << std::hex << (*it)->getStartAddress() << endl;
+      BPatch_basicBlock *bb = *it;
+      cJSON *json_bb  = cJSON_CreateObject();
+      cJSON_AddNumberToObject(json_bb, "id", bb->getBlockNumber());
+      cJSON_AddNumberToObject(json_bb, "startAddr", bb->getStartAddress());
+
+      BPatch_Vector<BPatch_basicBlock *> predes;
+      bb->getSources(predes);
+      cJSON_AddItemToObject(json_bb, "predes",  printBBsToJsonHelper(predes));
+
+      BPatch_Vector<BPatch_basicBlock *> succes;
+      bb->getSources(succes);
+      cJSON_AddItemToObject(json_bb, "succes",  printBBsToJsonHelper(succes));
+
+      cJSON_AddItemToArray(json_bbs, json_bb);
+    }
+
+    char *rendered = cJSON_Print(json_bbs);
+    cJSON_Delete(json_bbs);
+    out << rendered;
     out.close();
-    if(DEBUG_C) cout << "[sa] all predecessors: ";
+    if(DEBUG_C) cout << "[sa] all predecessors saved to \"result\"";
     if(DEBUG_C) cout << endl;
     return;
 
@@ -769,6 +818,7 @@ int main() {
   char *progName = "909_ziptest_exe9";
   //const char *funcName = "scanblock";
   char *funcName = "sweep";
+  // /home/anygroup/go-repro/909-go/src/pkg/runtime/mgc0.c:467
   long unsigned int addr = 0x409c55;
 
   BPatch_image *appImage = getImage(progName);
@@ -779,7 +829,7 @@ int main() {
   //char *regName = "";
   //
   //boost::unordered_set<BPatch_basicBlock *> predes;
-  //getControlFlowPredecessors(predes, appImage, funcName, addr);
+  //getAllControlFlowPredecessors(predes, appImage, funcName, addr);
   //
   getAllPredes(progName, funcName, addr);
   //backwardSlice(progName, funcName, 0x409c55, regName);
