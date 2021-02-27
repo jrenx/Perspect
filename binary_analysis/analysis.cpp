@@ -587,7 +587,7 @@ extern "C" {
 
   }
 
-cJSON *printBBsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> bbs) {
+  cJSON *printBBsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> bbs) {
     cJSON *json_bbs  = cJSON_CreateArray();
     for (int i=0; i<bbs.size(); i++) {
       BPatch_basicBlock *bb = bbs[i];
@@ -616,7 +616,7 @@ cJSON *printBBsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> bbs) {
       BPatch_basicBlock *bb = *it;
       cJSON *json_bb  = cJSON_CreateObject();
       cJSON_AddNumberToObject(json_bb, "id", bb->getBlockNumber());
-      cJSON_AddNumberToObject(json_bb, "startAddr", bb->getStartAddress());
+      cJSON_AddNumberToObject(json_bb, "start_addr", bb->getStartAddress());
 
       BPatch_Vector<BPatch_basicBlock *> predes;
       bb->getSources(predes);
