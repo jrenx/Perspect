@@ -60,9 +60,9 @@ BPatch_basicBlock *getBasicBlock(BPatch_flowGraph *fg, long unsigned int addr);
 Block *getBasicBlock2(Function *f, long unsigned int addr);
 
 GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, char *regName);
+cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int addr, char *regName);
 
 void getReversePostOrderListHelper(Node::Ptr node, std::vector<Node::Ptr> *list);
- 
 void getReversePostOrderList(GraphPtr slice, std::vector<Node::Ptr> *list);
 
 void locateBitVariables(GraphPtr slice, 
@@ -400,6 +400,70 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, char *regNa
   return slice;
 }
 
+
+cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int addr, char *regName) {
+  Function *func = getFunction2(progName, funcName);
+  Block *bb = getBasicBlock2(func, addr);
+  Instruction ifCond = bb->getInsn(addr);
+  GraphPtr slice = buildBackwardSlice(func, bb, ifCond, regName);
+
+  boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariables;
+  boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariablesToIgnore;
+  boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> bitOperations;
+  locateBitVariables(slice, bitVariables, bitVariablesToIgnore, bitOperations);
+
+  // get all the leaf nodes.
+  NodeIterator begin, end;
+  slice->entryNodes(begin, end);
+  //slice->allNodes(begin, end);
+
+  cJSON *json_reads = cJSON_CreateArray();
+
+  //std::stringstream ss;
+  if(DEBUG_C) cout << endl;
+  if(DEBUG_C) cout << "[sa] Result slice: " << endl;
+  for(NodeIterator it = begin; it != end; ++it) {
+    SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(*it);
+    Assignment::Ptr assign = aNode->assign();
+    //cout << assign->format() << " " << assign->insn().format() << " " << assign->insn().getOperation().getID() << " " << endl;
+    if (!assign->insn().readsMemory()) continue;
+
+    bool isBitVar = bitVariables.find(assign) != bitVariables.end();
+    bool isIgnoredBitVar = bitVariablesToIgnore.find(assign) != bitVariablesToIgnore.end();
+
+    if(DEBUG_C) cout << "[sa]" << assign->format() << " ";
+    if(DEBUG_C) cout << "insn: " << assign->insn().format() << " ";
+    if(DEBUG_C) cout << "is bit var: " << isBitVar  << " ";
+    if(DEBUG_C) cout << "is ignored bit var: " << isIgnoredBitVar  << " ";
+    if(DEBUG_C) cout << endl;
+
+    if (isBitVar) {
+      std::vector<Assignment::Ptr> operations = bitOperations[assign];
+      if (DEBUG_C) cout << "[sa] bit operations: " << endl;
+      for (auto oit = operations.begin(); oit != operations.end(); ++oit) {
+        if (DEBUG_C) cout << "	" << (*oit)->format() << (*oit)->insn().format() << endl;
+      }
+    }
+
+    std::set<Expression::Ptr> memReads;
+    assign->insn().getMemoryReadOperands(memReads);
+    if(DEBUG_C) cout << "[sa] Memory read: " << (*memReads.begin())->format() << endl;
+    std::string readStr = (*memReads.begin())->format();
+    if (std::any_of(std::begin(readStr), std::end(readStr), ::isalpha)) { //TODO why we need this again?
+      cJSON *json_read  = cJSON_CreateObject();
+      cJSON_AddNumberToObject(json_read, "insn_addr", assign->addr());
+      cJSON_AddStringToObject(json_read, "expr", readStr.c_str());
+      cJSON_AddItemToArray(json_reads, json_read);
+      //out << "|" << assign->addr() << ",";
+      //out << readStr;
+    }
+    //for (auto r = memReads.begin(); r != memReads.end(); ++r) {
+    //	cout << (*r)->eval() << endl;
+    //}
+  }
+  return json_reads;
+}
+
 void getReversePostOrderListHelper(Node::Ptr node,
 		std::vector<Node::Ptr> *list) {
   NodeIterator iBegin, iEnd;
@@ -609,14 +673,15 @@ extern "C" {
     boost::unordered_set<BPatch_basicBlock *> predes;
     getAllControlFlowPredecessors(predes, appImage, funcName, addr);
 
-    std::ofstream out("result");
+    std::ofstream out("getAllPredes_result");
     cJSON *json_bbs = cJSON_CreateArray();
     for(auto it = predes.begin(); it != predes.end(); ++it) {
       //out << std::hex << (*it)->getStartAddress() << endl;
       BPatch_basicBlock *bb = *it;
       cJSON *json_bb  = cJSON_CreateObject();
       cJSON_AddNumberToObject(json_bb, "id", bb->getBlockNumber());
-      cJSON_AddNumberToObject(json_bb, "start_addr", bb->getStartAddress());
+      cJSON_AddNumberToObject(json_bb, "start_insn", bb->getStartAddress());
+      cJSON_AddNumberToObject(json_bb, "end_insn", bb->getLastInsnAddress());
 
       BPatch_Vector<BPatch_basicBlock *> predes;
       bb->getSources(predes);
@@ -633,7 +698,7 @@ extern "C" {
     cJSON_Delete(json_bbs);
     out << rendered;
     out.close();
-    if(DEBUG_C) cout << "[sa] all predecessors saved to \"result\"";
+    if(DEBUG_C) cout << "[sa] all predecessors saved to \"getAllPredes_result\"";
     if(DEBUG_C) cout << endl;
     return;
 
@@ -711,80 +776,69 @@ extern "C" {
     //TODO
   }
 
-  void backwardSlice(char *progName, char *funcName, long unsigned int addr, char *regName){
-    if(DEBUG_C) cout << "[sa] ================================" << endl;
-    if(DEBUG_C) cout << "[sa] Making a backward slice: " << endl;
-    if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
-    if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
-    if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
-    if(DEBUG_C) cout << "[sa] reg: " << regName << endl;
-    if(DEBUG_C) cout << endl;
+  void backwardSlices(char *addrToRegNames, char *progName, char *funcName) {
+    if (DEBUG_C) cout << "[sa] ================================" << endl;
+    if (DEBUG_C) cout << "[sa] Making multiple backward slices: " << endl;
+    if (DEBUG_C) cout << "[sa] addr to reg: " << addrToRegNames << endl;
+    if (DEBUG_C) cout << "[sa] prog: " << progName << endl;
+    if (DEBUG_C) cout << "[sa] func: " << funcName << endl;
 
-    Function *func = getFunction2(progName, funcName);
-    Block *bb = getBasicBlock2(func, addr);
-    Instruction ifCond = bb->getInsn(addr);
-    GraphPtr slice = buildBackwardSlice(func, bb, ifCond, regName);
+    cJSON *json_slices = cJSON_CreateArray();
 
-    boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariables;
-    boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariablesToIgnore;
-    boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> bitOperations;
-    locateBitVariables(slice, bitVariables, bitVariablesToIgnore, bitOperations);
+    cJSON *json_addrToRegNames = cJSON_Parse(addrToRegNames);
+    int size = cJSON_GetArraySize(json_addrToRegNames);
+    if (DEBUG_C) cout << "[sa] size of addr to reg array is:　" << size << endl;
+    for (int i = 0; i < size; i++) {
+      cJSON *json_pair = cJSON_GetArrayItem(json_addrToRegNames, i);
 
-    // get all the leaf nodes.
-    NodeIterator begin, end;
-    slice->entryNodes(begin, end);
-    //slice->allNodes(begin, end);
-    //
-    std::ofstream out("result");
-    //std::stringstream ss;
-    if(DEBUG_C) cout << endl;
-    if(DEBUG_C) cout << "[sa] Result slice: " << endl;
-    for(NodeIterator it = begin; it != end; ++it) {
-      SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(*it);
-      Assignment::Ptr assign = aNode->assign();
-      //cout << assign->format() << " " << assign->insn().format() << " " << assign->insn().getOperation().getID() << " " << endl;
-      if (assign->insn().readsMemory()) {
-        if(DEBUG_C) cout << "[sa]" << assign->format() << " ";
-        if(DEBUG_C) cout << "insn: " << assign->insn().format() << " ";
+      cJSON *json_regName = cJSON_GetObjectItem(json_pair, "reg_name");
+      cJSON *json_addr = cJSON_GetObjectItem(json_pair, "addr");
 
-	bool isBitVar = bitVariables.find(assign) != bitVariables.end();
-        if(DEBUG_C) cout << "is bit var: " << isBitVar  << " ";
-        //if(DEBUG_C) cout << endl;
-	
-	bool isIgnoredBitVar = bitVariablesToIgnore.find(assign) != bitVariablesToIgnore.end();
-        if(DEBUG_C) cout << "is ignored bit var: " << isIgnoredBitVar  << " ";
-        if(DEBUG_C) cout << endl;
+      errno = 0;
+      char *end;
+      long unsigned int addr = strtol(json_addr->valuestring, &end, 10);
+      if (errno != 0)
+        cout << " Encountered error " << errno << " while parsing " << json_regName->valuestring << endl;
+      char *regName = json_regName->valuestring;
 
-	if (isBitVar) {
-          std::vector<Assignment::Ptr> operations = bitOperations[assign];
-          if (DEBUG_C) cout << "[sa] bit operations: " << endl;
-	  for (auto oit = operations.begin(); oit != operations.end(); ++oit) {
-	    if (DEBUG_C) cout << "	" << (*oit)->format() << (*oit)->insn().format() << endl;
-	  }
-	}
+      // parse string here, can the string be a json?
+      if (DEBUG_C) cout << "[sa] addr: " << addr << endl;
+      if (DEBUG_C) cout << "[sa] reg: " << regName << endl;
 
-	std::set<Expression::Ptr> memReads;
-	assign->insn().getMemoryReadOperands(memReads);
-	if(DEBUG_C) cout << "[sa] Memory read: " << (*memReads.begin())->format() << endl;
-	std::string readStr = (*memReads.begin())->format();
-	if (std::any_of(std::begin(readStr), std::end(readStr), ::isalpha)){
-          out << "|" << assign->addr() << ",";
-	  out << readStr;
-	}
-        //for (auto r = memReads.begin(); r != memReads.end(); ++r) {
-	//	cout << (*r)->eval() << endl;
-	//}
-      }
+      cJSON *json_reads = backwardSliceHelper(progName, funcName, addr, regName);
+      cJSON_AddItemToArray(json_slices, json_reads);
+      if (DEBUG_C) cout << endl;
     }
-    //std::string tmp = ss.str(); 
-    //if(DEBUG_C) cout << "[sa]" << tmp;
-    //out << tmp;
+    char *rendered = cJSON_Print(json_slices);
+    cJSON_Delete(json_slices);
+    std::ofstream out("backwardSlices_result");
+    out << rendered;
     out.close();
-    //const char* cstr = tmp.c_str();
-    //return cstr;
+
+    if(DEBUG_C) cout << "[sa] all predecessors saved to \"backwardSlices_result\"";
     if(DEBUG_C) cout << endl;
   }
 
+  void backwardSlice(char *progName, char *funcName, long unsigned int addr, char *regName) {
+    if (DEBUG_C) cout << "[sa] ================================" << endl;
+    if (DEBUG_C) cout << "[sa] Making a backward slice: " << endl;
+    if (DEBUG_C) cout << "[sa] prog: " << progName << endl;
+    if (DEBUG_C) cout << "[sa] func: " << funcName << endl;
+    if (DEBUG_C) cout << "[sa] addr: " << addr << endl;
+    if (DEBUG_C) cout << "[sa] reg: " << regName << endl;
+    if (DEBUG_C) cout << endl;
+
+    cJSON *json_reads = backwardSliceHelper(progName, funcName, addr, regName);
+
+    char *rendered = cJSON_Print(json_reads);
+    cJSON_Delete(json_reads);
+    std::ofstream out("backwardSlice_result");
+    out << rendered;
+    out.close();
+
+    if(DEBUG_C) cout << "[sa] all predecessors saved to \"backwardSlice_result\"";
+    if(DEBUG_C) cout << endl;
+  }
 
   void getRegsWritten(char *progName, char *funcName, long unsigned int addr){
     if(DEBUG_C) cout << "[sa] ================================" << endl;
@@ -818,10 +872,12 @@ int main() {
   char *progName = "909_ziptest_exe9";
   //const char *funcName = "scanblock";
   char *funcName = "sweep";
+  backwardSlices("[{\"reg_name\": \"\", \"addr\": \"4234200\"}, {\"reg_name\": \"\", \"addr\": \"4234203\"}]",
+      progName, funcName);
   // /home/anygroup/go-repro/909-go/src/pkg/runtime/mgc0.c:467
-  long unsigned int addr = 0x409c55;
+  //long unsigned int addr = 0x409c55;
 
-  BPatch_image *appImage = getImage(progName);
+  //BPatch_image *appImage = getImage(progName);
   //printAddrToLineMappings(appImage, funcName);
   //BPatch_basicBlock *immedDom = getImmediateDominator(appImage, funcName, 0x40940c);
   //Instruction ifCond = getIfCondition(immedDom);
@@ -831,7 +887,7 @@ int main() {
   //boost::unordered_set<BPatch_basicBlock *> predes;
   //getAllControlFlowPredecessors(predes, appImage, funcName, addr);
   //
-  getAllPredes(progName, funcName, addr);
+  //getAllPredes(progName, funcName, addr);
   //backwardSlice(progName, funcName, 0x409c55, regName);
   //getRegsWritten(progName, funcName, 0x409c55);
   //Function *func = getFunction2(progName, funcName);
