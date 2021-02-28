@@ -3,10 +3,11 @@ import os
 from util import *
 
 class BasicBlock:
-    def __init__(self, id):
+    def __init__(self, id, ends_in_branch):
         self.id = id
         self.start_insn = None
         self.last_insn = None
+        self.ends_in_branch = ends_in_branch
         self.predes = []
         self.succes = []
 
@@ -26,6 +27,7 @@ class BasicBlock:
         s = "     BB id: " + str(self.id) + "\n"
         s += "      first insn addr: " + str(self.start_insn) + "\n"
         s += "      last  insn addr: " + str(self.last_insn) + "\n"
+        s += "      last insn is branch: " + str(self.ends_in_branch) + "\n"
         s += "      predecessors: ["
         for prede in self.predes:
             s += str(prede.id) + ","
@@ -56,12 +58,23 @@ class CFG:
             insns.append(bb.last_insn)
         return insns
 
+    def get_last_nsn_of_every_block_if_is_branch(self):
+        insns = []
+        for bb_id in self.all_bbs:
+            bb = self.all_bbs[bb_id]
+            if bb.ends_in_branch is True:
+                insns.append(bb.last_insn)
+        return insns
+
     def build_partial_cfg(self, insn, func, prog):
         json_bbs = getAllPredes(insn, func, prog)
 
         for json_bb in json_bbs:
             bb_id = int(json_bb['id'])
-            bb = BasicBlock(bb_id)
+            ends_in_branch = False
+            if int(json_bb['ends_in_branch']) == 1:
+                ends_in_branch = True
+            bb = BasicBlock(bb_id, ends_in_branch)
 
             start_insn = int(json_bb['start_insn'])
             bb.add_start_insn(start_insn)
@@ -151,15 +164,18 @@ if __name__ == "__main__":
     cfg = CFG()
     cfg.build_partial_cfg(0x409c55, "sweep", "909_ziptest_exe9")
     print(cfg.get_first_insn_of_every_block())
-    print(cfg.get_last_insn_of_every_block())
-    reg_to_addr = []
 
-    reg_to_addr.append(["", 4234200])
-    static_backslices(reg_to_addr, "sweep", "909_ziptest_exe9")
-
-    #for insn in cfg.get_last_insn_of_every_block():
-    #    reg_to_addr.append(["", insn])
-    #static_backslices(reg_to_addr, "sweep", "909_ziptest_exe9")
     #static_graph = StaticDepGraph()
     #static_graph.convert(cfg)
+
+    #reg_to_addr.append(["", 4234200])
+    #static_backslices(reg_to_addr, "sweep", "909_ziptest_exe9")
+
+    reg_to_addr = []
+    for insn in cfg.get_last_nsn_of_every_block_if_is_branch():
+        print(hex(insn))
+        reg_to_addr.append(["", insn])
+
+    static_backslices(reg_to_addr, "sweep", "909_ziptest_exe9")
+
 

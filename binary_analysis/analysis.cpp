@@ -683,6 +683,12 @@ extern "C" {
       cJSON_AddNumberToObject(json_bb, "start_insn", bb->getStartAddress());
       cJSON_AddNumberToObject(json_bb, "end_insn", bb->getLastInsnAddress());
 
+      vector <Instruction> insns;
+      bb->getInstructions(insns);
+      Instruction ret = *insns.rbegin();
+      int isBranch = (ret.getCategory() == InsnCategory::c_BranchInsn) ? 1 : 0;
+      cJSON_AddNumberToObject(json_bb, "ends_in_branch", isBranch);
+
       BPatch_Vector<BPatch_basicBlock *> predes;
       bb->getSources(predes);
       cJSON_AddItemToObject(json_bb, "predes",  printBBsToJsonHelper(predes));
@@ -790,9 +796,10 @@ extern "C" {
     if (DEBUG_C) cout << "[sa] size of addr to reg array is:　" << size << endl;
     for (int i = 0; i < size; i++) {
       cJSON *json_pair = cJSON_GetArrayItem(json_addrToRegNames, i);
-
       cJSON *json_regName = cJSON_GetObjectItem(json_pair, "reg_name");
       cJSON *json_addr = cJSON_GetObjectItem(json_pair, "addr");
+
+
 
       errno = 0;
       char *end;
@@ -801,12 +808,17 @@ extern "C" {
         cout << " Encountered error " << errno << " while parsing " << json_regName->valuestring << endl;
       char *regName = json_regName->valuestring;
 
+      cJSON *json_slice  = cJSON_CreateObject();
+      cJSON_AddNumberToObject(json_slice, "addr", addr);
+      cJSON_AddStringToObject(json_slice, "reg_name", regName);
+
       // parse string here, can the string be a json?
       if (DEBUG_C) cout << "[sa] addr: " << addr << endl;
       if (DEBUG_C) cout << "[sa] reg: " << regName << endl;
 
       cJSON *json_reads = backwardSliceHelper(progName, funcName, addr, regName);
-      cJSON_AddItemToArray(json_slices, json_reads);
+      cJSON_AddItemToObject(json_slice, "reads", json_reads);
+      cJSON_AddItemToArray(json_slices, json_slice);
       if (DEBUG_C) cout << endl;
     }
     char *rendered = cJSON_Print(json_slices);

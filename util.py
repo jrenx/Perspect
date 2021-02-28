@@ -34,8 +34,9 @@ def parseReads(json_reads):
 
         def_reg = expr.strip()
         off = "0"
-        if "+" in expr:
-            expr = expr.split("+")[0].strip()
+
+        if '+' in expr:
+            def_reg = expr.split("+")[0].strip()
             off = expr.split("+")[1].strip()
         if '*' in expr:
             print("Is an expression too difficult for RR to handle")
@@ -82,6 +83,7 @@ def static_backslices(reg_to_addr, func, prog):
     for json_reads in json_reads_per_reg:
         if len(json_reads) == 0:
             continue
+        print("HERE " + str(json_reads))
         reg_name = regname_to_reg[json_reads['reg_name']]
         addr = json_reads['addr']
         data_points = parseReads(json_reads['reads'])
