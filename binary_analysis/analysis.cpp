@@ -44,7 +44,7 @@ BPatch_image *getImage(const char *progName);
 void printLineInfo(BPatch_basicBlock *block);
 void printAddrToLineMappings(BPatch_image *appImage, const char *funcName);
 
-void getAllControlFlowPredecessors(boost::unordered_set<BPatch_basicBlock *> &predecessors,
+void getAllControlFlowPredecessors(vector<BPatch_basicBlock *> &predecessors,
 		BPatch_image *appImage, const char *funcName, long unsigned int addr);
 
 BPatch_basicBlock *getImmediateDominator(BPatch_image *appImage, const char *funcName, long unsigned int addr);
@@ -160,10 +160,11 @@ void printAddrToLineMappings(BPatch_image *appImage, const char *funcName) {
   }
 }
 
-void getAllControlFlowPredecessors(boost::unordered_set<BPatch_basicBlock *> &allPredes,
+void getAllControlFlowPredecessors(vector<BPatch_basicBlock *> &allPredes,
 		BPatch_image *appImage, const char *funcName, long unsigned int addr) {
   BPatch_flowGraph *fg = getFunction(appImage, funcName)->getCFG();
   BPatch_basicBlock *bb = getBasicBlock(fg, addr);
+  boost::unordered_set<BPatch_basicBlock *> visited;
   std::queue<BPatch_basicBlock *> worklist; // TODO change to a boost queue?
   worklist.push(bb);
   while (worklist.size() > 0) {
@@ -172,11 +173,12 @@ void getAllControlFlowPredecessors(boost::unordered_set<BPatch_basicBlock *> &al
     worklist.pop();
     printLineInfo(curr);
     printInsnInfo(curr);
-    if (allPredes.find(curr) != allPredes.end()) {
+    if (visited.find(curr) != visited.end()) {
       cout << "Already visited " << endl;
       continue;
     }
-    allPredes.insert(curr);
+    visited.insert(curr);
+    allPredes.push_back(curr);
     BPatch_Vector<BPatch_basicBlock *> predes;
     curr->getSources(predes);
     for (int i=0; i<predes.size(); i++) {
@@ -670,7 +672,7 @@ extern "C" {
     if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
     if(DEBUG_C) cout << endl;
     BPatch_image *appImage = getImage(progName);
-    boost::unordered_set<BPatch_basicBlock *> predes;
+    vector<BPatch_basicBlock *> predes;
     getAllControlFlowPredecessors(predes, appImage, funcName, addr);
 
     std::ofstream out("getAllPredes_result");

@@ -4,6 +4,7 @@ from util import *
 
 class BasicBlock:
     def __init__(self, id, ends_in_branch):
+        # TODO: if we call Dyninst twice, are the Basic block IDs guaranteed to be the same?
         self.id = id
         self.start_insn = None
         self.last_insn = None
@@ -103,23 +104,51 @@ class CFG:
             print(self.all_bbs[bb_id])
 
 
+class MemoryLoad:
+    def __init__(self, reg, shift, off):
+        self.reg = reg
+        self.shift = shift
+        self.off = off
+
+    def __str__(self):
+        s = "Memory load: " + str(self.reg) + " * " \
+            + str(self.shift) + " + " + str(self.off)
+        return s
+
+
 class StaticNode:
     id = 0
-    def __init__(self, bb):
+
+    def __init__(self, insn, bb):
         self.id = StaticNode.id
         StaticNode.id += 1
-        self.bb = bb
+        self.insn = insn
 
+        ##### for control flow #####
+        self.bb = bb
         self.cf_predes = []
         self.cf_succes = []
 
-        self.defs = None
-        self.uses = None
+        #####   for dataflow   #####
+        # Inside each function, do not record the actual register for now
+        # if a node has dataflow predecessors, it means it uses a reg
+        # and the node that is the predecessor, which has dataflow successors defines the reg
+        # There are 3 possibilities for the predecessor
+        # 1. a constant 2. function parameter 3. memory load
+        # "mem_load" describes the address of the memory load
+        self.mem_load = None
+        self.df_predes = []
+        self.df_succes = []
 
     def __str__(self):
-        s = "   Node id: " + str(self.id) + "\n"
+        s = "===============================================\n"
+        s += "   Node id: " + str(self.id) + "\n"
+        s += "      insn: " + str(self.insn) + "\n"
         s += "    ------------Basic Block--------------\n"
-        s += str(self.bb)
+        if self.bb is None:
+            s += "\n"
+        else:
+            s += str(self.bb)
         s += "    -------------------------------------\n"
         s += "    control flow predecessors: ["
         for prede in self.cf_predes:
@@ -131,51 +160,110 @@ class StaticNode:
             s += str(succe.id) + ","
         s = s.strip(",")
         s += "] \n"
+
+        if self.mem_load is not None:
+            s += "    " + str(self.mem_load)
+
+        s += "    dataflow predecessors: ["
+        for prede in self.df_predes:
+            s += str(prede.id) + ","
+        s = s.strip(",")
+        s += "] \n"
+        s += "    dataflow successors: ["
+        for succe in self.df_succes:
+            s += str(succe.id) + ","
+        s = s.strip(",")
+        s += "] \n"
         return s
 
 class StaticDepGraph:
     def __init__(self):
-        self.nodes = {}
+        self.id_to_node = {}
+        self.insn_to_node = {}
 
-    def convert(self, cfg):
+    def make_node(self, insn, bb):
+        if insn in self.insn_to_node:
+            return self.insn_to_node[insn]
+        node = StaticNode(insn, bb)
+        self.id_to_node[node.id] = node
+        self.insn_to_node[insn] = node
+        return node
+
+    def buildDependencies(self, insn, func, prog):
+        self.buildControlFlowDependencies(insn, func, prog)
+        self.buildDataFlowDependencies(func, prog)
+
+    def buildDataFlowDependencies(self, func, prog):
+        reg_to_addr = []
+        addr_to_node = {}
+        for node_id in self.id_to_node:
+            node = self.id_to_node[node_id]
+            bb = node.bb
+            if bb.ends_in_branch is False:
+                continue
+            insn = bb.last_insn
+            print(hex(insn))
+            reg_to_addr.append(["", insn])
+            assert insn not in addr_to_node
+            addr_to_node[insn] = node
+        results = static_backslices(reg_to_addr, func, prog)
+        for result in results:
+            #reg_name = result[0]
+            insn = result[1]
+            loads = result[2]
+            if loads is None:
+                continue
+
+            succe = addr_to_node[insn]
+            for load in loads:
+                prede_insn = load[0]
+                prede_reg = load[1]
+                shift = load[2]
+                off = load[3]
+
+                prede = self.make_node(prede_insn, None)
+                prede.mem_load = MemoryLoad(prede_reg, shift, off)
+                succe.df_predes.append(prede)
+                prede.df_succes.append(succe)
+
+        for node_id in self.id_to_node:
+            print(str(self.id_to_node[node_id]))
+
+    def buildControlFlowDependencies(self, insn, func, prog):
+        cfg = CFG()
+        cfg.build_partial_cfg(insn, func, prog)
+
         bb_id_to_node_id = {}
 
+        first = True
+        #TODO, might want to keep trap of the starting instruction
         for bb_id in cfg.all_bbs:
             bb = cfg.all_bbs[bb_id]
             assert bb_id == bb.id
-            node = StaticNode(bb)
-            self.nodes[node.id] = node
+            if first:
+                node = self.make_node(insn, bb)
+                first = False
+            else:
+                node = self.make_node(bb.last_insn, bb)
+
             bb_id_to_node_id[bb_id] = node.id
 
         for bb_id in cfg.all_bbs:
             bb = cfg.all_bbs[bb_id]
             node_id = bb_id_to_node_id[bb_id]
-            node = self.nodes[node_id]
+            node = self.id_to_node[node_id]
             for prede in bb.predes:
                 prede_node_id = bb_id_to_node_id[prede.id]
-                node.cf_predes.append(self.nodes[prede_node_id])
+                node.cf_predes.append(self.id_to_node[prede_node_id])
             for succe in bb.succes:
                 succe_node_id = bb_id_to_node_id[succe.id]
-                node.cf_succes.append(self.nodes[succe_node_id])
-        for node_id in self.nodes:
-            print(str(self.nodes[node_id]))
+                node.cf_succes.append(self.id_to_node[succe_node_id])
+        for node_id in self.id_to_node:
+            print(str(self.id_to_node[node_id]))
+
+        return cfg
 
 if __name__ == "__main__":
-    cfg = CFG()
-    cfg.build_partial_cfg(0x409c55, "sweep", "909_ziptest_exe9")
-    print(cfg.get_first_insn_of_every_block())
 
-    #static_graph = StaticDepGraph()
-    #static_graph.convert(cfg)
-
-    #reg_to_addr.append(["", 4234200])
-    #static_backslices(reg_to_addr, "sweep", "909_ziptest_exe9")
-
-    reg_to_addr = []
-    for insn in cfg.get_last_nsn_of_every_block_if_is_branch():
-        print(hex(insn))
-        reg_to_addr.append(["", insn])
-
-    static_backslices(reg_to_addr, "sweep", "909_ziptest_exe9")
-
-
+    static_graph = StaticDepGraph()
+    static_graph.buildDependencies(0x409c55, "sweep", "909_ziptest_exe9")

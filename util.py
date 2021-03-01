@@ -19,30 +19,48 @@ lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
 
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 DEBUG_CTYPE = True
+DEBUG = True
 
 ################################################################
 #### C function declarations for accessing Dyninst analysis ####
 ################################################################
 
-def parseReads(json_reads):
+def parseLoads(json_loads):
     # TODO, why is it called a read again?
     data_points = []
-    for json_read in json_reads:
+    data_points_set = set()
+    for json_load in json_loads:
         # In the form: |4234758,RSP + 68|4234648,RSP + 68
-        insn_addr = json_read['insn_addr']
-        expr = json_read['expr']
+        insn_addr = json_load['insn_addr']
+        expr = json_load['expr']
+        load_str = str(insn_addr) + str(expr)
+        if load_str in data_points_set:
+            continue
+        data_points_set.add(load_str)
 
-        def_reg = expr.strip()
+        load_reg = expr.strip()
+        shift = "0"
         off = "0"
 
-        if '+' in expr:
-            def_reg = expr.split("+")[0].strip()
-            off = expr.split("+")[1].strip()
-        if '*' in expr:
+        #if DEBUG: print("Parsing expression: " + expr)
+        if '*' in load_reg:
+            if '+' in expr:
+                off = load_reg.split("+")[0].strip()
+                load_reg = load_reg.split("+")[1].strip()
+            shift = load_reg.split("*")[1].strip()
+            load_reg = load_reg.split("*")[0].strip()
             print("Is an expression too difficult for RR to handle")
-            raise
-            # continue
-        data_points.append([insn_addr, def_reg, off])
+        elif '+' in load_reg:
+            off = load_reg.split("+")[1].strip()
+            load_reg = load_reg.split("+")[0].strip()
+        shift = int(shift, 16)
+        off = int(off, 16)
+        #TODO: is the shift and offset hex or int???
+        if DEBUG: print("Parsing result reg: " + load_reg + \
+                        " shift " + str(shift) + " off " + str(off) + " insn addr: " + str(insn_addr))
+
+        data_points.append([insn_addr, load_reg, shift, off])
+        return data_points
 
 def static_backslices(reg_to_addr, func, prog):
     print()
@@ -78,16 +96,17 @@ def static_backslices(reg_to_addr, func, prog):
 
     data_points_per_reg = []
     f = open(os.path.join(curr_dir, 'backwardSlices_result'))
-    json_reads_per_reg = json.load(f)
-    if DEBUG_CTYPE: print("[main] : returned: " + str(json_reads_per_reg))
-    for json_reads in json_reads_per_reg:
-        if len(json_reads) == 0:
+    json_loads_per_reg = json.load(f)
+    if DEBUG_CTYPE: print("[main] : returned: " + str(json_loads_per_reg))
+    for json_loads in json_loads_per_reg:
+        if len(json_loads) == 0:
             continue
-        print("HERE " + str(json_reads))
-        reg_name = regname_to_reg[json_reads['reg_name']]
-        addr = json_reads['addr']
-        data_points = parseReads(json_reads['reads'])
-        data_points_per_reg.append({reg_name, addr, data_points})
+        reg_name = regname_to_reg[json_loads['reg_name']]
+        addr = json_loads['addr']
+        if DEBUG: print("==> For use reg: " + reg_name + " @ " + str(addr))
+        data_points = parseLoads(json_loads['reads'])
+
+        data_points_per_reg.append([reg_name, addr, data_points])
     f.close()
 
     if DEBUG_CTYPE: print( "[main] " + str(data_points_per_reg))
