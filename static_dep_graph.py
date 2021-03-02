@@ -89,16 +89,22 @@ class CFG:
 
     def traversalHelper(self, bb):
         #print(" Traversing bb: " + str(bb.id))
+        print("[Postorder] Current bb: " + str(bb.id) + " " + str(bb.lines))
         for succe in bb.succes:
+            print("[Postorder] Examining succe: " + str(succe.id) + " " + str(succe.lines))
             if succe in self.postorder_list: #TODO use a set?
+                print("[Postorder] Skipping cuz already in list")
                 continue
             if succe in bb.backedge_targets:
+                print("[Postorder] Skipping cuz is backedge")
                 continue
             if succe.id not in self.id_to_bb_in_slice:
-                self.postorder_list.append(bb)
+                if succe not in self.postorder_list:
+                    self.postorder_list.append(succe)
+                print("[Postorder] Skipping cuz is not in slice")
                 continue
             self.traversalHelper(succe)
-        if succe in self.postorder_list:
+        if bb not in self.postorder_list:
             self.postorder_list.append(bb)
 
     def simplify(self):
@@ -107,34 +113,34 @@ class CFG:
         postorder_bb_id_list = []
         for bb in self.postorder_list:
             postorder_bb_id_list.append(bb.id)
-        print("Postorder list: " + str(postorder_bb_id_list))
+        print("[Simplify] Postorder list: " + str(postorder_bb_id_list))
         bb_id_to_pdom_ids = {}
         for bb in self.postorder_list:
-            print("Examining: " + str(bb.id))
+            print("[Simplify] Examining: " + str(bb.id))
             pdoms = None
             for succe in bb.succes:
-                print("     current succe : " + str(succe.id))
+                print("[Simplify]      current succe : " + str(succe.id))
                 if succe.id not in bb_id_to_pdom_ids:
                     continue
                 if pdoms is None:
                     pdoms = set(bb_id_to_pdom_ids[succe.id])
                 else:
                     pdoms = pdoms.intersection(bb_id_to_pdom_ids[succe.id])
-                print("     current pdom : " + str(pdoms))
+                print("[Simplify]      current pdom : " + str(pdoms))
             if pdoms is None:
                 pdoms = set()
             pdoms.add(bb.id)
             bb_id_to_pdom_ids[bb.id] = pdoms
-        for bb_id in bb_id_to_pdom_ids:
-            print(str(bb_id) + " is post dominated by: " + str(bb_id_to_pdom_ids[bb_id]))
+        #for bb_id in bb_id_to_pdom_ids:
+            #print("[Simplify] " + str(bb_id) + " is post dominated by: " + str(bb_id_to_pdom_ids[bb_id]))
         for bb in self.postorder_list:
             pdoms = bb_id_to_pdom_ids[bb.id]
             pdoms.remove(bb.id)
             if len(pdoms) == 0:
                 continue
 
-            print("BB " + str(bb.id) + \
-                    " is post dominated by the some block " + \
+            print("[Simplify] BB " + str(bb.id) + "@" + str(bb.lines) + " " \
+                    " is post dominated by: " + \
                     str(pdoms))
             for prede in bb.predes:
                 prede.succes.remove(bb)
