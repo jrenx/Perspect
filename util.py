@@ -55,7 +55,7 @@ def parseLoads(json_loads):
             load_reg = load_reg.split("+")[0].strip()
         shift = int(shift, 16)
         off = int(off, 16)
-        #TODO: is the shift and offset hex or int???
+        #both shift and offset are in hex form
         if DEBUG: print("Parsing result reg: " + load_reg + \
                         " shift " + str(shift) + " off " + str(off) + " insn addr: " + str(insn_addr))
 
@@ -64,7 +64,7 @@ def parseLoads(json_loads):
 
 def static_backslices(reg_to_addr, func, prog):
     print()
-    print( "[main] taking a static backslice: ")
+    print( "[main] taking static backslices: ")
     # https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
     # https://bugs.python.org/issue1701409
 
@@ -126,7 +126,7 @@ def static_backslice(reg, insn, func, prog):
     func_name = c_char_p(str.encode(func))
     prog_name = c_char_p(str.encode(prog))
     if DEBUG_CTYPE: print( "[main] reg: "  + reg)
-    if DEBUG_CTYPE: print( "[main] addr: " + insn)
+    if DEBUG_CTYPE: print( "[main] addr: " + str(insn))
     if DEBUG_CTYPE: print( "[main] func: " + func)
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] : " + "Calling C")
@@ -161,9 +161,9 @@ def getImmedDom(insn, func, prog):
     addr = c_ulong(insn)
     func_name = c_char_p(str.encode(func))
     prog_name = c_char_p(str.encode(prog))
-    if DEBUG_CTYPE: print( "[main] prog: " + str(prog_name))
-    if DEBUG_CTYPE: print( "[main] func: " + str(func_name))
-    if DEBUG_CTYPE: print( "[main] addr: " + str(addr))
+    if DEBUG_CTYPE: print( "[main] prog: " + prog)
+    if DEBUG_CTYPE: print( "[main] func: " + func)
+    if DEBUG_CTYPE: print( "[main] addr: " + str(insn))
     dom = lib.getImmedDom(prog_name, func_name, addr)
     if DEBUG_CTYPE: print( "[main] immed dom: " + str(dom))
     return dom
@@ -172,14 +172,28 @@ def getAllPredes(insn, func, prog):
     addr = c_ulong(insn)
     func_name = c_char_p(str.encode(func))
     prog_name = c_char_p(str.encode(prog))
-    if DEBUG_CTYPE: print( "[main] prog: " + str(prog_name))
-    if DEBUG_CTYPE: print( "[main] func: " + str(func_name))
-    if DEBUG_CTYPE: print( "[main] addr: " + str(addr))
+    if DEBUG_CTYPE: print( "[main] prog: " + prog)
+    if DEBUG_CTYPE: print( "[main] func: " + func)
+    if DEBUG_CTYPE: print( "[main] addr: " + str(insn))
     lib.getAllPredes(prog_name, func_name, addr)
     f = open(os.path.join(curr_dir, 'getAllPredes_result'))
     json_bbs = json.load(f)
     f.close()
     if DEBUG_CTYPE: print( "[main] predes: " + str(json_bbs))
+    return json_bbs
+
+def getAllBBs(insn, func, prog):
+    addr = c_ulong(insn)
+    func_name = c_char_p(str.encode(func))
+    prog_name = c_char_p(str.encode(prog))
+    if DEBUG_CTYPE: print( "[main] prog: " + prog)
+    if DEBUG_CTYPE: print( "[main] func: " + func)
+    if DEBUG_CTYPE: print( "[main] addr: " + str(insn))
+    lib.getAllBBs(prog_name, func_name, addr)
+    f = open(os.path.join(curr_dir, 'getAllBBs_result'))
+    json_bbs = json.load(f)
+    f.close()
+    if DEBUG_CTYPE: print( "[main] bbs: " )#+ str(json_bbs))
     return json_bbs
 
 
@@ -201,9 +215,9 @@ def getFirstInstrInBB(insn, func, prog):
     addr = c_ulong(insn)
     func_name = c_char_p(str.encode(func))
     prog_name = c_char_p(str.encode(prog))
-    if DEBUG_CTYPE: print( "[main] prog: " + str(prog_name))
-    if DEBUG_CTYPE: print( "[main] func: " + str(func_name))
-    if DEBUG_CTYPE: print( "[main] addr: " + str(addr))
+    if DEBUG_CTYPE: print( "[main] prog: " + prog)
+    if DEBUG_CTYPE: print( "[main] func: " + func)
+    if DEBUG_CTYPE: print( "[main] addr: " + str(insn))
     f_insn = lib.getFirstInstrInBB(prog_name, func_name, addr)
     if DEBUG_CTYPE: print( "[main] first instr: " + str(f_insn))
     return f_insn
@@ -213,9 +227,9 @@ def getInstrAfter(insn, func, prog):
     addr = c_ulong(insn)
     func_name = c_char_p(str.encode(func))
     prog_name = c_char_p(str.encode(prog))
-    if DEBUG_CTYPE: print( "[main] prog: " + str(prog_name))
-    if DEBUG_CTYPE: print( "[main] func: " + str(func_name))
-    if DEBUG_CTYPE: print( "[main] addr: " + str(addr))
+    if DEBUG_CTYPE: print( "[main] prog: " + prog)
+    if DEBUG_CTYPE: print( "[main] func: " + func)
+    if DEBUG_CTYPE: print( "[main] addr: " + str(insn))
     f_insn = lib.getInstrAfter(prog_name, func_name, addr)
     if DEBUG_CTYPE: print( "[main] first instr: " + str(f_insn))
     return f_insn
@@ -239,9 +253,9 @@ def getLastInstrInBB(insn, func, prog):
     addr = c_ulong(insn)
     func_name = c_char_p(str.encode(func))
     prog_name = c_char_p(str.encode(prog))
-    if DEBUG_CTYPE: print( "[main] prog: " + str(prog_name))
-    if DEBUG_CTYPE: print( "[main] func: " + str(func_name))
-    if DEBUG_CTYPE: print( "[main] addr: " + str(addr))
+    if DEBUG_CTYPE: print( "[main] prog: " + prog)
+    if DEBUG_CTYPE: print( "[main] func: " + func)
+    if DEBUG_CTYPE: print( "[main] addr: " + str(insn))
     l_insn = lib.getLastInstrInBB(prog_name, func_name, addr)
     if DEBUG_CTYPE: print( "[main] first instr: " + str(l_insn))
     return l_insn

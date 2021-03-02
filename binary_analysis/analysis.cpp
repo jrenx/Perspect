@@ -28,8 +28,10 @@ using namespace DataflowAPI;
 
 /***************************************************************/
 BPatch bpatch;
-bool DEBUG_C = true;
-bool DEBUG_SLICE = true;
+bool INFO = true;
+bool DEBUG = false;
+bool DEBUG_SLICE = false;
+bool DEBUG_BIT = false;
 
 typedef enum {
   create,
@@ -41,6 +43,7 @@ typedef enum {
 BPatch_addressSpace *startInstrumenting(accessType_t accessType, const char *name, int pid, const char *argv[]);
 BPatch_image *getImage(const char *progName);
 
+void getLineInfo(BPatch_basicBlock *block, vector<unsigned short> &allLines);
 void printLineInfo(BPatch_basicBlock *block);
 void printAddrToLineMappings(BPatch_image *appImage, const char *funcName);
 
@@ -71,7 +74,9 @@ void locateBitVariables(GraphPtr slice,
                 boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations
 		);
 
-cJSON * printBBsToJsonHelper(BPatch_basicBlock * bb);
+cJSON * printBBIdsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs);
+cJSON *printBBsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs,
+    boost::unordered_map<BPatch_basicBlock *, vector<BPatch_basicBlock *>> *backEdges = NULL);
 
 // Attach, create, or open a file for rewriting
 BPatch_addressSpace *startInstrumenting(accessType_t accessType, const char *name, int pid, const char *argv[]) {
@@ -122,17 +127,25 @@ void printInsnInfo(BPatch_basicBlock *block) {
   }
 }
 
-void printLineInfo(BPatch_basicBlock *block) {
-  fprintf(stdout, " start %lx end %lx\n", block->getStartAddress(), block->getLastInsnAddress());
+void getLineInfo(BPatch_basicBlock *block, vector<unsigned short> &allLines) {
   BPatch_Vector<BPatch_sourceBlock*> sourceBlocks;
   block->getSourceBlocks(sourceBlocks);
   for (int i = 0; i < sourceBlocks.size(); i++) {
-    fprintf(stdout, "  source block: %u.\n", i);
     BPatch_Vector<unsigned short> lines;
     sourceBlocks[i]->getSourceLines(lines);
     for (int j = 0; j < lines.size(); j++) {
-      fprintf(stdout, "  source line: %u.\n", lines[j]);
+      allLines.push_back(lines[j]);
     }
+  }
+}
+
+void printLineInfo(BPatch_basicBlock *block) {
+  fprintf(stdout, " start %lx end %lx\n", block->getStartAddress(), block->getLastInsnAddress());
+  vector<unsigned short> allLines;
+  getLineInfo(block, allLines);
+  fprintf(stdout, "  source lines: ");
+  for (auto it = allLines.begin(); it != allLines.end(); it++) {
+    fprintf(stdout, " %u ", *it);
   }
 }
 
@@ -168,13 +181,13 @@ void getAllControlFlowPredecessors(vector<BPatch_basicBlock *> &allPredes,
   std::queue<BPatch_basicBlock *> worklist; // TODO change to a boost queue?
   worklist.push(bb);
   while (worklist.size() > 0) {
-    cout << "Checking predecessor ..." << endl;
+    if(DEBUG) cout << "Checking predecessor ..." << endl;
     BPatch_basicBlock *curr = worklist.front();
     worklist.pop();
-    printLineInfo(curr);
-    printInsnInfo(curr);
+    if(DEBUG) printLineInfo(curr);
+    if(DEBUG) printInsnInfo(curr);
     if (visited.find(curr) != visited.end()) {
-      cout << "Already visited " << endl;
+      if(DEBUG) cout << "Already visited " << endl;
       continue;
     }
     visited.insert(curr);
@@ -183,7 +196,7 @@ void getAllControlFlowPredecessors(vector<BPatch_basicBlock *> &allPredes,
     curr->getSources(predes);
     for (int i=0; i<predes.size(); i++) {
       worklist.push(predes[i]);
-      cout << "Adding predecessor to queue..." << endl;
+      if(DEBUG) cout << "Adding predecessor to queue..." << endl;
       printLineInfo(predes[i]);
       printInsnInfo(predes[i]);
     }
@@ -258,8 +271,10 @@ BPatch_basicBlock *getBasicBlock(BPatch_flowGraph *fg, long unsigned int addr) {
        blockIter != blocks.end();
        ++blockIter) {
     BPatch_basicBlock *block = *blockIter;
-    printLineInfo(block);
-    if (addr >= block->getStartAddress() && addr <= block->getEndAddress()) { //TODO inclusive?
+    if (DEBUG) cout << "Locating basic block of instruction: " << addr << endl;
+    if (DEBUG) printLineInfo(block);
+    if (DEBUG) cout << endl;
+    if (addr >= block->getStartAddress() && addr < block->getEndAddress()) {
       target = block;
       break;
     }
@@ -320,8 +335,8 @@ public:
   char *regName = NULL;
   bool filter = false;
   virtual bool endAtPoint(Assignment::Ptr ap) {
-    if(DEBUG_C|DEBUG_SLICE) cout << endl;
-    if(DEBUG_C|DEBUG_SLICE) cout << "[slice] Should continue slicing the assignment?" << endl;
+    if(DEBUG|DEBUG_SLICE) cout << endl;
+    if(DEBUG|DEBUG_SLICE) cout << "[slice] Should continue slicing the assignment?" << endl;
     if(DEBUG_SLICE) cout << "[slice] " << "assignment: " << ap->format();
     //cout << "  ";
     //cout << ap->insn().readsMemory();
@@ -330,13 +345,13 @@ public:
     if (ap->insn().readsMemory()) {
    	std::set<Expression::Ptr> memReads;
 	ap->insn().getMemoryReadOperands(memReads);
-	if(DEBUG_C) cout << "[sa] Memory read: " << (*memReads.begin())->format() << endl;
+	if(DEBUG) cout << "[sa] Memory read: " << (*memReads.begin())->format() << endl;
 	std::string readStr = (*memReads.begin())->format();
 	if (std::any_of(std::begin(readStr), std::end(readStr), ::isalpha)){
-	  if (DEBUG_C) cout << "[sa] is a true memory read." << endl;
+	  if (DEBUG) cout << "[sa] is a true memory read." << endl;
 	  return true;
 	}
-	if (DEBUG_C) cout << "[sa] is not a true memory read." << endl;
+	if (DEBUG) cout << "[sa] is not a true memory read." << endl;
 	return false;
     } else {
       return false;
@@ -346,8 +361,8 @@ public:
   //int i = 5;
   virtual bool addPredecessor(AbsRegion reg) {
     std:string regStr = reg.format();
-    if(DEBUG_C || DEBUG_SLICE) cout << endl;
-    if(DEBUG_C|DEBUG_SLICE) cout << "[slice] Should add the dataflow predecessor?" << endl;
+    if(DEBUG || DEBUG_SLICE) cout << endl;
+    if(DEBUG|DEBUG_SLICE) cout << "[slice] Should add the dataflow predecessor?" << endl;
     if(DEBUG_SLICE) cout << "[slice] " << "predecessor reg: " << regStr << endl;
     if (filter) {
       if (reg.format().compare(regName) != 0) {
@@ -358,10 +373,10 @@ public:
     }
 
     if (std::any_of(std::begin(regStr), std::end(regStr), ::isalpha)){
-      if (DEBUG_C) cout << "[sa] is a true reg: " << regStr << endl;
+      if (DEBUG) cout << "[sa] is a true reg: " << regStr << endl;
       return true;
     } else {
-      if (DEBUG_C) cout << "[sa] is not a true reg: " << regStr << endl;
+      if (DEBUG) cout << "[sa] is not a true reg: " << regStr << endl;
       return false;
     }
 
@@ -381,7 +396,8 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, char *regNa
   ac.convert(insn, b->last(), f, b, assignments);
 
   // An instruction can corresponds to multiple assignments
-  if(DEBUG_SLICE) cout << "[slice] " << " Finding all assignments of the instruction: " << endl;
+  if (INFO) cout << endl << "[slice] " << " Finding all assignments of the instruction: "
+             << insn.format() << endl;
   Assignment::Ptr assign; //TODO, how to handle multiple ones?
   for (auto ait = assignments.begin(); ait != assignments.end(); ++ait) {
     if(DEBUG_SLICE) cout << "[slice] " << "assignment: " << (*ait)->format() << endl;
@@ -422,8 +438,8 @@ cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int add
   cJSON *json_reads = cJSON_CreateArray();
 
   //std::stringstream ss;
-  if(DEBUG_C) cout << endl;
-  if(DEBUG_C) cout << "[sa] Result slice: " << endl;
+  if(DEBUG) cout << endl;
+  if(INFO) cout << "[sa] Result slice: " << endl;
   for(NodeIterator it = begin; it != end; ++it) {
     SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(*it);
     Assignment::Ptr assign = aNode->assign();
@@ -433,23 +449,23 @@ cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int add
     bool isBitVar = bitVariables.find(assign) != bitVariables.end();
     bool isIgnoredBitVar = bitVariablesToIgnore.find(assign) != bitVariablesToIgnore.end();
 
-    if(DEBUG_C) cout << "[sa]" << assign->format() << " ";
-    if(DEBUG_C) cout << "insn: " << assign->insn().format() << " ";
-    if(DEBUG_C) cout << "is bit var: " << isBitVar  << " ";
-    if(DEBUG_C) cout << "is ignored bit var: " << isIgnoredBitVar  << " ";
-    if(DEBUG_C) cout << endl;
+    if(INFO) cout << "[sa]" << assign->format() << " ";
+    if(INFO) cout << "insn: " << assign->insn().format() << " ";
+    if(INFO) cout << "is bit var: " << isBitVar  << " ";
+    if(INFO) cout << "is ignored bit var: " << isIgnoredBitVar  << " ";
+    if(INFO) cout << endl;
 
     if (isBitVar) {
       std::vector<Assignment::Ptr> operations = bitOperations[assign];
-      if (DEBUG_C) cout << "[sa] bit operations: " << endl;
+      if (INFO) cout << "[sa] bit operations: " << endl;
       for (auto oit = operations.begin(); oit != operations.end(); ++oit) {
-        if (DEBUG_C) cout << "	" << (*oit)->format() << (*oit)->insn().format() << endl;
+        if (INFO) cout << "	" << (*oit)->format() << (*oit)->insn().format() << endl;
       }
     }
 
     std::set<Expression::Ptr> memReads;
     assign->insn().getMemoryReadOperands(memReads);
-    if(DEBUG_C) cout << "[sa] Memory read: " << (*memReads.begin())->format() << endl;
+    if(INFO) cout << "[sa] Memory read: " << (*memReads.begin())->format() << endl;
     std::string readStr = (*memReads.begin())->format();
     if (std::any_of(std::begin(readStr), std::end(readStr), ::isalpha)) { //TODO why we need this again?
       cJSON *json_read  = cJSON_CreateObject();
@@ -516,11 +532,11 @@ void locateBitVariables(GraphPtr slice,
     visitedVariables.insert(assign);
     */
 
-    if(DEBUG_SLICE) cout << "[slice] " << "CHECKING instruction for bit variable: ";
-    if(DEBUG_SLICE) cout << "[slice] " << assign->format() << " ";
-    if(DEBUG_SLICE) cout << "[slice] " << assign->insn().format() << " ";
-    if(DEBUG_SLICE) cout << "[slice] " << id << " ";
-    if(DEBUG_SLICE) cout << endl;
+    if(DEBUG_BIT) cout << "[bit_var] " << "CHECKING instruction for bit variable: ";
+    if(DEBUG_BIT) cout << "[bit_var] " << assign->format() << " ";
+    if(DEBUG_BIT) cout << "[bit_var] " << assign->insn().format() << " ";
+    if(DEBUG_BIT) cout << "[bit_var] " << id << " ";
+    if(DEBUG_BIT) cout << endl;
 
     bool predeIsIgnored = false;
     bool predeIsBitVar = false;
@@ -533,16 +549,16 @@ void locateBitVariables(GraphPtr slice,
     for (NodeIterator it = oBegin; it != oEnd; ++it) {
       SliceNode::Ptr oNode = boost::static_pointer_cast<SliceNode>(*it);
       Assignment::Ptr oAssign = oNode->assign();
-      if(DEBUG_SLICE) cout << "[slice] " << "Dataflow predecessor: ";
-      if(DEBUG_SLICE) cout << "[slice] " << oAssign->format() << " ";
-      if(DEBUG_SLICE) cout << "[slice] " << oAssign->insn().format() << endl;
+      if(DEBUG_BIT) cout << "[bit_var] " << "Dataflow predecessor: ";
+      if(DEBUG_BIT) cout << "[bit_var] " << oAssign->format() << " ";
+      if(DEBUG_BIT) cout << "[bit_var] " << oAssign->insn().format() << endl;
       
       if (bitVariablesToIgnore.find(oAssign) != bitVariables.end()) {
-        if(DEBUG_SLICE) cout << "[slice] " << "Assignment might involve a bit variable that should be ignored." << endl;
-	std::vector<AbsRegion> regions = bitVariablesToIgnore[oAssign];
+        if(DEBUG_BIT) cout << "[bit_var] " << "Assignment might involve a bit variable that should be ignored." << endl;
+	      std::vector<AbsRegion> regions = bitVariablesToIgnore[oAssign];
         if (std::find(regions.begin(), regions.end(), assign->out()) != regions.end()) {
           predeIsIgnored = true;
-          if(DEBUG_SLICE) cout << "[slice] " << "Assignment involves a bit variable that should be ignored." << endl;
+          if(DEBUG_BIT) cout << "[bit_var] " << "Assignment involves a bit variable that should be ignored." << endl;
 	  break;
         }
       }
@@ -552,12 +568,12 @@ void locateBitVariables(GraphPtr slice,
       }
 
       if (bitVariables.find(oAssign) != bitVariables.end()) {
-        if(DEBUG_SLICE) cout << "[slice] " << "Assignment might involve a bit variable." << endl;
+        if(DEBUG_BIT) cout << "[bit_var] " << "Assignment might involve a bit variable." << endl;
 	std::vector<AbsRegion> regions = bitVariables[oAssign];
-        if(DEBUG_SLICE) cout << "[slice] " << "Current out " << assign->out() << endl;
+        if(DEBUG_BIT) cout << "[bit_var] " << "Current out " << assign->out() << endl;
         if (std::find(regions.begin(), regions.end(), assign->out()) != regions.end()) {
           predeIsBitVar = true;
-          if(DEBUG_SLICE) cout << "[slice] " << "Assignment involves a bit variable." << endl;
+          if(DEBUG_BIT) cout << "[bit_var] " << "Assignment involves a bit variable." << endl;
 	  operations = bitOperations[oAssign];
 	  break;
         }
@@ -576,48 +592,48 @@ void locateBitVariables(GraphPtr slice,
     if (predeIsBitVar) {
       switch(id) {
         case e_mov: {
-	    cout << "[slice] encountered mov instruction: " << assign->format() << " " << assign->insn().format() << endl;
-	    std::vector<AbsRegion> regions;
-            for(auto iit = assign->inputs().begin(); iit != assign->inputs().end(); ++iit) {
-              regions.push_back(*iit);
-            }
-	    bitVariables.insert({assign, regions});
-            bitOperations.insert({assign, operations});
-          }
-	  break;
-	case e_and:
-	case e_shr:
-	case e_sar:
-	case e_shl_sal: {
-	    cout << "[slice] encountered shift or and instruction: " << assign->format() << " " << assign->insn().format() << endl;
-	    std::vector<AbsRegion> regions;
-	    if (assign->inputs().size() == 2) {
-              regions.push_back(assign->inputs()[1]);
+          if(DEBUG_BIT) cout << "[bit_var] encountered mov instruction: " << assign->format() << " " << assign->insn().format() << endl;
+	        std::vector<AbsRegion> regions;
+	        for(auto iit = assign->inputs().begin(); iit != assign->inputs().end(); ++iit) {
+	          regions.push_back(*iit);
+	        }
+	        bitVariables.insert({assign, regions});
+	        bitOperations.insert({assign, operations});
+        }
+	      break;
+	      case e_and:
+	      case e_shr:
+	      case e_sar:
+	      case e_shl_sal: {
+          if(DEBUG_BIT) cout << "[bit_var] encountered shift or and instruction: " << assign->format() << " " << assign->insn().format() << endl;
+	        std::vector<AbsRegion> regions;
+	        if (assign->inputs().size() == 2) {
+	          regions.push_back(assign->inputs()[1]);
 
-	      std::vector<AbsRegion> regionsToIgnore;
-              regionsToIgnore.push_back(assign->inputs()[0]);
-	      bitVariablesToIgnore.insert({assign, regionsToIgnore});
+	          std::vector<AbsRegion> regionsToIgnore;
+	          regionsToIgnore.push_back(assign->inputs()[0]);
+	          bitVariablesToIgnore.insert({assign, regionsToIgnore});
 
-	    } else if (assign->inputs().size() == 1) {
-              regions.push_back(assign->inputs()[0]);
-	    } else {
-	      cout << "[warn][slice] Unhandle number of inputs. " << endl;
-	    }
-	    bitVariables.insert({assign, regions});
-	    operations.push_back(assign);
-            bitOperations.insert({assign, operations});
-	  }
-	  break;
-	default:
-	  cout << "[warn][slice] Unhandled case: " << assign->format() << " " << assign->insn().format() << endl;
+	        } else if (assign->inputs().size() == 1) {
+	          regions.push_back(assign->inputs()[0]);
+	        } else {
+            if(DEBUG_BIT) cout << "[warn][bit_var] Unhandle number of inputs. " << endl;
+	        }
+	        bitVariables.insert({assign, regions});
+	        operations.push_back(assign);
+	        bitOperations.insert({assign, operations});
+	      }
+	      break;
+	      default:
+	        if(DEBUG_BIT) cout << "[warn][slice] Unhandled case: " << assign->format() << " " << assign->insn().format() << endl;
       }
       continue;
     }
 
     if (id == e_and) {
-      if(DEBUG_SLICE) cout << "[slice] " << "FOUND an AND instruction, considered a mask: ";
-      if(DEBUG_SLICE) cout << "[slice] " << assign->format() << " ";
-      if(DEBUG_SLICE) cout << "[slice] " << assign->insn().format() << endl;
+      if(DEBUG_BIT) cout << "[slice] " << "FOUND an AND instruction, considered a mask: ";
+      if(DEBUG_BIT) cout << "[slice] " << assign->format() << " ";
+      if(DEBUG_BIT) cout << "[slice] " << assign->insn().format() << endl;
       
       std::vector<AbsRegion> regions;
       for(auto iit = assign->inputs().begin(); iit != assign->inputs().end(); ++iit) {
@@ -637,118 +653,200 @@ void locateBitVariables(GraphPtr slice,
   //}
 }
 
+cJSON *printBBIdsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs) {
+  cJSON *json_bbs  = cJSON_CreateArray();
+  for (int i=0; i<bbs.size(); i++) {
+    BPatch_basicBlock *bb = bbs[i];
+    cJSON *json_bb  = cJSON_CreateObject();
+    cJSON_AddNumberToObject(json_bb, "id", bb->getBlockNumber());
+    cJSON_AddItemToArray(json_bbs, json_bb);
+  }
+  return json_bbs;
+}
+
+cJSON *printBBsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs,
+                            boost::unordered_map<BPatch_basicBlock *,
+                                                 BPatch_Vector<BPatch_basicBlock *>> *backEdges) {
+  cJSON *json_bbs = cJSON_CreateArray();
+  for(auto it = bbs.begin(); it != bbs.end(); ++it) {
+    //out << std::hex << (*it)->getStartAddress() << endl;
+    BPatch_basicBlock *bb = *it;
+    cJSON *json_bb  = cJSON_CreateObject();
+    cJSON_AddNumberToObject(json_bb, "id", bb->getBlockNumber());
+    cJSON_AddNumberToObject(json_bb, "start_insn", bb->getStartAddress());
+    cJSON_AddNumberToObject(json_bb, "end_insn", bb->getLastInsnAddress());
+
+    vector <Instruction> insns;
+    bb->getInstructions(insns);
+    Instruction ret = *insns.rbegin();
+    int isBranch = (ret.getCategory() == InsnCategory::c_BranchInsn) ? 1 : 0;
+    cJSON_AddNumberToObject(json_bb, "ends_in_branch", isBranch);
+    int isEntry = (bb->isEntryBlock() == true) ? 1 : 0;
+    cJSON_AddNumberToObject(json_bb, "is_entry", isEntry);
+
+    BPatch_Vector<BPatch_basicBlock *> predes;
+    bb->getSources(predes);
+    cJSON_AddItemToObject(json_bb, "predes",  printBBIdsToJsonHelper(predes));
+
+    BPatch_Vector<BPatch_basicBlock *> succes;
+    bb->getTargets(succes);
+    cJSON_AddItemToObject(json_bb, "succes",  printBBIdsToJsonHelper(succes));
+
+    BPatch_basicBlock * immedDom = bb->getImmediateDominator();
+    if (immedDom != NULL)
+      cJSON_AddNumberToObject(json_bb, "immed_dom",  immedDom->getBlockNumber());
+
+    if (backEdges != NULL) {
+      if (backEdges->find(bb) != backEdges->end()) {
+        cJSON_AddItemToObject(json_bb, "backedge_targets",  printBBIdsToJsonHelper((*backEdges)[bb]));
+      }
+    }
+
+    // TODO: optimize this by putting it into one string?
+    cJSON *json_lines = cJSON_CreateArray();
+    vector<unsigned short> allLines;
+    getLineInfo(bb, allLines);
+    for (auto it = allLines.begin(); it != allLines.end(); it++) {
+      cJSON *json_line  = cJSON_CreateObject();
+      cJSON_AddNumberToObject(json_line, "line", *it);
+      cJSON_AddItemToArray(json_lines, json_line);
+    }
+    cJSON_AddItemToObject(json_bb, "lines", json_lines);
+
+
+cJSON_AddItemToArray(json_bbs, json_bb);
+  }
+  return json_bbs;
+}
+
 extern "C" {
   long unsigned int getImmedDom(char *progName, char *funcName, long unsigned int addr){
-    if(DEBUG_C) cout << "[sa] ================================" << endl;
-    if(DEBUG_C) cout << "[sa] Getting the immediate control flow dominator: " << endl;
-    if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
-    if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
-    if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
-    if(DEBUG_C) cout << endl;
+    if(DEBUG) cout << "[sa] ================================" << endl;
+    if(DEBUG) cout << "[sa] Getting the immediate control flow dominator: " << endl;
+    if(DEBUG) cout << "[sa] prog: " << progName << endl;
+    if(DEBUG) cout << "[sa] func: " << funcName << endl;
+    if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << endl;
+    if(DEBUG) cout << endl;
     Function *func = getFunction2(progName, funcName);
     Block *immedDom = getImmediateDominator2(func, addr);
     //Instruction ifCond = getIfConditionAddr2(immedDom);
-    if(DEBUG_C) cout << "[sa] immed dom: " << immedDom->last() << endl;
+    if(DEBUG) cout << "[sa] immed dom: " << immedDom->last() << endl;
     return immedDom->last();
 
   }
 
-  cJSON *printBBsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> bbs) {
-    cJSON *json_bbs  = cJSON_CreateArray();
-    for (int i=0; i<bbs.size(); i++) {
-      BPatch_basicBlock *bb = bbs[i];
-      cJSON *json_bb  = cJSON_CreateObject();
-      cJSON_AddNumberToObject(json_bb, "id", bb->getBlockNumber());
-      cJSON_AddItemToArray(json_bbs, json_bb);
-    }
-    return json_bbs;
-  }
-
-  void getAllPredes(char *progName, char *funcName, long unsigned int addr){
-    if(DEBUG_C) cout << "[sa] ================================" << endl;
-    if(DEBUG_C) cout << "[sa] Getting all control flow predecessors: " << endl;
-    if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
-    if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
-    if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
-    if(DEBUG_C) cout << endl;
+  void getAllBBs(char *progName, char *funcName, long unsigned int addr){
+    if(DEBUG) cout << "[sa] ================================" << endl;
+    if(DEBUG) cout << "[sa] Getting all control flow predecessors: " << endl;
+    if(DEBUG) cout << "[sa] prog: " << progName << endl;
+    if(DEBUG) cout << "[sa] func: " << funcName << endl;
+    if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << endl;
+    if(DEBUG) cout << endl;
     BPatch_image *appImage = getImage(progName);
-    vector<BPatch_basicBlock *> predes;
-    getAllControlFlowPredecessors(predes, appImage, funcName, addr);
+    vector<BPatch_basicBlock *> bbs;
+    BPatch_flowGraph *fg = getFunction(appImage, funcName)->getCFG();
 
-    std::ofstream out("getAllPredes_result");
-    cJSON *json_bbs = cJSON_CreateArray();
-    for(auto it = predes.begin(); it != predes.end(); ++it) {
-      //out << std::hex << (*it)->getStartAddress() << endl;
-      BPatch_basicBlock *bb = *it;
-      cJSON *json_bb  = cJSON_CreateObject();
-      cJSON_AddNumberToObject(json_bb, "id", bb->getBlockNumber());
-      cJSON_AddNumberToObject(json_bb, "start_insn", bb->getStartAddress());
-      cJSON_AddNumberToObject(json_bb, "end_insn", bb->getLastInsnAddress());
-
-      vector <Instruction> insns;
-      bb->getInstructions(insns);
-      Instruction ret = *insns.rbegin();
-      int isBranch = (ret.getCategory() == InsnCategory::c_BranchInsn) ? 1 : 0;
-      cJSON_AddNumberToObject(json_bb, "ends_in_branch", isBranch);
-
-      BPatch_Vector<BPatch_basicBlock *> predes;
-      bb->getSources(predes);
-      cJSON_AddItemToObject(json_bb, "predes",  printBBsToJsonHelper(predes));
-
-      BPatch_Vector<BPatch_basicBlock *> succes;
-      bb->getSources(succes);
-      cJSON_AddItemToObject(json_bb, "succes",  printBBsToJsonHelper(succes));
-
-      cJSON_AddItemToArray(json_bbs, json_bb);
+    boost::unordered_map<BPatch_basicBlock *, BPatch_Vector<BPatch_basicBlock *>> backEdges;
+    BPatch_Vector<BPatch_basicBlockLoop*> loops;
+    fg->getLoops(loops);
+    for (int i = 0; i < loops.size(); i++) {
+      BPatch_basicBlockLoop* loop = loops[i];
+      std::vector<BPatch_edge *> edges;
+      loop->getBackEdges(edges);
+      for (auto it = edges.begin(); it != edges.end(); it++) {
+        BPatch_edge *edge = *it;
+        BPatch_basicBlock *source = edge->getSource();
+        BPatch_basicBlock *target = edge->getTarget();
+        backEdges[source].push_back(target);
+      }
     }
+
+    set<BPatch_basicBlock *> blocks;
+    fg->getAllBasicBlocks(blocks);
+    for (auto blockIter = blocks.begin();
+         blockIter != blocks.end();
+         ++blockIter) {
+      BPatch_basicBlock *block = *blockIter;
+
+      if (addr >= block->getStartAddress() && addr < block->getEndAddress()) {
+        bbs.insert(bbs.begin(), block);
+      } else {
+        bbs.push_back(block);
+      }
+    }
+
+    std::ofstream out("getAllBBs_result");
+    cJSON *json_bbs = printBBsToJsonHelper(bbs, &backEdges);
 
     char *rendered = cJSON_Print(json_bbs);
     cJSON_Delete(json_bbs);
     out << rendered;
     out.close();
-    if(DEBUG_C) cout << "[sa] all predecessors saved to \"getAllPredes_result\"";
-    if(DEBUG_C) cout << endl;
+    if(DEBUG) cout << "[sa] all predecessors saved to \"getAllPredes_result\"";
+    if(DEBUG) cout << endl;
+    return;
+  }
+
+  void getAllPredes(char *progName, char *funcName, long unsigned int addr){
+    if(DEBUG) cout << "[sa] ================================" << endl;
+    if(DEBUG) cout << "[sa] Getting all control flow predecessors: " << endl;
+    if(DEBUG) cout << "[sa] prog: " << progName << endl;
+    if(DEBUG) cout << "[sa] func: " << funcName << endl;
+    if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << endl;
+    if(DEBUG) cout << endl;
+    BPatch_image *appImage = getImage(progName);
+    vector<BPatch_basicBlock *> predes;
+    getAllControlFlowPredecessors(predes, appImage, funcName, addr);
+
+    std::ofstream out("getAllPredes_result");
+    cJSON *json_bbs = printBBsToJsonHelper(predes);
+
+    char *rendered = cJSON_Print(json_bbs);
+    cJSON_Delete(json_bbs);
+    out << rendered;
+    out.close();
+    if(DEBUG) cout << "[sa] all predecessors saved to \"getAllPredes_result\"";
+    if(DEBUG) cout << endl;
     return;
 
   }
 
-
   long unsigned int getFirstInstrInBB(char *progName, char *funcName, long unsigned int addr){
-    if(DEBUG_C) cout << "[sa] ================================" << endl;
-    if(DEBUG_C) cout << "[sa] Getting the first instruction of the basic block: " << endl; 
-    if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
-    if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
-    if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
-    if(DEBUG_C) cout << endl;
+    if(DEBUG) cout << "[sa] ================================" << endl;
+    if(DEBUG) cout << "[sa] Getting the first instruction of the basic block: " << endl;
+    if(DEBUG) cout << "[sa] prog: " << progName << endl;
+    if(DEBUG) cout << "[sa] func: " << funcName << endl;
+    if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << endl;
+    if(DEBUG) cout << endl;
     Function *func = getFunction2(progName, funcName);
     Block *bb = getBasicBlock2(func, addr);
     //Instruction ifCond = getIfConditionAddr2(immedDom);
-    if(DEBUG_C) cout << "[sa] first instr: " << bb->start() << endl;
+    if(DEBUG) cout << "[sa] first instr: " << bb->start() << endl;
     return bb->start();
 
   }
 
   long unsigned int getLastInstrInBB(char *progName, char *funcName, long unsigned int addr){
-    if(DEBUG_C) cout << "[sa] ================================" << endl;
-    if(DEBUG_C) cout << "[sa] Getting the last instruction of the basic block: " << endl; 
-    if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
-    if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
-    if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
-    if(DEBUG_C) cout << endl;
+    if(DEBUG) cout << "[sa] ================================" << endl;
+    if(DEBUG) cout << "[sa] Getting the last instruction of the basic block: " << endl;
+    if(DEBUG) cout << "[sa] prog: " << progName << endl;
+    if(DEBUG) cout << "[sa] func: " << funcName << endl;
+    if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << endl;
+    if(DEBUG) cout << endl;
     Function *func = getFunction2(progName, funcName);
     Block *bb = getBasicBlock2(func, addr);
     //Instruction ifCond = getIfConditionAddr2(immedDom);
-    if(DEBUG_C) cout << "[sa] last instr: " << bb->last() << endl;
+    if(DEBUG) cout << "[sa] last instr: " << bb->last() << endl;
     return bb->last();
   }
 
   long unsigned int getInstrAfter(char *progName, char *funcName, long unsigned int addr){
-    if(DEBUG_C) cout << "[sa] ================================" << endl;
-    if(DEBUG_C) cout << "[sa] Getting the instruction after: " << endl; 
-    if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
-    if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
-    if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
-    if(DEBUG_C) cout << endl;
+    if(DEBUG) cout << "[sa] ================================" << endl;
+    if(DEBUG) cout << "[sa] Getting the instruction after: " << endl;
+    if(DEBUG) cout << "[sa] prog: " << progName << endl;
+    if(DEBUG) cout << "[sa] func: " << funcName << endl;
+    if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << endl;
+    if(DEBUG) cout << endl;
     Function *func = getFunction2(progName, funcName);
     Block *bb = getBasicBlock2(func, addr);
     Block::Insns insns;
@@ -758,7 +856,7 @@ extern "C" {
     for (auto it = insns.begin(); it != insns.end(); it++) {
       if (return_next) {
         nextInsn = it->first;
-	break;
+	      break;
       }
       if (it->first == addr) {
         return_next = true;
@@ -767,17 +865,17 @@ extern "C" {
     if (nextInsn == addr) 
       nextInsn = bb->end();
     //Instruction ifCond = getIfConditionAddr2(immedDom);
-    if(DEBUG_C) cout << "[sa] instr after: " << nextInsn << endl;
+    if(DEBUG) cout << "[sa] instr after: " << nextInsn << endl;
     return nextInsn;
   }
 
   void getImmedPred(char *progName, char *funcName, long unsigned int addr){
-    if(DEBUG_C) cout << "[sa] ================================" << endl;
-    if(DEBUG_C) cout << "[sa] Getting the immediate control flow predecessor: " << endl;
-    if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
-    if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
-    if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
-    if(DEBUG_C) cout << endl;
+    if(DEBUG) cout << "[sa] ================================" << endl;
+    if(DEBUG) cout << "[sa] Getting the immediate control flow predecessor: " << endl;
+    if(DEBUG) cout << "[sa] prog: " << progName << endl;
+    if(DEBUG) cout << "[sa] func: " << funcName << endl;
+    if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << endl;
+    if(DEBUG) cout << endl;
     Function *func = getFunction2(progName, funcName);
     Block *immedDom = getImmediateDominator2(func, addr);
     Instruction ifCond = getIfCondition2(immedDom);
@@ -785,23 +883,21 @@ extern "C" {
   }
 
   void backwardSlices(char *addrToRegNames, char *progName, char *funcName) {
-    if (DEBUG_C) cout << "[sa] ================================" << endl;
-    if (DEBUG_C) cout << "[sa] Making multiple backward slices: " << endl;
-    if (DEBUG_C) cout << "[sa] addr to reg: " << addrToRegNames << endl;
-    if (DEBUG_C) cout << "[sa] prog: " << progName << endl;
-    if (DEBUG_C) cout << "[sa] func: " << funcName << endl;
+    if (DEBUG) cout << "[sa] ================================" << endl;
+    if (DEBUG) cout << "[sa] Making multiple backward slices: " << endl;
+    if (DEBUG) cout << "[sa] addr to reg: " << addrToRegNames << endl;
+    if (DEBUG) cout << "[sa] prog: " << progName << endl;
+    if (DEBUG) cout << "[sa] func: " << funcName << endl;
 
     cJSON *json_slices = cJSON_CreateArray();
 
     cJSON *json_addrToRegNames = cJSON_Parse(addrToRegNames);
     int size = cJSON_GetArraySize(json_addrToRegNames);
-    if (DEBUG_C) cout << "[sa] size of addr to reg array is:　" << size << endl;
+    if (DEBUG) cout << "[sa] size of addr to reg array is:　" << size << endl;
     for (int i = 0; i < size; i++) {
       cJSON *json_pair = cJSON_GetArrayItem(json_addrToRegNames, i);
       cJSON *json_regName = cJSON_GetObjectItem(json_pair, "reg_name");
       cJSON *json_addr = cJSON_GetObjectItem(json_pair, "addr");
-
-
 
       errno = 0;
       char *end;
@@ -815,13 +911,13 @@ extern "C" {
       cJSON_AddStringToObject(json_slice, "reg_name", regName);
 
       // parse string here, can the string be a json?
-      if (DEBUG_C) cout << "[sa] addr: " << addr << endl;
-      if (DEBUG_C) cout << "[sa] reg: " << regName << endl;
+      if (INFO) cout << endl << "[sa] addr: 0x" << std::hex << addr << endl;
+      if (INFO) cout << "[sa] reg: " << regName << endl;
 
       cJSON *json_reads = backwardSliceHelper(progName, funcName, addr, regName);
       cJSON_AddItemToObject(json_slice, "reads", json_reads);
       cJSON_AddItemToArray(json_slices, json_slice);
-      if (DEBUG_C) cout << endl;
+      if (DEBUG) cout << endl;
     }
     char *rendered = cJSON_Print(json_slices);
     cJSON_Delete(json_slices);
@@ -829,18 +925,18 @@ extern "C" {
     out << rendered;
     out.close();
 
-    if(DEBUG_C) cout << "[sa] all predecessors saved to \"backwardSlices_result\"";
-    if(DEBUG_C) cout << endl;
+    if(DEBUG) cout << "[sa] all predecessors saved to \"backwardSlices_result\"";
+    if(DEBUG) cout << endl;
   }
 
   void backwardSlice(char *progName, char *funcName, long unsigned int addr, char *regName) {
-    if (DEBUG_C) cout << "[sa] ================================" << endl;
-    if (DEBUG_C) cout << "[sa] Making a backward slice: " << endl;
-    if (DEBUG_C) cout << "[sa] prog: " << progName << endl;
-    if (DEBUG_C) cout << "[sa] func: " << funcName << endl;
-    if (DEBUG_C) cout << "[sa] addr: " << addr << endl;
-    if (DEBUG_C) cout << "[sa] reg: " << regName << endl;
-    if (DEBUG_C) cout << endl;
+    if (DEBUG) cout << "[sa] ================================" << endl;
+    if (DEBUG) cout << "[sa] Making a backward slice: " << endl;
+    if (DEBUG) cout << "[sa] prog: " << progName << endl;
+    if (DEBUG) cout << "[sa] func: " << funcName << endl;
+    if (DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << endl;
+    if (DEBUG) cout << "[sa] reg: " << regName << endl;
+    if (DEBUG) cout << endl;
 
     cJSON *json_reads = backwardSliceHelper(progName, funcName, addr, regName);
 
@@ -850,17 +946,17 @@ extern "C" {
     out << rendered;
     out.close();
 
-    if(DEBUG_C) cout << "[sa] all predecessors saved to \"backwardSlice_result\"";
-    if(DEBUG_C) cout << endl;
+    if(DEBUG) cout << "[sa] all predecessors saved to \"backwardSlice_result\"";
+    if(DEBUG) cout << endl;
   }
 
   void getRegsWritten(char *progName, char *funcName, long unsigned int addr){
-    if(DEBUG_C) cout << "[sa] ================================" << endl;
-    if(DEBUG_C) cout << "[sa] Getting the registers written to by the instruction: " << endl;
-    if(DEBUG_C) cout << "[sa] prog: " << progName << endl;
-    if(DEBUG_C) cout << "[sa] func: " << funcName << endl;
-    if(DEBUG_C) cout << "[sa] addr: " << addr << endl;
-    if(DEBUG_C) cout << endl;
+    if(DEBUG) cout << "[sa] ================================" << endl;
+    if(DEBUG) cout << "[sa] Getting the registers written to by the instruction: " << endl;
+    if(DEBUG) cout << "[sa] prog: " << progName << endl;
+    if(DEBUG) cout << "[sa] func: " << funcName << endl;
+    if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << endl;
+    if(DEBUG) cout << endl;
 
     Function *func = getFunction2(progName, funcName);
     Block *bb = getBasicBlock2(func, addr);
@@ -872,7 +968,7 @@ extern "C" {
     std::ofstream out("result");
     //std::stringstream ss;
     for (auto it = writtenRegs.begin(); it != writtenRegs.end(); it++) {
-      if(DEBUG_C) cout << "[sa] Register written: " << (*it)->getID().name() << endl;
+      if(DEBUG) cout << "[sa] Register written: " << (*it)->getID().name() << endl;
       out << "|"; //<< addr << ",";
       out << (*it)->getID().name();
     }
@@ -886,10 +982,11 @@ int main() {
   char *progName = "909_ziptest_exe9";
   //const char *funcName = "scanblock";
   char *funcName = "sweep";
-  backwardSlices("[{\"reg_name\": \"\", \"addr\": \"4234200\"}, {\"reg_name\": \"\", \"addr\": \"4234203\"}]",
-      progName, funcName);
+  //backwardSlices("[{\"reg_name\": \"\", \"addr\": \"4234200\"}, {\"reg_name\": \"\", \"addr\": \"4234203\"}]",
+  //    progName, funcName);
   // /home/anygroup/go-repro/909-go/src/pkg/runtime/mgc0.c:467
-  //long unsigned int addr = 0x409c55;
+  long unsigned int addr = 0x409daa;
+  getAllBBs(progName, funcName, addr);
 
   //BPatch_image *appImage = getImage(progName);
   //printAddrToLineMappings(appImage, funcName);
