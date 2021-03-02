@@ -2,9 +2,10 @@ import json
 import os
 from util import *
 from collections import deque
+from collections import OrderedDict
 
 class BasicBlock:
-    def __init__(self, id, ends_in_branch, is_entry, immed_dom, lines):
+    def __init__(self, id, ends_in_branch, is_entry, lines):
         # Note: if we call Dyninst twice, the Basic block IDs will change
         self.id = id
         self.start_insn = None
@@ -12,7 +13,9 @@ class BasicBlock:
         self.lines = lines
         self.ends_in_branch = ends_in_branch
         self.is_entry = is_entry
-        self.immed_dom = immed_dom
+        self.immed_dom = None
+        self.immed_pdom = None
+        self.pdoms = None
         self.backedge_targets = []
         self.predes = []
         self.succes = []
@@ -30,21 +33,23 @@ class BasicBlock:
         s += "      source lines: " + str(self.lines) + "\n"
         s += "      last insn is branch: " + str(self.ends_in_branch) + "\n"
         s += "      is entry: " + str(self.is_entry) + "\n"
-        s += "      immediate dominator: " + str(self.immed_dom) + "\n"
+        if self.immed_dom is not None:
+            s += "      immediate dominator: " + str(self.immed_dom.id) + "\n"
+        if self.immed_pdom is not None:
+            s += "      immediate post dominator: " + str(self.immed_pdom.id) + "\n"
+        s += "      post dominators: "
+        if self.pdoms is not None:
+            s += str([pdom.id for pdom in self.pdoms])
+        s += " \n"
+
         s += "      predecessors: ["
-        for prede in self.predes:
-            s += str(prede.id) + ","
-        s = s.strip(",")
+        s += str([prede.id for prede in self.predes])
         s += "] \n"
         s += "      successors: ["
-        for succe in self.succes:
-            s += str(succe.id) + ","
-        s = s.strip(",")
+        s += str([succe.id for succe in self.succes])
         s += "] \n"
         s += "      backedge targets: ["
-        for target in self.backedge_targets:
-            s += str(target.id) + ","
-        s = s.strip(",")
+        s += str([target.id for target in self.backedge_targets])
         s += "] \n"
         return s
 
@@ -110,47 +115,108 @@ class CFG:
     def simplify(self):
         for entry in self.entry_bbs:
             self.traversalHelper(entry)
-        postorder_bb_id_list = []
-        for bb in self.postorder_list:
-            postorder_bb_id_list.append(bb.id)
-        print("[Simplify] Postorder list: " + str(postorder_bb_id_list))
+
+        postorder_map = {}
+        for i in range(len(self.postorder_list)):
+            postorder_map[self.postorder_list[i].id] = i
+
+        print("[Simplify] Postorder list: " + str([bb.id for bb in self.postorder_list]))
         bb_id_to_pdom_ids = {}
         for bb in self.postorder_list:
             print("[Simplify] Examining: " + str(bb.id))
-            pdoms = None
+            pdom_ids = None
             for succe in bb.succes:
                 print("[Simplify]      current succe : " + str(succe.id))
                 if succe.id not in bb_id_to_pdom_ids:
                     continue
-                if pdoms is None:
-                    pdoms = set(bb_id_to_pdom_ids[succe.id])
+                if pdom_ids is None:
+                    pdom_ids = set(bb_id_to_pdom_ids[succe.id])
                 else:
-                    pdoms = pdoms.intersection(bb_id_to_pdom_ids[succe.id])
-                print("[Simplify]      current pdom : " + str(pdoms))
-            if pdoms is None:
-                pdoms = set()
-            pdoms.add(bb.id)
-            bb_id_to_pdom_ids[bb.id] = pdoms
+                    pdom_ids = pdom_ids.intersection(bb_id_to_pdom_ids[succe.id])
+                print("[Simplify]      current pdom : " + str(pdom_ids))
+            if pdom_ids is None:
+                pdom_ids = set()
+            pdom_ids.add(bb.id)
+            bb_id_to_pdom_ids[bb.id] = pdom_ids
         #for bb_id in bb_id_to_pdom_ids:
             #print("[Simplify] " + str(bb_id) + " is post dominated by: " + str(bb_id_to_pdom_ids[bb_id]))
+
+        print("[Simplify] " + str(postorder_map))
         for bb in self.postorder_list:
-            pdoms = bb_id_to_pdom_ids[bb.id]
-            pdoms.remove(bb.id)
-            if len(pdoms) == 0:
+            pdom_ids = bb_id_to_pdom_ids[bb.id]
+            pdom_ids.remove(bb.id)
+            if len(pdom_ids) == 0:
                 continue
+
+            bb.pdoms = []
+            for pdom_id in pdom_ids:
+                bb.pdoms.append(self.id_to_bb[pdom_id])
 
             print("[Simplify] BB " + str(bb.id) + "@" + str(bb.lines) + " " \
                     " is post dominated by: " + \
-                    str(pdoms))
+                    str([pdom.id for pdom in bb.pdoms]))
+
+            pdom_id_to_range = {}
+            for pdom_id in pdom_ids:
+                pdom_id_to_range[postorder_map[pdom_id]] = pdom_id
+            for pdom_id_pair in reversed(sorted(pdom_id_to_range.items())):
+                bb.immed_pdom = self.id_to_bb[pdom_id_pair[1]]
+                break
+            print("[Simplify] BB " + str(bb.id) + "@" + str(bb.lines) + " " \
+                    " is immediately post dominated by: " + \
+                    str(bb.immed_pdom.id))
+
+        ignore_set = set() # call it ignore set
+        for bb in reversed(self.postorder_list):
+            print("[Simplify] can BB: " + str(bb.id) + " " + str(bb.lines) + " be removed? immed pdom is " \
+                  + (str(bb.immed_pdom.id) if bb.immed_pdom is not None else str(bb.immed_pdom)))
+            if bb.immed_pdom is None:
+                print("[Simplify]   BB has no immed pdom")
+                continue
+
+            if bb.immed_pdom.id not in self.id_to_bb_in_slice:
+                print("[Simplify]   immed pdom not in slice")
+                continue
+
+            if bb in ignore_set:
+                print("[Simplify]   BB is already removed or cannot be removed")
+                continue
+            all_succes_before_immed_pdom = set()
+            worklist = deque()
+            worklist.append(bb)
+            while len(worklist) > 0:
+                child_bb = worklist.popleft()
+                print("[Simplify]   child BB: " + str(child_bb.id) + \
+                      " " + str(child_bb.lines) + \
+                      " pdoms are " + str([pdom.id for pdom in child_bb.pdoms] \
+                        if child_bb.pdoms is not None else str(child_bb.pdoms)))
+                if child_bb is bb.immed_pdom:
+                    print("[Simplify]   child: " + str(child_bb.id) + \
+                          " is the immed pdom: " + str(bb.immed_pdom.id))
+                    continue
+                assert bb.immed_pdom in child_bb.pdoms
+                all_succes_before_immed_pdom.add(child_bb)
+                for succe in child_bb.succes:
+                    worklist.append(succe)
+
+            if self.target_bb in all_succes_before_immed_pdom:
+                ignore_set.union(all_succes_before_immed_pdom)
+                continue
+
+            #remove_set.add(bb) not really needed
             for prede in bb.predes:
                 prede.succes.remove(bb)
-                prede.succes.extend(bb.succes)
-            for succe in bb.succes:
-                succe.predes.remove(bb)
-                succe.predes.extend(bb.predes)
-            del self.id_to_bb_in_slice[bb.id]
-            self.ordered_bbs_in_slice.remove(bb)
-
+                if bb.immed_pdom not in prede.succes:
+                    prede.succes.append(bb.immed_pdom)
+                if prede not in bb.immed_pdom.predes:
+                    bb.immed_pdom.predes.append(prede)
+            for child_bb in all_succes_before_immed_pdom:
+                print("[Simplify] Removing BB: " + str(child_bb.id) + " " + str(child_bb.lines))
+                if child_bb in bb.immed_pdom.predes:
+                    bb.immed_pdom.predes.remove(child_bb)
+                del self.id_to_bb_in_slice[child_bb.id]
+                self.ordered_bbs_in_slice.remove(child_bb)
+                ignore_set.add(child_bb)
         raise Exception
 
     def slice(self, insn):
@@ -195,15 +261,11 @@ class CFG:
             if int(json_bb['is_entry']) == 1:
                 is_entry = True
 
-            immed_dom = None
-            if 'immed_dom' in json_bb:
-                immed_dom = int(json_bb['immed_dom'])
-
             lines = []
             for json_line in json_bb['lines']:
                 lines.append(int(json_line['line']))
 
-            bb = BasicBlock(bb_id, ends_in_branch, is_entry, immed_dom, lines)
+            bb = BasicBlock(bb_id, ends_in_branch, is_entry, lines)
             if self.target_bb is None:
                 self.target_bb = bb
             if is_entry:
@@ -219,6 +281,12 @@ class CFG:
 
         for json_bb in json_bbs:
             bb_id = int(json_bb['id'])
+
+            immed_dom_id = None
+            if 'immed_dom' in json_bb:
+                immed_dom_id = int(json_bb['immed_dom'])
+                bb.immed_dom = self.id_to_bb[immed_dom_id]
+
             json_predes = json_bb['predes']
             predes = []
             for json_prede in json_predes:
