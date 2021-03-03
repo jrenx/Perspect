@@ -455,6 +455,11 @@ cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int add
     if(INFO) cout << "is ignored bit var: " << isIgnoredBitVar  << " ";
     if(INFO) cout << endl;
 
+    if (isIgnoredBitVar) {
+      if(INFO) cout << "do not persist read because variable is an ignored bit variable " << endl;
+      continue;
+    }
+
     if (isBitVar) {
       std::vector<Assignment::Ptr> operations = bitOperations[assign];
       if (INFO) cout << "[sa] bit operations: " << endl;
@@ -559,7 +564,7 @@ void locateBitVariables(GraphPtr slice,
         if (std::find(regions.begin(), regions.end(), assign->out()) != regions.end()) {
           predeIsIgnored = true;
           if(DEBUG_BIT) cout << "[bit_var] " << "Assignment involves a bit variable that should be ignored." << endl;
-	  break;
+	        break;
         }
       }
 
@@ -569,13 +574,13 @@ void locateBitVariables(GraphPtr slice,
 
       if (bitVariables.find(oAssign) != bitVariables.end()) {
         if(DEBUG_BIT) cout << "[bit_var] " << "Assignment might involve a bit variable." << endl;
-	std::vector<AbsRegion> regions = bitVariables[oAssign];
+	      std::vector<AbsRegion> regions = bitVariables[oAssign];
         if(DEBUG_BIT) cout << "[bit_var] " << "Current out " << assign->out() << endl;
         if (std::find(regions.begin(), regions.end(), assign->out()) != regions.end()) {
           predeIsBitVar = true;
           if(DEBUG_BIT) cout << "[bit_var] " << "Assignment involves a bit variable." << endl;
-	  operations = bitOperations[oAssign];
-	  break;
+	        operations = bitOperations[oAssign];
+	        break;
         }
       }
     }
@@ -605,13 +610,20 @@ void locateBitVariables(GraphPtr slice,
 	      case e_shr:
 	      case e_sar:
 	      case e_shl_sal: {
-          if(DEBUG_BIT) cout << "[bit_var] encountered shift or and instruction: " << assign->format() << " " << assign->insn().format() << endl;
+          if(DEBUG_BIT) cout << "[bit_var] encountered shift or and instruction: " << assign->format()
+                             << " " << assign->insn().format() << endl;
 	        std::vector<AbsRegion> regions;
 	        if (assign->inputs().size() == 2) {
-	          regions.push_back(assign->inputs()[1]);
-
-	          std::vector<AbsRegion> regionsToIgnore;
-	          regionsToIgnore.push_back(assign->inputs()[0]);
+            //cout << "HERE" << (assign->out() == assign->inputs()[0]) << endl;
+            //cout << "HERE" << (assign->out() == assign->inputs()[1]) << endl;
+            std::vector<AbsRegion> regionsToIgnore;
+            if (assign->out() == assign->inputs()[0]) {
+              regions.push_back(assign->inputs()[0]);
+              regionsToIgnore.push_back(assign->inputs()[1]);
+            } else {
+              regions.push_back(assign->inputs()[1]);
+              regionsToIgnore.push_back(assign->inputs()[0]);
+            }
 	          bitVariablesToIgnore.insert({assign, regionsToIgnore});
 
 	        } else if (assign->inputs().size() == 1) {
@@ -625,7 +637,8 @@ void locateBitVariables(GraphPtr slice,
 	      }
 	      break;
 	      default:
-	        if(DEBUG_BIT) cout << "[warn][slice] Unhandled case: " << assign->format() << " " << assign->insn().format() << endl;
+	        if(DEBUG_BIT) cout << "[warn][slice] Unhandled case: " << assign->format()
+	                           << " " << assign->insn().format() << endl;
       }
       continue;
     }
