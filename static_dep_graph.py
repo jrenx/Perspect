@@ -217,7 +217,6 @@ class CFG:
                 del self.id_to_bb_in_slice[child_bb.id]
                 self.ordered_bbs_in_slice.remove(child_bb)
                 ignore_set.add(child_bb)
-        raise Exception
 
     def slice(self, insn):
         self.build_cfg(insn)
@@ -239,6 +238,8 @@ class CFG:
                 #    print("  Ignoring prede " + str(prede.id) + "because it is part of a backedge")
                 #    continue
                 worklist.append(prede)
+
+        print("=======================================================")
         for bb in self.ordered_bbs_in_slice:
             print(str(bb))
         assert len(self.id_to_bb_in_slice) == len(self.ordered_bbs_in_slice), \
@@ -246,6 +247,11 @@ class CFG:
         print("Total number of basic blocks after slicing: " + str(len(self.ordered_bbs_in_slice)))
 
         self.simplify()
+
+        print("=======================================================")
+        for bb in self.ordered_bbs_in_slice:
+            print(str(bb))
+        print("Total number of basic blocks after simplifying: " + str(len(self.ordered_bbs_in_slice)))
 
     def build_cfg(self, insn):
         json_bbs = getAllBBs(insn, self.func, self.prog)
@@ -355,7 +361,7 @@ class StaticNode:
     def __str__(self):
         s = "===============================================\n"
         s += "   Node id: " + str(self.id) + "\n"
-        s += "      insn: " + str(self.insn) + "\n"
+        s += "      insn: " + str(hex(self.insn)) + "\n"
         s += "    ------------Basic Block--------------\n"
         if self.bb is None:
             s += "\n"
@@ -392,6 +398,8 @@ class StaticDepGraph:
     def __init__(self):
         self.id_to_node = {}
         self.insn_to_node = {}
+        self.nodes_in_cf_slice = []
+        self.nodes_in_df_slice = []
 
     def make_node(self, insn, bb):
         if insn in self.insn_to_node:
@@ -408,8 +416,7 @@ class StaticDepGraph:
     def buildDataFlowDependencies(self, func, prog):
         reg_to_addr = []
         addr_to_node = {}
-        for node_id in self.id_to_node:
-            node = self.id_to_node[node_id]
+        for node in self.nodes_in_cf_slice:
             bb = node.bb
             if bb.ends_in_branch is False:
                 continue
@@ -434,13 +441,15 @@ class StaticDepGraph:
                 off = load[3]
 
                 prede = self.make_node(prede_insn, None)
+                if prede not in self.nodes_in_df_slice:
+                    self.nodes_in_df_slice.append(prede)
                 prede.mem_load = MemoryLoad(prede_reg, shift, off)
                 succe.df_predes.append(prede)
                 prede.df_succes.append(succe)
 
-        for node_id in self.id_to_node:
-            print(str(self.id_to_node[node_id]))
-        print("Total number of nodes: " + str(len(self.id_to_node)))
+        for node in self.nodes_in_df_slice:
+            print(str(node))
+        print("Total number of nodes in local dataflow slice: " + str(len(self.nodes_in_df_slice)))
 
     def buildControlFlowDependencies(self, insn, func, prog):
         cfg = CFG(func, prog)
@@ -450,17 +459,18 @@ class StaticDepGraph:
 
         first = True
         #TODO, might want to keep trap of the starting instruction
-        for bb in cfg.ordered_bbs_in_slice:
+        for bb in cfg.ordered_bbs:
             if first:
                 node = self.make_node(insn, bb)
                 first = False
             else:
                 node = self.make_node(bb.last_insn, bb)
-
             bb_id_to_node_id[bb.id] = node.id
+            if bb.id in cfg.id_to_bb_in_slice:
+                self.nodes_in_cf_slice.append(node)
 
-        for bb_id in cfg.id_to_bb_in_slice:
-            bb = cfg.id_to_bb_in_slice[bb_id]
+        for bb_id in cfg.id_to_bb:
+            bb = cfg.id_to_bb[bb_id]
             node_id = bb_id_to_node_id[bb_id]
             node = self.id_to_node[node_id]
             for prede in bb.predes:
@@ -469,9 +479,9 @@ class StaticDepGraph:
             for succe in bb.succes:
                 succe_node_id = bb_id_to_node_id[succe.id]
                 node.cf_succes.append(self.id_to_node[succe_node_id])
-        for node_id in self.id_to_node:
-            print(str(self.id_to_node[node_id]))
-        print("Total number of nodes: " + str(len(self.id_to_node)))
+        for node in self.nodes_in_cf_slice:
+            print(str(node))
+        print("Total number of nodes in control flow slice: " + str(len(self.nodes_in_cf_slice)))
         return cfg
 
 if __name__ == "__main__":

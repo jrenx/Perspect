@@ -58,9 +58,8 @@ def parseLoads(json_loads):
         #both shift and offset are in hex form
         if DEBUG: print("Parsing result reg: " + load_reg + \
                         " shift " + str(shift) + " off " + str(off) + " insn addr: " + str(insn_addr))
-
         data_points.append([insn_addr, load_reg, shift, off])
-        return data_points
+    return data_points
 
 def static_backslices(reg_to_addr, func, prog):
     print()
