@@ -465,6 +465,7 @@ class StaticDepGraph:
                 first = False
             else:
                 node = self.make_node(bb.last_insn, bb)
+                #TODO,does it matter if we use the first instruction instead?
             bb_id_to_node_id[bb.id] = node.id
             if bb.id in cfg.id_to_bb_in_slice:
                 self.nodes_in_cf_slice.append(node)
