@@ -36,6 +36,8 @@ class RunBreakCommands(gdb.Function):
             config = json.load(configFile)
 
         regs = config['regs']
+        step = config['step']
+        deref = config['deref']
 
         with open(os.path.join(rr_dir, 'breakpoints.log'), 'r') as f:
             position = gdb.convenience_variable('log_position')
@@ -50,7 +52,14 @@ class RunBreakCommands(gdb.Function):
                 continue
             break_num = int(match.group(0).split()[1][:-1]) - 1
             if break_num < len(regs):
+                if step:
+                    gdb.execute('si')
                 gdb.execute('i reg {}'.format(regs[break_num]))
+                if deref:
+                    try:
+                        gdb.execute('p/x *((long *) ${})'.format(regs[break_num]))
+                    except gdb.MemoryError:
+                        print("memory error")
                 return 1
         return 0
 
