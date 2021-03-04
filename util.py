@@ -90,7 +90,7 @@ def static_backslices(reg_to_addr, func, prog):
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] : " + "Calling C")
 
-    lib.backwardSlices(reg_to_addr_str, prog, func)
+    lib.backwardSlices(reg_to_addr_str, prog_name, func_name)
     if DEBUG_CTYPE: print( "[main] : Back from C")
 
     data_points_per_reg = []
