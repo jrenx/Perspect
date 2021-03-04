@@ -3,13 +3,14 @@ import json
 import re
 import os
 
+rr_dir = os.path.dirname(os.path.realpath(__file__))
 
 class InitArgument(gdb.Function):
     def __init__(self):
         super(InitArgument, self).__init__('init_argument')
 
     def invoke(self):
-        with open('config.json') as configFile:
+        with open(os.path.join(rr_dir, 'config.json')) as configFile:
             config = json.load(configFile)
 
         break_point = config['break_point']
@@ -21,7 +22,7 @@ class InitArgument(gdb.Function):
         if 'out' in config:
             output_filename = config['out']
         else:
-            output_filename = 'out.log'
+            output_filename = os.path.join(rr_dir, 'out.log')
         if os.path.exists(output_filename):
             os.remove(output_filename)
         gdb.set_convenience_variable('output_filename', output_filename)
@@ -36,7 +37,7 @@ class UpdateFilePosition(gdb.Function):
         super(UpdateFilePosition, self).__init__('update_file')
 
     def invoke(self):
-        with open('result.log', 'r') as f:
+        with open(os.path.join(rr_dir, 'result.log'), 'r') as f:
             f.seek(0, 2)
             position = f.tell()
         gdb.set_convenience_variable('log_position', position)
@@ -79,7 +80,7 @@ class CheckProcessExit(gdb.Function):
         super(CheckProcessExit, self).__init__('is_process_exit')
 
     def invoke(self):
-        with open('result.log', 'r') as f:
+        with open(os.path.join(rr_dir, 'result.log'), 'r') as f:
             position = gdb.convenience_variable('log_position')
             if position is not None:
                 position = int(position)
@@ -101,7 +102,7 @@ class CheckProgramStop(gdb.Function):
         super(CheckProgramStop, self).__init__('is_program_stop')
 
     def invoke(self):
-        with open('result.log', 'r') as f:
+        with open(os.path.join(rr_dir, 'result.log'), 'r') as f:
             position = gdb.convenience_variable('log_position')
             if position is not None:
                 position = int(position)
@@ -123,7 +124,7 @@ class CheckBreakpointSuccess(gdb.Function):
         super(CheckBreakpointSuccess, self).__init__('is_br_success')
 
     def invoke(self):
-        with open('result.log', 'r') as f:
+        with open(os.path.join(rr_dir, 'result.log'), 'r') as f:
             position = gdb.convenience_variable('log_position')
             if position is not None:
                 position = int(position)
@@ -148,7 +149,7 @@ class GetRegValue(gdb.Function):
         reg = str(gdb.convenience_variable('reg')).strip('"')
         gdb.execute('i reg {}'.format(reg))
         gdb.flush()
-        with open('result.log', 'r') as f:
+        with open(os.path.join(rr_dir, 'result.log'), 'r') as f:
             position = gdb.convenience_variable('log_position')
             if position is not None:
                 position = int(position)
@@ -200,7 +201,7 @@ class ProcessWatchOutput(gdb.Function):
         super(ProcessWatchOutput, self).__init__('process_watch_output')
 
     def invoke(self):
-        with open('result.log', 'r') as f:
+        with open(os.path.join(rr_dir, 'result.log'), 'r') as f:
             position = gdb.convenience_variable('log_position')
             if position is not None:
                 position = int(position)
@@ -227,7 +228,7 @@ class CleanUp(gdb.Function):
         super(CleanUp, self).__init__('clean_up')
 
     def invoke(self):
-        os.remove('result.log')
+        os.remove(os.path.join(rr_dir, 'result.log'))
         return 1
 
 

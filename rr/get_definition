@@ -1,9 +1,9 @@
-source result_parser.py
+source rr/result_parser.py
 
 set pagination off
 
 p $init_argument()
-set logging file result.log
+set logging file rr/result.log
 set logging overwrite on
 set logging redirect on
 set logging on
@@ -17,7 +17,7 @@ end
 
 r
 
-set logging file result.log
+set logging file rr/result.log
 set logging overwrite on
 set logging redirect on
 set logging on

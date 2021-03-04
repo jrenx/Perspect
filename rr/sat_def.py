@@ -4,12 +4,11 @@ import os
 import re
 import random
 
-#working_dir = "/home/anygroup/perf_debug_tool/"
-working_dir = os.getcwd()
-rr_dir = os.path.join(os.getcwd(), 'rr')
+rr_dir = os.path.dirname(os.path.realpath(__file__))
 
 def run_break_points(breakpoints):
-    json.dump({"breakpoints": breakpoints}, open(working_dir + 'config.json', 'w'))
+    print("working directory is: " + rr_dir)
+    json.dump({"breakpoints": breakpoints}, open(os.path.join(rr_dir, 'config.json'), 'w'))
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     print("Started RR.")
     try:
@@ -45,8 +44,8 @@ def parse_break_points():
 
 def run_back_trace(break_point, continue_count, trace_point, reg, offset):
     config = {"breakpoint": break_point, "continue_count": continue_count, "trace_point": trace_point, "reg": reg,
-              "offset": offset, "log_filename": "backtrace_{}.log".format(continue_count)}
-    json.dump(config, open(working_dir + 'config.json', 'w'))
+              "offset": offset, "log_filename": os.path.join(rr_dir, "backtrace_{}.log").format(continue_count)}
+    json.dump(config, open(os.path.join(rr_dir, 'config.json'), 'w'))
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     try:
         rr_process.communicate(('source ' + os.path.join(rr_dir, 'get_backtrace')).encode(), 60 * 10)
@@ -128,10 +127,10 @@ def get_sat_def(target, branch, trace_point, reg, offset="0x0"):
     not_taken_traces = []
     for count in taken_sample:
         run_back_trace(branch, count, trace_point, reg, offset)
-        taken_traces.append(parse_back_trace(working_dir + 'backtrace_{}.log'.format(count)))
+        taken_traces.append(parse_back_trace(os.path.join(rr_dir, 'backtrace_{}.log'.format(count))))
     for count in not_taken_sample:
         run_back_trace(branch, count, trace_point, reg, offset)
-        not_taken_traces.append(parse_back_trace(working_dir + 'backtrace_{}.log'.format(count)))
+        not_taken_traces.append(parse_back_trace(os.path.join(rr_dir, 'backtrace_{}.log'.format(count))))
 
     return analyze_trace(taken_traces, not_taken_traces)
 
@@ -159,10 +158,10 @@ def get_def(target, branch, trace_point, reg, offset="0x0"):
     not_taken_traces = []
     for count in taken_sample:
         run_back_trace(branch, count, trace_point, reg, offset)
-        taken_traces.append(parse_back_trace(working_dir + 'backtrace_{}.log'.format(count)))
+        taken_traces.append(parse_back_trace(os.path.join(rr_dir, 'backtrace_{}.log'.format(count))))
     for count in not_taken_sample:
         run_back_trace(branch, count, trace_point, reg, offset)
-        not_taken_traces.append(parse_back_trace(working_dir + 'backtrace_{}.log'.format(count)))
+        not_taken_traces.append(parse_back_trace(os.path.join(rr_dir, 'backtrace_{}.log'.format(count))))
 
     return get_last_def(taken_traces, not_taken_traces)
 

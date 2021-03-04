@@ -1,10 +1,10 @@
-source watchpoints.py
+source rr/watchpoints.py
 
 set pagination off
 
 p $init_argument()
 
-set logging file watchpoints.log
+set logging file rr/watchpoints.log
 set logging overwrite on
 set logging redirect on
 set logging on

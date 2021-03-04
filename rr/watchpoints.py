@@ -3,13 +3,14 @@ import json
 import re
 import os
 
+rr_dir = os.path.dirname(os.path.realpath(__file__))
 
 class InitArgument(gdb.Function):
     def __init__(self):
         super(InitArgument, self).__init__('init_argument')
 
     def invoke(self):
-        with open('config.json') as configFile:
+        with open(os.path.join(rr_dir, 'config.json')) as configFile:
             config = json.load(configFile)
 
         breakpoints = config['breakpoints']
@@ -32,7 +33,7 @@ class CheckProcessExit(gdb.Function):
         super(CheckProcessExit, self).__init__('is_process_exit')
 
     def invoke(self):
-        with open('watchpoints.log', 'r') as f:
+        with open(os.path.join(rr_dir, 'watchpoints.log'), 'r') as f:
             position = gdb.convenience_variable('log_position')
             if position is not None:
                 position = int(position)
@@ -54,7 +55,7 @@ class UpdateFilePosition(gdb.Function):
         super(UpdateFilePosition, self).__init__('update_file')
 
     def invoke(self):
-        with open('watchpoints.log', 'r') as f:
+        with open(os.path.join(rr_dir, 'watchpoints.log'), 'r') as f:
             f.seek(0, 2)
             position = f.tell()
         gdb.set_convenience_variable('log_position', position)

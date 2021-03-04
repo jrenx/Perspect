@@ -1,10 +1,10 @@
-source breakpoints.py
+source rr/breakpoints.py
 
 set pagination off
 
 p $init_argument()
 
-set logging file breakpoints.log
+set logging file rr/breakpoints.log
 set logging overwrite on
 set logging redirect on
 set logging on

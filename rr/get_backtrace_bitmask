@@ -1,4 +1,4 @@
-source backtrace_bitmask.py
+source rr/backtrace_bitmask.py
 
 set pagination off
 

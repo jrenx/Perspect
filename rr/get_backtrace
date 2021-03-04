@@ -1,4 +1,4 @@
-source backtrace.py
+source rr/backtrace.py
 
 set pagination off
 
