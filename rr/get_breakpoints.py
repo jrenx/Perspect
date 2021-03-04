@@ -3,6 +3,7 @@ import json
 import os
 import re
 
+rr_dir = os.path.dirname(os.path.realpath(__file__))
 
 def run_breakpoint(breakpoints, reg_points, regs, step, deref):
     config = {'breakpoints': breakpoints,
@@ -10,11 +11,11 @@ def run_breakpoint(breakpoints, reg_points, regs, step, deref):
               'regs': regs,
               'step': step,
               'deref': deref}
-    json.dump(config, open(os.path.join(os.getcwd(), 'config.json'), 'w'))
+    json.dump(config, open(os.path.join(rr_dir, 'config.json'), 'w'))
 
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     try:
-        rr_process.communicate(('source' + os.path.join(os.getcwd(), 'get_breakpoints')).encode(), timeout=300)
+        rr_process.communicate(('source' + os.path.join(rr_dir, 'get_breakpoints')).encode(), timeout=300)
     except subprocess.TimeoutExpired:
         rr_process.kill()
         return False
@@ -33,7 +34,7 @@ def parse_breakpoint(breakpoints, reg_points, deref):
     curr_br_num = -1
     value = None
 
-    with open(os.path.join(os.getcwd(), "breakpoints.log"), 'r') as log:
+    with open(os.path.join(rr_dir, "breakpoints.log"), 'r') as log:
         for line in log:
             if re.search(r'Breakpoint \d+,', line):
                 br_num = int(line.split()[1].strip(',')) - 1

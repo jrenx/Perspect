@@ -3,15 +3,16 @@ import json
 import os
 import re
 
+rr_dir = os.path.dirname(os.path.realpath(__file__))
 
 def run_watchpoint(breakpoints, watchpoints):
     config = {'breakpoints': breakpoints,
               'watchpoints': watchpoints}
-    json.dump(config, open(os.path.join(os.getcwd(), 'config.json'), 'w'))
+    json.dump(config, open(os.path.join(rr_dir, 'config.json'), 'w'))
 
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     try:
-        rr_process.communicate(('source' + os.path.join(os.getcwd(), 'get_watchpoints')).encode(), timeout=300)
+        rr_process.communicate(('source' + os.path.join(rr_dir, 'get_watchpoints')).encode(), timeout=300)
     except subprocess.TimeoutExpired:
         rr_process.kill()
         return False
@@ -29,7 +30,7 @@ def parse_watchpoint(breakpoints, watchpoints):
     result = []
     curr_watch_num = -1
 
-    with open(os.path.join(os.getcwd(), 'watchpoints.log'), 'r') as log:
+    with open(os.path.join(rr_dir, 'watchpoints.log'), 'r') as log:
         for line in log:
             if re.search(r'Breakpoint \d+,', line):
                 if curr_watch_num != -1:
