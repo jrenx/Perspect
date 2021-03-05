@@ -42,7 +42,8 @@ def get_reg_from_branch(branch_index, reg_points, trace):
 
     i = branch_index - 1
     while trace[i][1] is not None:
-        reg_point, reg_value = trace[i]
+        print(str(i) + " " + str(trace[i]))
+        reg_point, reg_value, reg_deref = trace[i]
         if reg_point in reg_points:
             if reg_point in reg_map:
                 raise KeyError("reg point already found")
@@ -157,6 +158,7 @@ def get_def(branch, taken, reg_point, reg, offset='0x0', iter=10):
     print("[rr] First pass finished")
 
     branch_indices = random.sample(taken_indices, 4) + random.sample(not_taken_indices, 4)
+
     watchpoints = [offset_reg(get_reg_from_branch(index, [reg_point], breakpoint_trace)[reg_point], offset)
                    for index in branch_indices]
     watchpoint_taken_indices = range(0, 4)
@@ -164,10 +166,11 @@ def get_def(branch, taken, reg_point, reg, offset='0x0', iter=10):
 
     for i in range(iter):
         # Second pass
-        print("Running second pass for {} times".format(i + 1))
+        print("[rr] Running second pass for {} times".format(i + 1))
         run_watchpoint([branch], watchpoints)
         watchpoint_trace = parse_watchpoint([branch], watchpoints)
-        print("Second pass finished")
+        print("[rr] Parsed " + str(len(watchpoint_trace)) + " watchpoints")
+        print("[rr] Second pass finished")
         taken_watchpoint_traces = [
             get_watchpoint_trace(watchpoints[index], get_num_from_index(index, breakpoint_trace), watchpoint_trace)
             for index in watchpoint_taken_indices]
@@ -180,7 +183,7 @@ def get_def(branch, taken, reg_point, reg, offset='0x0', iter=10):
         negative.union(watchpoint_result[1])
 
         # Third pass
-        print("Running third pass for {} times".format(i + 1))
+        print("[rr] Running third pass for {} times".format(i + 1))
         reg_points = [reg_point]
         regs = [reg]
         for instruction in positive:
@@ -192,9 +195,10 @@ def get_def(branch, taken, reg_point, reg, offset='0x0', iter=10):
         run_breakpoint([branch, taken], reg_points, regs, True, True)
         breakpoint_trace = parse_breakpoint([branch, taken], reg_points, True)
         taken_indices, not_taken_indices = check_write(reg_point, branch, taken, breakpoint_trace)
-        print("Third pass finished")
+        print("[rr] Third pass finished")
 
         branch_indices = random.sample(taken_indices, 4) + random.sample(not_taken_indices, 4)
+
         watchpoints = [offset_reg(get_reg_from_branch(index, [reg_point], breakpoint_trace)[reg_point], offset)
                    for index in branch_indices]
         watchpoint_taken_indices = range(0, 4)
