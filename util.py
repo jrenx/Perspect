@@ -9,6 +9,7 @@ from collections import deque
 from ctypes import *
 sys.path.append(os.path.abspath('./rr'))
 from sat_def import *
+from get_def import *
 sys.path.append(os.path.abspath('./pin'))
 from instruction_reg_trace import *
 from instruction_trace import *
@@ -278,7 +279,7 @@ def trace_function(function, path, prog, arg):
 #### Helper functions that interact with RR functionalities ####
 ################################################################
 
-def dynamic_backslice(reg, off, insn, func, prog): 
+def dynamic_backslice_old(reg, off, insn, func, prog):
     #TODO, can only do this when is in same function?
     fake_branch, fake_target = get_fake_target_and_branch \
                 (insn, func, prog)
@@ -292,7 +293,7 @@ def dynamic_backslice(reg, off, insn, func, prog):
                                  insn_str, reg, off)
     return list(rr_result_defs[0].union(rr_result_defs[1]))
 
-def dynamic_backslice2(branch, target, reg, off, insn): 
+def dynamic_backslice2_old(branch, target, reg, off, insn):
     #TODO, can only do this when is in same function?
     insn_str = hex(insn)
     target_str = hex(target)
@@ -304,6 +305,25 @@ def dynamic_backslice2(branch, target, reg, off, insn):
 
     rr_result_defs = get_sat_def('*' + target_str, '*' + branch_str, \
                                  insn_str, reg, off)
+    return list(rr_result_defs[0].union(rr_result_defs[1]))
+
+def rr_backslice(reg, shift, off, insn, branch, target):
+    #TODO, the offset and shift are stored as decimals,
+    # should they be passes dec or hex to RR?
+    # Looks like they take hex strings
+    target_str = '*' + hex(target)
+    branch_str = '*' + hex(branch)
+    insn_str = '*' + hex(insn)
+    reg_str = reg.lower()
+    shift_str = hex(shift)
+    off_str = hex(off)
+
+    print("[main] Inputtng to RR: " \
+        + " reg: " + str(reg_str) + " off: " + str(off_str) + " @ " + str(insn_str)\
+        + " branch @" + str(branch_str) + " target @" + str(target_str))
+
+    rr_result_defs = get_def(branch_str, target_str, insn_str, reg_str, off_str)
+    print("[main] Result: " + str(rr_result_defs))
     return list(rr_result_defs[0].union(rr_result_defs[1]))
 
 ################################################################

@@ -1,7 +1,7 @@
 import random
 
-from .get_breakpoints import *
-from .get_watchpoints import *
+from get_breakpoints import *
+from get_watchpoints import *
 
 
 def filter_branch(branch_point, taken_point, trace):
@@ -18,6 +18,8 @@ def filter_branch(branch_point, taken_point, trace):
     not_taken_indices = []
 
     for i, (point, value, _) in enumerate(trace):
+        print("point " + str(point))
+        print("value " + str(value))
         if point == branch_point and value is None:
             if i + 1 < len(trace) and trace[i + 1][0] == taken_point and trace[i + 1][1] is None:
                 taken_indices.append(i)
@@ -140,16 +142,19 @@ def get_written_reg(instruction):
 
 
 def get_def(branch, taken, reg_point, reg, offset='0x0', iter=10):
-
+    print("[rr] In get_def, branch: " + branch + " target: " + taken)
     positive = set()
     negative = set()
 
     # First pass
-    print("Running breakpoint for first pass")
+    print("[rr] Running breakpoint for first pass")
     run_breakpoint([branch, taken], [reg_point], [reg], False, False)
     breakpoint_trace = parse_breakpoint([branch, taken], [reg_point], False)
+    print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoints")
     taken_indices, not_taken_indices = filter_branch(branch, taken, breakpoint_trace)
-    print("First pass finished")
+    print("[rr] Parsed " + str(len(taken_indices)) + " taken indices")
+    print("[rr] Parsed " + str(len(not_taken_indices)) + " not taken indices")
+    print("[rr] First pass finished")
 
     branch_indices = random.sample(taken_indices, 4) + random.sample(not_taken_indices, 4)
     watchpoints = [offset_reg(get_reg_from_branch(index, [reg_point], breakpoint_trace)[reg_point], offset)
@@ -199,8 +204,8 @@ def get_def(branch, taken, reg_point, reg, offset='0x0', iter=10):
 
 
 if __name__ == '__main__':
-    branch = '*0x409c84'
-    taken = '*0x409c55'
+    branch = '*0x409c84' #472
+    taken = '*0x409c55' #467
     reg_point = '*0x409c24'
     regs = 'rbp'
-    positive, negative = get_def(branch, taken, reg_point)
+    positive, negative = get_def(branch, taken, reg_point, regs)

@@ -15,9 +15,13 @@ def test_func_trace():
     #print(ret)
     assert ret is not None
 
+def test_rr_slice():
+    rr_backslice('RBP', 0, 0, 4234276, 4234325, 4234372)
+
 def main():
     #test_ins_trace()
-    test_func_trace()
+    #test_func_trace()
+    test_rr_slice()
  
 if __name__ == "__main__":
     main()
