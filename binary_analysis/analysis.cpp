@@ -61,6 +61,7 @@ Instruction getIfCondition2(Block *b);
 
 BPatch_basicBlock *getBasicBlock(BPatch_flowGraph *fg, long unsigned int addr);
 Block *getBasicBlock2(Function *f, long unsigned int addr);
+Block *getBasicBlockContainingInsnBeforeAddr(Function *f, long unsigned int addr);
 
 GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsigned int addr, char *regName);
 cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int addr, char *regName);
@@ -282,6 +283,23 @@ BPatch_basicBlock *getBasicBlock(BPatch_flowGraph *fg, long unsigned int addr) {
 
   if (target == NULL) {
     fprintf(stderr, "Failed to find basic block @ %lx.\n", addr);
+    return NULL;
+  }
+  return target;
+}
+
+Block *getBasicBlockContainingInsnBeforeAddr(Function *f, long unsigned int addr) {
+  Block *target = NULL;
+  for (auto bit = f->blocks().begin(); bit != f->blocks().end(); ++bit) {
+    Block *b = *bit;
+    if (addr > b->start() && addr <= b->end()) { // "Address immediately following the last instruction in the block."
+      target = b;
+      break;
+    }
+  }
+
+  if (target == NULL) {
+    cerr << "Failed to find basic block for function " << f->name() << " @ " << addr << endl;
     return NULL;
   }
   return target;
@@ -930,8 +948,17 @@ extern "C" {
       if (INFO) cout << "[sa] func: " << funcName << endl;
 
       Function *func = getFunction2(progName, funcName);
-      Block *bb = getBasicBlock2(func, addr);
-      Instruction insn = bb->getInsn(addr);
+      Block *bb = getBasicBlockContainingInsnBeforeAddr(func, addr);
+
+      Instruction insn;
+      Block::Insns insns;
+      bb->getInsns(insns);
+      for (auto it = insns.begin(); it != insns.end(); it++) {
+        //cout << "[tmp] " << std::hex << (*it).first  << " " << (*it).second.format() << endl;
+        if ((*it).first == addr)
+          break;
+        insn = (*it).second;
+      }
       if (INFO) cout << "[sa] insn: " << insn.format() << endl;
 
       //AssignmentConverter ac(true, false);
