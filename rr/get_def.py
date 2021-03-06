@@ -104,7 +104,8 @@ def analyze_trace(taken_traces, not_taken_traces):
     return positive, negative
 
 
-def check_write(reg_point, branch_point, taken_point, trace):
+#def check_write(reg_point, branch_point, taken_point, trace):
+def check_write(reg_point, trace):
     """
     Check whether there is unknown writes to address pointed by register
     :param reg_point: instruction address to check the register
@@ -116,29 +117,32 @@ def check_write(reg_point, branch_point, taken_point, trace):
     taken branches whose register has unknown write
     """
     reg_map = {}
-    taken = []
-    not_taken = []
+    #taken = []
+    #not_taken = []
+    uknown_writes = []
     unknown_write = False
 
     for i, (addr, reg, value) in enumerate(trace):
-        if reg is None and addr == branch_point:
-            if unknown_write:
-                if i + 1 < len(trace) and trace[i + 1][0] == taken_point and trace[i + 1][1] is None:
-                    taken.append(i)
-                else:
-                    not_taken.append(i)
-                unknown_write = False
-            continue
-        if addr == reg_point:
+        #if reg is None and addr == branch_point:
+        #    if unknown_write:
+        #        if i + 1 < len(trace) and trace[i + 1][0] == taken_point and trace[i + 1][1] is None:
+        #            taken.append(i)
+        #        else:
+        #            not_taken.append(i)
+        #        unknown_write = False
+        #    continue
+        if addr == reg_point: # Is the read point.
             if reg not in reg_map or reg_map[reg] != value:
-                unknown_write = True
-            else:
-                unknown_write = False
-        else:
+                #unknown_write = True
+                uknown_writes.append(i)
+            #else:
+                #unknown_write = False
+        else: # Is a write point.
             reg_map[reg] = value
-            unknown_write = False
+            #unknown_write = False
 
-    return taken, not_taken
+    #return taken, not_taken
+    return uknown_writes
 
 
 def get_written_reg(instruction):
@@ -160,16 +164,18 @@ def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', iter
     negative = set()
 
     # First pass
-    print("[rr] Running breakpoint for first pass")
+    print("[rr] Running breakpoints for first step")
+    print("[rr] Breakpoints: " + str([reg_point]))
+    print("[rr] Registers: " + str([reg]))
     run_breakpoint([], [reg_point], [reg], False, False)
-    breakpoint_trace = parse_breakpoint([branch, taken], [reg_point], False)
+    breakpoint_trace = parse_breakpoint([], [reg_point], False)
     print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoints")
 
     #taken_indices, not_taken_indices = filter_branch(branch, taken, breakpoint_trace)
     #print("[rr] Parsed " + str(len(taken_indices)) + " taken indices")
     #print("[rr] Parsed " + str(len(not_taken_indices)) + " not taken indices")
 
-    print("[rr] First pass finished")
+    print("[rr] First step finished")
     addrs = pick_four_unique_addrs(breakpoint_trace)
     print("[rr] All unique addresses read: " + str(addrs))
     watchpoints = [offset_reg(addr, offset) for addr in addrs]
@@ -183,12 +189,12 @@ def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', iter
 
     for i in range(iter):
         # Second pass
-        print("[rr] Running second pass for {} times".format(i + 1))
+        print("[rr] Running second step for {} times".format(i + 1))
         run_watchpoint([], watchpoints)
         watchpoint_trace = parse_watchpoint([], watchpoints)
         print("[rr] Parsed " + str(len(watchpoint_trace)) + " watchpoints")
         print("[tmp] " + str(watchpoint_trace))
-        print("[rr] Second pass finished")
+        print("[rr] Second step finished")
 
         #taken_watchpoint_traces = [
         #    get_watchpoint_trace(watchpoints[index], get_num_from_index(index, breakpoint_trace), watchpoint_trace)
@@ -202,7 +208,7 @@ def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', iter
         #negative.union(watchpoint_result[1])
 
         # Third pass
-        print("[rr] Running third pass for {} times".format(i + 1))
+        print("[rr] Running third step for {} times".format(i + 1))
         reg_points = [reg_point]
         regs = [reg]
         unique_insns = set()
@@ -226,11 +232,17 @@ def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', iter
             insn = triple[0]
             func = triple[1]
             #TODO, what if have shift and off?
-            regs.extend([expr[1] for expr in triple[2]])
+            curr_regs = [expr[1] for expr in triple[2]]
+            if len(curr_regs) == 0:
+                print("[rr][error] insn " + str(insn) + " writes to no reg! ignoring ...")
+                continue
+            elif len(curr_regs) > 1:
+                print("[rr][error] insn " + str(insn) + " writes to multiple regs! Not handled ...")
+                raise Exception
+            regs.append(curr_regs[0].lower())
             reg_points.append('*' +hex(insn))
         print("[rr] all insn found " + str(reg_points))
         print("[rr] all registers found " + str(regs))
-        raise Exception
 
         #for instruction in positive:
         #    regs.append(get_written_reg(instruction))
@@ -239,20 +251,31 @@ def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', iter
         #    regs.append(get_written_reg(instruction))
         #    reg_points.append(instruction)
 
-        #TODO, how to distinguish diff insn and regs?
+        print("[rr] Running breakpoints for third step")
+        print("[rr] Breakpoints: " + str(reg_points))
+        print("[rr] Registers: " + str(regs))
+        #TODO, how to distinguish diff insn and regs? looks like it's according to order
         run_breakpoint([], reg_points, regs, True, True)
         breakpoint_trace = parse_breakpoint([], reg_points, True)
-        #TODO
-        taken_indices, not_taken_indices = check_write(reg_point, branch, taken, breakpoint_trace)
-        print("[rr] Third pass finished")
+        print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoints")
+        print("[rr] Third step finished")
 
+        unknown_writes_indices = check_write(reg_point, breakpoint_trace)
+        #taken_indices, not_taken_indices = check_write(reg_point, branch, taken, breakpoint_trace)
+
+        print("[rr] Addresses that might have undergone unknown writes: " + str(len(unknown_writes_indices)))
+        addrs = pick_four_unique_addrs([breakpoint_trace[i] for i in unknown_writes_indices])
+        print("[rr] All unique addresses read: " + str(addrs))
+        watchpoints = [offset_reg(addr, offset) for addr in addrs]
+        print("[rr] Picked watchpoints: " + str(watchpoints))
+      
         #TODO populate the watchpoints again
         #branch_indices = random.sample(taken_indices, 4) + random.sample(not_taken_indices, 4)
 
         #watchpoints = [offset_reg(get_reg_from_branch(index, [reg_point], breakpoint_trace)[reg_point], offset)
         #           for index in branch_indices]
-        watchpoint_taken_indices = range(0, 4)
-        watchpoint_not_taken_indices = range(4, 8)
+        #watchpoint_taken_indices = range(0, 4)
+        #watchpoint_not_taken_indices = range(4, 8)
 
     return positive, negative
 
