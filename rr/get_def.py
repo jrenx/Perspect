@@ -1,8 +1,11 @@
 import random
+import sys
 
 from get_breakpoints import *
 from get_watchpoints import *
-
+#sys.path.append(os.path.abspath('./..'))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from sa_util import *
 
 def filter_branch(branch_point, taken_point, trace):
     """
@@ -141,66 +144,113 @@ def check_write(reg_point, branch_point, taken_point, trace):
 def get_written_reg(instruction):
     raise NotImplementedError
 
+def pick_four_unique_addrs(breakpoint_trace):
+    addrs = set()
+    for breakpoint in breakpoint_trace:
+        addrs.add(breakpoint[1])
+        if len(addrs) == 4:
+            return addrs
+    return addrs
 
-def get_def(branch, taken, reg_point, reg, offset='0x0', iter=10):
+
+#TODO, shift should be shift to the right
+def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', iter=10):
     print("[rr] In get_def, branch: " + branch + " target: " + taken)
     positive = set()
     negative = set()
 
     # First pass
     print("[rr] Running breakpoint for first pass")
-    run_breakpoint([branch, taken], [reg_point], [reg], False, False)
+    run_breakpoint([], [reg_point], [reg], False, False)
     breakpoint_trace = parse_breakpoint([branch, taken], [reg_point], False)
     print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoints")
-    taken_indices, not_taken_indices = filter_branch(branch, taken, breakpoint_trace)
-    print("[rr] Parsed " + str(len(taken_indices)) + " taken indices")
-    print("[rr] Parsed " + str(len(not_taken_indices)) + " not taken indices")
+
+    #taken_indices, not_taken_indices = filter_branch(branch, taken, breakpoint_trace)
+    #print("[rr] Parsed " + str(len(taken_indices)) + " taken indices")
+    #print("[rr] Parsed " + str(len(not_taken_indices)) + " not taken indices")
+
     print("[rr] First pass finished")
+    addrs = pick_four_unique_addrs(breakpoint_trace)
+    print("[rr] All unique addresses read: " + str(addrs))
+    watchpoints = [offset_reg(addr, offset) for addr in addrs]
+    print("[rr] Picked watchpoints: " + str(watchpoints))
 
-    branch_indices = random.sample(taken_indices, 4) + random.sample(not_taken_indices, 4)
-
-    watchpoints = [offset_reg(get_reg_from_branch(index, [reg_point], breakpoint_trace)[reg_point], offset)
-                   for index in branch_indices]
-    watchpoint_taken_indices = range(0, 4)
-    watchpoint_not_taken_indices = range(4, 8)
+    #branch_indices = random.sample(taken_indices, 4) + random.sample(not_taken_indices, 4)
+    #watchpoints = [offset_reg(get_reg_from_branch(index, [reg_point], breakpoint_trace)[reg_point], offset)
+    #               for index in branch_indices]
+    #watchpoint_taken_indices = range(0, 4)
+    #watchpoint_not_taken_indices = range(4, 8)
 
     for i in range(iter):
         # Second pass
         print("[rr] Running second pass for {} times".format(i + 1))
-        run_watchpoint([branch], watchpoints)
-        watchpoint_trace = parse_watchpoint([branch], watchpoints)
+        run_watchpoint([], watchpoints)
+        watchpoint_trace = parse_watchpoint([], watchpoints)
         print("[rr] Parsed " + str(len(watchpoint_trace)) + " watchpoints")
+        print("[tmp] " + str(watchpoint_trace))
         print("[rr] Second pass finished")
-        taken_watchpoint_traces = [
-            get_watchpoint_trace(watchpoints[index], get_num_from_index(index, breakpoint_trace), watchpoint_trace)
-            for index in watchpoint_taken_indices]
-        not_taken_watchpoint_traces = [
-            get_watchpoint_trace(watchpoints[index], get_num_from_index(index, breakpoint_trace), watchpoint_trace)
-            for index in watchpoint_not_taken_indices]
 
-        watchpoint_result = analyze_trace(taken_watchpoint_traces, not_taken_watchpoint_traces)
-        positive.union(watchpoint_result[0])
-        negative.union(watchpoint_result[1])
+        #taken_watchpoint_traces = [
+        #    get_watchpoint_trace(watchpoints[index], get_num_from_index(index, breakpoint_trace), watchpoint_trace)
+        #    for index in watchpoint_taken_indices]
+        #not_taken_watchpoint_traces = [
+        #    get_watchpoint_trace(watchpoints[index], get_num_from_index(index, breakpoint_trace), watchpoint_trace)
+        #    for index in watchpoint_not_taken_indices]
+
+        #watchpoint_result = analyze_trace(taken_watchpoint_traces, not_taken_watchpoint_traces)
+        #positive.union(watchpoint_result[0])
+        #negative.union(watchpoint_result[1])
 
         # Third pass
         print("[rr] Running third pass for {} times".format(i + 1))
         reg_points = [reg_point]
         regs = [reg]
-        for instruction in positive:
-            regs.append(get_written_reg(instruction))
-            reg_points.append(instruction)
-        for instruction in negative:
-            regs.append(get_written_reg(instruction))
-            reg_points.append(instruction)
-        run_breakpoint([branch, taken], reg_points, regs, True, True)
-        breakpoint_trace = parse_breakpoint([branch, taken], reg_points, True)
+        unique_insns = set()
+        for line in watchpoint_trace:
+            insn = line[1]
+            func = line[2]
+            unique_insns.add(insn + "@" + func)
+        print("[rr] Found " + str(len(unique_insns)) + " unique instructions ")
+        print("[tmp] " + str(unique_insns))
+        print(str(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+        addr_to_func = []
+        for pair in unique_insns:
+            segs = pair.split("@")
+            insn = segs[0]
+            func = segs[1]
+            addr_to_func.append([str(int(insn, 16)), func])
+        insn_to_writes = get_mem_writes(addr_to_func, prog)
+        print("[rr] returned from get_mem_writes " + str(insn_to_writes))
+        for triple in insn_to_writes:
+            insn = triple[0]
+            func = triple[1]
+            #TODO, what if have shift and off?
+            regs.extend([expr[1] for expr in triple[2]])
+            reg_points.append('*' +hex(insn))
+        print("[rr] all insn found " + str(reg_points))
+        print("[rr] all registers found " + str(regs))
+        raise Exception
+
+        #for instruction in positive:
+        #    regs.append(get_written_reg(instruction))
+        #    reg_points.append(instruction)
+        #for instruction in negative:
+        #    regs.append(get_written_reg(instruction))
+        #    reg_points.append(instruction)
+
+        #TODO, how to distinguish diff insn and regs?
+        run_breakpoint([], reg_points, regs, True, True)
+        breakpoint_trace = parse_breakpoint([], reg_points, True)
+        #TODO
         taken_indices, not_taken_indices = check_write(reg_point, branch, taken, breakpoint_trace)
         print("[rr] Third pass finished")
 
-        branch_indices = random.sample(taken_indices, 4) + random.sample(not_taken_indices, 4)
+        #TODO populate the watchpoints again
+        #branch_indices = random.sample(taken_indices, 4) + random.sample(not_taken_indices, 4)
 
-        watchpoints = [offset_reg(get_reg_from_branch(index, [reg_point], breakpoint_trace)[reg_point], offset)
-                   for index in branch_indices]
+        #watchpoints = [offset_reg(get_reg_from_branch(index, [reg_point], breakpoint_trace)[reg_point], offset)
+        #           for index in branch_indices]
         watchpoint_taken_indices = range(0, 4)
         watchpoint_not_taken_indices = range(4, 8)
 
@@ -212,4 +262,4 @@ if __name__ == '__main__':
     taken = '*0x409c55' #467
     reg_point = '*0x409c24'
     regs = 'rbp'
-    positive, negative = get_def(branch, taken, reg_point, regs)
+    positive, negative = get_def('909_ziptest_exe9', branch, taken, reg_point, regs)

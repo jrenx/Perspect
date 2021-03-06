@@ -2,19 +2,8 @@ from __future__ import division
 import os
 import os.path
 import sys
-import subprocess
-from subprocess import call
-from optparse import OptionParser
-from collections import deque
+import json
 from ctypes import *
-sys.path.append(os.path.abspath('./rr'))
-from sat_def import *
-from get_def import *
-sys.path.append(os.path.abspath('./pin'))
-from instruction_reg_trace import *
-from instruction_trace import *
-from function_trace import *
-from bit_trace import *
 lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
 #https://stackoverflow.com/questions/145270/calling-c-c-from-python
 
@@ -26,41 +15,83 @@ DEBUG = True
 #### C function declarations for accessing Dyninst analysis ####
 ################################################################
 
-def parseLoads(json_loads):
+def parseLoadsOrStores(json_exprs):
     # TODO, why is it called a read again?
     data_points = []
     data_points_set = set()
-    for json_load in json_loads:
+    for json_expr in json_exprs:
         # In the form: |4234758,RSP + 68|4234648,RSP + 68
-        insn_addr = json_load['insn_addr']
-        expr = json_load['expr']
-        load_str = str(insn_addr) + str(expr)
-        if load_str in data_points_set:
+        insn_addr = None
+        if 'insn_addr' in json_expr:
+            insn_addr = json_expr['insn_addr']
+        expr = json_expr['expr']
+        expr_str = str(insn_addr) + str(expr)
+        if expr_str in data_points_set:
             continue
-        data_points_set.add(load_str)
+        data_points_set.add(expr_str)
 
-        load_reg = expr.strip()
+        expr_reg = expr.strip()
         shift = "0"
         off = "0"
 
         #if DEBUG: print("Parsing expression: " + expr)
-        if '*' in load_reg:
+        if '*' in expr_reg:
             if '+' in expr:
-                off = load_reg.split("+")[0].strip()
-                load_reg = load_reg.split("+")[1].strip()
-            shift = load_reg.split("*")[1].strip()
-            load_reg = load_reg.split("*")[0].strip()
+                off = expr_reg.split("+")[0].strip()
+                expr_reg = expr_reg.split("+")[1].strip()
+            shift = expr_reg.split("*")[1].strip()
+            expr_reg = expr_reg.split("*")[0].strip()
             print("Is an expression too difficult for RR to handle")
-        elif '+' in load_reg:
-            off = load_reg.split("+")[1].strip()
-            load_reg = load_reg.split("+")[0].strip()
+        elif '+' in expr_reg:
+            off = expr_reg.split("+")[1].strip()
+            expr_reg = expr_reg.split("+")[0].strip()
         shift = int(shift, 16)
         off = int(off, 16)
         #both shift and offset are in hex form
-        if DEBUG: print("Parsing result reg: " + load_reg + \
+        if DEBUG: print("Parsing result reg: " + expr_reg + \
                         " shift " + str(shift) + " off " + str(off) + " insn addr: " + str(insn_addr))
-        data_points.append([insn_addr, load_reg, shift, off])
+        data_points.append([insn_addr, expr_reg, shift, off])
     return data_points
+
+def get_mem_writes(addr_to_func, prog):
+    print()
+    print( "[main] taking static backslices: ")
+    # https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
+    # https://bugs.python.org/issue1701409
+
+    addr_to_func_json = []
+    for pair in addr_to_func:
+        addr = pair[0]
+        func_name = pair[1]
+        addr_to_func_json.append({'addr': addr, 'func_name': func_name})
+    json_str = json.dumps(addr_to_func_json)
+    addr_to_func_str = c_char_p(str.encode(json_str))
+    prog_name = c_char_p(str.encode(prog))
+
+    if DEBUG_CTYPE: print( "[main] addr to func: " + json_str)
+    if DEBUG_CTYPE: print( "[main] prog: " + prog)
+    if DEBUG_CTYPE: print( "[main] : " + "Calling C")
+
+    lib.getMemWrites(addr_to_func_str, prog_name)
+    if DEBUG_CTYPE: print( "[main] : Back from C")
+
+    mem_writes_per_insn = []
+    f = open(os.path.join(curr_dir, 'writesPerInsn_result'))
+    json_writes_per_insn = json.load(f)
+    if DEBUG_CTYPE: print("[main] : returned: " + str(json_writes_per_insn))
+    for json_writes in json_writes_per_insn:
+        if len(json_writes) == 0:
+            continue
+        addr = json_writes['addr']
+        func_name = json_writes['func_name']
+        if DEBUG: print("==> For instruction: " + str(addr) + " @ " + func_name)
+        data_points = parseLoadsOrStores(json_writes['writes'])
+
+        mem_writes_per_insn.append([addr, func_name, data_points])
+    f.close()
+
+    if DEBUG_CTYPE: print( "[main] " + str(mem_writes_per_insn))
+    return mem_writes_per_insn
 
 def static_backslices(reg_to_addr, func, prog):
     print()
@@ -104,7 +135,7 @@ def static_backslices(reg_to_addr, func, prog):
         reg_name = regname_to_reg[json_loads['reg_name']]
         addr = json_loads['addr']
         if DEBUG: print("==> For use reg: " + reg_name + " @ " + str(addr))
-        data_points = parseLoads(json_loads['reads'])
+        data_points = parseLoadsOrStores(json_loads['reads'])
 
         data_points_per_reg.append([reg_name, addr, data_points])
     f.close()
@@ -259,95 +290,3 @@ def getLastInstrInBB(insn, func, prog):
     l_insn = lib.getLastInstrInBB(prog_name, func_name, addr)
     if DEBUG_CTYPE: print( "[main] first instr: " + str(l_insn))
     return l_insn
-
-################################################################
-#### Helper functions that interact with PIN functionalities ###
-################################################################
-def are_predecessors_predictive(succe, prede, path, prog, arg):
-    trace = InsTrace(os.path.join(path, prog) + " " + arg, pin='~/pin-3.11/pin')
-    ret = trace.get_predictive_predecessors(succe, prede)
-    return ret
-
-def trace_function(function, path, prog, arg):
-    trace = TraceCollector(os.path.join(path, prog) + " " + arg, pin='~/pin-3.11/pin')
-    trace.run_function_trace(function)
-    trace.read_trace_from_disk(function)
-    #trace.cleanup(function)
-    return trace.traces[function]
-
-################################################################
-#### Helper functions that interact with RR functionalities ####
-################################################################
-
-def dynamic_backslice_old(reg, off, insn, func, prog):
-    #TODO, can only do this when is in same function?
-    fake_branch, fake_target = get_fake_target_and_branch \
-                (insn, func, prog)
-    insn_str = hex(insn)
-    
-    print( "[main] inputtng to RR: "  \
-        + str(fake_target) + " " + str(fake_branch) + " " \
-        + str(insn_str) + " " + str(reg) + " " + str(off))
-
-    rr_result_defs = get_def('*' + fake_target, '*' + fake_branch, \
-                                 insn_str, reg, off)
-    return list(rr_result_defs[0].union(rr_result_defs[1]))
-
-def dynamic_backslice2_old(branch, target, reg, off, insn):
-    #TODO, can only do this when is in same function?
-    insn_str = hex(insn)
-    target_str = hex(target)
-    branch_str = hex(branch)
-
-    print( "[main] inputtng to RR2: "  \
-        + str(target_str) + " " + str(branch_str) + " " \
-        + str(insn_str) + " " + str(reg) + " " + str(off))
-
-    rr_result_defs = get_sat_def('*' + target_str, '*' + branch_str, \
-                                 insn_str, reg, off)
-    return list(rr_result_defs[0].union(rr_result_defs[1]))
-
-def rr_backslice(reg, shift, off, insn, branch, target):
-    #TODO, the offset and shift are stored as decimals,
-    # should they be passes dec or hex to RR?
-    # Looks like they take hex strings
-    target_str = '*' + hex(target)
-    branch_str = '*' + hex(branch)
-    insn_str = '*' + hex(insn)
-    reg_str = reg.lower()
-    shift_str = hex(shift)
-    off_str = hex(off)
-
-    print("[main] Inputtng to RR: " \
-        + " reg: " + str(reg_str) + " off: " + str(off_str) + " @ " + str(insn_str)\
-        + " branch @" + str(branch_str) + " target @" + str(target_str))
-
-    rr_result_defs = get_def(branch_str, target_str, insn_str, reg_str, off_str)
-    print("[main] Result: " + str(rr_result_defs))
-    return list(rr_result_defs[0].union(rr_result_defs[1]))
-
-################################################################
-####                  Other helper functions                ####
-################################################################
-
-def get_function(insn, prog):
-    if not isinstance(insn, str):
-        insn = hex(insn)
-    cmd = ['addr2line', '-e', prog, '-f', insn]
-    print("[main] running command: " + str(cmd))
-    result = subprocess.run(cmd, stdout=subprocess.PIPE)
-    func = result.stdout.decode('ascii').split()[0]
-    print("[main] command returned: " + str(func))
-    return func
-
-def get_fake_target_and_branch(insn, func, prog):
-    fake_branch = getInstrAfter(insn, func, prog)
-    fake_target = getInstrAfter(fake_branch, func, prog)
-    #fake_target = getLastInstrInBB(insn, func, prog)
-    if fake_branch >= fake_target:
-        print("[main] [warn] BB just have one instr? " + str(fake_branch) + " " + str(fake_target))
-    fake_branch = hex(fake_branch)
-    fake_target = hex(fake_target)
-    return fake_branch, fake_target
-
-

@@ -36,15 +36,18 @@ def parse_watchpoint(breakpoints, watchpoints):
                 if curr_watch_num != -1:
                     raise ValueError('watchpoint with no source location')
                 br_num = int(line.split()[1].strip(',')) - 1
-                result.append((breakpoints[br_num - len(watchpoints)], None))
+                #print("[tmp] branch number: " + str(br_num) + " number of watch points " + str(len(watchpoints)))
+                result.append((breakpoints[br_num - len(watchpoints)], None, None))
                 curr_watch_num = -1
             elif re.search(r'Hardware watchpoint \d+:', line):
                 if curr_watch_num != -1:
                     raise ValueError('watchpoint with no source location')
                 curr_watch_num = int(line.split()[2].strip(':')) - 1
             elif curr_watch_num != -1 and line.startswith('pc') and len(line.split()) == 4:
-                addr = line.split()[1]
-                result.append((watchpoints[curr_watch_num], addr))
+                segs = line.split()
+                addr = segs[1]
+                func = segs[3].strip('<').strip('>').split('+')[0]
+                result.append((watchpoints[curr_watch_num], addr, func))
                 curr_watch_num = -1
     return result
 

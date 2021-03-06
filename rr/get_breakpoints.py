@@ -48,7 +48,7 @@ def parse_breakpoint(breakpoints, reg_points, deref):
                     curr_br_num = br_num
             elif curr_br_num != -1:
                 if 'memory error' in line:
-                    result.append((reg_points[curr_br_num], None))
+                    result.append((reg_points[curr_br_num], None, None))
                     curr_br_num = -1
                     value = None
                 elif len(line.split()) == 3 and line.startswith('$'):

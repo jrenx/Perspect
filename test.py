@@ -1,4 +1,6 @@
-from util import *
+from sa_util import *
+from rr_util import *
+from pin_util import *
 
 def test_ins_trace():
     #467, 472
@@ -16,7 +18,7 @@ def test_func_trace():
     assert ret is not None
 
 def test_rr_slice():
-    rr_backslice('RBP', 0, 0, 4234276, 4234325, 4234372)
+    rr_backslice('RBP', 0, 0, 4234276, 4234325, 4234372, '909_ziptest_exe9')
 
 def main():
     #test_ins_trace()

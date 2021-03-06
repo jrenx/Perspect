@@ -62,7 +62,7 @@ Instruction getIfCondition2(Block *b);
 BPatch_basicBlock *getBasicBlock(BPatch_flowGraph *fg, long unsigned int addr);
 Block *getBasicBlock2(Function *f, long unsigned int addr);
 
-GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, char *regName);
+GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsigned int addr, char *regName);
 cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int addr, char *regName);
 
 void getReversePostOrderListHelper(Node::Ptr node, std::vector<Node::Ptr> *list);
@@ -298,7 +298,7 @@ Block *getBasicBlock2(Function *f, long unsigned int addr) {
   }
 
   if (target == NULL) {
-    cerr << "Failed to find basic block for function" << f->name() << " @ " << addr << endl;
+    cerr << "Failed to find basic block for function " << f->name() << " @ " << addr << endl;
     return NULL;
   }
   return target;
@@ -315,7 +315,7 @@ Block *getImmediateDominator2(Function *f, long unsigned int addr) {
   }
 
   if (target == NULL) {
-    cerr << "Failed to find basic block for function" << f->name() << " @ " << addr << endl;
+    cerr << "Failed to find basic block for function " << f->name() << " @ " << addr << endl;
     return NULL;
   }
   return f->getImmediateDominator(target);
@@ -344,15 +344,15 @@ public:
     filter = false;
     if (ap->insn().readsMemory()) {
    	std::set<Expression::Ptr> memReads;
-	ap->insn().getMemoryReadOperands(memReads);
-	if(DEBUG) cout << "[sa] Memory read: " << (*memReads.begin())->format() << endl;
-	std::string readStr = (*memReads.begin())->format();
-	if (std::any_of(std::begin(readStr), std::end(readStr), ::isalpha)){
-	  if (DEBUG) cout << "[sa] is a true memory read." << endl;
-	  return true;
-	}
-	if (DEBUG) cout << "[sa] is not a true memory read." << endl;
-	return false;
+	  ap->insn().getMemoryReadOperands(memReads);
+	  if(DEBUG) cout << "[sa] Memory read: " << (*memReads.begin())->format() << endl;
+	  std::string readStr = (*memReads.begin())->format();
+	  if (std::any_of(std::begin(readStr), std::end(readStr), ::isalpha)) { // TODO, does this make sense?
+	    if (DEBUG) cout << "[sa] is a true memory read." << endl;
+	    return true;
+	  }
+	  if (DEBUG) cout << "[sa] is not a true memory read." << endl;
+	    return false;
     } else {
       return false;
     }
@@ -388,12 +388,12 @@ public:
   }
 };
 
-GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, char *regName) {
+GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsigned int addr, char *regName) {
 
   // Convert the instruction to assignments
   AssignmentConverter ac(true, false);
   vector<Assignment::Ptr> assignments;
-  ac.convert(insn, b->last(), f, b, assignments);
+  ac.convert(insn, addr, f, b, assignments);
 
   // An instruction can corresponds to multiple assignments
   if (INFO) cout << endl << "[slice] " << " Finding all assignments of the instruction: "
@@ -422,8 +422,8 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, char *regNa
 cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int addr, char *regName) {
   Function *func = getFunction2(progName, funcName);
   Block *bb = getBasicBlock2(func, addr);
-  Instruction ifCond = bb->getInsn(addr);
-  GraphPtr slice = buildBackwardSlice(func, bb, ifCond, regName);
+  Instruction insn = bb->getInsn(addr);
+  GraphPtr slice = buildBackwardSlice(func, bb, insn, addr, regName);
 
   boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariables;
   boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariablesToIgnore;
@@ -470,15 +470,18 @@ cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int add
 
     std::set<Expression::Ptr> memReads;
     assign->insn().getMemoryReadOperands(memReads);
-    if(INFO) cout << "[sa] Memory read: " << (*memReads.begin())->format() << endl;
-    std::string readStr = (*memReads.begin())->format();
-    if (std::any_of(std::begin(readStr), std::end(readStr), ::isalpha)) { //TODO why we need this again?
-      cJSON *json_read  = cJSON_CreateObject();
-      cJSON_AddNumberToObject(json_read, "insn_addr", assign->addr());
-      cJSON_AddStringToObject(json_read, "expr", readStr.c_str());
-      cJSON_AddItemToArray(json_reads, json_read);
-      //out << "|" << assign->addr() << ",";
-      //out << readStr;
+    for (auto rit = memReads.begin(); rit != memReads.end(); rit ++) {
+      Expression::Ptr read = *rit;
+      if (INFO) cout << "[sa] Memory read: " << read->format() << endl;
+      std::string readStr = read->format();
+      // TODO, so, right now only include it if there is a letter in the expression,
+      // constants are ignored, need to fix this.
+      if (std::any_of(std::begin(readStr), std::end(readStr), ::isalpha)) { //TODO why we need this again?
+        cJSON *json_read = cJSON_CreateObject();
+        cJSON_AddNumberToObject(json_read, "insn_addr", assign->addr());
+        cJSON_AddStringToObject(json_read, "expr", readStr.c_str());
+        cJSON_AddItemToArray(json_reads, json_read);
+      }
     }
     //for (auto r = memReads.begin(); r != memReads.end(); ++r) {
     //	cout << (*r)->eval() << endl;
@@ -821,7 +824,6 @@ extern "C" {
     if(DEBUG) cout << "[sa] all predecessors saved to \"getAllPredes_result\"";
     if(DEBUG) cout << endl;
     return;
-
   }
 
   long unsigned int getFirstInstrInBB(char *progName, char *funcName, long unsigned int addr){
@@ -895,6 +897,76 @@ extern "C" {
     //TODO
   }
 
+  void getMemWrites(char *addrToFuncNames, char *progName) {
+    if (DEBUG) cout << "[sa] ================================" << endl;
+    if (DEBUG) cout << "[sa] Getting memory writes for instructions: " << endl;
+    if (DEBUG) cout << "[sa] addr to func: " << addrToFuncNames << endl;
+    if (DEBUG) cout << "[sa] prog: " << progName << endl;
+
+    cJSON *json_insns = cJSON_CreateArray();
+
+    cJSON *json_addrToFuncNames = cJSON_Parse(addrToFuncNames);
+    int size = cJSON_GetArraySize(json_addrToFuncNames);
+    if (DEBUG) cout << "[sa] size of addr to func array is:　" << size << endl;
+    for (int i = 0; i < size; i++) {
+      cJSON *json_pair = cJSON_GetArrayItem(json_addrToFuncNames, i);
+      cJSON *json_funcName = cJSON_GetObjectItem(json_pair, "func_name");
+      cJSON *json_addr = cJSON_GetObjectItem(json_pair, "addr");
+
+      errno = 0;
+      char *end;
+      cout << json_addr->valuestring << endl;
+      long unsigned int addr = strtol(json_addr->valuestring, &end, 10);
+      if (errno != 0)
+        cout << " Encountered error " << errno << " while parsing " << json_addr->valuestring << endl;
+      char *funcName = json_funcName->valuestring;
+
+      cJSON *json_insn  = cJSON_CreateObject();
+      cJSON_AddNumberToObject(json_insn, "addr", addr);
+      cJSON_AddStringToObject(json_insn, "func_name", funcName);
+
+      // parse string here, can the string be a json?
+      if (INFO) cout << endl << "[sa] addr: 0x" << std::hex << addr << endl;
+      if (INFO) cout << "[sa] func: " << funcName << endl;
+
+      Function *func = getFunction2(progName, funcName);
+      Block *bb = getBasicBlock2(func, addr);
+      Instruction insn = bb->getInsn(addr);
+      if (INFO) cout << "[sa] insn: " << insn.format() << endl;
+
+      //AssignmentConverter ac(true, false);
+      //vector<Assignment::Ptr> assignments;
+      //ac.convert(insn, addr, func, bb, assignments);
+      // ^ TODO check how to use ac.convert again
+      cJSON *json_writes = cJSON_CreateArray();
+      std::set<Expression::Ptr> memWrites;
+      insn.getMemoryWriteOperands(memWrites);
+      for (auto wit = memWrites.begin(); wit != memWrites.end(); wit ++) {
+        Expression::Ptr write = *wit;
+        if (INFO) cout << "[sa] Memory write: " << write->format() << endl;
+        std::string writeStr = write->format();
+        if (!std::any_of(std::begin(writeStr), std::end(writeStr), ::isalpha)) {
+          cout << "[sa][warn] Memory write expression has not register in it? " << writeStr << endl;
+        }
+        cJSON *json_write = cJSON_CreateObject();
+        cJSON_AddStringToObject(json_write, "expr", writeStr.c_str());
+        cJSON_AddItemToArray(json_writes, json_write);
+      }
+
+      cJSON_AddItemToObject(json_insn, "writes", json_writes);
+      cJSON_AddItemToArray(json_insns, json_insn);
+      if (DEBUG) cout << endl;
+    }
+    char *rendered = cJSON_Print(json_insns);
+    cJSON_Delete(json_insns);
+    std::ofstream out("writesPerInsn_result");
+    out << rendered;
+    out.close();
+
+    if(DEBUG) cout << "[sa] all predecessors saved to \"writesPerInsn_result\"";
+    if(DEBUG) cout << endl;
+  }
+
   void backwardSlices(char *addrToRegNames, char *progName, char *funcName) {
     if (DEBUG) cout << "[sa] ================================" << endl;
     if (DEBUG) cout << "[sa] Making multiple backward slices: " << endl;
@@ -916,7 +988,7 @@ extern "C" {
       char *end;
       long unsigned int addr = strtol(json_addr->valuestring, &end, 10);
       if (errno != 0)
-        cout << " Encountered error " << errno << " while parsing " << json_regName->valuestring << endl;
+        cout << " Encountered error " << errno << " while parsing " << json_addr->valuestring << endl;
       char *regName = json_regName->valuestring;
 
       cJSON *json_slice  = cJSON_CreateObject();
