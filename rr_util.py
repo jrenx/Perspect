@@ -46,12 +46,12 @@ def dynamic_backslice2_old(branch, target, reg, off, insn):
                                  insn_str, reg, off)
     return list(rr_result_defs[0].union(rr_result_defs[1]))
 
-def rr_backslice(reg, shift, off, insn, branch, target, prog):
+def rr_backslice(reg, shift, off, insn, prog):
     #TODO, the offset and shift are stored as decimals,
     # should they be passes dec or hex to RR?
     # Looks like they take hex strings
-    target_str = '*' + hex(target)
-    branch_str = '*' + hex(branch)
+    #target_str = '*' + hex(target)
+    #branch_str = '*' + hex(branch)
     insn_str = '*' + hex(insn)
     reg_str = reg.lower()
     shift_str = hex(shift)
@@ -60,12 +60,12 @@ def rr_backslice(reg, shift, off, insn, branch, target, prog):
 
     print("[main] Inputtng to RR: " \
         + " reg: " + str(reg_str) + " off: " + str(off_str) + " @ " + str(insn_str)\
-        + " branch @" + str(branch_str) + " target @" + str(target_str)\
+        #+ " branch @" + str(branch_str) + " target @" + str(target_str)\
         + " program: " +str(prog))
 
-    rr_result_defs = get_def(prog, branch_str, target_str, insn_str, reg_str, off_str)
+    rr_result_defs = get_def(prog, insn_str, reg_str, off_str)
     print("[main] Result: " + str(rr_result_defs))
-    return list(rr_result_defs[0].union(rr_result_defs[1]))
+    return rr_result_defs
 
 ################################################################
 ####                  Other helper functions                ####

@@ -2,9 +2,10 @@ import subprocess
 import json
 import os
 import re
+import time
 
 rr_dir = os.path.dirname(os.path.realpath(__file__))
-
+DEBUG = False
 def run_watchpoint(breakpoints, watchpoints):
     config = {'breakpoints': breakpoints,
               'watchpoints': watchpoints}
@@ -17,7 +18,6 @@ def run_watchpoint(breakpoints, watchpoints):
         rr_process.kill()
         return False
     return True
-
 
 def parse_watchpoint(breakpoints, watchpoints):
     """
@@ -49,6 +49,10 @@ def parse_watchpoint(breakpoints, watchpoints):
                 func = segs[3].strip('<').strip('>').split('+')[0]
                 result.append((watchpoints[curr_watch_num], addr, func))
                 curr_watch_num = -1
+    if DEBUG:
+        timestamp = str(time.time())
+        print("[rr] renaming to " + str(os.path.join(rr_dir, 'watchpoints.log' + '.' + timestamp)))
+        os.rename(os.path.join(rr_dir, 'watchpoints.log'), os.path.join(rr_dir, 'watchpoints.log' + '.' + timestamp))
     return result
 
 

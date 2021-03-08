@@ -105,7 +105,7 @@ def analyze_trace(taken_traces, not_taken_traces):
 
 
 #def check_writes(reg_point, branch_point, taken_point, trace):
-def check_writes(reg_point, trace):
+def check_writes(reg_point, trace, watched_addrs):
     """
     Check whether there is unknown writes to address pointed by register
     :param reg_point: instruction address to check the register
@@ -124,6 +124,7 @@ def check_writes(reg_point, trace):
     equals = 0
 
     for i, (read_insn, var_addr, value) in enumerate(trace):
+        #print("[tmp] " + str(read_insn) + " " + str(var_addr) + " " + str(value))
         #if reg is None and addr == branch_point:
         #    if unknown_write:
         #        if i + 1 < len(trace) and trace[i + 1][0] == taken_point and trace[i + 1][1] is None:
@@ -133,19 +134,23 @@ def check_writes(reg_point, trace):
         #        unknown_write = False
         #    continue
         if read_insn == reg_point: # Is the read point.
-            print("[tmp] Address is being read at: " + str(read_insn))
+            #print("[tmp] Address is being read at: " + str(read_insn))
             if var_addr not in addr_to_value:
                 #unknown_write = True
                 uknown_writes.append(i)
-                print("[tmp] register has not been seen before: " + str(var_addr))
+                #print("[tmp] register has not been seen before: " + str(var_addr))
+                #if var_addr in watched_addrs:
+                    #print("[tmp] Address already watched: " + str(var_addr))
             elif addr_to_value[var_addr] != value:
                 uknown_writes.append(i)
-                print("[tmp] register has been seen before: " + str(var_addr))
-                print("[tmp] but values differ from last written: " + str(addr_to_value[var_addr]) + " " + str(value))
+                #print("[tmp] register has been seen before: " + str(var_addr))
+                #print("[tmp] but values differ from last written: " + str(addr_to_value[var_addr]) + " " + str(value))
+                #if var_addr in watched_addrs:
+                    #print("[tmp] Address already watched: " + str(var_addr))
             else:
                 #unknown_write = False
-                print("[tmp] register has been seen before: " + str(var_addr))
-                print("[tmp] and values are equal: " + str(addr_to_value[var_addr]) + " " + str(value))
+                #print("[tmp] register has been seen before: " + str(var_addr))
+                #print("[tmp] and values are equal: " + str(addr_to_value[var_addr]) + " " + str(value))
                 equals += 1
         else: # Is a write point.
             addr_to_value[var_addr] = value
@@ -171,8 +176,8 @@ def get_unique_addrs(breakpoint_trace):
 """
 
 #TODO, shift should be shift to the right
-def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', iter=10):
-    print("[rr] In get_def, branch: " + branch + " target: " + taken)
+def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', iter=10):
+    print("[rr] In get_def") #, branch: " + branch + " target: " + taken)
     #positive = set()
     #negative = set()
 
@@ -189,6 +194,7 @@ def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', iter
     #print("[rr] Parsed " + str(len(not_taken_indices)) + " not taken indices")
 
     print("[rr] First step finished")
+    watched_addrs = set()
     all_addrs = set([breakpoint[1] for breakpoint in breakpoint_trace])
     addrs = set()
     for a in all_addrs:
@@ -200,6 +206,7 @@ def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', iter
     watchpoints = [offset_reg(addr, offset) for addr in addrs]
     print("[rr] Picked watchpoints: " + str(watchpoints))
     all_addrs = all_addrs.difference(addrs)
+    watched_addrs = watched_addrs.union(addrs)
 
     #branch_indices = random.sample(taken_indices, 4) + random.sample(not_taken_indices, 4)
     #watchpoints = [offset_reg(get_reg_from_branch(index, [reg_point], breakpoint_trace)[reg_point], offset)
@@ -210,6 +217,7 @@ def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', iter
     reg_points = [reg_point]
     regs = [reg]
     all_unique_insns = set()
+    results = []
 
     for i in range(iter):
         # Second pass
@@ -217,7 +225,7 @@ def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', iter
         run_watchpoint([], watchpoints)
         watchpoint_trace = parse_watchpoint([], watchpoints)
         print("[rr] Parsed " + str(len(watchpoint_trace)) + " watchpoints")
-        print("[tmp] " + str(watchpoint_trace))
+        #("[tmp] " + str(watchpoint_trace))
         print("[rr] Second step finished")
 
         #taken_watchpoint_traces = [
@@ -241,8 +249,7 @@ def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', iter
             if insn_func_str in all_unique_insns:
                 continue
             unique_insns.add(insn_func_str)
-        print("[rr] Found " + str(len(unique_insns)) + " new unique writes ")
-        print("[tmp] " + str(unique_insns))
+        print("[rr] Found " + str(len(unique_insns)) + " new unique writes: " + str(unique_insns))
         if len(unique_insns) == 0:
             print("[rr] No additional writes are found, keep watching more addresses.")
         all_unique_insns = all_unique_insns.union(unique_insns)
@@ -269,8 +276,12 @@ def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', iter
                 elif len(curr_regs) > 1:
                     print("[rr][error] insn " + str(insn) + " writes to multiple regs! Not handled ...")
                     raise Exception
-                regs.append(curr_regs[0].lower())
-                reg_points.append('*' +hex(true_insn_addr))
+
+                curr_reg = curr_regs[0].lower()
+                regs.append(curr_reg)
+                reg_points.append('*' + hex(true_insn_addr))
+
+                results.append([curr_reg, true_insn_addr, func])
             print("[rr] all insns found " + str(reg_points))
             print("[rr] all registers found " + str(regs))
 
@@ -290,8 +301,11 @@ def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', iter
             print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoints")
             print("[rr] Third step finished")
 
-            unknown_writes_indices = check_writes(reg_point, breakpoint_trace)
+            unknown_writes_indices = check_writes(reg_point, breakpoint_trace, watched_addrs)
             #taken_indices, not_taken_indices = check_writes(reg_point, branch, taken, breakpoint_trace)
+            if len(unknown_writes_indices) == 0:
+                print("All writes are accounted for, returning now.")
+                return results
 
             partial_breakpoint_trace = [breakpoint_trace[i] for i in unknown_writes_indices]
             all_addrs = set([breakpoint[1] for breakpoint in partial_breakpoint_trace])
@@ -304,6 +318,7 @@ def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', iter
             if len(addrs) == 4:
                 break
         all_addrs = all_addrs.difference(addrs)
+        watched_addrs = watched_addrs.union(addrs)
         print("[rr] Total number of unique addresses read: " + str(len(all_addrs)))
         print("[rr] Picking 4 addresses: " + str(addrs))
         watchpoints = [offset_reg(addr, offset) for addr in addrs]
@@ -318,7 +333,7 @@ def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', iter
         #watchpoint_not_taken_indices = range(4, 8)
 
     #return positive, negative
-    return TODO
+    return results
 
 
 if __name__ == '__main__':

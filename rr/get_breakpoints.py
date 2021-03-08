@@ -2,9 +2,10 @@ import subprocess
 import json
 import os
 import re
+import time
 
 rr_dir = os.path.dirname(os.path.realpath(__file__))
-
+DEBUG = False
 def run_breakpoint(breakpoints, reg_points, regs, step, deref):
     config = {'breakpoints': breakpoints,
               'reg_points': reg_points,
@@ -58,14 +59,17 @@ def parse_breakpoint(breakpoints, reg_points, deref):
                         result.append((reg_points[curr_br_num], line.split()[2], None))
                     curr_br_num = -1
                     value = None
-                elif len(line.split()) == 3 and line.split()[0].isalpha():
+                elif len(line.split()) == 3 and line.split()[0][0].isalpha():
                     if deref:
                         value = line.split()[1]
                     else:
                         result.append((reg_points[curr_br_num], line.split()[1], None))
                         curr_br_num = -1
                         value = None
-
+    if DEBUG:
+        timestamp = str(time.time())
+        print("[tmp] renaming to " + str(os.path.join(rr_dir, 'breakpoints.log' + '.' + timestamp)))
+        os.rename(os.path.join(rr_dir, 'breakpoints.log'), os.path.join(rr_dir, 'breakpoints.log' + '.' + timestamp))
     return result
 
 
