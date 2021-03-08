@@ -60,11 +60,11 @@ class CFG:
         self.func = func
         self.prog = prog
 
-        self.id_to_bb = {}
-        self.ordered_bbs = []
+        self.id_to_bb = {} #Includes all the Basic Blocks in the function
+        self.ordered_bbs = [] #Includes all the Basic Blocks in the function
 
-        self.id_to_bb_in_slice = {}
-        self.ordered_bbs_in_slice = []
+        self.id_to_bb_in_slice = {} #Includes only the Basic Blocks in the slice
+        self.ordered_bbs_in_slice = [] #Includes only the Basic Blocks in the slice
 
         self.target_bb = None
         self.entry_bbs = []
@@ -221,8 +221,10 @@ class CFG:
                 ignore_set.add(child_bb)
 
     def slice(self, insn):
+        # Build the control flow graph for the entire function
         self.build_cfg(insn)
 
+        # Find all the control flow predecessors of the given instruction
         # https://stackoverflow.com/questions/35206372/understanding-stacks-and-queues-in-python/35206452
         worklist = deque()
         worklist.append(self.target_bb)
@@ -248,6 +250,7 @@ class CFG:
             str(len(self.id_to_bb_in_slice)) + " " + str(len(self.ordered_bbs_in_slice))
         print("Total number of basic blocks after slicing: " + str(len(self.ordered_bbs_in_slice)))
 
+        # Simplify the slice
         self.simplify()
 
         print("=======================================================")
@@ -490,4 +493,5 @@ class StaticDepGraph:
 if __name__ == "__main__":
 
     static_graph = StaticDepGraph()
-    static_graph.buildDependencies(0x409daa, "sweep", "909_ziptest_exe9")
+    static_graph.buildControlFlowDependencies(0x409daa, "sweep", "909_ziptest_exe9")
+    #static_graph.buildDependencies(0x409daa, "sweep", "909_ziptest_exe9")
