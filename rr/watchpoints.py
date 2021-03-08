@@ -15,9 +15,12 @@ class InitArgument(gdb.Function):
 
         breakpoints = config['breakpoints']
         watchpoints = config['watchpoints']
-
+        i = 0
         for wp in watchpoints:
             gdb.execute("watch -l *(long *){}".format(wp))
+            i += 1
+            if i >= 4:
+                break
 
         for br in breakpoints:
             gdb.execute("br {}".format(br))

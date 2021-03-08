@@ -9,7 +9,7 @@ lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
 
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 DEBUG_CTYPE = True
-DEBUG = True
+DEBUG = False
 
 ################################################################
 #### C function declarations for accessing Dyninst analysis ####
@@ -53,18 +53,19 @@ def parseLoadsOrStores(json_exprs):
         data_points.append([insn_addr, expr_reg, shift, off])
     return data_points
 
-def get_mem_writes(addr_to_func, prog):
+#FIXME: call instructions insns and not addrs
+def get_mem_writes(insn_to_func, prog):
     print()
-    print( "[main] taking static backslices: ")
+    print( "[main] getting the registers written at instructions: ")
     # https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
     # https://bugs.python.org/issue1701409
 
-    addr_to_func_json = []
-    for pair in addr_to_func:
-        addr = pair[0]
+    insn_to_func_json = []
+    for pair in insn_to_func:
+        insn = pair[0]
         func_name = pair[1]
-        addr_to_func_json.append({'addr': addr, 'func_name': func_name})
-    json_str = json.dumps(addr_to_func_json)
+        insn_to_func_json.append({'addr': insn, 'func_name': func_name})
+    json_str = json.dumps(insn_to_func_json)
     addr_to_func_str = c_char_p(str.encode(json_str))
     prog_name = c_char_p(str.encode(prog))
 
@@ -82,12 +83,13 @@ def get_mem_writes(addr_to_func, prog):
     for json_writes in json_writes_per_insn:
         if len(json_writes) == 0:
             continue
-        addr = json_writes['addr']
+        insn = json_writes['addr']
+        true_insn_addr = json_writes['true_addr']
         func_name = json_writes['func_name']
-        if DEBUG: print("==> For instruction: " + str(addr) + " @ " + func_name)
+        if DEBUG: print("==> For instruction: " + str(insn) + " @ " + func_name)
         data_points = parseLoadsOrStores(json_writes['writes'])
 
-        mem_writes_per_insn.append([addr, func_name, data_points])
+        mem_writes_per_insn.append([insn, func_name, data_points, true_insn_addr])
     f.close()
 
     if DEBUG_CTYPE: print( "[main] " + str(mem_writes_per_insn))

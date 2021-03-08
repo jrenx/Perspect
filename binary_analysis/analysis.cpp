@@ -953,13 +953,16 @@ extern "C" {
       Instruction insn;
       Block::Insns insns;
       bb->getInsns(insns);
+      long unsigned int true_addr = 0;
       for (auto it = insns.begin(); it != insns.end(); it++) {
         //cout << "[tmp] " << std::hex << (*it).first  << " " << (*it).second.format() << endl;
         if ((*it).first == addr)
           break;
+        true_addr = (*it).first;
         insn = (*it).second;
       }
       if (INFO) cout << "[sa] insn: " << insn.format() << endl;
+      cJSON_AddNumberToObject(json_insn, "true_addr", true_addr);
 
       //AssignmentConverter ac(true, false);
       //vector<Assignment::Ptr> assignments;
