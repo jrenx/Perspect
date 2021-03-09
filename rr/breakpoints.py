@@ -38,6 +38,10 @@ class RunBreakCommands(gdb.Function):
         regs = config['regs']
         step = config['step']
         deref = config['deref']
+        off_regs = config['off_regs']
+        offsets = config['offsets']
+        shifts = config['shifts']
+        src_regs = config['src_regs']
 
         with open(os.path.join(rr_dir, 'breakpoints.log'), 'r') as f:
             position = gdb.convenience_variable('log_position')
@@ -51,15 +55,39 @@ class RunBreakCommands(gdb.Function):
             if not match:
                 continue
             break_num = int(match.group(0).split()[1][:-1]) - 1
+            is_go_file = line.split()[-1].split(':')[0].endswith('.go')
             if break_num < len(regs):
                 if step:
                     gdb.execute('si')
-                gdb.execute('i reg {}'.format(regs[break_num]))
-                if deref:
-                    try:
-                        gdb.execute('p/x *((long *) ${})'.format(regs[break_num]))
-                    except gdb.MemoryError:
-                        print("memory error")
+                try:
+                    arg = ''
+
+                    arg += '(${}'.format(regs[break_num])
+                    if shifts[break_num] != '0x0':
+                        arg += '<<{}'.format(shifts[break_num]) #TODO test this
+                    if off_regs[break_num] != '':
+                        arg += '+${}*{}'.format(off_regs[break_num], offsets[break_num])
+                    elif offsets[break_num] != '0x0':
+                        arg += '+{}'.format(offsets[break_num])
+                    arg += ')'
+
+                    cmd = 'p/x ' + arg
+                    gdb.execute(cmd)
+
+                    if deref:
+                        if not is_go_file:  # TODO, is this right?
+                            arg = '(long *) ' + arg
+                        cmd = 'p/x *(' + arg + ')'
+                        gdb.execute(cmd)
+                except gdb.MemoryError:
+                    print("memory error")
+                except Exception as e:
+                    if 'Attempt to dereference a generic pointer.' in str(e):
+                        gdb.execute('p/x ${}'.format(src_regs[break_num]))
+                    else:
+                        raise Exception
+
+
                 return 1
         return 0
 

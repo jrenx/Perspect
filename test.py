@@ -19,7 +19,8 @@ def test_func_trace():
 
 def test_rr_slice():
     #rr_backslice('RBP', 0, 0, 4234276, 4234325, 4234372, '909_ziptest_exe9')
-    rr_backslice('RBP', 0, 0, 4234276, '909_ziptest_exe9')
+    rr_backslice('909_ziptest_exe9', 4234276, 'RBP', 0, 0, None)
+    #rr_backslice('909_ziptest_exe9', 4232057, 'RDX', 0, 8, 'R13')
 
 def main():
     #test_ins_trace()

@@ -82,12 +82,12 @@ def get_watchpoint_trace(watchpoint, branch_num, trace):
 
     return instructions
 
-
+"""
 def offset_reg(reg_str, offset_str):
     reg = int(reg_str, 16)
     offset = int(offset_str, 16)
     return hex(reg + offset)
-
+"""
 
 def analyze_trace(taken_traces, not_taken_traces):
     positive = set()
@@ -175,18 +175,53 @@ def get_unique_addrs(breakpoint_trace):
     return addrs
 """
 
+def get_addrs(breakpoint_trace, shift, offset, offset_reg):
+    s = int(shift, 16)
+    o = int(offset, 16)
+    if offset_reg is None:
+        return set([hex((int(bp[1], 16) << s) + o) for bp in breakpoint_trace])
+
+    all_addrs = set()
+    prev_insn = None
+    prev_reg = None
+    for bp in breakpoint_trace:
+        print("[tmp] breakpoint: " + str(bp))
+        curr_insn = bp[0]
+        curr_reg = bp[1]
+        if prev_insn is not None:
+            if curr_insn == prev_insn:
+                addr = hex((int(prev_reg, 16) << s) + int(curr_reg, 16) * o)
+                print("[tmp] original addr " + prev_reg + " addr calculated " + str(addr))
+                all_addrs.add(addr)
+                prev_insn = None
+                prev_reg = None
+                continue
+            else:
+                all_addrs.add(hex((int(prev_reg, 16) << s) + o))
+
+        prev_insn = curr_insn
+        prev_reg = curr_reg
+    return all_addrs
+
 #TODO, shift should be shift to the right
-def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', iter=10):
+def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', offset_reg = None, iter=10):
     print("[rr] In get_def") #, branch: " + branch + " target: " + taken)
     #positive = set()
     #negative = set()
 
+    reg_points = [reg_point]
+    regs = [reg]
+    off_regs = [offset_reg] if offset_reg is not None else ['']
+    offsets = [offset]
+    shifts = [shift]
+    src_regs = ['']
+
     # First pass
     print("[rr] Running breakpoints for first step")
-    print("[rr] Breakpoints: " + str([reg_point]))
-    print("[rr] Registers: " + str([reg]))
-    run_breakpoint([], [reg_point], [reg], False, False)
-    breakpoint_trace = parse_breakpoint([], [reg_point], False)
+    print("[rr] Breakpoints: " + str(reg_points))
+    print("[rr] Registers: " + str(regs))
+    run_breakpoint([], reg_points, regs, off_regs, offsets, shifts, src_regs, False, False)
+    breakpoint_trace = parse_breakpoint([], reg_points, False)
     print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoints")
 
     #taken_indices, not_taken_indices = filter_branch(branch, taken, breakpoint_trace)
@@ -203,7 +238,8 @@ def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', iter=10):
             break
     print("[rr] Total number of unique addresses read: " + str(len(all_addrs)))
     print("[rr] Picking 4 addresses: " + str(addrs))
-    watchpoints = [offset_reg(addr, offset) for addr in addrs]
+    #watchpoints = [offset_reg(addr, offset) for addr in addrs]
+    watchpoints = [addr for addr in addrs]
     print("[rr] Picked watchpoints: " + str(watchpoints))
     all_addrs = all_addrs.difference(addrs)
     watched_addrs = watched_addrs.union(addrs)
@@ -214,8 +250,6 @@ def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', iter=10):
     #watchpoint_taken_indices = range(0, 4)
     #watchpoint_not_taken_indices = range(4, 8)
 
-    reg_points = [reg_point]
-    regs = [reg]
     all_unique_insns = set()
     results = []
 
@@ -264,24 +298,29 @@ def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', iter=10):
 
             insn_to_writes = get_mem_writes(insn_to_func, prog)
             print("[rr] returned from get_mem_writes " + str(insn_to_writes))
-            for triple in insn_to_writes:
-                insn = triple[0]
-                true_insn_addr = triple[3]
-                func = triple[1]
+            for line in insn_to_writes:
+                print("[tmp] " + str(line))
+                insn = line[0]
+                true_insn_addr = line[3]
+                func = line[1]
                 #TODO, what if have shift and off?
-                curr_regs = [expr[1] for expr in triple[2]]
-                if len(curr_regs) == 0:
+
+                if len(line[2]) == 0:
                     print("[rr][error] insn " + str(insn) + " writes to no reg! ignoring ...")
                     continue
-                elif len(curr_regs) > 1:
+                elif len(line[2]) > 1:
                     print("[rr][error] insn " + str(insn) + " writes to multiple regs! Not handled ...")
                     raise Exception
-
-                curr_reg = curr_regs[0].lower()
-                regs.append(curr_reg)
-                reg_points.append('*' + hex(true_insn_addr))
-
-                results.append([curr_reg, true_insn_addr, func])
+                curr_expr = line[2][0]
+                print('[tmp] ' + str(curr_expr))
+                curr_insn = '*' + hex(true_insn_addr)
+                reg_points.append(curr_insn)
+                regs.append(curr_expr[1].lower())
+                shifts.append('0x' + str(curr_expr[2]))
+                offsets.append('0x' + str(curr_expr[3]))
+                off_regs.append(curr_expr[4].strip().lower() if curr_expr[4] is not None else '')
+                src_regs.append(line[4].strip().lower())
+                results.append([curr_expr[1:], true_insn_addr, func])
             print("[rr] all insns found " + str(reg_points))
             print("[rr] all registers found " + str(regs))
 
@@ -296,7 +335,7 @@ def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', iter=10):
             print("[rr] Breakpoints: " + str(reg_points))
             print("[rr] Registers: " + str(regs))
             #TODO, how to distinguish diff insn and regs? looks like it's according to order
-            run_breakpoint([], reg_points, regs, True, True)
+            run_breakpoint([], reg_points, regs, off_regs, offsets, shifts, src_regs, True, True)
             breakpoint_trace = parse_breakpoint([], reg_points, True)
             print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoints")
             print("[rr] Third step finished")
@@ -321,7 +360,8 @@ def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', iter=10):
         watched_addrs = watched_addrs.union(addrs)
         print("[rr] Total number of unique addresses read: " + str(len(all_addrs)))
         print("[rr] Picking 4 addresses: " + str(addrs))
-        watchpoints = [offset_reg(addr, offset) for addr in addrs]
+        #watchpoints = [offset_reg(addr, offset) for addr in addrs]
+        watchpoints = [addr for addr in addrs]
         print("[rr] Picked watchpoints: " + str(watchpoints))
       
         #TODO populate the watchpoints again

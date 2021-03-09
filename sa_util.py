@@ -30,27 +30,59 @@ def parseLoadsOrStores(json_exprs):
             continue
         data_points_set.add(expr_str)
 
-        expr_reg = expr.strip()
+        reg = None
         shift = "0"
         off = "0"
+        off_reg = None
 
         #if DEBUG: print("Parsing expression: " + expr)
-        if '*' in expr_reg:
-            if '+' in expr:
-                off = expr_reg.split("+")[0].strip()
-                expr_reg = expr_reg.split("+")[1].strip()
-            shift = expr_reg.split("*")[1].strip()
-            expr_reg = expr_reg.split("*")[0].strip()
-            print("Is an expression too difficult for RR to handle")
-        elif '+' in expr_reg:
-            off = expr_reg.split("+")[1].strip()
-            expr_reg = expr_reg.split("+")[0].strip()
+        segs = expr.strip().split('+')
+        assert len(segs) >= 1 and len(segs) <= 3, str(expr)
+        for seg in segs:
+            try:
+                int(seg.strip(), 16)
+            except:
+                continue
+            off = seg.strip()
+            break
+
+        for seg in segs:
+            if '*' in seg:
+                continue
+            try:
+                int(seg.strip(), 16)
+            except:
+                reg = seg.strip()
+                break
+
+        for seg in segs:
+            if '*' not in seg:
+                continue
+            ssegs = seg.split('*')
+            assert len(ssegs) == 2, str(expr)
+
+            ri = 0
+            ni = 1
+            try:
+                int(ssegs[1].strip(), 16)
+            except:
+                ri = 1
+                ni = 0
+
+            if reg is not None:
+                off_reg = ssegs[ri].strip()
+                assert off == "0", str(expr)
+                off = ssegs[ni].strip()
+            else:
+                reg = ssegs[ri].strip()
+                shift = ssegs[ni].strip()
+
         shift = int(shift, 16)
         off = int(off, 16)
         #both shift and offset are in hex form
         if DEBUG: print("Parsing result reg: " + expr_reg + \
                         " shift " + str(shift) + " off " + str(off) + " insn addr: " + str(insn_addr))
-        data_points.append([insn_addr, expr_reg, shift, off])
+        data_points.append([insn_addr, reg, shift, off, off_reg])
     return data_points
 
 #FIXME: call instructions insns and not addrs
@@ -86,10 +118,11 @@ def get_mem_writes(insn_to_func, prog):
         insn = json_writes['addr']
         true_insn_addr = json_writes['true_addr']
         func_name = json_writes['func_name']
+        src_reg = json_writes['src']
         if DEBUG: print("==> For instruction: " + str(insn) + " @ " + func_name)
         data_points = parseLoadsOrStores(json_writes['writes'])
 
-        mem_writes_per_insn.append([insn, func_name, data_points, true_insn_addr])
+        mem_writes_per_insn.append([insn, func_name, data_points, true_insn_addr, src_reg])
     f.close()
 
     if DEBUG_CTYPE: print( "[main] " + str(mem_writes_per_insn))
