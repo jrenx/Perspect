@@ -982,10 +982,9 @@ extern "C" {
         cJSON_AddStringToObject(json_write, "expr", writeStr.c_str());
         cJSON_AddItemToArray(json_writes, json_write);
       }
-      std::vector<Operand> operands;
-      insn.getOperands(operands);
-      Operand src = *operands.rbegin();
-      cJSON_AddStringToObject(json_insn, "src", src.format(insn.getArch()).c_str());
+      std::vector<Operand> ops;
+      insn.getOperands(ops);
+      cJSON_AddStringToObject(json_insn, "src", ops.rbegin() != ops.rend() ? (*ops.rbegin()).format(insn.getArch()).c_str() : "");
       cJSON_AddItemToObject(json_insn, "writes", json_writes);
       cJSON_AddItemToArray(json_insns, json_insn);
       if (DEBUG) cout << endl;
