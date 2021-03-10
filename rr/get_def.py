@@ -326,7 +326,7 @@ def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', offset_reg = None, 
                 offsets.append('0x' + str(curr_expr[3]))
                 off_regs.append(curr_expr[4].strip().lower() if curr_expr[4] is not None else '')
                 src_regs.append(line[4].strip().strip('%').lower())
-                loop_insn_flags.append(line[5].strip())
+                loop_insn_flags.append(line[5])
                 results.append([curr_expr[1:], true_insn_addr, func])
             print("[rr] all insns found " + str(reg_points))
             print("[rr] all registers found " + str(regs))

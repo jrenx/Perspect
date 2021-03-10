@@ -5,7 +5,7 @@ import re
 import time
 
 rr_dir = os.path.dirname(os.path.realpath(__file__))
-DEBUG = True
+DEBUG = False
 def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, step, deref):
 
 
