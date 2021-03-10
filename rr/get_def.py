@@ -322,8 +322,8 @@ def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', offset_reg = None, 
                 curr_insn = '*' + hex(true_insn_addr)
                 reg_points.append(curr_insn)
                 regs.append(curr_expr[1].strip().lower() if curr_expr[1] is not None else '')
-                shifts.append('0x' + str(curr_expr[2]))
-                offsets.append('0x' + str(curr_expr[3]))
+                shifts.append(hex(str(curr_expr[2])))
+                offsets.append(hex(str(curr_expr[3])))
                 off_regs.append(curr_expr[4].strip().lower() if curr_expr[4] is not None else '')
                 src_regs.append(line[4].strip().strip('%').lower())
                 loop_insn_flags.append(line[5])
@@ -358,7 +358,7 @@ def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', offset_reg = None, 
             print("[rr] Addresses that might have undergone unknown writes: " + str(len(all_addrs)))
 
         addrs = set()
-        #all_addrs = all_addrs.difference(checked_addrs)
+        all_addrs = all_addrs.difference(watched_addrs)
         for a in all_addrs:
             addrs.add(a)
             if len(addrs) == 4:
