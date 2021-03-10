@@ -1,6 +1,7 @@
 from sa_util import *
 from rr_util import *
 from pin_util import *
+import datetime
 
 def test_ins_trace():
     #467, 472
@@ -18,9 +19,12 @@ def test_func_trace():
     assert ret is not None
 
 def test_rr_slice():
+    a = datetime.datetime.now()
     #rr_backslice('RBP', 0, 0, 4234276, 4234325, 4234372, '909_ziptest_exe9')
-    rr_backslice('909_ziptest_exe9', 4234276, 'RBP', 0, 0, None)
-    #rr_backslice('909_ziptest_exe9', 4232057, 'RDX', 0, 8, 'R13')
+    #rr_backslice('909_ziptest_exe9', 4234276, 'RBP', 0, 0, None)
+    rr_backslice('909_ziptest_exe9', 4232057, 'RDX', 0, 8, 'R13')
+    b = datetime.datetime.now()
+    print("Took: " + str(b-a))
 
 def main():
     #test_ins_trace()

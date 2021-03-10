@@ -117,12 +117,13 @@ def get_mem_writes(insn_to_func, prog):
             continue
         insn = json_writes['addr']
         true_insn_addr = json_writes['true_addr']
+        is_loop_insn = json_writes['is_loop_insn']
         func_name = json_writes['func_name']
         src_reg = json_writes['src']
         if DEBUG: print("==> For instruction: " + str(insn) + " @ " + func_name)
         data_points = parseLoadsOrStores(json_writes['writes'])
 
-        mem_writes_per_insn.append([insn, func_name, data_points, true_insn_addr, src_reg])
+        mem_writes_per_insn.append([insn, func_name, data_points, true_insn_addr, src_reg, is_loop_insn])
     f.close()
 
     if DEBUG_CTYPE: print( "[main] " + str(mem_writes_per_insn))

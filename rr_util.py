@@ -65,7 +65,7 @@ def rr_backslice(prog, insn, reg, shift = 0, off = 0, off_reg = None):
         + " program: " +str(prog))
 
     rr_result_defs = get_def(prog, insn_str, reg_str, shift_str, off_str, off_reg_str)
-    print("[main] Result: " + str(rr_result_defs))
+    print("[main] Result: " + str(len(rr_result_defs)) + " def points: " + str(rr_result_defs))
     return rr_result_defs
 
 ################################################################

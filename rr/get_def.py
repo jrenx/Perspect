@@ -122,9 +122,9 @@ def check_writes(reg_point, trace, watched_addrs):
     uknown_writes = []
     unknown_write = False
     equals = 0
-
+    zeros = 0
     for i, (read_insn, var_addr, value) in enumerate(trace):
-        #print("[tmp] " + str(read_insn) + " " + str(var_addr) + " " + str(value))
+        print("[tmp] " + str(read_insn) + " " + str(var_addr) + " " + str(value))
         #if reg is None and addr == branch_point:
         #    if unknown_write:
         #        if i + 1 < len(trace) and trace[i + 1][0] == taken_point and trace[i + 1][1] is None:
@@ -136,11 +136,15 @@ def check_writes(reg_point, trace, watched_addrs):
         if read_insn == reg_point: # Is the read point.
             #print("[tmp] Address is being read at: " + str(read_insn))
             if var_addr not in addr_to_value:
-                #unknown_write = True
-                uknown_writes.append(i)
-                #print("[tmp] register has not been seen before: " + str(var_addr))
-                #if var_addr in watched_addrs:
-                    #print("[tmp] Address already watched: " + str(var_addr))
+                if value == '0x0':
+                    zeros += 1
+                else:
+                    #unknown_write = True
+                    uknown_writes.append(i)
+                    #print("[tmp] register has not been seen before: " + str(var_addr))
+                    #if var_addr in watched_addrs:
+                        #print("[tmp] Address already watched: " + str(var_addr))
+
             elif addr_to_value[var_addr] != value:
                 uknown_writes.append(i)
                 #print("[tmp] register has been seen before: " + str(var_addr))
@@ -156,6 +160,7 @@ def check_writes(reg_point, trace, watched_addrs):
             addr_to_value[var_addr] = value
             #unknown_write = False
 
+    print("[rr] number of reads whose values are zeros: " + str(zeros))
     print("[rr] number of reads whose writes are all seen: " + str(equals))
     print("[rr] number of reads whose writes are not all seen: " + str(len(uknown_writes)))
     #return taken, not_taken
@@ -215,12 +220,13 @@ def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', offset_reg = None, 
     offsets = [offset]
     shifts = [shift]
     src_regs = ['']
+    loop_insn_flags = ['0']
 
     # First pass
     print("[rr] Running breakpoints for first step")
     print("[rr] Breakpoints: " + str(reg_points))
     print("[rr] Registers: " + str(regs))
-    run_breakpoint([], reg_points, regs, off_regs, offsets, shifts, src_regs, False, False)
+    run_breakpoint([], reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, False, False)
     breakpoint_trace = parse_breakpoint([], reg_points, False)
     print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoints")
 
@@ -315,11 +321,12 @@ def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', offset_reg = None, 
                 print('[tmp] ' + str(curr_expr))
                 curr_insn = '*' + hex(true_insn_addr)
                 reg_points.append(curr_insn)
-                regs.append(curr_expr[1].lower())
+                regs.append(curr_expr[1].strip().lower() if curr_expr[1] is not None else '')
                 shifts.append('0x' + str(curr_expr[2]))
                 offsets.append('0x' + str(curr_expr[3]))
                 off_regs.append(curr_expr[4].strip().lower() if curr_expr[4] is not None else '')
                 src_regs.append(line[4].strip().strip('%').lower())
+                loop_insn_flags.append(line[5].strip())
                 results.append([curr_expr[1:], true_insn_addr, func])
             print("[rr] all insns found " + str(reg_points))
             print("[rr] all registers found " + str(regs))
@@ -335,7 +342,7 @@ def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', offset_reg = None, 
             print("[rr] Breakpoints: " + str(reg_points))
             print("[rr] Registers: " + str(regs))
             #TODO, how to distinguish diff insn and regs? looks like it's according to order
-            run_breakpoint([], reg_points, regs, off_regs, offsets, shifts, src_regs, True, True)
+            run_breakpoint([], reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, True, True)
             breakpoint_trace = parse_breakpoint([], reg_points, True)
             print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoints")
             print("[rr] Third step finished")

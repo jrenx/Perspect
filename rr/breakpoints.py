@@ -21,6 +21,9 @@ class InitArgument(gdb.Function):
         for br in breakpoints:
             gdb.execute("br {}".format(br))
 
+        data = {'is_last_loop_insn': '0'}
+        json.dump(data, open(os.path.join(rr_dir, 'data.json'), 'w'))
+
         return 1
 
 
@@ -42,6 +45,7 @@ class RunBreakCommands(gdb.Function):
         offsets = config['offsets']
         shifts = config['shifts']
         src_regs = config['src_regs']
+        loop_insn_flags = config['loop_insn_flags']
 
         with open(os.path.join(rr_dir, 'breakpoints.log'), 'r') as f:
             position = gdb.convenience_variable('log_position')
@@ -50,45 +54,81 @@ class RunBreakCommands(gdb.Function):
                 f.seek(position)
             outs = f.readlines()
 
+        found_break_num = False
+
         for line in outs:
             match = re.match(r'Breakpoint (\d+),', line)
             if not match:
                 continue
             break_num = int(match.group(0).split()[1][:-1]) - 1
             is_go_file = line.split()[-1].split(':')[0].endswith('.go')
-            if break_num < len(regs):
-                if step:
-                    gdb.execute('si')
-                try:
-                    arg = ''
+            found_break_num = True
 
-                    arg += '(${}'.format(regs[break_num])
-                    if shifts[break_num] != '0x0':
-                        arg += '<<{}'.format(shifts[break_num]) #TODO test this
-                    if off_regs[break_num] != '':
-                        arg += '+${}*{}'.format(off_regs[break_num], offsets[break_num])
-                    elif offsets[break_num] != '0x0':
-                        arg += '+{}'.format(offsets[break_num])
-                    arg += ')'
+        if not found_break_num:
+            return 0
 
-                    cmd = 'p/x ' + arg
-                    gdb.execute(cmd)
+        with open(os.path.join(rr_dir, 'data.json')) as configFile:
+            data = json.load(configFile)
+            is_last_loop_insn = int(data['is_last_loop_insn'])
+            print('[tmp] is_last_loop_insn： ' + str(is_last_loop_insn == 1) + ' ' + str(is_last_loop_insn == 0) + ' ' + str(is_last_loop_insn))
 
-                    if deref:
-                        if not is_go_file:  # TODO, is this right?
-                            arg = '(long *) ' + arg
-                        cmd = 'p/x *(' + arg + ')'
-                        gdb.execute(cmd)
-                except gdb.MemoryError:
-                    print("memory error")
-                except Exception as e:
-                    if 'Attempt to dereference a generic pointer.' in str(e):
-                        gdb.execute('p/x ${}'.format(src_regs[break_num]))
+        is_loop_insn = int(loop_insn_flags[break_num])
+        if is_loop_insn == 1:
+            print('[tmp] Currently encountered a loop instruction')
+        data = {'is_last_loop_insn': str(is_loop_insn)}
+        json.dump(data, open(os.path.join(rr_dir, 'data.json'), 'w'))
+
+        if break_num < len(regs):
+            if is_last_loop_insn == 1 and is_loop_insn == 1:
+                print("[tmp] inside instruction loop")
+            elif step:
+                gdb.execute('si')
+
+            try:
+                arg = '('
+                if regs[break_num] != '':
+                    arg += '${}'.format(regs[break_num])
+                if shifts[break_num] != '0x0':
+                    arg += '<<{}'.format(shifts[break_num]) #TODO test this
+                if off_regs[break_num] != '':
+                    arg += '+${}*{}'.format(off_regs[break_num], offsets[break_num])
+                elif offsets[break_num] != '0x0':
+                    arg += '+{}'.format(offsets[break_num])
+                arg += ')'
+
+                cmd = 'p/x ' + arg
+                gdb.execute(cmd)
+
+                if deref:
+                    if not is_go_file:  # TODO, is this right?
+                        cmd = 'p/x *((long *) ' + arg + ')'
                     else:
+                        cmd = 'p/x *(' + arg + ')'
+                    gdb.execute(cmd)
+            except gdb.MemoryError as me:
+                print("memory error1: " + str(me))
+                if deref:
+                    cmd = 'p/x *(' + arg + ')'
+                    try:
+                        gdb.execute(cmd)
+                    except gdb.MemoryError:
+                        print("memory error2: " + cmd)
+                    except Exception as e:
+                        print("Retry GDB command caused error1: " + cmd)
                         raise Exception
-
-
-                return 1
+            except Exception as e: #TODO is there a more specific error?
+                if 'Attempt to dereference a generic pointer.' in str(e):
+                    try:
+                        gdb.execute('p/x ${}'.format(src_regs[break_num]))
+                    except gdb.MemoryError:
+                        print("memory error3: " + cmd)
+                    except Exception as e:
+                        print("Retry GDB command caused error2: " + cmd)
+                        raise Exception
+                else:
+                    print("GDB command caused error: " + cmd)
+                    raise Exception
+            return 1
         return 0
 
 

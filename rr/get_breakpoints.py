@@ -5,8 +5,8 @@ import re
 import time
 
 rr_dir = os.path.dirname(os.path.realpath(__file__))
-DEBUG = False
-def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src_regs, step, deref):
+DEBUG = True
+def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, step, deref):
 
 
     """
@@ -30,6 +30,7 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
               'offsets': offsets,
               'shifts' : shifts,
               'src_regs' : src_regs,
+              'loop_insn_flags' : loop_insn_flags,
               'step': step,
               'deref': deref}
     json.dump(config, open(os.path.join(rr_dir, 'config.json'), 'w'))
@@ -96,7 +97,7 @@ def parse_breakpoint(breakpoints, reg_points, deref):
                 """
     if DEBUG:
         timestamp = str(time.time())
-        print("[tmp] renaming to " + str(os.path.join(rr_dir, 'breakpoints.log' + '.' + timestamp)))
+        print("[rr] renaming to " + str(os.path.join(rr_dir, 'breakpoints.log' + '.' + timestamp)))
         os.rename(os.path.join(rr_dir, 'breakpoints.log'), os.path.join(rr_dir, 'breakpoints.log' + '.' + timestamp))
     return result
 

@@ -948,21 +948,33 @@ extern "C" {
       if (INFO) cout << "[sa] func: " << funcName << endl;
 
       Function *func = getFunction2(progName, funcName);
-      Block *bb = getBasicBlockContainingInsnBeforeAddr(func, addr);
-
-      Instruction insn;
-      Block::Insns insns;
-      bb->getInsns(insns);
-      long unsigned int true_addr = 0;
-      for (auto it = insns.begin(); it != insns.end(); it++) {
-        //cout << "[tmp] " << std::hex << (*it).first  << " " << (*it).second.format() << endl;
-        if ((*it).first == addr)
-          break;
-        true_addr = (*it).first;
-        insn = (*it).second;
+      Block *bb = getBasicBlock2(func, addr);
+      Instruction insn = bb->getInsn(addr);
+      long unsigned int trueAddr = 0;
+      int isLoopInsn = 0; //TODO: fix the casings
+      if (insn.getOperation().getID()  == 329 || insn.getOperation().format().rfind("REP", 0) == 0) {
+        // Is a looped move
+        trueAddr = addr;
+        isLoopInsn = 1;
+        if (INFO) cout << "[sa] special looped move: ID: "
+                       << insn.getOperation().getID()  << " op: "
+                       << insn.getOperation().format() << endl;
+      } else {
+        bb = getBasicBlockContainingInsnBeforeAddr(func, addr);
+        //Instruction insn;
+        Block::Insns insns;
+        bb->getInsns(insns);
+        for (auto it = insns.begin(); it != insns.end(); it++) {
+          //cout << "[tmp] " << std::hex << (*it).first  << " " << (*it).second.format() << endl;
+          if ((*it).first == addr)
+            break;
+          trueAddr = (*it).first;
+          insn = (*it).second;
+        }
       }
       if (INFO) cout << "[sa] insn: " << insn.format() << endl;
-      cJSON_AddNumberToObject(json_insn, "true_addr", true_addr);
+      cJSON_AddNumberToObject(json_insn, "true_addr", trueAddr);
+      cJSON_AddNumberToObject(json_insn, "is_loop_insn", isLoopInsn);
 
       //AssignmentConverter ac(true, false);
       //vector<Assignment::Ptr> assignments;
@@ -1098,12 +1110,21 @@ int main() {
   // Set up information about the program to be instrumented 
   char *progName = "909_ziptest_exe9";
   //const char *funcName = "scanblock";
-  char *funcName = "sweep";
+  //char *funcName = "sweep";
+  char *funcName = "runtime.memmove";
   //backwardSlices("[{\"reg_name\": \"\", \"addr\": \"4234200\"}, {\"reg_name\": \"\", \"addr\": \"4234203\"}]",
   //    progName, funcName);
   // /home/anygroup/go-repro/909-go/src/pkg/runtime/mgc0.c:467
-  long unsigned int addr = 0x409daa;
-  getAllBBs(progName, funcName, addr);
+  //long unsigned int addr = 0x409daa;
+  long unsigned int addr = 0x408aff;
+  //long unsigned int addr = 0x408b02;
+  Function *func = getFunction2(progName, funcName);
+  Block *bb = getBasicBlock2(func, addr);
+  Instruction insn = bb->getInsn(addr);
+  cout << insn.getOperation().format() << endl;
+  cout << insn.getOperation().getID() << endl;
+  cout << (insn.getOperation().getID()  == 329) << endl;
+  //getAllBBs(progName, funcName, addr);
 
   //BPatch_image *appImage = getImage(progName);
   //printAddrToLineMappings(appImage, funcName);
