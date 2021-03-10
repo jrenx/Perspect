@@ -29,7 +29,7 @@ def parse_watchpoint(breakpoints, watchpoints):
     """
     result = []
     curr_watch_num = -1
-
+    watchpoints_not_seen = set(watchpoints)
     with open(os.path.join(rr_dir, 'watchpoints.log'), 'r') as log:
         for line in log:
             if re.search(r'Breakpoint \d+,', line):
@@ -47,8 +47,12 @@ def parse_watchpoint(breakpoints, watchpoints):
                 segs = line.split()
                 addr = segs[1]
                 func = segs[3].strip('<').strip('>').split('+')[0]
-                result.append((watchpoints[curr_watch_num], addr, func))
+                watchpoint = watchpoints[curr_watch_num]
+                result.append((watchpoint, addr, func))
+                if watchpoint in watchpoints_not_seen:
+                    watchpoints_not_seen.remove(watchpoint)
                 curr_watch_num = -1
+    print('[rr][warn] watchpoints not seen: ' + str(watchpoints_not_seen))
     if DEBUG:
         timestamp = str(time.time())
         print("[rr] renaming to " + str(os.path.join(rr_dir, 'watchpoints.log' + '.' + timestamp)))

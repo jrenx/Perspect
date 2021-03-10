@@ -180,6 +180,7 @@ def get_unique_addrs(breakpoint_trace):
     return addrs
 """
 
+"""
 def get_addrs(breakpoint_trace, shift, offset, offset_reg):
     s = int(shift, 16)
     o = int(offset, 16)
@@ -207,9 +208,10 @@ def get_addrs(breakpoint_trace, shift, offset, offset_reg):
         prev_insn = curr_insn
         prev_reg = curr_reg
     return all_addrs
+"""
 
 #TODO, shift should be shift to the right
-def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', offset_reg = None, iter=10):
+def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', offset_reg = None, iter=30):
     print("[rr] In get_def") #, branch: " + branch + " target: " + taken)
     #positive = set()
     #negative = set()
@@ -228,7 +230,7 @@ def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', offset_reg = None, 
     print("[rr] Registers: " + str(regs))
     run_breakpoint([], reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, False, False)
     breakpoint_trace = parse_breakpoint([], reg_points, False)
-    print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoints")
+    print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoint hits")
 
     #taken_indices, not_taken_indices = filter_branch(branch, taken, breakpoint_trace)
     #print("[rr] Parsed " + str(len(taken_indices)) + " taken indices")
@@ -264,7 +266,7 @@ def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', offset_reg = None, 
         print("[rr] Running second step for {} times".format(i + 1))
         run_watchpoint([], watchpoints)
         watchpoint_trace = parse_watchpoint([], watchpoints)
-        print("[rr] Parsed " + str(len(watchpoint_trace)) + " watchpoints")
+        print("[rr] Parsed " + str(len(watchpoint_trace)) + " watchpoint hits")
         #("[tmp] " + str(watchpoint_trace))
         print("[rr] Second step finished")
 
@@ -322,8 +324,8 @@ def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', offset_reg = None, 
                 curr_insn = '*' + hex(true_insn_addr)
                 reg_points.append(curr_insn)
                 regs.append(curr_expr[1].strip().lower() if curr_expr[1] is not None else '')
-                shifts.append(hex(str(curr_expr[2])))
-                offsets.append(hex(str(curr_expr[3])))
+                shifts.append(hex(curr_expr[2]))
+                offsets.append(hex(curr_expr[3]))
                 off_regs.append(curr_expr[4].strip().lower() if curr_expr[4] is not None else '')
                 src_regs.append(line[4].strip().strip('%').lower())
                 loop_insn_flags.append(line[5])
@@ -344,7 +346,7 @@ def get_def(prog, reg_point, reg, shift='0x0', offset='0x0', offset_reg = None, 
             #TODO, how to distinguish diff insn and regs? looks like it's according to order
             run_breakpoint([], reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, True, True)
             breakpoint_trace = parse_breakpoint([], reg_points, True)
-            print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoints")
+            print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoint hits")
             print("[rr] Third step finished")
 
             unknown_writes_indices = check_writes(reg_point, breakpoint_trace, watched_addrs)
