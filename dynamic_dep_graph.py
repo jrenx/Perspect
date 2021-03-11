@@ -26,6 +26,7 @@ class DynamicNode:
         self.insn_id = insn_id
         self.staticNode = staticNode
         self.cf_predes = []
+        self.cf_predes_insn_id = []
         self.cf_success = []
         self.mem_load = None
 
@@ -78,7 +79,7 @@ class DynamicDependence:
                          pin='~/pin-3.11/pin')
         trace.run_instruction_trace(instructions)
         executable_path = os.path.join(curr_dir, 'pin', 'instruction_trace.out')
-        # executable_path = os.path.join(curr_dir, 'pin', 'result')
+        #executable_path = os.path.join(curr_dir, 'pin', 'result')
 
         return executable_path
 
@@ -131,7 +132,8 @@ class DynamicCFG:
         self.dynamicNodes = []
         self.number = graph_number
         self.root = None
-        self.branch_nodes = {}
+        self.branch_nodes = []
+        self.current_branch_nodes = {}
         self.target_dir = os.path.join(curr_dir, 'dynamicGraph')
 
     def build_dynamicCFG(self, executable, insn_to_nodes):
@@ -163,29 +165,32 @@ class DynamicCFG:
                 dynamicNode = DynamicNode(self.insn_to_id[insn], insn_to_nodes[insn])
                 self.dynamicNodes.append(dynamicNode)
                 if not is_first:
-                    if previous_node.insn_id not in self.branch_nodes:
-                        self.branch_nodes[previous_node.insn_id] = previous_node
+                    if previous_node.insn_id not in self.current_branch_nodes:
+                        self.current_branch_nodes[previous_node.insn_id] = previous_node
+                        self.branch_nodes.append(previous_node)
                 previous_node = dynamicNode
                 visited_node = []
 
             elif not is_first:
-
                 curr_node_id = self.insn_to_id[insn]
-
                 if curr_node_id not in visited_node:
-                    if curr_node_id in self.branch_nodes:
-                        previous_node.cf_predes.append(self.branch_nodes[curr_node_id])
-                        self.branch_nodes[curr_node_id].cf_success.append(previous_node)
-                        visited_node.append(self.branch_nodes[curr_node_id].insn_id)
-                        previous_node = self.branch_nodes[curr_node_id]
+                    if curr_node_id in self.current_branch_nodes:
+                        previous_node.cf_predes.append(self.current_branch_nodes[curr_node_id])
+                        self.current_branch_nodes[curr_node_id].cf_success.append(previous_node)
+                        visited_node.append(self.current_branch_nodes[curr_node_id].insn_id)
+                        previous_node = self.current_branch_nodes[curr_node_id]
                     else:
-                        dynamicNode = DynamicNode(curr_node_id, insn_to_nodes[insn])
-                        self.dynamicNodes.append(dynamicNode)
-                        visited_node.append(dynamicNode)
-                        dynamicNode.cf_success.append(previous_node)
-                        previous_node.cf_predes.append(dynamicNode)
-                        previous_node = dynamicNode
-                        visited_node.append(dynamicNode.insn_id)
+
+                        if previous_node.insn_id in self.current_branch_nodes:
+                            del self.current_branch_nodes[previous_node.insn_id]
+                        if curr_node_id not in visited_node:
+                            dynamicNode = DynamicNode(curr_node_id, insn_to_nodes[insn])
+                            self.dynamicNodes.append(dynamicNode)
+                            visited_node.append(dynamicNode)
+                            dynamicNode.cf_success.append(previous_node)
+                            previous_node.cf_predes.append(dynamicNode)
+                            previous_node = dynamicNode
+                            visited_node.append(dynamicNode.insn_id)
 
             if is_first:
                 is_first = False
@@ -208,9 +213,9 @@ class DynamicCFG:
         with open(fname, 'w') as out:
             out.write(starting)
 
-        for key in self.branch_nodes:
-            string = "      Instruction id: " + str(key) + "\n"
-            string += str(self.branch_nodes[key])
+        for node in self.branch_nodes:
+            string = "      Instruction id: " + str(node.insn_id) + "\n"
+            string += str(node)
             with open(fname, 'a') as out:
                 out.write(string)
 
