@@ -64,7 +64,7 @@ def rr_backslice(prog, branch, target, insn, reg, shift = 0, off = 0, off_reg = 
         + " branch @" + str(branch_str) + " target @" + str(target_str)\
         + " program: " +str(prog))
 
-    rr_result_defs = get_def(prog, target_str, branch_str, insn_str, reg_str, shift_str, off_str, off_reg_str)
+    rr_result_defs = get_def(prog, branch_str, target_str, insn_str, reg_str, shift_str, off_str, off_reg_str)
     print("[main] Result: " + str(len(rr_result_defs)) + " def points: " + str(rr_result_defs))
     return rr_result_defs
 

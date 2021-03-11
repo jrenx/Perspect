@@ -7,7 +7,7 @@ from get_watchpoints import *
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sa_util import *
 
-def filter_branch(branch_point, taken_point, trace):
+def filter_branch(branch_point, target_point, trace):
     """
     Find the branches in the trace and distinguish whether it is taken
     :param branch_point: instruction where the branch happens
@@ -19,12 +19,12 @@ def filter_branch(branch_point, taken_point, trace):
     """
     taken_indices = []
     not_taken_indices = []
+    print("[tmp] branch " + str(branch_point) + " target " + str(target_point))
 
     for i, (point, value, _) in enumerate(trace):
-        print("[tmp] point " + str(point))
-        print("[tmp] value " + str(value))
+        print("[tmp] point " + str(point) + " value " + str(value))
         if point == branch_point and value is None:
-            if i + 1 < len(trace) and trace[i + 1][0] == taken_point:
+            if i + 1 < len(trace) and trace[i + 1][0] == target_point:
                 assert trace[i + 1][1] is None, str(trace[i]) + str(trace[i + 1])
                 taken_indices.append(i)
             else:
@@ -234,7 +234,7 @@ def get_addrs(breakpoint_trace, shift, offset, offset_reg):
 
 #TODO, shift should be shift to the right
 def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_reg = None, iter=30):
-    print("[rr] In get_def") #, branch: " + branch + " target: " + target)
+    print("[rr] In get_def, branch: " + branch + " target: " + target)
     #positive = set()
     #negative = set()
 
