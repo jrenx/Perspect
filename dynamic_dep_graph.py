@@ -19,10 +19,11 @@ os.makedirs(target_dir)
 class DynamicNode:
     id = 0
 
-    def __init__(self, instance_number, staticNode):
+    def __init__(self, insn_id, staticNode):
         self.id = DynamicNode.id
         DynamicNode.id += 1
-        self.instance_number = instance_number
+        #self.instance_id = instance_id
+        self.insn_id = insn_id
         self.staticNode = staticNode
         self.cf_predes = []
         self.cf_success = []
@@ -30,8 +31,9 @@ class DynamicNode:
 
     def __str__(self):
         s = "===============================================\n"
+        #s += "   Instance id : " + str(self.instance_id) + "\n"
         s += "   Dynamic Node id: " + str(self.id) + "\n"
-        s += "   Instance Number : " + str(self.instance_number) + "\n"
+        s += "   Instruction id : " + str(self.insn_id) + "\n"
         s += "   Static Node id: " + str(self.staticNode.id) + "\n"
         s += "      insn: " + str(hex(self.staticNode.insn)) + "\n"
         s += "    ------------Basic Block--------------\n"
@@ -72,7 +74,6 @@ class DynamicDependence:
             instructions.append(hex(node.insn))
 
         # invoke PIN. get output of a sequence of insn
-        # TODO: what is the successor?
         trace = InsTrace('/home/anygroup/perf_debug_tool/909_ziptest_exe9 /home/anygroup/perf_debug_tool/test.zip',
                          pin='~/pin-3.11/pin')
         trace.run_instruction_trace(instructions)
@@ -91,7 +92,7 @@ class DynamicDependence:
         for node in self.all_static_nodes:
             self.insn_to_nodes[str(hex(node.insn))] = node
 
-    def buildDynamicControlFlowGraph(self, func, prog, executable_path):
+    def buildDynamicControlFlowGraph(self, func, prog, insn, executable_path):
         # For each execution:
 
         with open(executable_path, 'r') as f1:
@@ -107,7 +108,7 @@ class DynamicDependence:
         graph_number = 0
         for index in dividing_line[1:]:
             executable = insn_seq[start_index:index]
-            dynamicCFG = DynamicCFG(func, prog, graph_number)
+            dynamicCFG = DynamicCFG(func, prog, insn, graph_number)
             dynamicCFG.build_dynamicCFG(executable, self.insn_to_nodes)
             start_index = index
             graph_number += 1
@@ -119,56 +120,110 @@ class DynamicDependence:
 
         self.getSlice(insn, func, prog)
         executable_path = self.getDynamicExecutable()
-        self.buildDynamicControlFlowGraph(func, prog, executable_path)
+        self.buildDynamicControlFlowGraph(func, prog, insn, executable_path)
 
 
 
 
 class DynamicCFG:
-    def __init__(self, func, prog, graph_number):
+    def __init__(self, func, prog, insn, graph_number):
         self.func = func
         self.prog = prog
+        self.start_insn = insn
+        self.insn_to_id = {str(hex(self.start_insn)): 1}
         self.dynamicNodes = []
         self.number = graph_number
+        self.current_root = None
+        self.branch_nodes = {}
         self.target_dir = os.path.join(curr_dir, 'dynamicGraph')
 
 
     def build_dynamicCFG(self, executable, insn_to_nodes):
 
+        # reverse the executetable, and remove insns beyond the start insn
+        executable.reverse()
+        index = executable.index(str(hex(self.start_insn)) + '\n')
+        executable = executable[index:]
+
+        #init
         insn_times = {}
         previous_node = None
         is_first = True
+        insn_id = 2
+
+        #traverse
         for insn_line in executable:
             insn = insn_line.rstrip('\n')
             if insn.find("eof") != -1:
                 break
-            if insn in insn_times:
-                insn_times[insn] += 1
-            else:
-                insn_times[insn] = 1
-            time = insn_times[insn]
-            node = insn_to_nodes[str(insn)]
-            dynamicNode = DynamicNode(time, node)
 
-            # set predecessor and successor
+            #mark visited insn
+            if insn not in self.insn_to_id:
+                self.insn_to_id[insn] = insn_id
+                insn_id += 1
+
+            # the leaf
+            if insn == str(hex(self.start_insn)):
+                dynamicNode = DynamicNode(self.insn_to_id[insn], insn_to_nodes[insn])
+                self.dynamicNodes.append(dynamicNode)
+                if not is_first:
+                    if previous_node.insn_id not in self.branch_nodes:
+                        self.branch_nodes[previous_node.insn_id] = previous_node
+                else:
+                    self.current_root = dynamicNode
+                previous_node = dynamicNode
+
             if not is_first:
-                dynamicNode.cf_predes.append(previous_node)
-                previous_node.cf_success.append(dynamicNode)
-            is_first = False
-            previous_node = dynamicNode
 
-            self.dynamicNodes.append(dynamicNode)
+                curr_node_id = self.insn_to_id[insn]
+                
+                if curr_node_id > previous_node.insn_id:
+
+                    if curr_node_id in self.branch_nodes:
+                        previous_node.cf_predes.append(self.branch_nodes[curr_node_id])
+                        self.branch_nodes[curr_node_id].cf_success.append(previous_node)
+                        previous_node = self.branch_nodes[curr_node_id]
+                    else:
+                        dynamicNode = DynamicNode(curr_node_id, insn_to_nodes[insn])
+                        self.dynamicNodes.append(dynamicNode)
+                        dynamicNode.cf_success.append(previous_node)
+                        previous_node.cf_predes.append(dynamicNode)
+                        previous_node = dynamicNode
+
+                        if curr_node_id > self.current_root.insn_id:
+                            self.current_root = dynamicNode
+
+            else:
+                is_first = False
 
         self.print_graph()
+        print(self.insn_to_id)
+        print(executable[-1])
 
     def print_graph(self):
 
         fname = os.path.join(self.target_dir, 'Graph_No.' + str(self.number))
-        staring = "===============================================\n"
-        staring += "    ------------Dynamic CFG No." + str(self.number) + "--------------\n"
+        starting = "===============================================\n"
+        starting += "    ------------Dynamic CFG No." + str(self.number) + "--------------\n"
+        starting += "   Dynamic Graph Root: \n"
+        starting += str(self.current_root)
+        starting = "===============================================\n"
+        starting += "   Dynamic Graph branch nodes:  \n"
 
         with open(fname, 'w') as out:
-            out.write(staring)
+            out.write(starting)
+
+        for key in self.branch_nodes:
+            string = "      Instruction id: " + str(key) + "\n"
+            string += str(self.branch_nodes[key])
+            with open(fname, 'a') as out:
+                out.write(string)
+
+        string = "\n===============================================\n"
+        string += "    ------------ DynamicNodes in CFG--------------\n"
+
+        with open(fname, 'a') as out:
+            out.write(string)
 
         for node in self.dynamicNodes:
             with open(fname, 'a') as out:
