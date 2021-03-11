@@ -44,12 +44,12 @@ class DynamicNode:
         s += "    -------------------------------------\n"
         s += "    dynamic control flow predecessors: ["
         for prede in self.cf_predes:
-            s += str(prede.id) + ","
+            s += str(prede.insn_id) + ","
         s = s.strip(",")
         s += "] \n"
         s += "    dynamic control flow successors: ["
         for succe in self.cf_success:
-            s += str(succe.id) + ","
+            s += str(succe.insn_id) + ","
         s = s.strip(",")
         s += "] \n"
 
@@ -176,29 +176,27 @@ class DynamicCFG:
             if not is_first:
 
                 curr_node_id = self.insn_to_id[insn]
-                
-                if curr_node_id > previous_node.insn_id:
 
-                    if curr_node_id in self.branch_nodes:
+                if curr_node_id in self.branch_nodes:
+                    if curr_node_id != previous_node.insn_id:
                         previous_node.cf_predes.append(self.branch_nodes[curr_node_id])
                         self.branch_nodes[curr_node_id].cf_success.append(previous_node)
                         previous_node = self.branch_nodes[curr_node_id]
-                    else:
-                        dynamicNode = DynamicNode(curr_node_id, insn_to_nodes[insn])
-                        self.dynamicNodes.append(dynamicNode)
-                        dynamicNode.cf_success.append(previous_node)
-                        previous_node.cf_predes.append(dynamicNode)
-                        previous_node = dynamicNode
 
-                        if curr_node_id > self.current_root.insn_id:
-                            self.current_root = dynamicNode
+                elif curr_node_id > previous_node.insn_id:
+                    dynamicNode = DynamicNode(curr_node_id, insn_to_nodes[insn])
+                    self.dynamicNodes.append(dynamicNode)
+                    dynamicNode.cf_success.append(previous_node)
+                    previous_node.cf_predes.append(dynamicNode)
+                    previous_node = dynamicNode
 
+                    if curr_node_id > self.current_root.insn_id:
+                        self.current_root = dynamicNode
             else:
                 is_first = False
 
         self.print_graph()
         print(self.insn_to_id)
-        print(executable[-1])
 
     def print_graph(self):
 
@@ -207,7 +205,7 @@ class DynamicCFG:
         starting += "    ------------Dynamic CFG No." + str(self.number) + "--------------\n"
         starting += "   Dynamic Graph Root: \n"
         starting += str(self.current_root)
-        starting += "\n===============================================\n"
+        starting += "===============================================\n"
         starting += "   Dynamic Graph branch nodes:  \n"
 
         with open(fname, 'w') as out:
@@ -234,4 +232,5 @@ if __name__ == '__main__':
 
     dynamic_graph = DynamicDependence()
     dynamic_graph.buildDynamicControlFlowDep(0x409daa, "sweep", "909_ziptest_exe9")
+
 
