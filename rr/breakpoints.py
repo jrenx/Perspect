@@ -32,6 +32,10 @@ class RunBreakCommands(gdb.Function):
         super(RunBreakCommands, self).__init__('run_break_commands')
 
     def invoke(self):
+        inside_loop = False
+        with open(os.path.join(rr_dir, 'config.json')) as configFile:
+            config = json.load(configFile)
+
         while True:
             with open(os.path.join(rr_dir, 'breakpoints.log'), 'r') as f:
                 position = gdb.convenience_variable('log_position')
@@ -51,9 +55,6 @@ class RunBreakCommands(gdb.Function):
 
             if not found_break_num:
                 return 0
-
-            with open(os.path.join(rr_dir, 'config.json')) as configFile:
-                config = json.load(configFile)
 
             if break_num >= len(config['regs']):
                 return 0
@@ -76,7 +77,7 @@ class RunBreakCommands(gdb.Function):
                 arg += '+{}'.format(offset)
             arg += ')'
 
-            if config['step']:
+            if config['step'] and not inside_loop:
                 gdb.execute('si')
 
             for i in range(2):
@@ -135,6 +136,12 @@ class RunBreakCommands(gdb.Function):
                 break
             else:
                 print("[debug] Is a loop instruction, re-running.")
+                with open(os.path.join(rr_dir, 'breakpoints.log'), 'r') as f:
+                    f.seek(0, 2)
+                    position = f.tell()
+                gdb.set_convenience_variable('log_position', position)
+                gdb.execute('si')
+                inside_loop = True
         return 1
 
 
