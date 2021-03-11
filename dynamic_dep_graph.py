@@ -5,14 +5,18 @@ from rr_util import *
 from pin_util import *
 from collections import deque
 from collections import OrderedDict
+import shutil
 from static_dep_graph import *
 from pin.instruction_trace import *
 
 curr_dir = os.path.dirname(os.path.realpath(__file__))
+target_dir = os.path.join(curr_dir, 'dynamicGraph')
+if os.path.exists(target_dir):
+    shutil.rmtree(target_dir)
+os.makedirs(target_dir)
 
 
 class DynamicNode:
-
     id = 0
 
     def __init__(self, instance_number, staticNode):
@@ -52,8 +56,10 @@ class DynamicNode:
 
         return s
 
+
 class DynamicDependence:
     def __init__(self):
+        self.start_insn = None
         self.all_static_nodes = []
         self.dynamicNodes = []
         self.insn_to_nodes = {}
@@ -85,6 +91,27 @@ class DynamicDependence:
         for node in self.all_static_nodes:
             self.insn_to_nodes[str(hex(node.insn))] = node
 
+    def buildDynamicControlFlowGraph(self, func, prog, executable_path):
+        # For each execution:
+
+        with open(executable_path, 'r') as f1:
+            insn_seq = f1.readlines()
+
+        self.start_insn = insn_seq[0]
+
+        dividing_line = [i for i, x in enumerate(insn_seq) if x == self.start_insn]
+
+        dividing_line.append(-1)
+
+        start_index = dividing_line[0]
+        graph_number = 0
+        for index in dividing_line[1:]:
+            executable = insn_seq[start_index:index]
+            dynamicCFG = DynamicCFG(func, prog, graph_number)
+            dynamicCFG.build_dynamicCFG(executable, self.insn_to_nodes)
+            start_index = index
+            graph_number += 1
+
 
     def buildDynamicControlFlowDep(self, insn, func, prog):
 
@@ -92,13 +119,10 @@ class DynamicDependence:
 
         self.getSlice(insn, func, prog)
         executable_path = self.getDynamicExecutable()
-
-        #For each execution:
-        dynamicCFG = DynamicCFG(func, prog, 0)
-        dynamicCFG.build_dynamicCFG(executable_path, self.insn_to_nodes)
+        self.buildDynamicControlFlowGraph(func, prog, executable_path)
 
 
-        pass
+
 
 class DynamicCFG:
     def __init__(self, func, prog, graph_number):
@@ -106,17 +130,17 @@ class DynamicCFG:
         self.prog = prog
         self.dynamicNodes = []
         self.number = graph_number
+        self.target_dir = os.path.join(curr_dir, 'dynamicGraph')
 
-    def build_dynamicCFG(self, file_path, insn_to_nodes):
-        with open(file_path, 'r') as f1:
-            insn_seq = f1.readlines()
+
+    def build_dynamicCFG(self, executable, insn_to_nodes):
 
         insn_times = {}
         previous_node = None
         is_first = True
-        for insn_line in insn_seq:
+        for insn_line in executable:
             insn = insn_line.rstrip('\n')
-            if insn.find("eof") != -1 :
+            if insn.find("eof") != -1:
                 break
             if insn in insn_times:
                 insn_times[insn] += 1
@@ -127,7 +151,7 @@ class DynamicCFG:
             dynamicNode = DynamicNode(time, node)
 
             # set predecessor and successor
-            if not is_first :
+            if not is_first:
                 dynamicNode.cf_predes.append(previous_node)
                 previous_node.cf_success.append(dynamicNode)
             is_first = False
@@ -135,15 +159,24 @@ class DynamicCFG:
 
             self.dynamicNodes.append(dynamicNode)
 
-        print("===============================================\n")
-        print("    ------------Dynamic CFG No." + str(self.number) + "--------------\n")
-        for node in self.dynamicNodes:
-            print(str(node))
+        self.print_graph()
 
-        print("\n")
+    def print_graph(self):
+
+        fname = os.path.join(self.target_dir, 'Graph_No.' + str(self.number))
+        staring = "===============================================\n"
+        staring += "    ------------Dynamic CFG No." + str(self.number) + "--------------\n"
+
+        with open(fname, 'w') as out:
+            out.write(staring)
+
+        for node in self.dynamicNodes:
+            with open(fname, 'a') as out:
+                out.write(str(node))
 
 
 if __name__ == '__main__':
+
     dynamic_graph = DynamicDependence()
     dynamic_graph.buildDynamicControlFlowDep(0x409daa, "sweep", "909_ziptest_exe9")
 
