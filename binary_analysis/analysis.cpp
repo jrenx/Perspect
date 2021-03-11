@@ -300,7 +300,7 @@ Block *getBasicBlockContainingInsnBeforeAddr(Function *f, long unsigned int addr
   }
 
   if (target == NULL) {
-    cerr << "Failed to find basic block for function " << f->name() << " @ " << addr << endl;
+    cerr << "Failed to find basic block in function " << f->name() << " before " << addr << endl;
     return NULL;
   }
   return target;
@@ -317,7 +317,7 @@ Block *getBasicBlock2(Function *f, long unsigned int addr) {
   }
 
   if (target == NULL) {
-    cerr << "Failed to find basic block for function " << f->name() << " @ " << addr << endl;
+    cerr << "Failed to find basic block in function " << f->name() << " @ " << addr << endl;
     return NULL;
   }
   return target;
@@ -966,6 +966,10 @@ extern "C" {
         if (INFO) cout << "[sa] special looped move: ID: "
                        << insn.getOperation().getID()  << " op: "
                        << insn.getOperation().format() << endl;
+      } else if (func->entry() == bb && bb->start == addr) {
+        // Instruction is already the first in the function
+        if (INFO) cout << "[sa] instruction is the first in the function: " << insn.format() << endl;
+        trueAddr = addr;
       } else {
         bb = getBasicBlockContainingInsnBeforeAddr(func, addr);
         //Instruction insn;

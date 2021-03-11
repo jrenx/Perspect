@@ -29,8 +29,8 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
               'regs': regs,
               'off_regs': off_regs,
               'offsets': offsets,
-              'shifts' : shifts,
-              'src_regs' : src_regs,
+              'shifts': shifts,
+              'src_regs': src_regs,
               'loop_insn_flags' : loop_insn_flags,
               'step': step,
               'deref': deref}
@@ -40,7 +40,7 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
     a = datetime.datetime.now()
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     try:
-        rr_process.communicate(('source' + os.path.join(rr_dir, 'get_breakpoints')).encode())#, timeout=300)
+        rr_process.communicate(('source' + os.path.join(rr_dir, 'get_breakpoints')).encode(), timeout=300)
     except subprocess.TimeoutExpired:
         rr_process.kill()
         success = False
