@@ -376,6 +376,8 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
             print("[rr] Third step finished")
 
             taken_indices, not_taken_indices = filter_branch(branch, target, breakpoint_trace)
+            print("[rr] Parsed " + str(len(taken_indices)) + " taken indices")
+            print("[rr] Parsed " + str(len(not_taken_indices)) + " not taken indices")
             if pos_pass:
                 read_filter = set([get_def_insn_index_for_branch(index, [read], breakpoint_trace) for index in taken_indices])
                 unknown_writes_indices = find_unknown_writes(read, breakpoint_trace, read_filter)
