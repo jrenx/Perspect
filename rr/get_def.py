@@ -124,8 +124,7 @@ def analyze_trace(taken_traces, not_taken_traces):
     return positive, negative
 
 
-def check_writes(reg_point, trace, watched_addrs, filter=None):
-#def check_writes(reg_point, trace, watched_addrs):
+def find_unknown_writes(reg_point, trace, filter=None, ignore_default=False):
     """
     Check whether there is unknown writes to address pointed by register
     :param reg_point: instruction address to check the register
@@ -158,7 +157,7 @@ def check_writes(reg_point, trace, watched_addrs, filter=None):
                 print("[tmp] ignoring read point because did not lead to positive branch outcome")
                 continue
             #print("[tmp] Address is being read at: " + str(read_insn))
-            if var_addr not in addr_to_value:
+            if not ignore_default and var_addr not in addr_to_value:
                 if value == '0x0':
                     zeros += 1
                 else:
@@ -234,12 +233,12 @@ def get_addrs(breakpoint_trace, shift, offset, offset_reg):
 """
 
 #TODO, shift should be shift to the right
-def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', offset_reg = None, iter=30):
-    print("[rr] In get_def") #, branch: " + branch + " target: " + taken)
+def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_reg = None, iter=30):
+    print("[rr] In get_def") #, branch: " + branch + " target: " + target)
     #positive = set()
     #negative = set()
 
-    reg_points = [reg_point]
+    reg_points = [read]
     regs = [reg]
     off_regs = [offset_reg] if offset_reg is not None else ['']
     offsets = [offset]
@@ -251,17 +250,17 @@ def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', offs
     print("[rr] Running breakpoints for first step")
     print("[rr] Breakpoints: " + str(reg_points))
     print("[rr] Registers: " + str(regs))
-    run_breakpoint([branch, taken], reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, False, False)
-    breakpoint_trace = parse_breakpoint([branch, taken], reg_points, False)
+    run_breakpoint([branch, target], reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, False, False)
+    breakpoint_trace = parse_breakpoint([branch, target], reg_points, False)
     print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoint hits")
 
-    taken_indices, not_taken_indices = filter_branch(branch, taken, breakpoint_trace)
+    taken_indices, not_taken_indices = filter_branch(branch, target, breakpoint_trace)
     print("[rr] Parsed " + str(len(taken_indices)) + " taken indices")
     print("[rr] Parsed " + str(len(not_taken_indices)) + " not taken indices")
 
     print("[rr] First step finished")
     watched_addrs = set()
-    all_addrs = set([breakpoint_trace[get_def_insn_index_for_branch(index, [reg_point], breakpoint_trace)][1]
+    all_addrs = set([breakpoint_trace[get_def_insn_index_for_branch(index, [read], breakpoint_trace)][1]
                     for index in taken_indices])
     print("[rr] Total number of unique addresses read when branch outcome was positive: " + str(len(all_addrs)))
     print("[tmp] " + str(all_addrs))
@@ -283,8 +282,10 @@ def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', offs
     #watchpoint_taken_indices = range(0, 4)
     #watchpoint_not_taken_indices = range(4, 8)
 
-    all_unique_insns = set()
+    all_unique_writes = set()
     results = []
+
+    pos_pass = True
 
     for i in range(iter):
         # Second pass
@@ -308,22 +309,22 @@ def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', offs
 
         # Third pass
         print("[rr] Running third step for {} times".format(i + 1))
-        unique_insns = set()
+        new_unique_writes = set()
         for line in watchpoint_trace:
             insn = line[1]
             func = line[2]
             insn_func_str = insn + "@" + func
-            if insn_func_str in all_unique_insns:
+            if insn_func_str in all_unique_writes:
                 continue
-            unique_insns.add(insn_func_str)
-        print("[rr] Found " + str(len(unique_insns)) + " new unique writes: " + str(unique_insns))
-        if len(unique_insns) == 0:
+            new_unique_writes.add(insn_func_str)
+        print("[rr] Found " + str(len(new_unique_writes)) + " new unique writes: " + str(new_unique_writes))
+        if len(new_unique_writes) == 0:
             print("[rr] No additional writes are found, keep watching more addresses.")
-        all_unique_insns = all_unique_insns.union(unique_insns)
+        all_unique_writes = all_unique_writes.union(new_unique_writes)
 
-        if len(unique_insns) > 0:
+        if len(new_unique_writes) > 0:
             insn_to_func = []
-            for pair in unique_insns:
+            for pair in new_unique_writes:
                 segs = pair.split("@")
                 insn = segs[0]
                 func = segs[1]
@@ -369,19 +370,26 @@ def get_def(prog, branch, taken, reg_point, reg, shift='0x0', offset='0x0', offs
             print("[rr] Breakpoints: " + str(reg_points))
             print("[rr] Registers: " + str(regs))
             #TODO, how to distinguish diff insn and regs? looks like it's according to order
-            run_breakpoint([branch, taken], reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, True, True)
-            breakpoint_trace = parse_breakpoint([branch, taken], reg_points, True)
+            run_breakpoint([branch, target], reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, True, True)
+            breakpoint_trace = parse_breakpoint([branch, target], reg_points, True)
             print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoint hits")
             print("[rr] Third step finished")
 
-            taken_indices, not_taken_indices = filter_branch(branch, taken, breakpoint_trace)
-            filter = set([get_def_insn_index_for_branch(index, [reg_point], breakpoint_trace) for index in taken_indices])
-            unknown_writes_indices = check_writes(reg_point, breakpoint_trace, watched_addrs, filter)
-            #taken_indices, not_taken_indices = check_writes(reg_point, branch, taken, breakpoint_trace)
-            if len(unknown_writes_indices) == 0:
-                print("All writes are accounted for, returning now.")
-                return results
+            taken_indices, not_taken_indices = filter_branch(branch, target, breakpoint_trace)
+            if pos_pass:
+                read_filter = set([get_def_insn_index_for_branch(index, [read], breakpoint_trace) for index in taken_indices])
+                unknown_writes_indices = find_unknown_writes(read, breakpoint_trace, read_filter)
 
+                if len(unknown_writes_indices) == 0:
+                    print("Only found the writes that lead to positive branch outcome, looking for other writes now...")
+                    pos_pass = False
+
+            if not pos_pass:
+                read_filter = set([get_def_insn_index_for_branch(index, [read], breakpoint_trace) for index in not_taken_indices])
+                unknown_writes_indices = find_unknown_writes(read, breakpoint_trace, read_filter, True)
+                if len(unknown_writes_indices) == 0:
+                    print("All writes are accounted for. Returning now...")
+                    return results
             # the unknown writes must also have been
             partial_breakpoint_trace = [breakpoint_trace[i] for i in unknown_writes_indices]
             all_addrs = set([breakpoint[1] for breakpoint in partial_breakpoint_trace])
