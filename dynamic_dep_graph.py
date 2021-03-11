@@ -207,7 +207,7 @@ class DynamicCFG:
         starting += "    ------------Dynamic CFG No." + str(self.number) + "--------------\n"
         starting += "   Dynamic Graph Root: \n"
         starting += str(self.current_root)
-        starting = "===============================================\n"
+        starting += "\n===============================================\n"
         starting += "   Dynamic Graph branch nodes:  \n"
 
         with open(fname, 'w') as out:
