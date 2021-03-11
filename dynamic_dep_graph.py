@@ -22,7 +22,7 @@ class DynamicNode:
     def __init__(self, insn_id, staticNode):
         self.id = DynamicNode.id
         DynamicNode.id += 1
-        #self.instance_id = instance_id
+        # self.instance_id = instance_id
         self.insn_id = insn_id
         self.staticNode = staticNode
         self.cf_predes = []
@@ -31,7 +31,7 @@ class DynamicNode:
 
     def __str__(self):
         s = "===============================================\n"
-        #s += "   Instance id : " + str(self.instance_id) + "\n"
+        # s += "   Instance id : " + str(self.instance_id) + "\n"
         s += "   Dynamic Node id: " + str(self.id) + "\n"
         s += "   Instruction id : " + str(self.insn_id) + "\n"
         s += "   Static Node id: " + str(self.staticNode.id) + "\n"
@@ -44,12 +44,12 @@ class DynamicNode:
         s += "    -------------------------------------\n"
         s += "    dynamic control flow predecessors: ["
         for prede in self.cf_predes:
-            s += str(prede.insn_id) + ","
+            s += '[' + str(prede.id) + "," + str(prede.insn_id) + ']'
         s = s.strip(",")
         s += "] \n"
         s += "    dynamic control flow successors: ["
         for succe in self.cf_success:
-            s += str(succe.insn_id) + ","
+            s += '[' + str(succe.id) + "," + str(succe.insn_id) + ']'
         s = s.strip(",")
         s += "] \n"
 
@@ -78,7 +78,7 @@ class DynamicDependence:
                          pin='~/pin-3.11/pin')
         trace.run_instruction_trace(instructions)
         executable_path = os.path.join(curr_dir, 'pin', 'instruction_trace.out')
-        #executable_path = os.path.join(curr_dir, 'pin', 'result')
+        # executable_path = os.path.join(curr_dir, 'pin', 'result')
 
         return executable_path
 
@@ -113,7 +113,6 @@ class DynamicDependence:
             start_index = index
             graph_number += 1
 
-
     def buildDynamicControlFlowDep(self, insn, func, prog):
 
         # Get static dep, then invoke pin to get execution results, and build CFG
@@ -121,8 +120,6 @@ class DynamicDependence:
         self.getSlice(insn, func, prog)
         executable_path = self.getDynamicExecutable()
         self.buildDynamicControlFlowGraph(func, prog, insn, executable_path)
-
-
 
 
 class DynamicCFG:
@@ -133,10 +130,9 @@ class DynamicCFG:
         self.insn_to_id = {str(hex(self.start_insn)): 1}
         self.dynamicNodes = []
         self.number = graph_number
-        self.current_root = None
+        self.root = None
         self.branch_nodes = {}
         self.target_dir = os.path.join(curr_dir, 'dynamicGraph')
-
 
     def build_dynamicCFG(self, executable, insn_to_nodes):
 
@@ -145,19 +141,19 @@ class DynamicCFG:
         index = executable.index(str(hex(self.start_insn)) + '\n')
         executable = executable[index:]
 
-        #init
+        # init
         insn_times = {}
         previous_node = None
         is_first = True
         insn_id = 2
 
-        #traverse
+        # traverse
         for insn_line in executable:
             insn = insn_line.rstrip('\n')
             if insn.find("eof") != -1:
                 break
 
-            #mark visited insn
+            # mark visited insn
             if insn not in self.insn_to_id:
                 self.insn_to_id[insn] = insn_id
                 insn_id += 1
@@ -169,31 +165,32 @@ class DynamicCFG:
                 if not is_first:
                     if previous_node.insn_id not in self.branch_nodes:
                         self.branch_nodes[previous_node.insn_id] = previous_node
-                else:
-                    self.current_root = dynamicNode
                 previous_node = dynamicNode
+                visited_node = []
 
-            if not is_first:
+            elif not is_first:
 
                 curr_node_id = self.insn_to_id[insn]
 
-                if curr_node_id in self.branch_nodes:
-                    if curr_node_id != previous_node.insn_id:
+                if curr_node_id not in visited_node:
+                    if curr_node_id in self.branch_nodes:
                         previous_node.cf_predes.append(self.branch_nodes[curr_node_id])
                         self.branch_nodes[curr_node_id].cf_success.append(previous_node)
+                        visited_node.append(self.branch_nodes[curr_node_id].insn_id)
                         previous_node = self.branch_nodes[curr_node_id]
+                    else:
+                        dynamicNode = DynamicNode(curr_node_id, insn_to_nodes[insn])
+                        self.dynamicNodes.append(dynamicNode)
+                        visited_node.append(dynamicNode)
+                        dynamicNode.cf_success.append(previous_node)
+                        previous_node.cf_predes.append(dynamicNode)
+                        previous_node = dynamicNode
+                        visited_node.append(dynamicNode.insn_id)
 
-                elif curr_node_id > previous_node.insn_id:
-                    dynamicNode = DynamicNode(curr_node_id, insn_to_nodes[insn])
-                    self.dynamicNodes.append(dynamicNode)
-                    dynamicNode.cf_success.append(previous_node)
-                    previous_node.cf_predes.append(dynamicNode)
-                    previous_node = dynamicNode
-
-                    if curr_node_id > self.current_root.insn_id:
-                        self.current_root = dynamicNode
-            else:
+            if is_first:
                 is_first = False
+
+        self.root = dynamicNode
 
         self.print_graph()
         print(self.insn_to_id)
@@ -204,7 +201,7 @@ class DynamicCFG:
         starting = "===============================================\n"
         starting += "    ------------Dynamic CFG No." + str(self.number) + "--------------\n"
         starting += "   Dynamic Graph Root: \n"
-        starting += str(self.current_root)
+        starting += str(self.root)
         starting += "===============================================\n"
         starting += "   Dynamic Graph branch nodes:  \n"
 
@@ -229,8 +226,6 @@ class DynamicCFG:
 
 
 if __name__ == '__main__':
-
     dynamic_graph = DynamicDependence()
     dynamic_graph.buildDynamicControlFlowDep(0x409daa, "sweep", "909_ziptest_exe9")
-
 
