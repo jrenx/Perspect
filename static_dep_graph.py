@@ -122,24 +122,30 @@ class CFG:
         for i in range(len(self.postorder_list)):
             postorder_map[self.postorder_list[i].id] = i
 
-        print("[Simplify] Postorder list: " + str([bb.id for bb in self.postorder_list]))
+        print("[Simplify] Postorder list: " + str([bb.lines for bb in self.postorder_list]))
         bb_id_to_pdom_ids = {}
-        for bb in self.postorder_list:
-            print("[Simplify] Examining: " + str(bb.id))
-            pdom_ids = None
-            for succe in bb.succes:
-                print("[Simplify]      current succe : " + str(succe.id))
-                if succe.id not in bb_id_to_pdom_ids:
-                    continue
+
+        retry = True
+        while retry:
+            retry = False
+            for bb in self.postorder_list:
+                print("[Simplify] Examining: " + str(bb.id))
+                pdom_ids = None
+                for succe in bb.succes:
+                    print("[Simplify]      current succe : " + str(succe.id))
+                    if succe.id not in bb_id_to_pdom_ids:
+                        if succe in bb.backedge_targets:
+                            retry = True
+                        continue
+                    if pdom_ids is None:
+                        pdom_ids = set(bb_id_to_pdom_ids[succe.id])
+                    else:
+                        pdom_ids = pdom_ids.intersection(bb_id_to_pdom_ids[succe.id])
+                    print("[Simplify]      current pdom : " + str(pdom_ids))
                 if pdom_ids is None:
-                    pdom_ids = set(bb_id_to_pdom_ids[succe.id])
-                else:
-                    pdom_ids = pdom_ids.intersection(bb_id_to_pdom_ids[succe.id])
-                print("[Simplify]      current pdom : " + str(pdom_ids))
-            if pdom_ids is None:
-                pdom_ids = set()
-            pdom_ids.add(bb.id)
-            bb_id_to_pdom_ids[bb.id] = pdom_ids
+                    pdom_ids = set()
+                pdom_ids.add(bb.id)
+                bb_id_to_pdom_ids[bb.id] = pdom_ids
         #for bb_id in bb_id_to_pdom_ids:
             #print("[Simplify] " + str(bb_id) + " is post dominated by: " + str(bb_id_to_pdom_ids[bb_id]))
 
@@ -156,17 +162,30 @@ class CFG:
 
             print("[Simplify] BB " + str(bb.id) + "@" + str(bb.lines) + " " \
                     " is post dominated by: " + \
-                    str([pdom.id for pdom in bb.pdoms]))
+                    str([pdom.lines for pdom in bb.pdoms]))
 
-            pdom_id_to_range = {}
+            bb_id_to_range = {}
             for pdom_id in pdom_ids:
-                pdom_id_to_range[postorder_map[pdom_id]] = pdom_id
-            for pdom_id_pair in reversed(sorted(pdom_id_to_range.items())):
-                bb.immed_pdom = self.id_to_bb[pdom_id_pair[1]]
+                bb_id_to_range[postorder_map[pdom_id]] = pdom_id
+            bb_id_to_range[postorder_map[bb.id]] = bb.id
+            print("[Simplify] ordered post dominators: " + \
+                    str([self.id_to_bb[bb_id_pair[1]].lines for bb_id_pair in reversed(sorted(bb_id_to_range.items()))]))
+
+            for bb_id_pair in reversed(sorted(bb_id_to_range.items())):
+                bb.immed_pdom = self.id_to_bb[bb_id_pair[1]]
                 break
+
+            found = False
+            for bb_id_pair in reversed(sorted(bb_id_to_range.items())):
+                if found is True:
+                    bb.immed_pdom = self.id_to_bb[bb_id_pair[1]]
+                    break
+                if bb.id == bb_id_pair[1]:
+                    found = True
+
             print("[Simplify] BB " + str(bb.id) + "@" + str(bb.lines) + " " \
                     " is immediately post dominated by: " + \
-                    str(bb.immed_pdom.id))
+                    str(bb.immed_pdom.lines))
 
         ignore_set = set() # call it ignore set
         for bb in reversed(self.postorder_list):
@@ -186,11 +205,16 @@ class CFG:
             all_succes_before_immed_pdom = set()
             worklist = deque()
             worklist.append(bb)
+            visited = set([])
             while len(worklist) > 0:
                 child_bb = worklist.popleft()
+                if child_bb in visited:
+                    print('[Simplify]   child BB already visited, ignore: ' + str(child_bb.id))
+                    continue
+                visited.add(child_bb)
                 print("[Simplify]   child BB: " + str(child_bb.id) + \
                       " " + str(child_bb.lines) + \
-                      " pdoms are " + str([pdom.id for pdom in child_bb.pdoms] \
+                      " pdoms are " + str([pdom.lines for pdom in child_bb.pdoms] \
                         if child_bb.pdoms is not None else str(child_bb.pdoms)))
                 if child_bb is bb.immed_pdom:
                     print("[Simplify]   child: " + str(child_bb.id) + \
@@ -216,8 +240,10 @@ class CFG:
                 print("[Simplify] Removing BB: " + str(child_bb.id) + " " + str(child_bb.lines))
                 if child_bb in bb.immed_pdom.predes:
                     bb.immed_pdom.predes.remove(child_bb)
-                del self.id_to_bb_in_slice[child_bb.id]
-                self.ordered_bbs_in_slice.remove(child_bb)
+                if child_bb.id in self.id_to_bb_in_slice:
+                    del self.id_to_bb_in_slice[child_bb.id]
+                if child_bb in self.ordered_bbs_in_slice:
+                    self.ordered_bbs_in_slice.remove(child_bb)
                 ignore_set.add(child_bb)
 
     def slice(self, insn):
@@ -493,5 +519,6 @@ class StaticDepGraph:
 if __name__ == "__main__":
 
     static_graph = StaticDepGraph()
-    static_graph.buildControlFlowDependencies(0x409daa, "sweep", "909_ziptest_exe9")
+    #static_graph.buildControlFlowDependencies(0x409daa, "sweep", "909_ziptest_exe9")
+    static_graph.buildControlFlowDependencies(0x409408, "scanblock", "909_ziptest_exe9")
     #static_graph.buildDependencies(0x409daa, "sweep", "909_ziptest_exe9")

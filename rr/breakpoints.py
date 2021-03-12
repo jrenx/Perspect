@@ -32,36 +32,117 @@ class RunBreakCommands(gdb.Function):
         super(RunBreakCommands, self).__init__('run_break_commands')
 
     def invoke(self):
+        inside_loop = False
         with open(os.path.join(rr_dir, 'config.json')) as configFile:
             config = json.load(configFile)
 
-        regs = config['regs']
-        step = config['step']
-        deref = config['deref']
+        while True:
+            with open(os.path.join(rr_dir, 'breakpoints.log'), 'r') as f:
+                position = gdb.convenience_variable('log_position')
+                if position is not None:
+                    position = int(position)
+                    f.seek(position)
+                outs = f.readlines()
 
-        with open(os.path.join(rr_dir, 'breakpoints.log'), 'r') as f:
-            position = gdb.convenience_variable('log_position')
-            if position is not None:
-                position = int(position)
-                f.seek(position)
-            outs = f.readlines()
+            found_break_num = False
+            for line in outs:
+                match = re.match(r'Breakpoint (\d+),', line)
+                if not match:
+                    continue
+                break_num = int(match.group(0).split()[1][:-1]) - 1
+                is_go_file = line.split()[-1].split(':')[0].endswith('.go')
+                found_break_num = True
 
-        for line in outs:
-            match = re.match(r'Breakpoint (\d+),', line)
-            if not match:
-                continue
-            break_num = int(match.group(0).split()[1][:-1]) - 1
-            if break_num < len(regs):
-                if step:
-                    gdb.execute('si')
-                gdb.execute('i reg {}'.format(regs[break_num]))
-                if deref:
+            if not found_break_num:
+                return 0
+
+            if break_num >= len(config['regs']):
+                return 0
+
+            reg = config['regs'][break_num]
+            shift = config['shifts'][break_num]
+            off_reg = config['off_regs'][break_num]
+            src_reg = config['src_regs'][break_num]
+            offset = config['offsets'][break_num]
+            is_loop_insn = int(config['loop_insn_flags'][break_num])
+
+            arg = '('
+            if reg != '':
+                arg += '${}'.format(reg)
+            if shift != '0x0':
+                arg += '<<{}'.format(shift)  # TODO test this
+            if off_reg != '':
+                arg += '+${}*{}'.format(off_reg, offset)
+            elif offset != '0x0':
+                arg += '+{}'.format(offset)
+            arg += ')'
+
+            if config['step'] and not inside_loop:
+                gdb.execute('si')
+
+            for i in range(2):
+                try:
+                    cmd = 'p/x ' + arg
+                    gdb.execute(cmd)
+                    break
+                except Exception as e: #TODO is there a more specific error?
+                    if 'Argument to arithmetic operation not a number or boolean.' in str(e):
+                        if reg != '':
+                            gdb.execute('i reg ${}'.format(reg))
+                        if off_reg != '':
+                            gdb.execute('i reg ${}'.format(off_reg))
+                        with open(os.path.join(rr_dir, 'breakpoints.log'), 'r') as f:
+                            position = gdb.convenience_variable('log_position')
+                            if position is not None:
+                                position = int(position)
+                                f.seek(position)
+                            outs = f.readlines()
+                        reg_value = 0
+                        off_reg_value = 1
+                        for line in outs:
+                            if reg != '' and line.startswith(reg):
+                                reg_value = int(line.split(1), 16)
+                            if off_reg != '' and line.startswith(off_reg):
+                                off_reg_value = int(line.split(1), 16)
+                        addr = hex(reg_value + off_reg_value * int(offset, 16))
+                        print('[debug] computed addr is: ' + addr)
+                        arg = addr
+                    else:
+                        print('[debug] GDB command caused error: ' + cmd)
+                        raise e
+
+            if config['deref']:
+                if not is_go_file:  # TODO, is this right?
+                    cmd = 'p/x *((long *) ' + arg + ')'
+                else: # long type does not exist for go
+                    cmd = 'p/x *(' + arg + ')'
+                for i in range(3):
                     try:
-                        gdb.execute('p/x *((long *) ${})'.format(regs[break_num]))
-                    except gdb.MemoryError:
-                        print("memory error")
-                return 1
-        return 0
+                        gdb.execute(cmd)
+                        break
+                    except gdb.MemoryError as me:
+                        print('[debug] memory error: ' + str(me) + ' caused by cmd: ' + cmd)
+                        cmd = 'p/x *(' + arg + ')'
+                    except Exception as e: #TODO is there a more specific error?
+                        if 'Attempt to dereference a generic pointer.' in str(e):
+                            if '(' in src_reg or ',' in src_reg or '%' in src_reg: #FIXME: use regex to test for non alphebet and non number
+                                print('[debug] Source register format is not accepted: ' + src_reg)
+                                raise e
+                            cmd = 'p/x ${}'.format(src_reg) #TODO: sometimes the src is not a simple reg either
+                        else:
+                            print("[debug] GDB command caused error: " + cmd)
+                            raise e
+            if is_loop_insn != 1:
+                break
+            else:
+                print("[debug] Is a loop instruction, re-running.")
+                with open(os.path.join(rr_dir, 'breakpoints.log'), 'r') as f:
+                    f.seek(0, 2)
+                    position = f.tell()
+                gdb.set_convenience_variable('log_position', position)
+                gdb.execute('si')
+                inside_loop = True
+        return 1
 
 
 RunBreakCommands()

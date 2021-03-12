@@ -64,7 +64,7 @@ Block *getBasicBlock2(Function *f, long unsigned int addr);
 Block *getBasicBlockContainingInsnBeforeAddr(Function *f, long unsigned int addr);
 
 GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsigned int addr, char *regName);
-cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int addr, char *regName);
+cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int addr, char *regName, bool isKnownBitVar = false);
 
 void getReversePostOrderListHelper(Node::Ptr node, std::vector<Node::Ptr> *list);
 void getReversePostOrderList(GraphPtr slice, std::vector<Node::Ptr> *list);
@@ -72,7 +72,8 @@ void getReversePostOrderList(GraphPtr slice, std::vector<Node::Ptr> *list);
 void locateBitVariables(GraphPtr slice, 
 		boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
                 boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
-                boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations
+                boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations,
+                bool isKnownBitVar = false
 		);
 
 cJSON * printBBIdsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs);
@@ -299,7 +300,7 @@ Block *getBasicBlockContainingInsnBeforeAddr(Function *f, long unsigned int addr
   }
 
   if (target == NULL) {
-    cerr << "Failed to find basic block for function " << f->name() << " @ " << addr << endl;
+    cerr << "Failed to find basic block in function " << f->name() << " before " << addr << endl;
     return NULL;
   }
   return target;
@@ -316,7 +317,7 @@ Block *getBasicBlock2(Function *f, long unsigned int addr) {
   }
 
   if (target == NULL) {
-    cerr << "Failed to find basic block for function " << f->name() << " @ " << addr << endl;
+    cerr << "Failed to find basic block in function " << f->name() << " @ " << addr << endl;
     return NULL;
   }
   return target;
@@ -437,7 +438,7 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsign
 }
 
 
-cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int addr, char *regName) {
+cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int addr, char *regName, bool isKnownBitVar) {
   Function *func = getFunction2(progName, funcName);
   Block *bb = getBasicBlock2(func, addr);
   Instruction insn = bb->getInsn(addr);
@@ -446,7 +447,7 @@ cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int add
   boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariables;
   boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariablesToIgnore;
   boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> bitOperations;
-  locateBitVariables(slice, bitVariables, bitVariablesToIgnore, bitOperations);
+  locateBitVariables(slice, bitVariables, bitVariablesToIgnore, bitOperations, isKnownBitVar);
 
   // get all the leaf nodes.
   NodeIterator begin, end;
@@ -532,9 +533,10 @@ void getReversePostOrderList(GraphPtr slice,
 }
 
 void locateBitVariables(GraphPtr slice, 
-		boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
-                boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
-                boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations
+		  boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
+		  boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
+		  boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations,
+      bool isKnownBitVar
 		) {
 
   // Enqueue all the root nodes of the dataflow graph.
@@ -658,16 +660,20 @@ void locateBitVariables(GraphPtr slice,
 	      }
 	      break;
 	      default:
-	        if(DEBUG_BIT) cout << "[warn][slice] Unhandled case: " << assign->format()
+	        if(DEBUG_BIT) cout << "[bit_var][warn] Unhandled case: " << assign->format()
 	                           << " " << assign->insn().format() << endl;
       }
       continue;
     }
 
-    if (id == e_and) {
-      if(DEBUG_BIT) cout << "[slice] " << "FOUND an AND instruction, considered a mask: ";
-      if(DEBUG_BIT) cout << "[slice] " << assign->format() << " ";
-      if(DEBUG_BIT) cout << "[slice] " << assign->insn().format() << endl;
+    if (id == e_and || isKnownBitVar) {
+      if (id == e_and) {
+        if (DEBUG_BIT) cout << "[bit_var] " << "FOUND an AND instruction, considered a mask: ";
+      } else if (isKnownBitVar) {
+        if (DEBUG_BIT) cout << "[bit_var] " << "variable is known as a bit variable: ";
+      }
+      if(DEBUG_BIT) cout << "[bit_var] " << assign->format() << " ";
+      if(DEBUG_BIT) cout << "[bit_var] " << assign->insn().format() << endl;
       
       std::vector<AbsRegion> regions;
       for(auto iit = assign->inputs().begin(); iit != assign->inputs().end(); ++iit) {
@@ -948,21 +954,38 @@ extern "C" {
       if (INFO) cout << "[sa] func: " << funcName << endl;
 
       Function *func = getFunction2(progName, funcName);
-      Block *bb = getBasicBlockContainingInsnBeforeAddr(func, addr);
-
-      Instruction insn;
-      Block::Insns insns;
-      bb->getInsns(insns);
-      long unsigned int true_addr = 0;
-      for (auto it = insns.begin(); it != insns.end(); it++) {
-        //cout << "[tmp] " << std::hex << (*it).first  << " " << (*it).second.format() << endl;
-        if ((*it).first == addr)
-          break;
-        true_addr = (*it).first;
-        insn = (*it).second;
+      Block *bb = getBasicBlock2(func, addr);
+      Instruction insn = bb->getInsn(addr);
+      long unsigned int trueAddr = 0;
+      int isLoopInsn = 0; //TODO: fix the casings
+      if (insn.getOperation().getPrefixID() == prefix_rep ||
+          insn.getOperation().getPrefixID() == prefix_repnz) {
+        // Is a looped move
+        trueAddr = addr;
+        isLoopInsn = 1;
+        if (INFO) cout << "[sa] special looped move: ID: "
+                       << insn.getOperation().getID()  << " op: "
+                       << insn.getOperation().format() << endl;
+      } else if (func->entry() == bb && bb->start == addr) {
+        // Instruction is already the first in the function
+        if (INFO) cout << "[sa] instruction is the first in the function: " << insn.format() << endl;
+        trueAddr = addr;
+      } else {
+        bb = getBasicBlockContainingInsnBeforeAddr(func, addr);
+        //Instruction insn;
+        Block::Insns insns;
+        bb->getInsns(insns);
+        for (auto it = insns.begin(); it != insns.end(); it++) {
+          //cout << "[tmp] " << std::hex << (*it).first  << " " << (*it).second.format() << endl;
+          if ((*it).first == addr)
+            break;
+          trueAddr = (*it).first;
+          insn = (*it).second;
+        }
       }
       if (INFO) cout << "[sa] insn: " << insn.format() << endl;
-      cJSON_AddNumberToObject(json_insn, "true_addr", true_addr);
+      cJSON_AddNumberToObject(json_insn, "true_addr", trueAddr);
+      cJSON_AddNumberToObject(json_insn, "is_loop_insn", isLoopInsn);
 
       //AssignmentConverter ac(true, false);
       //vector<Assignment::Ptr> assignments;
@@ -982,7 +1005,9 @@ extern "C" {
         cJSON_AddStringToObject(json_write, "expr", writeStr.c_str());
         cJSON_AddItemToArray(json_writes, json_write);
       }
-
+      std::vector<Operand> ops;
+      insn.getOperands(ops);
+      cJSON_AddStringToObject(json_insn, "src", ops.rbegin() != ops.rend() ? (*ops.rbegin()).format(insn.getArch()).c_str() : "");
       cJSON_AddItemToObject(json_insn, "writes", json_writes);
       cJSON_AddItemToArray(json_insns, json_insn);
       if (DEBUG) cout << endl;
@@ -1000,7 +1025,7 @@ extern "C" {
   void backwardSlices(char *addrToRegNames, char *progName, char *funcName) {
     if (DEBUG) cout << "[sa] ================================" << endl;
     if (DEBUG) cout << "[sa] Making multiple backward slices: " << endl;
-    if (DEBUG) cout << "[sa] addr to reg: " << addrToRegNames << endl;
+    if (DEBUG) cout << "[sa] addr to reg: " << addrToRegNames << endl; // FIXME: maybe change to insn to reg, addr is instruction addr
     if (DEBUG) cout << "[sa] prog: " << progName << endl;
     if (DEBUG) cout << "[sa] func: " << funcName << endl;
 
@@ -1013,13 +1038,19 @@ extern "C" {
       cJSON *json_pair = cJSON_GetArrayItem(json_addrToRegNames, i);
       cJSON *json_regName = cJSON_GetObjectItem(json_pair, "reg_name");
       cJSON *json_addr = cJSON_GetObjectItem(json_pair, "addr");
+      cJSON *json_isBitVar = cJSON_GetObjectItem(json_pair, "is_bit_var");
 
       errno = 0;
       char *end;
       long unsigned int addr = strtol(json_addr->valuestring, &end, 10);
       if (errno != 0)
         cout << " Encountered error " << errno << " while parsing " << json_addr->valuestring << endl;
+
       char *regName = json_regName->valuestring;
+
+      bool isKnownBitVar = (strtol(json_isBitVar->valuestring, &end, 10) == 1) ? true : false;
+      if (errno != 0)
+        cout << " Encountered error " << errno << " while parsing " << json_isBitVar->valuestring << endl;
 
       cJSON *json_slice  = cJSON_CreateObject();
       cJSON_AddNumberToObject(json_slice, "addr", addr);
@@ -1029,7 +1060,7 @@ extern "C" {
       if (INFO) cout << endl << "[sa] addr: 0x" << std::hex << addr << endl;
       if (INFO) cout << "[sa] reg: " << regName << endl;
 
-      cJSON *json_reads = backwardSliceHelper(progName, funcName, addr, regName);
+      cJSON *json_reads = backwardSliceHelper(progName, funcName, addr, regName, isKnownBitVar);
       cJSON_AddItemToObject(json_slice, "reads", json_reads);
       cJSON_AddItemToArray(json_slices, json_slice);
       if (DEBUG) cout << endl;
@@ -1096,12 +1127,23 @@ int main() {
   // Set up information about the program to be instrumented 
   char *progName = "909_ziptest_exe9";
   //const char *funcName = "scanblock";
-  char *funcName = "sweep";
+  //char *funcName = "sweep";
+  char *funcName = "runtime.memmove";
   //backwardSlices("[{\"reg_name\": \"\", \"addr\": \"4234200\"}, {\"reg_name\": \"\", \"addr\": \"4234203\"}]",
   //    progName, funcName);
   // /home/anygroup/go-repro/909-go/src/pkg/runtime/mgc0.c:467
-  long unsigned int addr = 0x409daa;
-  getAllBBs(progName, funcName, addr);
+  //long unsigned int addr = 0x409daa;
+  long unsigned int addr = 0x408aff;
+  //long unsigned int addr = 0x408b02;
+  Function *func = getFunction2(progName, funcName);
+  Block *bb = getBasicBlock2(func, addr);
+  Instruction insn = bb->getInsn(addr);
+  cout << insn.getOperation().format() << endl;
+  //cout << insn.getOperation().getID() << endl;
+  //cout << (insn.getOperation().getID()  == 329) << endl;
+  cout << (insn.getOperation().getPrefixID() == prefix_rep) << endl;
+  cout << (insn.getOperation().getPrefixID() == prefix_repnz) << endl;
+  //getAllBBs(progName, funcName, addr);
 
   //BPatch_image *appImage = getImage(progName);
   //printAddrToLineMappings(appImage, funcName);

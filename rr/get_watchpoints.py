@@ -3,6 +3,7 @@ import json
 import os
 import re
 import time
+import datetime
 
 rr_dir = os.path.dirname(os.path.realpath(__file__))
 DEBUG = False
@@ -11,13 +12,17 @@ def run_watchpoint(breakpoints, watchpoints):
               'watchpoints': watchpoints}
     json.dump(config, open(os.path.join(rr_dir, 'config.json'), 'w'))
 
+    success = True
+    a = datetime.datetime.now()
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     try:
         rr_process.communicate(('source' + os.path.join(rr_dir, 'get_watchpoints')).encode(), timeout=300)
     except subprocess.TimeoutExpired:
         rr_process.kill()
-        return False
-    return True
+        success = False
+    b = datetime.datetime.now()
+    print("Running watchpoints took: " + str(b - a))
+    return success
 
 def parse_watchpoint(breakpoints, watchpoints):
     """
@@ -29,7 +34,7 @@ def parse_watchpoint(breakpoints, watchpoints):
     """
     result = []
     curr_watch_num = -1
-
+    watchpoints_not_seen = set(watchpoints)
     with open(os.path.join(rr_dir, 'watchpoints.log'), 'r') as log:
         for line in log:
             if re.search(r'Breakpoint \d+,', line):
@@ -47,8 +52,12 @@ def parse_watchpoint(breakpoints, watchpoints):
                 segs = line.split()
                 addr = segs[1]
                 func = segs[3].strip('<').strip('>').split('+')[0]
-                result.append((watchpoints[curr_watch_num], addr, func))
+                watchpoint = watchpoints[curr_watch_num]
+                result.append((watchpoint, addr, func))
+                if watchpoint in watchpoints_not_seen:
+                    watchpoints_not_seen.remove(watchpoint)
                 curr_watch_num = -1
+    print('[rr][warn] watchpoints not seen: ' + str(watchpoints_not_seen))
     if DEBUG:
         timestamp = str(time.time())
         print("[rr] renaming to " + str(os.path.join(rr_dir, 'watchpoints.log' + '.' + timestamp)))
