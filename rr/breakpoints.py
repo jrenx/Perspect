@@ -115,7 +115,10 @@ class RunBreakCommands(gdb.Function):
                 if not is_go_file:  # TODO, is this right?
                     cmd = 'p/x *((long *) ' + arg + ')'
                 else: # long type does not exist for go
-                    cmd = 'p/x *(' + arg + ')'
+                    if '(' in src_reg or ',' in src_reg or '%' in src_reg:  # FIXME: use regex to test for non alphebet and non number
+                        cmd = 'p/x *(' + arg + ')'
+                    else:
+                        cmd = 'p/x ${}'.format(src_reg)  # TODO: sometimes the src is not a simple reg either
                 for i in range(3):
                     try:
                         gdb.execute(cmd)
@@ -124,14 +127,14 @@ class RunBreakCommands(gdb.Function):
                         print('[debug] memory error: ' + str(me) + ' caused by cmd: ' + cmd)
                         cmd = 'p/x *(' + arg + ')'
                     except Exception as e: #TODO is there a more specific error?
-                        if 'Attempt to dereference a generic pointer.' in str(e):
-                            if '(' in src_reg or ',' in src_reg or '%' in src_reg: #FIXME: use regex to test for non alphebet and non number
-                                print('[debug] Source register format is not accepted: ' + src_reg)
-                                raise e
-                            cmd = 'p/x ${}'.format(src_reg) #TODO: sometimes the src is not a simple reg either
-                        else:
-                            print("[debug] GDB command caused error: " + cmd)
-                            raise e
+                        #if 'Attempt to dereference a generic pointer.' in str(e):
+                        #    if '(' in src_reg or ',' in src_reg or '%' in src_reg: #FIXME: use regex to test for non alphebet and non number
+                        #        print('[debug] Source register format is not accepted: ' + src_reg)
+                        #        raise e
+                        #    cmd = 'p/x ${}'.format(src_reg) #TODO: sometimes the src is not a simple reg either
+                        #else:
+                        print("[debug] GDB command caused error: " + cmd)
+                        raise e
             if is_loop_insn != 1:
                 break
             else:

@@ -6,7 +6,7 @@ import time
 import datetime
 
 rr_dir = os.path.dirname(os.path.realpath(__file__))
-DEBUG = False
+DEBUG = True
 def run_watchpoint(breakpoints, watchpoints):
     config = {'breakpoints': breakpoints,
               'watchpoints': watchpoints}

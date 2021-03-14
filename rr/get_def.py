@@ -385,6 +385,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                 if len(unknown_writes_indices) == 0:
                     print("Only found the writes that lead to positive branch outcome, looking for other writes now...")
                     pos_pass = False
+                    return results #TODO remove this
 
             if not pos_pass:
                 read_filter = set([get_def_insn_index_for_branch(index, [read], breakpoint_trace) for index in not_taken_indices])
