@@ -20,7 +20,6 @@ def parseLoadsOrStores(json_exprs):
     data_points = []
     data_points_set = set()
     for json_expr in json_exprs:
-        # In the form: |4234758,RSP + 68|4234648,RSP + 68
         insn_addr = None
         if 'insn_addr' in json_expr:
             insn_addr = json_expr['insn_addr']
@@ -84,6 +83,39 @@ def parseLoadsOrStores(json_exprs):
                         " shift " + str(shift) + " off " + str(off) + " insn addr: " + str(insn_addr))
         data_points.append([insn_addr, reg, shift, off, off_reg])
     return data_points
+
+
+#FIXME: call instructions insns and not addrs
+def get_mem_writes_to_static_addrs(prog):
+    print()
+    print( "[main] getting the instructions that write to static addresses: ")
+    # https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
+    # https://bugs.python.org/issue1701409
+
+    prog_name = c_char_p(str.encode(prog))
+
+    if DEBUG_CTYPE: print( "[main] prog: " + prog)
+    if DEBUG_CTYPE: print( "[main] : " + "Calling C")
+
+    lib.getMemWritesToStaticAddresses(prog_name)
+    if DEBUG_CTYPE: print( "[main] : Back from C")
+
+    mem_writes_per_insn = []
+    f = open(os.path.join(curr_dir, 'writesToStaticAddr_result'))
+    json_insn_to_writes = json.load(f)
+    data_points = {}
+    for json_insn_to_write in json_insn_to_writes:
+        insn_addr = json_insn_to_write['insn_addr']
+        expr = hex(int(json_insn_to_write['expr'], 16))
+        func = json_insn_to_write['func']
+        if expr not in data_points:
+            data_points[expr] = []
+        data_points[expr].append([insn_addr, func])
+    f.close()
+
+    if DEBUG_CTYPE: print( "[main] " + str(data_points))
+    return data_points
+
 
 #FIXME: call instructions insns and not addrs
 def get_mem_writes(insn_to_func, prog):

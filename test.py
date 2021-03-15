@@ -33,6 +33,7 @@ def main():
     #test_ins_trace()
     #test_func_trace()
     test_rr_slice()
+    #get_mem_writes_to_static_addrs('909_ziptest_exe9')
  
 if __name__ == "__main__":
     main()
