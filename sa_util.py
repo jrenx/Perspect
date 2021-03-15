@@ -84,6 +84,36 @@ def parseLoadsOrStores(json_exprs):
         data_points.append([insn_addr, reg, shift, off, off_reg])
     return data_points
 
+#FIXME: call instructions insns and not addrs
+def get_func_to_callsites(prog):
+    print()
+    print( "[main] getting all functions' callsites: ")
+    # https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
+    # https://bugs.python.org/issue1701409
+
+    prog_name = c_char_p(str.encode(prog))
+
+    if DEBUG_CTYPE: print( "[main] prog: " + prog)
+    if DEBUG_CTYPE: print( "[main] : " + "Calling C")
+
+    lib.getCalleeToCallsites(prog_name)
+    if DEBUG_CTYPE: print( "[main] : Back from C")
+
+    f = open(os.path.join(curr_dir, 'functionToCallSites_result'))
+    json_func_to_callsites_array = json.load(f)
+    data_points = {}
+    for json_func_to_callsites in json_func_to_callsites_array:
+        func_name = json_func_to_callsites['func']
+        json_callsites = json_func_to_callsites['callsites']
+        callsites = []
+        for json_callsite in json_callsites:
+            call_insn = json_callsite['insn_addr']
+            callsites.append(call_insn)
+        data_points[func_name] = callsites
+    f.close()
+
+    if DEBUG_CTYPE: print( "[main] sa returned  " + str(data_points))
+    return data_points
 
 #FIXME: call instructions insns and not addrs
 def get_mem_writes_to_static_addrs(prog):
@@ -113,7 +143,7 @@ def get_mem_writes_to_static_addrs(prog):
         data_points[expr].append([insn_addr, func])
     f.close()
 
-    if DEBUG_CTYPE: print( "[main] " + str(data_points))
+    if DEBUG_CTYPE: print( "[main] sa returned " + str(data_points))
     return data_points
 
 
@@ -143,7 +173,7 @@ def get_mem_writes(insn_to_func, prog):
     mem_writes_per_insn = []
     f = open(os.path.join(curr_dir, 'writesPerInsn_result'))
     json_writes_per_insn = json.load(f)
-    if DEBUG_CTYPE: print("[main] : returned: " + str(json_writes_per_insn))
+    if DEBUG_CTYPE: print("[main] : sa returned: " + str(json_writes_per_insn))
     for json_writes in json_writes_per_insn:
         if len(json_writes) == 0:
             continue
@@ -158,7 +188,7 @@ def get_mem_writes(insn_to_func, prog):
         mem_writes_per_insn.append([insn, func_name, data_points, true_insn_addr, src_reg, is_loop_insn])
     f.close()
 
-    if DEBUG_CTYPE: print( "[main] " + str(mem_writes_per_insn))
+    if DEBUG_CTYPE: print( "[main] sa returned " + str(mem_writes_per_insn))
     return mem_writes_per_insn
 
 def static_backslices(reg_to_addr, func, prog):
@@ -208,7 +238,7 @@ def static_backslices(reg_to_addr, func, prog):
         data_points_per_reg.append([reg_name, addr, data_points])
     f.close()
 
-    if DEBUG_CTYPE: print( "[main] " + str(data_points_per_reg))
+    if DEBUG_CTYPE: print( "[main] returned" + str(data_points_per_reg))
     return data_points_per_reg
 
 def static_backslice(reg, insn, func, prog):
@@ -238,7 +268,7 @@ def static_backslice(reg, insn, func, prog):
     data_points = parseReads(json_reads)
     f.close()
 
-    if DEBUG_CTYPE: print( "[main] " + str(data_points))
+    if DEBUG_CTYPE: print( "[main] returned " + str(data_points))
     return data_points
 
 

@@ -244,8 +244,8 @@ Function *getFunction2(const char *binaryPath, const char *funcName) {
     return NULL;
   }
 
-  SymtabCodeSource *sts = new SymtabCodeSource((char *)binaryPath);
-  CodeObject *co = new CodeObject(sts);
+  SymtabCodeSource *stcs = new SymtabCodeSource((char *)binaryPath);
+  CodeObject *co = new CodeObject(stcs);
 
   co->parse();
 
@@ -822,7 +822,7 @@ extern "C" {
     cJSON_Delete(json_bbs);
     out << rendered;
     out.close();
-    if(DEBUG) cout << "[sa] all predecessors saved to \"getAllPredes_result\"";
+    if(DEBUG) cout << "[sa] all results saved to \"getAllPredes_result\"";
     if(DEBUG) cout << endl;
     return;
   }
@@ -845,7 +845,7 @@ extern "C" {
     cJSON_Delete(json_bbs);
     out << rendered;
     out.close();
-    if(DEBUG) cout << "[sa] all predecessors saved to \"getAllPredes_result\"";
+    if(DEBUG) cout << "[sa] all results saved to \"getAllPredes_result\"";
     if(DEBUG) cout << endl;
     return;
   }
@@ -920,6 +920,83 @@ extern "C" {
     Instruction ifCond = getIfCondition2(immedDom);
     //TODO
   }
+
+void getCalleeToCallsites(char *progName) {
+  if (DEBUG) cout << "[sa] ================================" << endl;
+  if (DEBUG) cout << "[sa] prog: " << progName << endl;
+
+  SymtabAPI::Symtab *symTab;
+  string binaryPathStr(progName);
+  bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
+  if (isParsable == false) {
+    fprintf(stderr, "File cannot be parsed: %s.\n", progName);
+    return;
+  }
+
+  SymtabCodeSource *sts = new SymtabCodeSource((char *)progName);
+  CodeObject *co = new CodeObject(sts);
+
+  co->parse();
+  const CodeObject::funclist &all = co->funcs();
+  if (all.size() == 0) {
+    fprintf(stderr, "No function in file %s.\n", progName);
+    return;
+  }
+
+  boost::unordered_map<Function *, std::vector<std::pair<Instruction, long unsigned int>>>
+      functionToCallsite;
+  for (auto fit = all.begin(); fit != all.end(); ++fit) {
+    Function *f = *fit;
+    if (DEBUG) cout << "[sa] current function: " << f->name() << endl;
+    Function::edgelist list = f->callEdges();
+    for(auto cit = list.begin(); cit != list.end(); cit++) {
+      Block* src = (*cit)->src();
+      Block* trg = (*cit)->trg();
+      Function *trg_func = co->findFuncByEntry(trg->region(), trg->start());
+      if (trg_func == NULL) {
+        if (DEBUG) cout << "[sa]   function not found at: " << trg->start() << endl;
+        continue;
+      }
+      if (DEBUG) cout << "[sa]   calls function: " << trg_func->name() << endl;
+      Block::Insns insns;
+      src->getInsns(insns);
+      long unsigned int addr = 0;
+      Instruction insn;
+      for (auto iit = insns.begin(); iit != insns.end(); iit++) { //TODO is call
+        insn = (*iit).second;
+        if (DEBUG) cout << "[sa]   checking src insn: " << insn.format() << endl;
+        if (insn.getCategory() != c_CallInsn && insn.getCategory() != c_BranchInsn) continue;
+        addr = (*iit).first;
+      }
+      functionToCallsite[f].push_back(std::pair<Instruction, long unsigned int>(insn, addr));
+    }
+  }
+
+  cJSON *json_funcs  = cJSON_CreateArray();
+  for (auto mit = functionToCallsite.begin(); mit != functionToCallsite.end(); mit++) {
+    Function *f = mit->first;
+    std::vector<std::pair<Instruction, long unsigned int>> callsites = mit->second;
+    cJSON *json_func = cJSON_CreateObject();
+    cJSON_AddStringToObject(json_func, "func", f->name().c_str());
+    cJSON *json_callsites  = cJSON_CreateArray();
+    for (auto cit = callsites.begin(); cit != callsites.end(); cit++) {
+      cJSON *json_callsite = cJSON_CreateObject();
+      cJSON_AddNumberToObject(json_callsite, "insn_addr", cit->second);
+      cJSON_AddItemToArray(json_callsites, json_callsite);
+    }
+    cJSON_AddItemToObject(json_func, "callsites",  json_callsites);
+    cJSON_AddItemToArray(json_funcs, json_func);
+  }
+
+  char *rendered = cJSON_Print(json_funcs);
+  cJSON_Delete(json_funcs);
+  std::ofstream out("functionToCallSites_result");
+  out << rendered;
+  out.close();
+
+  if(DEBUG) cout << "[sa] all results saved to \"functionToCallSites_result\"";
+  if(DEBUG) cout << endl;
+}
 
   void getMemWritesToStaticAddresses(char *progName) {
     if (DEBUG) cout << "[sa] ================================" << endl;
@@ -1006,7 +1083,7 @@ extern "C" {
     out << rendered;
     out.close();
 
-    if(DEBUG) cout << "[sa] all predecessors saved to \"writesToStaticAddr_result\"";
+    if(DEBUG) cout << "[sa] all results saved to \"writesToStaticAddr_result\"";
     if(DEBUG) cout << endl;
   }
 
@@ -1107,7 +1184,7 @@ extern "C" {
     out << rendered;
     out.close();
 
-    if(DEBUG) cout << "[sa] all predecessors saved to \"writesPerInsn_result\"";
+    if(DEBUG) cout << "[sa] all results saved to \"writesPerInsn_result\"";
     if(DEBUG) cout << endl;
   }
 
@@ -1188,7 +1265,7 @@ extern "C" {
     out << rendered;
     out.close();
 
-    if(DEBUG) cout << "[sa] all predecessors saved to \"backwardSlices_result\"";
+    if(DEBUG) cout << "[sa] all results saved to \"backwardSlices_result\"";
     if(DEBUG) cout << endl;
   }
 
@@ -1209,14 +1286,15 @@ extern "C" {
     out << rendered;
     out.close();
 
-    if(DEBUG) cout << "[sa] all predecessors saved to \"backwardSlice_result\"";
+    if(DEBUG) cout << "[sa] all results saved to \"backwardSlice_result\"";
     if(DEBUG) cout << endl;
   }
 }
 
 int main() {
   char *progName = "909_ziptest_exe9";
-  getMemWritesToStaticAddresses(progName);
+  getCalleeToCallsites(progName);
+  //getMemWritesToStaticAddresses(progName);
   /*
   // Set up information about the program to be instrumented 
   char *progName = "909_ziptest_exe9";
