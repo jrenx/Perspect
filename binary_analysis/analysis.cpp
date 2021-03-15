@@ -1163,7 +1163,9 @@ extern "C" {
 
       char *regName = json_regName->valuestring;
 
-      bool isKnownBitVar = (strtol(json_isBitVar->valuestring, &end, 10) == 1) ? true : false;
+      bool isKnownBitVar = false;
+      if (json_isBitVar != NULL)
+        isKnownBitVar = (strtol(json_isBitVar->valuestring, &end, 10) == 1) ? true : false;
       if (errno != 0)
         cout << " Encountered error " << errno << " while parsing " << json_isBitVar->valuestring << endl;
 
