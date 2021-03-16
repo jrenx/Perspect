@@ -7,7 +7,7 @@ from collections import deque
 from collections import OrderedDict
 import shutil
 from static_dep_graph import *
-from pin.instruction_trace import *
+from pin.instruction_reg_trace import *
 
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 target_dir = os.path.join(curr_dir, 'dynamicGraph')
@@ -28,7 +28,10 @@ class DynamicNode:
         self.cf_predes = []
         self.cf_predes_insn_id = []
         self.cf_success = []
+        self.df_predes = []
+        self.df_success =[]
         self.mem_load = None
+        self.mem_addr = None
 
     def __str__(self):
         s = "===============================================\n"
@@ -63,21 +66,26 @@ class DynamicNode:
 class DynamicDependence:
     def __init__(self):
         self.start_insn = None
-        self.all_static_nodes = []
+        self.all_static_cf_nodes = []
+        self.all_static_df_nodes = []
         self.dynamicNodes = []
         self.insn_to_nodes = {}
+
         pass
 
     def getDynamicExecutable(self):
 
-        instructions = []
-        for node in self.all_static_nodes:
-            instructions.append(hex(node.insn))
+        instructions = {}
+        for node in self.all_static_cf_nodes:
+            instructions[hex(node.insn)] = 'pc'
+
+        for node in self.all_static_df_nodes:
+            instructions[hex(node.insn)] = node.mem_load.reg.lower()
 
         # invoke PIN. get output of a sequence of insn
-        trace = InsTrace('/home/anygroup/perf_debug_tool/909_ziptest_exe9 /home/anygroup/perf_debug_tool/test.zip',
+        trace = InsRegTrace('/home/anygroup/perf_debug_tool/909_ziptest_exe9 /home/anygroup/perf_debug_tool/test.zip',
                          pin='~/pin-3.11/pin')
-        trace.run_instruction_trace(instructions)
+        trace.run_function_trace(instructions)
         executable_path = os.path.join(curr_dir, 'pin', 'instruction_trace.out')
         #executable_path = os.path.join(curr_dir, 'pin', 'result')
 
@@ -87,10 +95,14 @@ class DynamicDependence:
 
         # Get slice
         static_graph = StaticDepGraph()
-        static_graph.buildControlFlowDependencies(insn, func, prog)
-        self.all_static_nodes = static_graph.nodes_in_cf_slice
+        static_graph.buildDependencies(insn, func, prog)
+        self.all_static_cf_nodes = static_graph.nodes_in_cf_slice
+        self.all_static_df_nodes = static_graph.nodes_in_df_slice
 
-        for node in self.all_static_nodes:
+        for node in self.all_static_cf_nodes:
+            self.insn_to_nodes[str(hex(node.insn))] = node
+
+        for node in self.all_static_df_nodes:
             self.insn_to_nodes[str(hex(node.insn))] = node
 
     def buildDynamicControlFlowGraph(self, func, prog, insn, executable_path):
@@ -120,7 +132,7 @@ class DynamicDependence:
 
         self.getSlice(insn, func, prog)
         executable_path = self.getDynamicExecutable()
-        self.buildDynamicControlFlowGraph(func, prog, insn, executable_path)
+        #self.buildDynamicControlFlowGraph(func, prog, insn, executable_path)
 
 
 class DynamicCFG:
@@ -238,5 +250,6 @@ if __name__ == '__main__':
     dynamic_graph = DynamicDependence()
     dynamic_graph.buildDynamicControlFlowDep(0x409daa, "sweep", "909_ziptest_exe9")
     #dynamic_graph.buildDynamicControlFlowDep(0x409408, "scanblock", "909_ziptest_exe9")
+
 
 

@@ -22,7 +22,9 @@ class InsRegTrace:
 
         pin_program_list.append('--')
         pin_program_list.extend(self.program)
-        subprocess.call(' '.join(pin_program_list), shell=True)
+        pin_cmd = ' '.join(pin_program_list)
+        print(pin_cmd)
+        subprocess.call(pin_cmd, shell=True)
 
     def parse_break_points(self, branch, target):
         count = -1
@@ -44,6 +46,7 @@ class InsRegTrace:
 
 
 if __name__ == '__main__':
-    trace = InsRegTrace('~/go-repro/909_ziptest_exe2 ~/go-repro/909_ziptest/test.zip', pin='~/pin-3.11/pin')
+    trace = InsRegTrace('/home/anygroup/perf_debug_tool/909_ziptest_exe9 /home/anygroup/perf_debug_tool/test.zip', pin='~/pin-3.11/pin')
     trace.run_function_trace({"0x409c41": "pc", "0x409c70": "pc", "0x409c10": 'rbp'})
     # instruction1 -> register1, instruction2 -> register2
+
