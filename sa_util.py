@@ -191,7 +191,7 @@ def get_mem_writes(insn_to_func, prog):
     if DEBUG_CTYPE: print( "[main] sa returned " + str(mem_writes_per_insn))
     return mem_writes_per_insn
 
-def static_backslices(reg_to_addr, func, prog):
+def static_backslices(slice_starts, prog):
     print()
     print( "[main] taking static backslices: ")
     # https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
@@ -199,28 +199,28 @@ def static_backslices(reg_to_addr, func, prog):
 
     regname_to_reg = {}
 
-    reg_to_addr_json = []
-    for pair in reg_to_addr:
-        reg = pair[0]
+    slice_starts_json = []
+    for line in slice_starts:
+        reg = line[0]
         if reg == "":
             reg_name = reg
         else:
             reg_name = "[x86_64::" + reg + "]"
         regname_to_reg[reg_name] = reg
 
-        addr = str(pair[1])
-        reg_to_addr_json.append({'reg_name': reg_name, 'addr': addr})
-    json_str = json.dumps(reg_to_addr_json)
-    reg_to_addr_str = c_char_p(str.encode(json_str))
-    func_name = c_char_p(str.encode(func))
+        addr = str(line[1])
+        func = line[2]
+        is_bit_var = 0 if line[3] is False else 1
+        slice_starts_json.append({'reg_name': reg_name, 'addr': addr, 'func_name': func, 'is_bit_var': is_bit_var})
+    json_str = json.dumps(slice_starts_json)
+    slice_starts_str = c_char_p(str.encode(json_str))
     prog_name = c_char_p(str.encode(prog))
 
-    if DEBUG_CTYPE: print( "[main] reg to addr: " + json_str)
-    if DEBUG_CTYPE: print( "[main] func: " + func)
+    if DEBUG_CTYPE: print( "[main] slice starts: " + json_str)
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] : " + "Calling C")
 
-    lib.backwardSlices(reg_to_addr_str, prog_name, func_name)
+    lib.backwardSlices(slice_starts_str, prog_name)
     if DEBUG_CTYPE: print( "[main] : Back from C")
 
     data_points_per_reg = []

@@ -451,7 +451,7 @@ class StaticDepGraph:
         self.buildDataFlowDependencies(func, prog)
 
     def buildDataFlowDependencies(self, func, prog):
-        reg_to_addr = []
+        slice_starts = []
         addr_to_node = {}
         for node in self.nodes_in_cf_slice:
             bb = node.bb
@@ -459,10 +459,10 @@ class StaticDepGraph:
                 continue
             insn = bb.last_insn
             print(hex(insn))
-            reg_to_addr.append(["", insn])
+            slice_starts.append(["", insn, func, False])
             assert insn not in addr_to_node
             addr_to_node[insn] = node
-        results = static_backslices(reg_to_addr, func, prog)
+        results = static_backslices(slice_starts, prog)
         for result in results:
             #reg_name = result[0]
             insn = result[1]

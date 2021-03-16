@@ -1214,23 +1214,23 @@ void getCalleeToCallsites(char *progName) {
     out.close();
   }
 
-  void backwardSlices(char *addrToRegNames, char *progName, char *funcName) {
+  void backwardSlices(char *addrToRegNames, char *progName) {
     if (DEBUG) cout << "[sa] ================================" << endl;
     if (DEBUG) cout << "[sa] Making multiple backward slices: " << endl;
     if (DEBUG) cout << "[sa] addr to reg: " << addrToRegNames << endl; // FIXME: maybe change to insn to reg, addr is instruction addr
     if (DEBUG) cout << "[sa] prog: " << progName << endl;
-    if (DEBUG) cout << "[sa] func: " << funcName << endl;
 
     cJSON *json_slices = cJSON_CreateArray();
 
-    cJSON *json_addrToRegNames = cJSON_Parse(addrToRegNames);
-    int size = cJSON_GetArraySize(json_addrToRegNames);
+    cJSON *json_sliceStarts = cJSON_Parse(addrToRegNames);
+    int size = cJSON_GetArraySize(json_sliceStarts);
     if (DEBUG) cout << "[sa] size of addr to reg array is:　" << size << endl;
     for (int i = 0; i < size; i++) {
-      cJSON *json_pair = cJSON_GetArrayItem(json_addrToRegNames, i);
-      cJSON *json_regName = cJSON_GetObjectItem(json_pair, "reg_name");
-      cJSON *json_addr = cJSON_GetObjectItem(json_pair, "addr");
-      cJSON *json_isBitVar = cJSON_GetObjectItem(json_pair, "is_bit_var");
+      cJSON *json_sliceStart = cJSON_GetArrayItem(json_sliceStarts, i);
+      cJSON *json_regName = cJSON_GetObjectItem(json_sliceStart, "reg_name");
+      cJSON *json_addr = cJSON_GetObjectItem(json_sliceStart, "addr");
+      cJSON *json_funcName = cJSON_GetObjectItem(json_sliceStart, "func_name");
+      cJSON *json_isBitVar = cJSON_GetObjectItem(json_sliceStart, "is_bit_var");
 
       errno = 0;
       char *end;
@@ -1239,10 +1239,8 @@ void getCalleeToCallsites(char *progName) {
         cout << " Encountered error " << errno << " while parsing " << json_addr->valuestring << endl;
 
       char *regName = json_regName->valuestring;
-
-      bool isKnownBitVar = false;
-      if (json_isBitVar != NULL)
-        isKnownBitVar = (strtol(json_isBitVar->valuestring, &end, 10) == 1) ? true : false;
+      char *funcName = json_funcName->valuestring;
+      bool isKnownBitVar = (json_isBitVar->valueint == 1) ? true : false;
       if (errno != 0)
         cout << " Encountered error " << errno << " while parsing " << json_isBitVar->valuestring << endl;
 
