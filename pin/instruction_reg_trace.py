@@ -46,3 +46,4 @@ class InsRegTrace:
 if __name__ == '__main__':
     trace = InsRegTrace('~/go-repro/909_ziptest_exe2 ~/go-repro/909_ziptest/test.zip', pin='~/pin-3.11/pin')
     trace.run_function_trace({"0x409c41": "pc", "0x409c70": "pc", "0x409c10": 'rbp'})
+    # instruction1 -> register1, instruction2 -> register2

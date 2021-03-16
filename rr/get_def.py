@@ -246,6 +246,11 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     src_regs = ['']
     loop_insn_flags = ['0']
 
+    all_unique_writes = set()
+    results = []
+
+    all_static_addr_writes = get_mem_writes_to_static_addrs(prog)
+
     # First pass
     print("[rr] Running breakpoints for first step")
     print("[rr] Breakpoints: " + str(reg_points))
@@ -264,6 +269,22 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                     for index in taken_indices])
     print("[rr] Total number of unique addresses read when branch outcome was positive: " + str(len(all_addrs)))
     print("[tmp] " + str(all_addrs))
+    static_addrs = all_addrs.intersection(set(all_static_addr_writes.keys()))
+    all_addrs = all_addrs.difference(set(all_static_addr_writes.keys()))
+    print("[tmp] addrs after static write addrs are moved" + str(all_addrs))
+
+    for static_addr in static_addrs:
+        for insn, func in all_static_addr_writes[static_addr]:
+            curr_insn = '*' + hex(insn)
+            reg_points.append(curr_insn)
+            regs.append('')
+            shifts.append('')
+            offsets.append(static_addr)  # already in hex
+            off_regs.append('')
+            src_regs.append('')
+            loop_insn_flags.append('0')
+            results.append([static_addr, curr_insn, func])
+
     addrs = set()
     for a in all_addrs:
         addrs.add(a)
@@ -281,9 +302,6 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     #               for index in branch_indices]
     #watchpoint_taken_indices = range(0, 4)
     #watchpoint_not_taken_indices = range(4, 8)
-
-    all_unique_writes = set()
-    results = []
 
     pos_pass = True
 
@@ -351,11 +369,12 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                 reg_points.append(curr_insn)
                 regs.append(curr_expr[1].strip().lower() if curr_expr[1] is not None else '')
                 shifts.append(hex(curr_expr[2]))
-                offsets.append(hex(curr_expr[3]))
+                offsets.append(hex(curr_expr[3])) #FIXME, when parsing should probably just return hex
                 off_regs.append(curr_expr[4].strip().lower() if curr_expr[4] is not None else '')
                 src_regs.append(line[4].strip().strip('%').lower())
                 loop_insn_flags.append(line[5])
                 results.append([curr_expr[1:], true_insn_addr, func])
+
             print("[rr] all insns found " + str(reg_points))
             print("[rr] all registers found " + str(regs))
 
@@ -385,6 +404,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                 if len(unknown_writes_indices) == 0:
                     print("Only found the writes that lead to positive branch outcome, looking for other writes now...")
                     pos_pass = False
+                    return results #TODO remove this
 
             if not pos_pass:
                 read_filter = set([get_def_insn_index_for_branch(index, [read], breakpoint_trace) for index in not_taken_indices])

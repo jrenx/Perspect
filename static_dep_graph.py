@@ -360,7 +360,7 @@ class MemoryLoad:
         self.off = off
 
     def __str__(self):
-        s = "Memory load: " + str(self.reg) + " * " \
+        s = "Memory load address: " + str(self.reg) + " * " \
             + str(self.shift) + " + " + str(self.off)
         return s
 
@@ -368,10 +368,11 @@ class MemoryLoad:
 class StaticNode:
     id = 0
 
-    def __init__(self, insn, bb):
+    def __init__(self, insn, bb, function):
         self.id = StaticNode.id
         StaticNode.id += 1
         self.insn = insn
+        self.function = function
 
         ##### for control flow #####
         self.bb = bb
@@ -386,6 +387,11 @@ class StaticNode:
         # 1. a constant 2. function parameter 3. memory load
         # "mem_load" describes the address of the memory load
         self.mem_load = None
+        self.reg_load = None
+
+        self.mem_write = None # none-local data flow dependency
+        self.reg_write = None # local data flow dependency TODO fill in something
+
         self.df_predes = []
         self.df_succes = []
 
@@ -432,10 +438,10 @@ class StaticDepGraph:
         self.nodes_in_cf_slice = []
         self.nodes_in_df_slice = []
 
-    def make_node(self, insn, bb):
+    def make_node(self, insn, bb, function):
         if insn in self.insn_to_node:
             return self.insn_to_node[insn]
-        node = StaticNode(insn, bb)
+        node = StaticNode(insn, bb, function)
         self.id_to_node[node.id] = node
         self.insn_to_node[insn] = node
         return node
@@ -471,10 +477,11 @@ class StaticDepGraph:
                 shift = load[2]
                 off = load[3]
 
-                prede = self.make_node(prede_insn, None)
+                prede = self.make_node(prede_insn, None, func)
                 if prede not in self.nodes_in_df_slice:
                     self.nodes_in_df_slice.append(prede)
                 prede.mem_load = MemoryLoad(prede_reg, shift, off)
+                prede.reg_write = '' #TODO put actual register name here
                 succe.df_predes.append(prede)
                 prede.df_succes.append(succe)
 
@@ -492,10 +499,10 @@ class StaticDepGraph:
         #TODO, might want to keep trap of the starting instruction
         for bb in cfg.ordered_bbs:
             if first:
-                node = self.make_node(insn, bb)
+                node = self.make_node(insn, bb, func)
                 first = False
             else:
-                node = self.make_node(bb.last_insn, bb)
+                node = self.make_node(bb.last_insn, bb, func)
                 #TODO,does it matter if we use the first instruction instead?
             bb_id_to_node_id[bb.id] = node.id
             if bb.id in cfg.id_to_bb_in_slice:
@@ -520,5 +527,5 @@ if __name__ == "__main__":
 
     static_graph = StaticDepGraph()
     #static_graph.buildControlFlowDependencies(0x409daa, "sweep", "909_ziptest_exe9")
-    static_graph.buildControlFlowDependencies(0x409408, "scanblock", "909_ziptest_exe9")
-    #static_graph.buildDependencies(0x409daa, "sweep", "909_ziptest_exe9")
+    #static_graph.buildControlFlowDependencies(0x409408, "scanblock", "909_ziptest_exe9")
+    static_graph.buildDependencies(0x409daa, "sweep", "909_ziptest_exe9")

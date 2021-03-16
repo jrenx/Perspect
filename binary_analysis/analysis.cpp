@@ -221,7 +221,7 @@ Instruction getIfCondition(BPatch_basicBlock *block) {
 }
 /***************************************************************/
 BPatch_function *getFunction(BPatch_image *appImage, const char *funcName){
-  vector < BPatch_function * > functions;
+  vector<BPatch_function *> functions;
   appImage->findFunction(funcName, functions);
   if (functions.size() == 0) {
     fprintf(stderr, "Loading function %s failed.\n", funcName);
@@ -244,8 +244,8 @@ Function *getFunction2(const char *binaryPath, const char *funcName) {
     return NULL;
   }
 
-  SymtabCodeSource *sts = new SymtabCodeSource((char *)binaryPath);
-  CodeObject *co = new CodeObject(sts);
+  SymtabCodeSource *stcs = new SymtabCodeSource((char *)binaryPath);
+  CodeObject *co = new CodeObject(stcs);
 
   co->parse();
 
@@ -822,7 +822,7 @@ extern "C" {
     cJSON_Delete(json_bbs);
     out << rendered;
     out.close();
-    if(DEBUG) cout << "[sa] all predecessors saved to \"getAllPredes_result\"";
+    if(DEBUG) cout << "[sa] all results saved to \"getAllPredes_result\"";
     if(DEBUG) cout << endl;
     return;
   }
@@ -845,7 +845,7 @@ extern "C" {
     cJSON_Delete(json_bbs);
     out << rendered;
     out.close();
-    if(DEBUG) cout << "[sa] all predecessors saved to \"getAllPredes_result\"";
+    if(DEBUG) cout << "[sa] all results saved to \"getAllPredes_result\"";
     if(DEBUG) cout << endl;
     return;
   }
@@ -921,6 +921,172 @@ extern "C" {
     //TODO
   }
 
+void getCalleeToCallsites(char *progName) {
+  if (DEBUG) cout << "[sa] ================================" << endl;
+  if (DEBUG) cout << "[sa] prog: " << progName << endl;
+
+  SymtabAPI::Symtab *symTab;
+  string binaryPathStr(progName);
+  bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
+  if (isParsable == false) {
+    fprintf(stderr, "File cannot be parsed: %s.\n", progName);
+    return;
+  }
+
+  SymtabCodeSource *sts = new SymtabCodeSource((char *)progName);
+  CodeObject *co = new CodeObject(sts);
+
+  co->parse();
+  const CodeObject::funclist &all = co->funcs();
+  if (all.size() == 0) {
+    fprintf(stderr, "No function in file %s.\n", progName);
+    return;
+  }
+
+  boost::unordered_map<Function *, std::vector<std::pair<Instruction, long unsigned int>>>
+      functionToCallsite;
+  for (auto fit = all.begin(); fit != all.end(); ++fit) {
+    Function *f = *fit;
+    if (DEBUG) cout << "[sa] current function: " << f->name() << endl;
+    Function::edgelist list = f->callEdges();
+    for(auto cit = list.begin(); cit != list.end(); cit++) {
+      Block* src = (*cit)->src();
+      Block* trg = (*cit)->trg();
+      Function *trg_func = co->findFuncByEntry(trg->region(), trg->start());
+      if (trg_func == NULL) {
+        if (DEBUG) cout << "[sa]   function not found at: " << trg->start() << endl;
+        continue;
+      }
+      if (DEBUG) cout << "[sa]   calls function: " << trg_func->name() << endl;
+      Block::Insns insns;
+      src->getInsns(insns);
+      long unsigned int addr = 0;
+      Instruction insn;
+      for (auto iit = insns.begin(); iit != insns.end(); iit++) { //TODO is call
+        insn = (*iit).second;
+        if (DEBUG) cout << "[sa]   checking src insn: " << insn.format() << endl;
+        if (insn.getCategory() != c_CallInsn && insn.getCategory() != c_BranchInsn) continue;
+        addr = (*iit).first;
+      }
+      functionToCallsite[f].push_back(std::pair<Instruction, long unsigned int>(insn, addr));
+    }
+  }
+
+  cJSON *json_funcs  = cJSON_CreateArray();
+  for (auto mit = functionToCallsite.begin(); mit != functionToCallsite.end(); mit++) {
+    Function *f = mit->first;
+    std::vector<std::pair<Instruction, long unsigned int>> callsites = mit->second;
+    cJSON *json_func = cJSON_CreateObject();
+    cJSON_AddStringToObject(json_func, "func", f->name().c_str());
+    cJSON *json_callsites  = cJSON_CreateArray();
+    for (auto cit = callsites.begin(); cit != callsites.end(); cit++) {
+      cJSON *json_callsite = cJSON_CreateObject();
+      cJSON_AddNumberToObject(json_callsite, "insn_addr", cit->second);
+      cJSON_AddItemToArray(json_callsites, json_callsite);
+    }
+    cJSON_AddItemToObject(json_func, "callsites",  json_callsites);
+    cJSON_AddItemToArray(json_funcs, json_func);
+  }
+
+  char *rendered = cJSON_Print(json_funcs);
+  cJSON_Delete(json_funcs);
+  std::ofstream out("functionToCallSites_result");
+  out << rendered;
+  out.close();
+
+  if(DEBUG) cout << "[sa] all results saved to \"functionToCallSites_result\"";
+  if(DEBUG) cout << endl;
+}
+
+  void getMemWritesToStaticAddresses(char *progName) {
+    if (DEBUG) cout << "[sa] ================================" << endl;
+    if (DEBUG) cout << "[sa] prog: " << progName << endl;
+
+    SymtabAPI::Symtab *symTab;
+    string binaryPathStr(progName);
+    bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
+    if (isParsable == false) {
+      fprintf(stderr, "File cannot be parsed: %s.\n", progName);
+      return;
+    }
+
+    SymtabCodeSource *sts = new SymtabCodeSource((char *)progName);
+    CodeObject *co = new CodeObject(sts);
+
+    co->parse();
+    const CodeObject::funclist &all = co->funcs();
+    if (all.size() == 0) {
+      fprintf(stderr, "No function in file %s.\n", progName);
+      return;
+    }
+
+    cJSON *json_writes  = cJSON_CreateArray();
+
+    for (auto fit = all.begin(); fit != all.end(); ++fit) {
+      Function *f = *fit;
+      for (auto bit = f->blocks().begin(); bit != f->blocks().end(); ++bit) {
+        Block *b = *bit;
+        Block::Insns insns;
+        b->getInsns(insns);
+        for (auto iit = insns.begin(); iit != insns.end(); iit++) {
+          long unsigned int addr = (*iit).first;
+          Instruction insn = (*iit).second;
+          std::set<Expression::Ptr> memWrites;
+          insn.getMemoryWriteOperands(memWrites);
+          // FIXME: For now just handle those that have one memory write.
+          if (memWrites.size() != 1) continue;
+          std::vector<Operand> ops;
+          insn.getOperands(ops);
+          bool isWriteAddrStatic = true;
+          if (DEBUG) cout << "[sa] checking instruction: " << insn.format() << endl;
+          if (ops.size() == 0) continue;
+          bool writesMemory = false;
+          for (auto oit = ops.begin(); oit != ops.end(); ++oit) {
+            if (!(*oit).writesMemory()) continue;
+            writesMemory = true;
+            if (DEBUG) cout << "[sa] memory write op: " << (*oit).format(insn.getArch()) << endl;
+            std::set<RegisterAST::Ptr> regsRead;
+            (*oit).getReadSet(regsRead);
+            if (DEBUG) cout << "[sa] register read count: " << regsRead.size() << endl;
+            if (!regsRead.empty()) {
+              isWriteAddrStatic = false;
+              break;
+            }
+            std::set<RegisterAST::Ptr> regsWrite;
+            (*oit).getWriteSet(regsWrite);
+            if (DEBUG) cout << "[sa] register write count: " << regsWrite.size() << endl;
+            if (!regsWrite.empty()) {
+              isWriteAddrStatic = false;
+              break;
+            }
+          }
+          if (!isWriteAddrStatic) continue;
+          if (!writesMemory) continue;
+
+          Expression::Ptr write = *memWrites.begin();
+          std::string writeStr = write->format();
+          if (DEBUG) cout << "[sa] memory write to static address: " << write->format() << endl;
+          //if (!std::any_of(std::begin(writeStr), std::end(writeStr), ::isalpha)) {
+          //  cout << "[sa][warn] Memory write expression has not register in it? " << writeStr << endl;
+          //}
+          cJSON *json_write = cJSON_CreateObject();
+          cJSON_AddStringToObject(json_write, "func", f->name().c_str());
+          cJSON_AddNumberToObject(json_write, "insn_addr", addr);
+          cJSON_AddStringToObject(json_write, "expr", writeStr.c_str());
+          cJSON_AddItemToArray(json_writes, json_write);
+        }
+      }
+    }
+    char *rendered = cJSON_Print(json_writes);
+    cJSON_Delete(json_writes);
+    std::ofstream out("writesToStaticAddr_result");
+    out << rendered;
+    out.close();
+
+    if(DEBUG) cout << "[sa] all results saved to \"writesToStaticAddr_result\"";
+    if(DEBUG) cout << endl;
+  }
+
   void getMemWrites(char *addrToFuncNames, char *progName) {
     if (DEBUG) cout << "[sa] ================================" << endl;
     if (DEBUG) cout << "[sa] Getting memory writes for instructions: " << endl;
@@ -966,7 +1132,7 @@ extern "C" {
         if (INFO) cout << "[sa] special looped move: ID: "
                        << insn.getOperation().getID()  << " op: "
                        << insn.getOperation().format() << endl;
-      } else if (func->entry() == bb && bb->start == addr) {
+      } else if (func->entry() == bb && bb->start() == addr) {
         // Instruction is already the first in the function
         if (INFO) cout << "[sa] instruction is the first in the function: " << insn.format() << endl;
         trueAddr = addr;
@@ -1018,8 +1184,34 @@ extern "C" {
     out << rendered;
     out.close();
 
-    if(DEBUG) cout << "[sa] all predecessors saved to \"writesPerInsn_result\"";
+    if(DEBUG) cout << "[sa] all results saved to \"writesPerInsn_result\"";
     if(DEBUG) cout << endl;
+  }
+
+
+  void getRegsWritten(char *progName, char *funcName, long unsigned int addr) {
+    if(DEBUG) cout << "[sa] ================================" << endl;
+    if(DEBUG) cout << "[sa] Getting the registers written to by the instruction: " << endl;
+    if(DEBUG) cout << "[sa] prog: " << progName << endl;
+    if(DEBUG) cout << "[sa] func: " << funcName << endl;
+    if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << endl;
+    if(DEBUG) cout << endl;
+
+    Function *func = getFunction2(progName, funcName);
+    Block *bb = getBasicBlock2(func, addr);
+    Instruction insn = bb->getInsn(addr);
+
+    std::set<RegisterAST::Ptr> writtenRegs;
+    insn.getWriteSet(writtenRegs);
+
+    std::ofstream out("result");
+    //std::stringstream ss;
+    for (auto it = writtenRegs.begin(); it != writtenRegs.end(); it++) {
+      if(DEBUG) cout << "[sa] Register written: " << (*it)->getID().name() << endl;
+      out << "|"; //<< addr << ",";
+      out << (*it)->getID().name();
+    }
+    out.close();
   }
 
   void backwardSlices(char *addrToRegNames, char *progName, char *funcName) {
@@ -1048,7 +1240,9 @@ extern "C" {
 
       char *regName = json_regName->valuestring;
 
-      bool isKnownBitVar = (strtol(json_isBitVar->valuestring, &end, 10) == 1) ? true : false;
+      bool isKnownBitVar = false;
+      if (json_isBitVar != NULL)
+        isKnownBitVar = (strtol(json_isBitVar->valuestring, &end, 10) == 1) ? true : false;
       if (errno != 0)
         cout << " Encountered error " << errno << " while parsing " << json_isBitVar->valuestring << endl;
 
@@ -1071,7 +1265,7 @@ extern "C" {
     out << rendered;
     out.close();
 
-    if(DEBUG) cout << "[sa] all predecessors saved to \"backwardSlices_result\"";
+    if(DEBUG) cout << "[sa] all results saved to \"backwardSlices_result\"";
     if(DEBUG) cout << endl;
   }
 
@@ -1092,38 +1286,16 @@ extern "C" {
     out << rendered;
     out.close();
 
-    if(DEBUG) cout << "[sa] all predecessors saved to \"backwardSlice_result\"";
+    if(DEBUG) cout << "[sa] all results saved to \"backwardSlice_result\"";
     if(DEBUG) cout << endl;
   }
-
-  void getRegsWritten(char *progName, char *funcName, long unsigned int addr){
-    if(DEBUG) cout << "[sa] ================================" << endl;
-    if(DEBUG) cout << "[sa] Getting the registers written to by the instruction: " << endl;
-    if(DEBUG) cout << "[sa] prog: " << progName << endl;
-    if(DEBUG) cout << "[sa] func: " << funcName << endl;
-    if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << endl;
-    if(DEBUG) cout << endl;
-
-    Function *func = getFunction2(progName, funcName);
-    Block *bb = getBasicBlock2(func, addr);
-    Instruction insn = bb->getInsn(addr);
-
-    std::set<RegisterAST::Ptr> writtenRegs;
-    insn.getWriteSet(writtenRegs);
-
-    std::ofstream out("result");
-    //std::stringstream ss;
-    for (auto it = writtenRegs.begin(); it != writtenRegs.end(); it++) {
-      if(DEBUG) cout << "[sa] Register written: " << (*it)->getID().name() << endl;
-      out << "|"; //<< addr << ",";
-      out << (*it)->getID().name();
-    }
-    out.close();
-  }
-
 }
 
 int main() {
+  char *progName = "909_ziptest_exe9";
+  getCalleeToCallsites(progName);
+  //getMemWritesToStaticAddresses(progName);
+  /*
   // Set up information about the program to be instrumented 
   char *progName = "909_ziptest_exe9";
   //const char *funcName = "scanblock";
@@ -1144,6 +1316,7 @@ int main() {
   cout << (insn.getOperation().getPrefixID() == prefix_rep) << endl;
   cout << (insn.getOperation().getPrefixID() == prefix_repnz) << endl;
   //getAllBBs(progName, funcName, addr);
+  */
 
   //BPatch_image *appImage = getImage(progName);
   //printAddrToLineMappings(appImage, funcName);

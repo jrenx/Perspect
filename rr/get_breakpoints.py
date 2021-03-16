@@ -6,7 +6,7 @@ import time
 import datetime
 
 rr_dir = os.path.dirname(os.path.realpath(__file__))
-DEBUG = False
+DEBUG = True
 def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, step, deref):
 
 
@@ -60,37 +60,52 @@ def parse_breakpoint(breakpoints, reg_points, deref):
     result = []
     curr_br_num = -1
     addr = None
+    pending_point = None
 
     with open(os.path.join(rr_dir, "breakpoints.log"), 'r') as log:
-        for line in log:
+        for i, line in enumerate(log):
             if "Error" in line:
-                raise Exception
+                print("[tmp][warn] Is this an error from GDB? " + line)
             if re.search(r'Breakpoint \d+,', line):
                 br_num = int(line.split()[1].strip(',')) - 1
                 if br_num >= len(reg_points):
+                    bp = breakpoints[br_num - len(reg_points)]
                     if curr_br_num != -1:
-                        raise ValueError('reg point with no addr value')
-                    result.append((breakpoints[br_num - len(reg_points)], None, None))
-                    curr_br_num = -1
-                    addr = None
+                        rp = reg_points[curr_br_num]
+                        if int(bp.strip('*'), 16) - int(rp.strip('*'), 16) <= 8:
+                            print('[tmp][warn] reg point ' + rp + ' is immediately followed by breakpoint ' + bp)
+                            pending_point = (bp, None, None)
+                        else:
+                            raise ValueError('reg point with no addr value at file index: ' + str(i) + ' ' + line)
+                    else:
+                        result.append((bp, None, None))
+                        addr = None
+                        assert pending_point == None
                 else:
                     curr_br_num = br_num
             elif curr_br_num != -1:
                 if 'memory error' in line:
                     result.append((reg_points[curr_br_num], None, None))
+                    if pending_point is not None:
+                        result.append(pending_point)
+                        pending_point = None
                     addr = None
                     curr_br_num = -1
                 elif len(line.split()) == 3 and line.startswith('$'):
+                    if deref and addr is None:
+                        addr = line.split()[2]
+                        continue
+
                     if deref and addr is not None:
                         result.append((reg_points[curr_br_num], addr, line.split()[2]))
-                        addr = None
-                        curr_br_num = -1
-                    elif deref and addr is None:
-                        addr = line.split()[2]
                     else:
                         result.append((reg_points[curr_br_num], line.split()[2], None))
-                        addr = None
-                        curr_br_num = -1
+
+                    if pending_point is not None:
+                        result.append(pending_point)
+                        pending_point = None
+                    addr = None
+                    curr_br_num = -1
                 """
                 elif len(line.split()) == 3 and line.split()[0][0].isalpha():
                     if deref:
@@ -108,10 +123,10 @@ def parse_breakpoint(breakpoints, reg_points, deref):
 
 
 if __name__ == '__main__':
-    breakpoints = ['*0x409c84', '*0x409c55']
-    reg_points = ['*0x409c24']
-    regs = ['rbp']
-    run_breakpoint(breakpoints, reg_points, regs, False, False)
-    trace = parse_breakpoint(breakpoints, reg_points, False)
-    print(trace[:10])
-    print(trace[-10:])
+    breakpoints = ['*0x40937d', '*0x409394']
+    reg_points = ['*0x409379']
+    #regs = ['rbp']
+    #run_breakpoint(breakpoints, reg_points, regs, False, False)
+    trace = parse_breakpoint(breakpoints, reg_points, True)
+    #print(trace[:10])
+    #print(trace[-10:])
