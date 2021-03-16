@@ -29,12 +29,26 @@ def test_rr_slice():
     b = datetime.datetime.now()
     print("Took: " + str(b-a))
 
+def test_sa_slices():
+    slice_starts = []
+    slice_starts.append(['rax', 4234536, 'sweep', True]) #why is the filtered against?
+    slice_starts.append(['rax', 4232216, 'scanblock', True])
+    slice_starts.append(['rax', 4234346, 'sweep', True])
+    slice_starts.append(['rdx', 4236970, 'runtime.markallocated', True])
+    slice_starts.append(['rax', 4237718, 'runtime.markspan', True])
+    slice_starts.append(['rdx', 4238284, 'runtime.setblockspecial', True])
+    #slice_starts.append(['RAX', 4237997, 'runtime.unmarkspan', True])
+    slice_starts.append(['rax', 4237218, 'runtime.markfreed', True])
+    results = static_backslices(slice_starts, '909_ziptest_exe9')
+    print(results)
+
 def main():
     #test_ins_trace()
     #test_func_trace()
     #test_rr_slice()
     #get_mem_writes_to_static_addrs('909_ziptest_exe9')
-    get_func_to_callsites('909_ziptest_exe9')
+    #get_func_to_callsites('909_ziptest_exe9')
+    test_sa_slices()
  
 if __name__ == "__main__":
     main()
