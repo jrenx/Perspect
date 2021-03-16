@@ -140,11 +140,15 @@ class DynamicCFG:
 
         # reverse the executetable, and remove insns beyond the start insn
         executable.reverse()
-        index = executable.index(str(hex(self.start_insn)) + '\n')
-        executable = executable[index:]
+        target_str = str(hex(self.start_insn)) + '\n'
+        if target_str in executable:
+            index = executable.index(target_str)
+            executable = executable[index:]
+        else:
+            print("There is no target instruction detected during Execution " + str(self.number))
+            return 
 
         # init
-        insn_times = {}
         previous_node = None
         is_first = True
         insn_id = 2
@@ -233,4 +237,6 @@ class DynamicCFG:
 if __name__ == '__main__':
     dynamic_graph = DynamicDependence()
     dynamic_graph.buildDynamicControlFlowDep(0x409daa, "sweep", "909_ziptest_exe9")
+    #dynamic_graph.buildDynamicControlFlowDep(0x409408, "scanblock", "909_ziptest_exe9")
+
 
