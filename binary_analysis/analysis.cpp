@@ -527,7 +527,7 @@ cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int add
         }
         if (INFO) cout << endl;
         cJSON_AddNumberToObject(json_bitOp, "insn_addr", opAssign->addr());
-        cJSON_AddStringToObject(json_bitOp, "operand", bitOperands[opAssign].absloc().reg().name().c_str());
+        cJSON_AddStringToObject(json_bitOp, "operand", bitOperands[opAssign].format().c_str());
         cJSON_AddStringToObject(json_bitOp, "operation", opAssign->insn().getOperation().format().c_str());
         cJSON_AddItemToArray(json_bitOps, json_bitOp);
       }
