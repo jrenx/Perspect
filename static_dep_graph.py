@@ -353,7 +353,7 @@ class CFG:
         print("Total number of basic blocks in the entire cfg: " + str(len(self.ordered_bbs)))
 
 
-class MemoryLoad:
+class MemoryAccess:
     def __init__(self, reg, shift, off):
         self.reg = reg
         self.shift = shift
@@ -417,7 +417,10 @@ class StaticNode:
         s += "] \n"
 
         if self.mem_load is not None:
-            s += "    " + str(self.mem_load)
+            s += "    memory load " + str(self.mem_load)
+
+        if self.mem_store is not None:
+            s += "    memory store " + str(self.mem_store)
 
         s += "    dataflow predecessors: ["
         for prede in self.df_predes:
@@ -480,13 +483,36 @@ class StaticDepGraph:
                 prede = self.make_node(prede_insn, None, func)
                 if prede not in self.nodes_in_df_slice:
                     self.nodes_in_df_slice.append(prede)
-                prede.mem_load = MemoryLoad(prede_reg, shift, off)
+                prede.mem_load = MemoryAccess(prede_reg, shift, off)
                 prede.reg_write = '' #TODO put actual register name here
                 succe.df_predes.append(prede)
                 prede.df_succes.append(succe)
 
         for node in self.nodes_in_df_slice:
             print(str(node))
+            if node.insn == 4234276:
+                results = rr_backslice('909_ziptest_exe9', 4234305, 4234325, 4234276, 'RBP', 0, 0, None)
+                print(results)
+                for result in results:
+                    # reg_name = result[0]
+                    load = result[0]
+                    prede_insn = result[1]
+                    func = result[2]
+                    if load is None:
+                        continue
+
+                    prede_reg = load[0]
+                    shift = load[1]
+                    off = load[2]
+
+                    prede = self.make_node(prede_insn, None, func)
+                    if prede not in self.nodes_in_df_slice:
+                        self.nodes_in_df_slice.append(prede)
+                    prede.mem_store = MemoryAccess(prede_reg, shift, off)
+                    prede.reg_read = ''  # TODO put actual register name here
+                    node.df_predes.append(prede)
+                    prede.df_succes.append(node)
+
         print("Total number of nodes in local dataflow slice: " + str(len(self.nodes_in_df_slice)))
 
     def buildControlFlowDependencies(self, insn, func, prog):
