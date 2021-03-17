@@ -131,6 +131,8 @@ int main (INT32 argc, CHAR *argv[])
     reg_map["rdx"] = REG_RDX;
     reg_map["rbx"] = REG_RBX;
     reg_map["rsi"] = REG_RSI;
+    reg_map["rdi"] = REG_RDI;
+    reg_map["rcx"] = REG_RCX;
     reg_map["cl"] = REG_CL;
     //reg_map["r1"] = REG_R1;
     //reg_map["r2"] = REG_R2;
