@@ -38,13 +38,10 @@ class DynamicNode:
         # s += "   Instance id : " + str(self.instance_id) + "\n"
         s += "   Dynamic Node id: " + str(self.id) + "\n"
         s += "   Instruction id : " + str(self.insn_id) + "\n"
-        s += "   Static Node id: " + str(self.staticNode.id) + "\n"
-        s += "      insn: " + str(hex(self.staticNode.insn)) + "\n"
-        s += "    ------------Basic Block--------------\n"
-        if self.staticNode.bb is None:
-            s += "\n"
-        else:
-            s += str(self.staticNode.bb)
+        s += "    -------------------------------------\n"
+        s += "    ------------Static Node--------------\n"
+        s += str(self.staticNode) + "\n"
+        s += "    -------------------------------------\n"
         s += "    -------------------------------------\n"
         s += "    dynamic control flow predecessors: ["
         for prede in self.cf_predes:
@@ -56,9 +53,20 @@ class DynamicNode:
             s += '[' + str(succe.id) + "," + str(succe.insn_id) + ']'
         s = s.strip(",")
         s += "] \n"
+        s += "    dynamic data flow predecessors: ["
+        for prede in self.df_predes:
+            s += '[' + str(prede.id) + "," + str(prede.insn_id) + ']'
+        s = s.strip(",")
+        s += "] \n"
+        s += "    dynamic data flow successors: ["
+        for succe in self.df_success:
+            s += '[' + str(succe.id) + "," + str(succe.insn_id) + ']'
+        s = s.strip(",")
+        s += "] \n"
+        s += "    " + str(self.mem_load) + "\n"
 
-        if self.mem_load is not None:
-            s += "    " + str(self.mem_load)
+        if self.mem_addr is not None:
+            s += self.mem_addr + "\n"
 
         return s
 
@@ -68,10 +76,11 @@ class DynamicDependence:
         self.start_insn = None
         self.all_static_cf_nodes = []
         self.all_static_df_nodes = []
+        self.insn_of_cf_nodes = []
+        self.insn_of_df_nodes = []
         self.dynamicNodes = []
         self.insn_to_nodes = {}
 
-        pass
 
     def getDynamicExecutable(self):
 
@@ -97,33 +106,50 @@ class DynamicDependence:
         static_graph = StaticDepGraph()
         static_graph.buildDependencies(insn, func, prog)
         self.all_static_cf_nodes = static_graph.nodes_in_cf_slice
-        self.all_static_df_nodes = static_graph.nodes_in_df_slice
 
         for node in self.all_static_cf_nodes:
             self.insn_to_nodes[str(hex(node.insn))] = node
+            self.insn_of_cf_nodes.append(str(hex(node.insn)))
+            print(node)
 
-        for node in self.all_static_df_nodes:
-            self.insn_to_nodes[str(hex(node.insn))] = node
+        for node in static_graph.nodes_in_df_slice:
 
-    def buildDynamicControlFlowGraph(self, func, prog, insn, executable_path):
+            #trace local
+            if node.reg_write == "":
+                self.all_static_df_nodes.append(node)
+                self.insn_to_nodes[str(hex(node.insn))] = node
+                self.insn_of_df_nodes.append(str(hex(node.insn)))
+                print(node)
+
+    def buildDynamicGraph(self, func, prog, insn, executable_path):
         # For each execution:
 
         with open(executable_path, 'r') as f1:
             insn_seq = f1.readlines()
 
-        self.start_insn = insn_seq[0]
+        line_num = 0
+        line = insn_seq[line_num]
+        start_insn = line.split(": ", 1)[0]
+        while start_insn not in self.insn_of_cf_nodes:
+            line_num += 1
+            line = insn_seq[line_num]
+            start_insn = line.split(": ", 1)[0]
 
-        dividing_line = [i for i, x in enumerate(insn_seq) if x == self.start_insn]
+        self.start_insn = start_insn
+
+        dividing_line = [i for i, x in enumerate(insn_seq) if x == line]
 
         dividing_line.append(-1)
 
-        start_index = dividing_line[0]
+        start_index = dividing_line[0] - line_num
         graph_number = 0
         for index in dividing_line[1:]:
+            if graph_number > 10:
+                break
             executable = insn_seq[start_index:index]
-            dynamicCFG = DynamicCFG(func, prog, insn, graph_number)
-            dynamicCFG.build_dynamicCFG(executable, self.insn_to_nodes)
-            start_index = index
+            dynamicGraph = DynamicGraph(func, prog, insn, graph_number)
+            dynamicGraph.build_dynamicGraph(executable, self.insn_to_nodes, self.insn_of_cf_nodes, self.insn_of_df_nodes)
+            start_index = index - line_num
             graph_number += 1
 
     def buildDynamicControlFlowDep(self, insn, func, prog):
@@ -132,10 +158,10 @@ class DynamicDependence:
 
         self.getSlice(insn, func, prog)
         executable_path = self.getDynamicExecutable()
-        #self.buildDynamicControlFlowGraph(func, prog, insn, executable_path)
+        self.buildDynamicGraph(func, prog, insn, executable_path)
 
 
-class DynamicCFG:
+class DynamicGraph:
     def __init__(self, func, prog, insn, graph_number):
         self.func = func
         self.prog = prog
@@ -147,12 +173,14 @@ class DynamicCFG:
         self.branch_nodes = []
         self.current_branch_nodes = {}
         self.target_dir = os.path.join(curr_dir, 'dynamicGraph')
+        self.succ_of_df_node = {}
 
-    def build_dynamicCFG(self, executable, insn_to_nodes):
+    def build_dynamicGraph(self, executable, insn_to_nodes, insn_of_cf_nodes, insn_of_df_nodes):
 
         # reverse the executetable, and remove insns beyond the start insn
         executable.reverse()
-        target_str = str(hex(self.start_insn)) + '\n'
+
+        target_str = str(hex(self.start_insn)) + ": " + str(hex(self.start_insn)) + '\n'
         if target_str in executable:
             index = executable.index(target_str)
             executable = executable[index:]
@@ -167,9 +195,12 @@ class DynamicCFG:
 
         # traverse
         for insn_line in executable:
-            insn = insn_line.rstrip('\n')
-            if insn.find("eof") != -1:
+            if insn_line.find("eof") != -1:
                 break
+
+            result = insn_line.split(": ",1)
+            insn = result[0]
+            reg = result[1].rstrip('\n')
 
             # mark visited insn
             if insn not in self.insn_to_id:
@@ -179,11 +210,24 @@ class DynamicCFG:
             # the leaf
             if insn == str(hex(self.start_insn)):
                 dynamicNode = DynamicNode(self.insn_to_id[insn], insn_to_nodes[insn])
+                if insn_to_nodes[insn].df_predes:
+                    for node in insn_to_nodes[insn].df_predes:
+                        node_insn = str(hex(node.insn))
+                        if node_insn in insn_of_df_nodes:
+                            if node_insn not in self.succ_of_df_node:
+                                self.succ_of_df_node[node_insn] = [dynamicNode]
+                            else:
+                                tmp = self.succ_of_df_node[node_insn]
+                                tmp.append(dynamicNode)
+                                self.succ_of_df_node[node_insn] = tmp
                 self.dynamicNodes.append(dynamicNode)
+
                 if not is_first:
                     if previous_node.insn_id not in self.current_branch_nodes:
                         self.current_branch_nodes[previous_node.insn_id] = previous_node
-                        self.branch_nodes.append(previous_node)
+                        if previous_node not in self.branch_nodes:
+                            self.branch_nodes.append(previous_node)
+
                 previous_node = dynamicNode
                 visited_node = []
 
@@ -196,17 +240,49 @@ class DynamicCFG:
                         visited_node.append(self.current_branch_nodes[curr_node_id].insn_id)
                         previous_node = self.current_branch_nodes[curr_node_id]
                     else:
-
                         if previous_node.insn_id in self.current_branch_nodes:
                             del self.current_branch_nodes[previous_node.insn_id]
                         if curr_node_id not in visited_node:
                             dynamicNode = DynamicNode(curr_node_id, insn_to_nodes[insn])
                             self.dynamicNodes.append(dynamicNode)
-                            visited_node.append(dynamicNode)
                             dynamicNode.cf_success.append(previous_node)
-                            previous_node.cf_predes.append(dynamicNode)
-                            previous_node = dynamicNode
-                            visited_node.append(dynamicNode.insn_id)
+
+                            if insn_to_nodes[insn].df_predes:
+                                for node in insn_to_nodes[insn].df_predes:
+                                    node_insn = str(hex(node.insn))
+
+                                    if node_insn in insn_of_df_nodes:
+                                        if node_insn not in self.succ_of_df_node:
+                                            self.succ_of_df_node[node_insn] = [dynamicNode]
+                                        else:
+                                            tmp = self.succ_of_df_node[node_insn]
+                                            tmp.append(dynamicNode)
+                                            self.succ_of_df_node[node_insn] = tmp
+
+                            if insn in insn_of_cf_nodes:
+                                previous_node.cf_predes.append(dynamicNode)
+                                previous_node = dynamicNode
+                                visited_node.append(dynamicNode.insn_id)
+
+                            if insn in insn_of_df_nodes:
+                                current_node_in_dict = False
+                                print("current node is: \n" )
+                                print (dynamicNode.id)
+                                if insn in self.succ_of_df_node:
+                                    for node in self.succ_of_df_node[insn]:
+                                        print(node.id)
+                                        if node.id != dynamicNode.id:
+                                            node.df_predes.append(dynamicNode)
+                                            dynamicNode.df_success.append(node)
+                                        else:
+                                            current_node_in_dict = True
+
+                                    del self.succ_of_df_node[insn]
+                                    if current_node_in_dict:
+                                        self.succ_of_df_node[insn] = [dynamicNode]
+
+                                dynamicNode.mem_addr = self.mem_addr_calculate(reg,
+                                                                               str(dynamicNode.staticNode.mem_load))
 
             if is_first:
                 is_first = False
@@ -216,15 +292,33 @@ class DynamicCFG:
         self.print_graph()
         print(self.insn_to_id)
 
+    def mem_addr_calculate(self, reg_addr, expr):
+        dict = {}
+        json_exprs = []
+        dict['insn_addr'] = int(reg_addr, 16)
+        dict['expr'] = expr
+        json_exprs.append(dict)
+        data_points = parseLoadsOrStores(json_exprs)
+        data_point = data_points[0]
+
+        if data_point[2] == 0:
+            data_point[2] = 1
+
+        res = str(hex(data_point[0] * data_point[2] + data_point[3]))
+
+        return res
+
+
     def print_graph(self):
 
         fname = os.path.join(self.target_dir, 'Graph_No.' + str(self.number))
-        starting = "===============================================\n"
+        starting = "===============================================\n\n\n"
         starting += "    ------------Dynamic CFG No." + str(self.number) + "--------------\n"
-        starting += "   Dynamic Graph Root: \n"
+        starting += "############## Dynamic Graph Root ############## \n"
+
         starting += str(self.root)
-        starting += "===============================================\n"
-        starting += "   Dynamic Graph branch nodes:  \n"
+        starting += "\n\n===============================================\n\n"
+        starting += "###########  Dynamic Graph branch nodes ########### \n"
 
         with open(fname, 'w') as out:
             out.write(starting)
@@ -235,7 +329,8 @@ class DynamicCFG:
             with open(fname, 'a') as out:
                 out.write(string)
 
-        string = "\n===============================================\n"
+        string = "\n\n\n===============================================\n\n\n"
+        string = "\n\n\n===============================================\n\n\n"
         string += "    ------------ DynamicNodes in CFG--------------\n"
 
         with open(fname, 'a') as out:
@@ -248,8 +343,9 @@ class DynamicCFG:
 
 if __name__ == '__main__':
     dynamic_graph = DynamicDependence()
-    dynamic_graph.buildDynamicControlFlowDep(0x409daa, "sweep", "909_ziptest_exe9")
-    #dynamic_graph.buildDynamicControlFlowDep(0x409408, "scanblock", "909_ziptest_exe9")
+    #dynamic_graph.buildDynamicControlFlowDep(0x409daa, "sweep", "909_ziptest_exe9")
+    dynamic_graph.buildDynamicControlFlowDep(0x409408, "scanblock", "909_ziptest_exe9")
+
 
 
 
