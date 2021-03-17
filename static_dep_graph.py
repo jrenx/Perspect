@@ -490,7 +490,7 @@ class StaticDepGraph:
 
         for node in self.nodes_in_df_slice:
             print(str(node))
-            if node.insn == 4234276:
+            if node.insn == 0: #4234276:
                 results = rr_backslice('909_ziptest_exe9', 4234305, 4234325, 4234276, 'RBP', 0, 0, None)
                 print(results)
                 for result in results:
