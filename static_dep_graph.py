@@ -389,8 +389,8 @@ class StaticNode:
         self.mem_load = None
         self.reg_load = None
 
-        self.mem_write = None # none-local data flow dependency
-        self.reg_write = None # local data flow dependency TODO fill in something
+        self.mem_store = None # none-local data flow dependency
+        self.reg_store = None # local data flow dependency TODO fill in something
 
         self.df_predes = []
         self.df_succes = []
@@ -490,7 +490,7 @@ class StaticDepGraph:
 
         for node in self.nodes_in_df_slice:
             print(str(node))
-            if node.insn == 4234276:
+            if node.insn == 0: #4234276:
                 results = rr_backslice('909_ziptest_exe9', 4234305, 4234325, 4234276, 'RBP', 0, 0, None)
                 print(results)
                 for result in results:

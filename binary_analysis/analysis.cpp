@@ -31,7 +31,7 @@ BPatch bpatch;
 bool INFO = true;
 bool DEBUG = false;
 bool DEBUG_SLICE = false;
-bool DEBUG_BIT = true;
+bool DEBUG_BIT = false;
 
 typedef enum {
   create,
@@ -77,6 +77,7 @@ void locateBitVariables(GraphPtr slice,
 void analyzeKnownBitVariables(GraphPtr slice,
                               Expression::Ptr memWrite,
                               boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
+                              boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
                               boost::unordered_map<Assignment::Ptr, AbsRegion> &bitOperands,
                               boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations);
 
@@ -357,6 +358,7 @@ class CustomSlicer : public Slicer::Predicates {
 public:
   char *regName = NULL;
   bool filter = false;
+  Instruction insn;
   virtual bool endAtPoint(Assignment::Ptr ap) {
     if(DEBUG|DEBUG_SLICE) cout << endl;
     if(DEBUG|DEBUG_SLICE) cout << "[slice] Should continue slicing the assignment?" << endl;
@@ -366,15 +368,15 @@ public:
     if(DEBUG_SLICE) cout << endl;
     filter = false;
     if (ap->insn().readsMemory()) {
-   	std::set<Expression::Ptr> memReads;
-	  ap->insn().getMemoryReadOperands(memReads);
-	  if(DEBUG) cout << "[sa] Memory read: " << (*memReads.begin())->format() << endl;
-	  std::string readStr = (*memReads.begin())->format();
-	  if (std::any_of(std::begin(readStr), std::end(readStr), ::isalpha)) { // TODO, does this make sense?
-	    if (DEBUG) cout << "[sa] is a true memory read." << endl;
-	    return true;
-	  }
-	  if (DEBUG) cout << "[sa] is not a true memory read." << endl;
+      std::set<Expression::Ptr> memReads;
+      ap->insn().getMemoryReadOperands(memReads);
+      if(DEBUG) cout << "[sa] Memory read: " << (*memReads.begin())->format() << endl;
+      std::string readStr = (*memReads.begin())->format();
+      if (std::any_of(std::begin(readStr), std::end(readStr), ::isalpha)) { // TODO, does this make sense?
+	      if (DEBUG) cout << "[sa] is a true memory read." << endl;
+	      return true;
+      }
+      if (DEBUG) cout << "[sa] is not a true memory read." << endl;
 	    return false;
     } else {
       return false;
@@ -387,6 +389,7 @@ public:
     if(DEBUG || DEBUG_SLICE) cout << endl;
     if(DEBUG|DEBUG_SLICE) cout << "[slice] Should add the dataflow predecessor?" << endl;
     if(DEBUG_SLICE) cout << "[slice] " << "predecessor reg: " << regStr << endl;
+    if (insn.readsMemory()) return false;
     if (filter) {
       if (reg.format().compare(regName) != 0) {
 	      if(DEBUG_SLICE) cout << "[slice] " << "Filtering against " << regName <<
@@ -434,6 +437,7 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsign
     cs.regName = regName;
     cs.filter = true;
   }
+  cs.insn = insn;
   GraphPtr slice = s.backwardSlice(cs);
   //cout << slice->size() << endl;
   string filePath("/home/anygroup/perf_debug_tool/binary_analysis/graph");
@@ -461,17 +465,12 @@ cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int add
       cout << "Instruction has more than one memory write? " << insn.format() << endl;
     }
     assert(memWrites.size() == 1);
-    analyzeKnownBitVariables(slice, *memWrites.begin(), bitVariables, bitOperands, bitOperations);
+    analyzeKnownBitVariables(slice, *memWrites.begin(), bitVariables, bitVariablesToIgnore, bitOperands, bitOperations);
   } // TODO propogate the bit operands.
 
   // get all the leaf nodes.
   NodeIterator begin, end;
-  if (!isKnownBitVar) {
-    slice->entryNodes(begin, end);
-  } else {
-    slice->exitNodes(begin, end);
-  }
-  //slice->allNodes(begin, end);
+  slice->entryNodes(begin, end);
 
   cJSON *json_reads = cJSON_CreateArray();
 
@@ -498,32 +497,44 @@ cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int add
       continue;
     }
 
+    std::set<Expression::Ptr> memReads;
+    assign->insn().getMemoryReadOperands(memReads);
+    assert(memReads.size() == 1);
+    Expression::Ptr read = *memReads.begin();
+    //	cout << read->eval() << endl;
+    if (INFO) cout << "[sa] Memory read: " << read->format() << endl;
+    std::string readStr = read->format();
+    // TODO, so, right now only include it if there is a letter in the expression,
+    // constants are ignored, need to fix this.
+    if (!std::any_of(std::begin(readStr), std::end(readStr), ::isalpha)) //TODO, reads from constant addresses should be OK too
+      continue;
+
+    cJSON *json_read = cJSON_CreateObject();
+    cJSON_AddNumberToObject(json_read, "insn_addr", assign->addr());
+    cJSON_AddStringToObject(json_read, "expr", readStr.c_str());
+    cJSON_AddNumberToObject(json_read, "read_same_as_write", isKnownBitVar ? 1 : 0); // TODO, see analyzeKnownBitVariables for proper way to handle this
+
     if (isBitVar) {
       std::vector<Assignment::Ptr> operations = bitOperations[assign];
       if (INFO) cout << "[sa] bit operations: " << endl;
+      cJSON *json_bitOps = cJSON_CreateArray();
       for (auto oit = operations.begin(); oit != operations.end(); ++oit) {
-        if (INFO) cout << "	" << (*oit)->format() << (*oit)->insn().format() << endl;
+        cJSON *json_bitOp  = cJSON_CreateObject();
+        Assignment::Ptr opAssign = (*oit);
+        if (INFO) cout << "	operation: " << opAssign->format() << opAssign->insn().format();
+        if (bitOperands.find(opAssign) != bitOperands.end()) {
+          if (INFO) cout << "	operand: " << bitOperands[opAssign].format();
+        }
+        if (INFO) cout << endl;
+        cJSON_AddNumberToObject(json_bitOp, "insn_addr", opAssign->addr());
+        cJSON_AddStringToObject(json_bitOp, "operand", bitOperands[opAssign].absloc().reg().name().c_str());
+        cJSON_AddStringToObject(json_bitOp, "operation", opAssign->insn().getOperation().format().c_str());
+        cJSON_AddItemToArray(json_bitOps, json_bitOp);
       }
+      cJSON_AddItemToObject(json_read, "bit_operations",  json_bitOps);
     }
+    cJSON_AddItemToArray(json_reads, json_read);
 
-    std::set<Expression::Ptr> memReads;
-    assign->insn().getMemoryReadOperands(memReads);
-    for (auto rit = memReads.begin(); rit != memReads.end(); rit ++) {
-      Expression::Ptr read = *rit;
-      if (INFO) cout << "[sa] Memory read: " << read->format() << endl;
-      std::string readStr = read->format();
-      // TODO, so, right now only include it if there is a letter in the expression,
-      // constants are ignored, need to fix this.
-      if (std::any_of(std::begin(readStr), std::end(readStr), ::isalpha)) { //TODO why we need this again?
-        cJSON *json_read = cJSON_CreateObject();
-        cJSON_AddNumberToObject(json_read, "insn_addr", assign->addr());
-        cJSON_AddStringToObject(json_read, "expr", readStr.c_str());
-        cJSON_AddItemToArray(json_reads, json_read);
-      }
-    }
-    //for (auto r = memReads.begin(); r != memReads.end(); ++r) {
-    //	cout << (*r)->eval() << endl;
-    //}
   }
   return json_reads;
 }
@@ -579,9 +590,21 @@ void findMemoryLoad(Expression::Ptr memWrite,
 void analyzeKnownBitVariables(GraphPtr slice,
                         Expression::Ptr memWrite,
                         boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
+                        boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
                         boost::unordered_map<Assignment::Ptr, AbsRegion> &bitOperands,
                         boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations
 ) {
+
+  // TODO: to implement this properly:
+  /*
+   *the proper way to handle the known bit variables:
+   *run forward normal bit variable with the flag set,
+   * find the read point,
+   * from the read point get all the bit operations like already done
+   * then, check if the read and write points are the same:
+   * first, same expression,
+   * second, the registers in the expression have the same set of definition points
+   */
 
   // Enqueue all the root nodes of the dataflow graph.
   // Need to do reverse post order.
@@ -591,60 +614,84 @@ void analyzeKnownBitVariables(GraphPtr slice,
   findMemoryLoad(memWrite, slice, &list);
 
   //boost::unordered_set<Assignment::Ptr> visitedVariables;
-  AbsRegion prev = NULL;
+  AbsRegion source;
   std::vector<Assignment::Ptr> operations;
   for(auto it = list.begin(); it != list.end(); ++it) {
     Node::Ptr node = *it;
     SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(node);
     Assignment::Ptr assign = aNode->assign();
+    entryID id = assign->insn().getOperation().getID();
 
-    if(DEBUG_BIT) cout << "[bit_var] " << "CHECKING instruction for bit variable: ";
-    if(DEBUG_BIT) cout << "[bit_var] " << assign->format() << " ";
-    if(DEBUG_BIT) cout << "[bit_var] " << assign->insn().format() << " ";
-    if(DEBUG_BIT) cout << "[bit_var] " << id << " ";
-    if(DEBUG_BIT) cout << endl;
+    if (DEBUG_BIT) cout << "[bit_var] " << "CHECKING instruction for bit variable: ";
+    if (DEBUG_BIT) cout << "[bit_var] " << assign->format() << " ";
+    if (DEBUG_BIT) cout << "[bit_var] " << assign->insn().format() << " ";
+    if (DEBUG_BIT) cout << "[bit_var] " << id << " ";
+    if (DEBUG_BIT) cout << endl;
 
-    if (prev == NULL) {
-      std::vector<AbsRegion> regions;
-      prev = assign->outputs().begin();
+    if (it == list.begin()) {
+      source = assign->out();
       continue;
     }
 
-    if (it + 1 == list.end()) {
-      std::vector<AbsRegion> oRegions;
-      for(auto rit = assign->outputs().begin(); rit != assign->outputs().end(); rit++) {
-        oRegions.push_back(*rit);
-      }
-      bitVariables.insert({assign, oRegions});
-      break;
-    }
-
+    bool usesSource = false;
     std::vector<AbsRegion> regions;
-    for(auto rit = assign->inputs().begin(); rit != assign->inputs().end(); rit++) {
-      if (*rit == prev) { // TODO check this!!
-        continue;
+    for (auto rit = assign->inputs().begin(); rit != assign->inputs().end(); rit++) {
+      if (*rit == source) {
+        usesSource = true;
+        break;
       }
-      prev = *rit;
-      bitOperands.insert({assign, *rit});
-      //TODO change bit operand to
     }
 
-    entryID id = assign->insn().getOperation().getID();
+    if (usesSource) {
+      for (auto rit = assign->inputs().begin(); rit != assign->inputs().end(); rit++) {
+        if (*rit == source) {
+          continue;
+        }
+        bitOperands.insert({assign, *rit});
+      }
+      source = assign->out();
+    }
 
-    switch(id) {
+    switch (id) {
       case e_and:
+      case e_or:
       case e_shr:
       case e_sar:
       case e_shl_sal: {
-        if(DEBUG_BIT) cout << "[bit_var] encountered shift or and instruction: " << assign->format()
-                           << " " << assign->insn().format() << endl;
+        if (DEBUG_BIT)
+          cout << "[bit_var] encountered shift or and instruction: " << assign->format()
+               << " " << assign->insn().format() << endl;
         operations.push_back(assign);
       }
         break;
       default:
-        if(DEBUG_BIT) cout << "[bit_var][warn] Unhandled case: " << assign->format()
-                           << " " << assign->insn().format() << endl;
+        if (DEBUG_BIT)
+          cout << "[bit_var][warn] Unhandled case: " << assign->format()
+               << " " << assign->insn().format() << endl;
     }
+  }
+
+  Node::Ptr node = *list.begin();
+  SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(node);
+  Assignment::Ptr bitVarAssign = aNode->assign();
+
+  std::vector<AbsRegion> oRegions; // FIXME: this is not even used later ...
+  //oRegions.push_back(bitVarAssign->out());
+  bitVariables.insert({bitVarAssign, oRegions});
+
+  bitOperations.insert({bitVarAssign, operations});
+
+  NodeIterator begin, end;
+  slice->entryNodes(begin, end);
+  for(NodeIterator it = begin; it != end; ++it) {
+    SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(*it);
+    Assignment::Ptr assign = aNode->assign();
+    if(DEBUG_BIT) cout << "[bit_var] Should ignore? " << assign->format() << " " << assign->insn().format() << endl;
+    if (assign == bitVarAssign) continue;
+    if(DEBUG_BIT) cout << "[bit_var] Will ignore. " << endl;
+    std::vector<AbsRegion> oRegions;
+    bitVariablesToIgnore.insert({assign, oRegions});
+  }
 }
 
 void getReversePostOrderListHelper(Node::Ptr node,
