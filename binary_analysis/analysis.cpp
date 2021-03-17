@@ -31,7 +31,7 @@ BPatch bpatch;
 bool INFO = true;
 bool DEBUG = false;
 bool DEBUG_SLICE = false;
-bool DEBUG_BIT = false;
+bool DEBUG_BIT = true;
 
 typedef enum {
   create,
@@ -72,9 +72,13 @@ void getReversePostOrderList(GraphPtr slice, std::vector<Node::Ptr> *list);
 void locateBitVariables(GraphPtr slice, 
 		boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
                 boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
-                boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations,
-                bool isKnownBitVar = false
-		);
+                boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations);
+
+void analyzeKnownBitVariables(GraphPtr slice,
+                              Expression::Ptr memWrite,
+                              boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
+                              boost::unordered_map<Assignment::Ptr, AbsRegion> &bitOperands,
+                              boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations);
 
 cJSON * printBBIdsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs);
 cJSON *printBBsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs,
@@ -385,7 +389,7 @@ public:
     if(DEBUG_SLICE) cout << "[slice] " << "predecessor reg: " << regStr << endl;
     if (filter) {
       if (reg.format().compare(regName) != 0) {
-	if(DEBUG_SLICE) cout << "[slice] " << "Filtering against " << regName << 
+	      if(DEBUG_SLICE) cout << "[slice] " << "Filtering against " << regName <<
 	       				      " filter out: " << regStr << endl;
         return false;
       }
@@ -446,12 +450,27 @@ cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int add
 
   boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariables;
   boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariablesToIgnore;
+  boost::unordered_map<Assignment::Ptr, AbsRegion> bitOperands;
   boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> bitOperations;
-  locateBitVariables(slice, bitVariables, bitVariablesToIgnore, bitOperations, isKnownBitVar);
+  if (!isKnownBitVar) {
+    locateBitVariables(slice, bitVariables, bitVariablesToIgnore, bitOperations);
+  } else {
+    std::set<Expression::Ptr> memWrites;
+    insn.getMemoryWriteOperands(memWrites);
+    if (memWrites.size() > 1) {
+      cout << "Instruction has more than one memory write? " << insn.format() << endl;
+    }
+    assert(memWrites.size() == 1);
+    analyzeKnownBitVariables(slice, *memWrites.begin(), bitVariables, bitOperands, bitOperations);
+  } // TODO propogate the bit operands.
 
   // get all the leaf nodes.
   NodeIterator begin, end;
-  slice->entryNodes(begin, end);
+  if (!isKnownBitVar) {
+    slice->entryNodes(begin, end);
+  } else {
+    slice->exitNodes(begin, end);
+  }
   //slice->allNodes(begin, end);
 
   cJSON *json_reads = cJSON_CreateArray();
@@ -509,8 +528,127 @@ cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int add
   return json_reads;
 }
 
+bool findMemoryLoadHelper(Expression::Ptr memWrite,
+                          SliceNode::Ptr node,
+                          std::vector<Node::Ptr> *list) {
+  NodeIterator iBegin, iEnd;
+  node->ins(iBegin, iEnd);
+  // Checking through successors.
+  bool containsMemLoad = false;
+  Assignment::Ptr assign = node->assign();
+  Instruction insn = assign->insn();
+  std::set<Expression::Ptr> memReads;
+  insn.getMemoryReadOperands(memReads);
+  if (memReads.size() > 1) {
+    if(DEBUG && DEBUG_BIT) cout << "Instruction has more than one memory read? " << insn.format() << endl;
+  }
+  if(DEBUG && DEBUG_BIT) cout << "Instruction " << insn.format() << " has " << memReads.size() << endl;
+  if (memReads.size() == 1) {
+    Expression::Ptr memRead = *memReads.begin();
+    std::string readStr = memRead->format();
+    std::string writeStr = memWrite->format();
+    if(DEBUG && DEBUG_BIT) cout << "Read str: " << readStr << endl;
+    if(DEBUG && DEBUG_BIT) cout << "Write str: " << writeStr << endl;
+    if (readStr.compare(writeStr) == 0) {
+      list->push_back(node);
+      return true;
+    }
+  }
+
+  for (NodeIterator it = iBegin; it != iEnd; ++it) {
+    SliceNode::Ptr iNode = boost::static_pointer_cast<SliceNode>(*it);
+    containsMemLoad = (containsMemLoad == true) ? true : findMemoryLoadHelper(memWrite, iNode, list);
+  }
+  if (containsMemLoad == true) {
+    list->push_back(node);
+  }
+  return containsMemLoad;
+}
+
+void findMemoryLoad(Expression::Ptr memWrite,
+                    GraphPtr slice,
+                    std::vector<Node::Ptr> *list) {
+  NodeIterator begin, end;
+  slice->exitNodes(begin, end);//Exit nods are the root nodes.
+  for (NodeIterator it = begin; it != end; ++it) {
+    SliceNode::Ptr iNode = boost::static_pointer_cast<SliceNode>(*it);
+    findMemoryLoadHelper(memWrite, iNode, list);
+  }
+}
+
+void analyzeKnownBitVariables(GraphPtr slice,
+                        Expression::Ptr memWrite,
+                        boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
+                        boost::unordered_map<Assignment::Ptr, AbsRegion> &bitOperands,
+                        boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations
+) {
+
+  // Enqueue all the root nodes of the dataflow graph.
+  // Need to do reverse post order.
+  std::vector<Node::Ptr> list;
+  //getReversePostOrderList(slice, &list);
+  //std::reverse(list.begin(), list.end());
+  findMemoryLoad(memWrite, slice, &list);
+
+  //boost::unordered_set<Assignment::Ptr> visitedVariables;
+  AbsRegion prev = NULL;
+  std::vector<Assignment::Ptr> operations;
+  for(auto it = list.begin(); it != list.end(); ++it) {
+    Node::Ptr node = *it;
+    SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(node);
+    Assignment::Ptr assign = aNode->assign();
+
+    if(DEBUG_BIT) cout << "[bit_var] " << "CHECKING instruction for bit variable: ";
+    if(DEBUG_BIT) cout << "[bit_var] " << assign->format() << " ";
+    if(DEBUG_BIT) cout << "[bit_var] " << assign->insn().format() << " ";
+    if(DEBUG_BIT) cout << "[bit_var] " << id << " ";
+    if(DEBUG_BIT) cout << endl;
+
+    if (prev == NULL) {
+      std::vector<AbsRegion> regions;
+      prev = assign->outputs().begin();
+      continue;
+    }
+
+    if (it + 1 == list.end()) {
+      std::vector<AbsRegion> oRegions;
+      for(auto rit = assign->outputs().begin(); rit != assign->outputs().end(); rit++) {
+        oRegions.push_back(*rit);
+      }
+      bitVariables.insert({assign, oRegions});
+      break;
+    }
+
+    std::vector<AbsRegion> regions;
+    for(auto rit = assign->inputs().begin(); rit != assign->inputs().end(); rit++) {
+      if (*rit == prev) { // TODO check this!!
+        continue;
+      }
+      prev = *rit;
+      bitOperands.insert({assign, *rit});
+      //TODO change bit operand to
+    }
+
+    entryID id = assign->insn().getOperation().getID();
+
+    switch(id) {
+      case e_and:
+      case e_shr:
+      case e_sar:
+      case e_shl_sal: {
+        if(DEBUG_BIT) cout << "[bit_var] encountered shift or and instruction: " << assign->format()
+                           << " " << assign->insn().format() << endl;
+        operations.push_back(assign);
+      }
+        break;
+      default:
+        if(DEBUG_BIT) cout << "[bit_var][warn] Unhandled case: " << assign->format()
+                           << " " << assign->insn().format() << endl;
+    }
+}
+
 void getReversePostOrderListHelper(Node::Ptr node,
-		std::vector<Node::Ptr> *list) {
+                                   std::vector<Node::Ptr> *list) {
   NodeIterator iBegin, iEnd;
   node->ins(iBegin, iEnd);
   // Checking through successors.
@@ -518,12 +656,11 @@ void getReversePostOrderListHelper(Node::Ptr node,
     SliceNode::Ptr iNode = boost::static_pointer_cast<SliceNode>(*it);
     getReversePostOrderListHelper(iNode, list);
   }
-
   list->push_back(node);
 }
 
 void getReversePostOrderList(GraphPtr slice,
-		std::vector<Node::Ptr> *list) {
+                             std::vector<Node::Ptr> *list) {
 
   NodeIterator begin, end;
   slice->exitNodes(begin, end);//Exit nods are the root nodes.
@@ -535,8 +672,7 @@ void getReversePostOrderList(GraphPtr slice,
 void locateBitVariables(GraphPtr slice, 
 		  boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
 		  boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
-		  boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations,
-      bool isKnownBitVar
+		  boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations
 		) {
 
   // Enqueue all the root nodes of the dataflow graph.
@@ -666,12 +802,9 @@ void locateBitVariables(GraphPtr slice,
       continue;
     }
 
-    if (id == e_and || isKnownBitVar) {
-      if (id == e_and) {
-        if (DEBUG_BIT) cout << "[bit_var] " << "FOUND an AND instruction, considered a mask: ";
-      } else if (isKnownBitVar) {
-        if (DEBUG_BIT) cout << "[bit_var] " << "variable is known as a bit variable: ";
-      }
+    if (id == e_and) {
+      if (DEBUG_BIT) cout << "[bit_var] " << "FOUND an AND instruction, considered a mask: ";
+
       if(DEBUG_BIT) cout << "[bit_var] " << assign->format() << " ";
       if(DEBUG_BIT) cout << "[bit_var] " << assign->insn().format() << endl;
       
@@ -1173,6 +1306,7 @@ void getCalleeToCallsites(char *progName) {
       }
       std::vector<Operand> ops;
       insn.getOperands(ops);
+      // TODO is this good enough?
       cJSON_AddStringToObject(json_insn, "src", ops.rbegin() != ops.rend() ? (*ops.rbegin()).format(insn.getArch()).c_str() : "");
       cJSON_AddItemToObject(json_insn, "writes", json_writes);
       cJSON_AddItemToArray(json_insns, json_insn);
@@ -1214,23 +1348,23 @@ void getCalleeToCallsites(char *progName) {
     out.close();
   }
 
-  void backwardSlices(char *addrToRegNames, char *progName, char *funcName) {
+  void backwardSlices(char *addrToRegNames, char *progName) {
     if (DEBUG) cout << "[sa] ================================" << endl;
     if (DEBUG) cout << "[sa] Making multiple backward slices: " << endl;
     if (DEBUG) cout << "[sa] addr to reg: " << addrToRegNames << endl; // FIXME: maybe change to insn to reg, addr is instruction addr
     if (DEBUG) cout << "[sa] prog: " << progName << endl;
-    if (DEBUG) cout << "[sa] func: " << funcName << endl;
 
     cJSON *json_slices = cJSON_CreateArray();
 
-    cJSON *json_addrToRegNames = cJSON_Parse(addrToRegNames);
-    int size = cJSON_GetArraySize(json_addrToRegNames);
+    cJSON *json_sliceStarts = cJSON_Parse(addrToRegNames);
+    int size = cJSON_GetArraySize(json_sliceStarts);
     if (DEBUG) cout << "[sa] size of addr to reg array is:　" << size << endl;
     for (int i = 0; i < size; i++) {
-      cJSON *json_pair = cJSON_GetArrayItem(json_addrToRegNames, i);
-      cJSON *json_regName = cJSON_GetObjectItem(json_pair, "reg_name");
-      cJSON *json_addr = cJSON_GetObjectItem(json_pair, "addr");
-      cJSON *json_isBitVar = cJSON_GetObjectItem(json_pair, "is_bit_var");
+      cJSON *json_sliceStart = cJSON_GetArrayItem(json_sliceStarts, i);
+      cJSON *json_regName = cJSON_GetObjectItem(json_sliceStart, "reg_name");
+      cJSON *json_addr = cJSON_GetObjectItem(json_sliceStart, "addr");
+      cJSON *json_funcName = cJSON_GetObjectItem(json_sliceStart, "func_name");
+      cJSON *json_isBitVar = cJSON_GetObjectItem(json_sliceStart, "is_bit_var");
 
       errno = 0;
       char *end;
@@ -1239,10 +1373,8 @@ void getCalleeToCallsites(char *progName) {
         cout << " Encountered error " << errno << " while parsing " << json_addr->valuestring << endl;
 
       char *regName = json_regName->valuestring;
-
-      bool isKnownBitVar = false;
-      if (json_isBitVar != NULL)
-        isKnownBitVar = (strtol(json_isBitVar->valuestring, &end, 10) == 1) ? true : false;
+      char *funcName = json_funcName->valuestring;
+      bool isKnownBitVar = (json_isBitVar->valueint == 1) ? true : false;
       if (errno != 0)
         cout << " Encountered error " << errno << " while parsing " << json_isBitVar->valuestring << endl;
 
