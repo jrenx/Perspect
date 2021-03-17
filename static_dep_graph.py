@@ -389,8 +389,8 @@ class StaticNode:
         self.mem_load = None
         self.reg_load = None
 
-        self.mem_write = None # none-local data flow dependency
-        self.reg_write = None # local data flow dependency TODO fill in something
+        self.mem_store = None # none-local data flow dependency
+        self.reg_store = None # local data flow dependency TODO fill in something
 
         self.df_predes = []
         self.df_succes = []
