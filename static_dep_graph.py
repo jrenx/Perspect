@@ -6,6 +6,7 @@ from pin_util import *
 from collections import deque
 from collections import OrderedDict
 
+curr_dir = os.path.dirname(os.path.realpath(__file__))
 class BasicBlock:
     def __init__(self, id, ends_in_branch, is_entry, lines):
         # Note: if we call Dyninst twice, the Basic block IDs will change
@@ -441,6 +442,12 @@ class StaticDepGraph:
         self.nodes_in_cf_slice = []
         self.nodes_in_df_slice = []
 
+        self.func_to_cfg = {}
+        self.func_to_cf_slice = {}
+        self.func_to_df_slice = {}
+
+        self.rr_result_cache = {}
+
     def make_node(self, insn, bb, function):
         if insn in self.insn_to_node:
             return self.insn_to_node[insn]
@@ -450,8 +457,26 @@ class StaticDepGraph:
         return node
 
     def buildDependencies(self, insn, func, prog):
-        self.buildControlFlowDependencies(insn, func, prog)
-        self.buildDataFlowDependencies(func, prog)
+        rr_result_file = os.path.join(curr_dir, 'rr_results.json')
+        if os.path.exists(rr_result_file):
+            with open(rr_result_file) as file:
+                self.rr_result_cache = json.load(file)
+
+        explained = set([])
+        worklist = deque()
+        worklist.append([insn, func, prog])
+        while len(worklist) > 0:
+            curr_insn, curr_func, curr_prog = worklist.popleft()
+            #TODO if cfg exists then don't get it again ...
+            #     refactor?
+            cfg = self.buildControlFlowDependencies(curr_insn, curr_func, curr_prog)
+            self.func_to_cfg[func] = cfg
+            
+            self.buildDataFlowDependencies(curr_func, curr_prog)
+
+        rr_result_file = os.path.join(curr_dir, 'rr_results.json')
+        with open(rr_result_file, 'w') as f:
+            json.dump(self.rr_result_cache, f)
 
     def buildDataFlowDependencies(self, func, prog):
         slice_starts = []
@@ -490,8 +515,10 @@ class StaticDepGraph:
 
         for node in self.nodes_in_df_slice:
             print(str(node))
+
             if node.insn == 4234276:
-                results = rr_backslice('909_ziptest_exe9', 4234305, 4234325, node.insn, 'RBP', 0, 0, None)
+                results = rr_backslice('909_ziptest_exe9', 4234305, 4234325, \
+                                       node.insn, 'RBP', 0, 0, None, self.rr_result_cache)
                 print(results)
                 for result in results:
                     # reg_name = result[0]
