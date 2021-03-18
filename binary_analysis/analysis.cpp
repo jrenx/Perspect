@@ -72,6 +72,7 @@ void getReversePostOrderList(GraphPtr slice, std::vector<Node::Ptr> *list);
 void locateBitVariables(GraphPtr slice, 
 		boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
                 boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
+                boost::unordered_map<Assignment::Ptr, AbsRegion> &bitOperands,
                 boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations);
 
 void analyzeKnownBitVariables(GraphPtr slice,
@@ -80,6 +81,8 @@ void analyzeKnownBitVariables(GraphPtr slice,
                               boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
                               boost::unordered_map<Assignment::Ptr, AbsRegion> &bitOperands,
                               boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations);
+
+std::string findMatchingOpExprStr(Assignment::Ptr assign, AbsRegion region);
 
 cJSON * printBBIdsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs);
 cJSON *printBBsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs,
@@ -445,6 +448,61 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsign
   return slice;
 }
 
+std::string findMatchingOpExprStr(Assignment::Ptr assign, AbsRegion region) {
+  AbsRegion curr;
+  AbsRegionConverter arc(true, false);
+
+  std::set<RegisterAST::Ptr> regsRead;
+  assign->insn().getReadSet(regsRead);
+
+  for (auto i = regsRead.begin(); i != regsRead.end(); ++i) {
+    if (DEBUG_BIT)  cout << "[bit_var] reg read: " << (*i)->format() << endl;
+    /*
+    if(assign->insn().getArch() == Arch_aarch64) {
+      MachRegister machReg = (*i)->getID();
+      std::vector<MachRegister> flagRegs = {aarch64::n, aarch64::z, aarch64::c, aarch64::v};
+      if((machReg & 0xFF) == (aarch64::pstate & 0xFF) && (machReg & 0xFF0000) == (aarch64::SPR)) {
+        for(std::vector<MachRegister>::iterator itr = flagRegs.begin(); itr != flagRegs.end(); itr++) {
+          curr = arc.convert(RegisterAST::Ptr(new RegisterAST(*itr)));
+        }
+      } else {
+        curr = arc.convert(*i);
+      }
+    } else {
+      curr = arc.convert(*i);
+    }*/
+    curr = arc.convert(*i);
+    if (curr == region) {
+      return (*i)->format();
+    }
+  }
+
+  /*
+  if (assign->insn().readsMemory()) {
+    std::set<Expression::Ptr> memReads;
+    assign->insn().getMemoryReadOperands(memReads);
+    for (std::set<Expression::Ptr>::const_iterator r = memReads.begin();
+         r != memReads.end();
+         ++r) {
+      curr = arc.convert(*r, assign->addr(), assign->func(), assign->block());
+    }
+  }*/
+
+  std::vector<Operand> ops;
+  assign->insn().getOperands(ops);
+  for (auto oit = ops.begin(); oit != ops.end(); ++oit) {
+    std::set<RegisterAST::Ptr> regsRead;
+    (*oit).getReadSet(regsRead);
+    if (regsRead.size() > 0) continue;
+
+    std::set<RegisterAST::Ptr> regsWrite;
+    (*oit).getWriteSet(regsWrite);
+    if (regsWrite.size() > 0) continue;
+
+    if (DEBUG_BIT) cout << "[bit_var] Is constant: " << (*oit).getValue()->format() << endl;
+    return (*oit).getValue()->format();
+  }
+}
 
 cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int addr, char *regName, bool isKnownBitVar) {
   Function *func = getFunction2(progName, funcName);
@@ -457,7 +515,7 @@ cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int add
   boost::unordered_map<Assignment::Ptr, AbsRegion> bitOperands;
   boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> bitOperations;
   if (!isKnownBitVar) {
-    locateBitVariables(slice, bitVariables, bitVariablesToIgnore, bitOperations);
+    locateBitVariables(slice, bitVariables, bitVariablesToIgnore, bitOperands, bitOperations);
   } else {
     std::set<Expression::Ptr> memWrites;
     insn.getMemoryWriteOperands(memWrites);
@@ -527,7 +585,7 @@ cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int add
         }
         if (INFO) cout << endl;
         cJSON_AddNumberToObject(json_bitOp, "insn_addr", opAssign->addr());
-        cJSON_AddStringToObject(json_bitOp, "operand", bitOperands[opAssign].format().c_str());
+        cJSON_AddStringToObject(json_bitOp, "operand", findMatchingOpExprStr(opAssign, bitOperands[opAssign]).c_str());
         cJSON_AddStringToObject(json_bitOp, "operation", opAssign->insn().getOperation().format().c_str());
         cJSON_AddItemToArray(json_bitOps, json_bitOp);
       }
@@ -719,6 +777,7 @@ void getReversePostOrderList(GraphPtr slice,
 void locateBitVariables(GraphPtr slice, 
 		  boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
 		  boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
+		  boost::unordered_map<Assignment::Ptr, AbsRegion> &bitOperands,
 		  boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations
 		) {
 
@@ -818,6 +877,7 @@ void locateBitVariables(GraphPtr slice,
 	      case e_shl_sal: {
           if(DEBUG_BIT) cout << "[bit_var] encountered shift or and instruction: " << assign->format()
                              << " " << assign->insn().format() << endl;
+          AbsRegion operand;
 	        std::vector<AbsRegion> regions;
 	        if (assign->inputs().size() == 2) {
             //cout << "HERE" << (assign->out() == assign->inputs()[0]) << endl;
@@ -831,6 +891,7 @@ void locateBitVariables(GraphPtr slice,
               regionsToIgnore.push_back(assign->inputs()[0]);
             }
 	          bitVariablesToIgnore.insert({assign, regionsToIgnore});
+            operand = *regionsToIgnore.begin();
 
 	        } else if (assign->inputs().size() == 1) {
 	          regions.push_back(assign->inputs()[0]);
@@ -838,8 +899,11 @@ void locateBitVariables(GraphPtr slice,
             if(DEBUG_BIT) cout << "[warn][bit_var] Unhandle number of inputs. " << endl;
 	        }
 	        bitVariables.insert({assign, regions});
+
 	        operations.push_back(assign);
 	        bitOperations.insert({assign, operations});
+
+          bitOperands.insert({assign, operand});
 	      }
 	      break;
 	      default:
@@ -849,21 +913,32 @@ void locateBitVariables(GraphPtr slice,
       continue;
     }
 
-    if (id == e_and) {
+    if (id == e_and) { //TODO: OR is not yet handled, should probably handle, but works for this case
       if (DEBUG_BIT) cout << "[bit_var] " << "FOUND an AND instruction, considered a mask: ";
 
       if(DEBUG_BIT) cout << "[bit_var] " << assign->format() << " ";
       if(DEBUG_BIT) cout << "[bit_var] " << assign->insn().format() << endl;
       
-      std::vector<AbsRegion> regions;
+      std::vector<AbsRegion> regions; // FIXME, should probably get rid of the vector and just store one AbsRegion?
+      std::vector<AbsRegion> regionsToIgnore;
       for(auto iit = assign->inputs().begin(); iit != assign->inputs().end(); ++iit) {
-        regions.push_back(*iit);
+        if (*iit == assign->out())
+          regions.push_back(*iit);
+        else
+          regionsToIgnore.push_back(*iit);
       }
       bitVariables.insert({assign, regions});
- 
+      bitVariablesToIgnore.insert({assign, regionsToIgnore});
+
       std::vector<Assignment::Ptr> operations;
       operations.push_back(assign);
       bitOperations.insert({assign, operations});
+
+      AbsRegion operand;
+      if (regionsToIgnore.begin() != regionsToIgnore.end()) {
+        operand = *regionsToIgnore.begin();
+      }
+      bitOperands.insert({assign, operand});
 
       continue;
     }
@@ -1333,10 +1408,6 @@ void getCalleeToCallsites(char *progName) {
       cJSON_AddNumberToObject(json_insn, "true_addr", trueAddr);
       cJSON_AddNumberToObject(json_insn, "is_loop_insn", isLoopInsn);
 
-      //AssignmentConverter ac(true, false);
-      //vector<Assignment::Ptr> assignments;
-      //ac.convert(insn, addr, func, bb, assignments);
-      // ^ TODO check how to use ac.convert again
       cJSON *json_writes = cJSON_CreateArray();
       std::set<Expression::Ptr> memWrites;
       insn.getMemoryWriteOperands(memWrites);
