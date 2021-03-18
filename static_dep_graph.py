@@ -67,9 +67,12 @@ class CFG:
         self.id_to_bb_in_slice = {} #Includes only the Basic Blocks in the slice
         self.ordered_bbs_in_slice = [] #Includes only the Basic Blocks in the slice
 
-        self.target_bb = None
+        self.target_bbs = set()
         self.entry_bbs = []
         self.postorder_list = []
+
+        self.built = False
+        self.sliced = False
 
     '''
     def get_first_insn_of_every_block(self):
@@ -226,7 +229,7 @@ class CFG:
                 for succe in child_bb.succes:
                     worklist.append(succe)
 
-            if self.target_bb in all_succes_before_immed_pdom:
+            if len(self.target_bbs.intersection(all_succes_before_immed_pdom)) > 0:
                 ignore_set.union(all_succes_before_immed_pdom)
                 continue
 
@@ -247,14 +250,13 @@ class CFG:
                     self.ordered_bbs_in_slice.remove(child_bb)
                 ignore_set.add(child_bb)
 
-    def slice(self, insn):
-        # Build the control flow graph for the entire function
-        self.build_cfg(insn)
-
+    def slice(self):
+        self.sliced = True
         # Find all the control flow predecessors of the given instruction
         # https://stackoverflow.com/questions/35206372/understanding-stacks-and-queues-in-python/35206452
         worklist = deque()
-        worklist.append(self.target_bb)
+        for bb in self.target_bbs:
+            worklist.append(bb)
         while len(worklist) > 0:
             bb = worklist.popleft()
             if bb.id in self.id_to_bb_in_slice:
@@ -285,7 +287,8 @@ class CFG:
             print(str(bb))
         print("Total number of basic blocks after simplifying: " + str(len(self.ordered_bbs_in_slice)))
 
-    def build_cfg(self, insn):
+    def build(self, insn):
+        self.built = True
         json_bbs = getAllBBs(insn, self.func, self.prog)
 
         for json_bb in json_bbs:
@@ -304,8 +307,8 @@ class CFG:
                 lines.append(int(json_line['line']))
 
             bb = BasicBlock(bb_id, ends_in_branch, is_entry, lines)
-            if self.target_bb is None:
-                self.target_bb = bb
+            #if self.target_bb is None:
+            #    self.target_bb = bb
             if is_entry:
                 self.entry_bbs.append(bb)
 
@@ -469,9 +472,8 @@ class StaticDepGraph:
             curr_insn, curr_func, curr_prog = worklist.popleft()
             #TODO if cfg exists then don't get it again ...
             #     refactor?
-            cfg = self.buildControlFlowDependencies(curr_insn, curr_func, curr_prog)
-            self.func_to_cfg[func] = cfg
-            
+            self.buildControlFlowDependencies(curr_insn, curr_func, curr_prog)
+
             self.buildDataFlowDependencies(curr_func, curr_prog)
 
         rr_result_file = os.path.join(curr_dir, 'rr_results.json')
@@ -543,9 +545,17 @@ class StaticDepGraph:
         print("Total number of nodes in local dataflow slice: " + str(len(self.nodes_in_df_slice)))
 
     def buildControlFlowDependencies(self, insn, func, prog):
-        cfg = CFG(func, prog)
-        cfg.slice(insn)
 
+        if func in self.func_to_cfg:
+            cfg = self.func_to_cfg[func]
+        else:
+            cfg = CFG(func, prog)
+            # Build the control flow graph for the entire function then slice
+            cfg.build(insn)  # FIXME: for now, order the BBs such that the one that contains insn appears first
+            self.func_to_cfg[func] = cfg
+
+        cfg.target_bbs.add(cfg.ordered_bbs[0])
+        cfg.slice()
         bb_id_to_node_id = {}
 
         first = True
@@ -574,7 +584,6 @@ class StaticDepGraph:
         for node in self.nodes_in_cf_slice:
             print(str(node))
         print("Total number of nodes in control flow slice: " + str(len(self.nodes_in_cf_slice)))
-        return cfg
 
 if __name__ == "__main__":
 
