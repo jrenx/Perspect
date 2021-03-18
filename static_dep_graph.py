@@ -364,7 +364,7 @@ class MemoryAccess:
         self.off = off
 
     def __str__(self):
-        s = "Memory load address: " + str(self.reg) + " * " \
+        s = " address: " + str(self.reg) + " * " \
             + str(self.shift) + " + " + str(self.off)
         return s
 
