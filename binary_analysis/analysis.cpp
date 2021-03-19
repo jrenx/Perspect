@@ -32,6 +32,7 @@ bool INFO = true;
 bool DEBUG = false;
 bool DEBUG_SLICE = false;
 bool DEBUG_BIT = false;
+bool DEBUG_STACK = true;
 
 typedef enum {
   create,
@@ -363,8 +364,8 @@ public:
   bool filter = false;
   Instruction insn;
   virtual bool endAtPoint(Assignment::Ptr ap) {
-    if(DEBUG|DEBUG_SLICE) cout << endl;
-    if(DEBUG|DEBUG_SLICE) cout << "[slice] Should continue slicing the assignment?" << endl;
+    if(DEBUG || DEBUG_SLICE) cout << endl;
+    if(DEBUG || DEBUG_SLICE) cout << "[slice] Should continue slicing the assignment?" << endl;
     if(DEBUG_SLICE) cout << "[slice] " << "assignment: " << ap->format();
     //cout << "  ";
     //cout << ap->insn().readsMemory();
@@ -390,7 +391,7 @@ public:
   virtual bool addPredecessor(AbsRegion reg) {
     std:string regStr = reg.format();
     if(DEBUG || DEBUG_SLICE) cout << endl;
-    if(DEBUG|DEBUG_SLICE) cout << "[slice] Should add the dataflow predecessor?" << endl;
+    if(DEBUG || DEBUG_SLICE) cout << "[slice] Should add the dataflow predecessor?" << endl;
     if(DEBUG_SLICE) cout << "[slice] " << "predecessor reg: " << regStr << endl;
     if (insn.readsMemory()) return false;
     if (filter) {
@@ -504,11 +505,148 @@ std::string findMatchingOpExprStr(Assignment::Ptr assign, AbsRegion region) {
   }
 }
 
+void getReversePostOrderListHelper(Block *b,
+                                   std::vector<Block *> &list,
+                                   boost::unordered_set<Block *> &visited) {
+
+  if (visited.find(b) != visited.end()) {
+    if(DEBUG) cout << "Already visited " << endl;
+    return;
+  }
+
+  Block::edgelist targets = b->targets();
+  visited.insert(b);
+
+  for (auto it = targets.begin(); it != targets.end(); it++) {
+    if ((*it)->type() == CALL || (*it)->type() == RET || (*it)->type() == CATCH)
+      continue;
+    Block* src = (*it)->src();
+    Block* trg = (*it)->trg();
+    getReversePostOrderListHelper(trg, list, visited);
+  }
+  list.push_back(b);
+}
+
+bool writesToStack(Operand op, Instruction insn, Address addr) {
+  if (!op.writesMemory()) return false;
+
+  if (DEBUG && DEBUG_STACK) cout << "[sa] Checking memory write @ " << op.format(insn.getArch()) << endl;
+
+  std::set<Expression::Ptr> memWrites;
+  insn.getMemoryWriteOperands(memWrites);
+  // FIXME: For now just handle those that have one memory write.
+  if (DEBUG && DEBUG_STACK) cout << "[sa] Number of memory writes: " << memWrites.size() << endl;
+  assert(memWrites.size() == 1);
+
+  std::set<RegisterAST::Ptr> regsRead;
+  op.getReadSet(regsRead);
+  if (DEBUG && DEBUG_STACK) cout << "[sa] Register read count: " << regsRead.size() << endl;
+  for (auto rit = regsRead.begin(); rit != regsRead.end(); rit++) {
+    RegisterAST::Ptr regAst = *rit;
+    MachRegister reg = regAst->getID();
+    if (reg == x86_64::rsp || reg == x86_64::esp) {
+      if (DEBUG_STACK) cout << "[sa] Found store to stack: " << op.format(insn.getArch())
+                            << " @ " << insn.format() << " @ " << addr << endl;
+
+      std::set<RegisterAST::Ptr> regsWrite;
+      op.getWriteSet(regsWrite);
+      assert(regsWrite.size() == 0);
+
+      return true;
+    }
+  }
+  return false;
+}
+
+void checkAndGetStackWrites(Function *f) { //TODO, add the declaration to top
+  //cout << "Checking function: " << f->name() << endl;
+  std::vector<Block *> list;
+  boost::unordered_set<Block *> visited;
+  getReversePostOrderListHelper(f->entry(), list, visited);
+  std::reverse(list.begin(), list.end());
+
+  for (auto bit = list.begin(); bit != list.end(); bit++) {
+    Block::Insns insns;
+    Block *b = *bit;
+    b->getInsns(insns);
+    for (auto iit = insns.begin(); iit != insns.end(); iit++) {
+      Address addr = (*iit).first;
+      Instruction insn = (*iit).second;
+      if (DEBUG && DEBUG_STACK) cout << "[sa] Checking register write @ " << insn.format() << endl;
+      std::set<RegisterAST::Ptr> regsWrite;
+      insn.getWriteSet(regsWrite);
+      for (auto rit = regsWrite.begin(); rit != regsWrite.end(); rit++) {
+        RegisterAST::Ptr regAst = *rit;
+        MachRegister reg = regAst->getID();
+        if (reg == x86_64::rsp || reg == x86_64::esp) {
+          if (DEBUG_STACK) cout << "[sa] Found stack pointer manipulation @ " << insn.format() << endl;
+        }
+        //StackAnalysis sa(f);
+        //StackAnalysis::DefHeightSet set = sa.findDefHeight(b, addr, Absloc(reg));
+        //cout << "HERE: " << reg.name() << " " << (*set.begin()).height.format() << " " << insn.format() << " @ " << addr << endl;
+      }
+    }
+  }
+
+  boost::unordered_map<Address, boost::unordered_map<Operand, std::vector<std::pair<Instruction, Address>>>>
+      insnToReachableStores; //FIXME if I'm more comfortable with pointers store pointers instead ...
+  for (auto bit = list.begin(); bit != list.end(); bit++) {
+    Block::Insns insns;
+    Block *b = *bit;
+    b->getInsns(insns);
+    for (auto iit = insns.begin(); iit != insns.end(); iit++) {
+      Address addr = (*iit).first;
+      Instruction insn = (*iit).second;
+      std::vector<Operand> ops;
+      insn.getOperands(ops);
+      if (DEBUG) cout << "[sa] checking instruction: " << insn.format() << " @" << addr << endl;
+      for (auto oit = ops.begin(); oit != ops.end(); ++oit) {
+        if (!writesToStack(*oit, insn, addr)) continue;
+        boost::unordered_map<Expression::Ptr, std::pair<Instruction, Address>> reachableStores;
+        std::vector<std::pair<Instruction, Address>> v;
+        std::pair<Instruction, Address> p(insn, addr);
+        v.push_back(p)
+        reachableStores.insert({op, v});
+        insnToReachableStores.insert({addr, reachableStores});
+      }
+    }
+  }
+
+  bool changed = true;
+  while (changed) {
+    changed = false;
+    for (auto bit = list.begin(); bit != list.end(); bit++) {
+      Block::Insns insns;
+      Block *b = *bit;
+      b->getInsns(insns);
+      // for the first instruction get sources, union them
+      // otherwise, just get the previous
+      // then, for the same entry, override
+      // if any update, then changed .. how to compare two vectors are equal?
+      for (auto iit = insns.begin(); iit != insns.end(); iit++) {
+        Address addr = (*iit).first;
+        Instruction insn = (*iit).second;
+        if (DEBUG) cout << "[sa] checking instruction: " << insn.format() << " @" << addr << endl;
+        for (auto oit = ops.begin(); oit != ops.end(); ++oit) {
+          if (!writesToStack(*oit, insn, addr)) continue;
+          if (insnToReachableStores.find(addr) == insnToReachableStores.end()) {
+            boost::unordered_map<Expression::Ptr, std::pair<Instruction, Address>> reachableStores;
+            insnToReachableStores.insert({addr, reachableStores});
+            changed = true;
+          }
+
+        }
+      }
+    }
+  }
+}
+
 cJSON *backwardSliceHelper(char *progName, char *funcName, long unsigned int addr, char *regName, bool isKnownBitVar) {
   Function *func = getFunction2(progName, funcName);
   Block *bb = getBasicBlock2(func, addr);
   Instruction insn = bb->getInsn(addr);
   GraphPtr slice = buildBackwardSlice(func, bb, insn, addr, regName);
+  checkAndGetStackWrites(func);
 
   boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariables;
   boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariablesToIgnore;
