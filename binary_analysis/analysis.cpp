@@ -41,57 +41,6 @@ typedef enum {
   open
 } accessType_t;
 
-
-BPatch_addressSpace *startInstrumenting(accessType_t accessType, const char *name, int pid, const char *argv[]);
-BPatch_image *getImage(const char *progName);
-
-void getLineInfo(BPatch_basicBlock *block, vector<unsigned short> &allLines);
-void printLineInfo(BPatch_basicBlock *block);
-void printAddrToLineMappings(BPatch_image *appImage, const char *funcName);
-
-void getAllControlFlowPredecessors(vector<BPatch_basicBlock *> &predecessors,
-		BPatch_image *appImage, const char *funcName, long unsigned int addr);
-
-BPatch_basicBlock *getImmediateDominator(BPatch_image *appImage, const char *funcName, long unsigned int addr);
-Block *getImmediateDominator2(Function *f, long unsigned int addr);
-
-BPatch_function *getFunction(BPatch_image *appImage, const char *funcName);
-Function *getFunction2(const char *binaryPath, const char *funcName);
-
-Instruction getIfCondition(BPatch_basicBlock *block);
-Instruction getIfCondition2(Block *b);
-
-BPatch_basicBlock *getBasicBlock(BPatch_flowGraph *fg, long unsigned int addr);
-Block *getBasicBlock2(Function *f, long unsigned int addr);
-Block *getBasicBlockContainingInsnBeforeAddr(Function *f, long unsigned int addr);
-
-GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsigned int addr, char *regName);
-void backwardSliceHelper(cJSON *json_reads, char *progName, char *funcName, long unsigned int addr, char *regName, bool isKnownBitVar = false);
-
-void getReversePostOrderListHelper(Node::Ptr node, std::vector<Node::Ptr> *list);
-void getReversePostOrderList(GraphPtr slice, std::vector<Node::Ptr> *list);
-
-void locateBitVariables(GraphPtr slice, 
-		boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
-                boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
-                boost::unordered_map<Assignment::Ptr, AbsRegion> &bitOperands,
-                boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations);
-
-void analyzeKnownBitVariables(GraphPtr slice,
-                              Expression::Ptr memWrite,
-                              boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
-                              boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
-                              boost::unordered_map<Assignment::Ptr, AbsRegion> &bitOperands,
-                              boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations);
-
-void getRegAndOff(Expression::Ptr exp, MachRegister *machReg, long *off);
-
-std::string findMatchingOpExprStr(Assignment::Ptr assign, AbsRegion region);
-
-cJSON * printBBIdsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs);
-cJSON *printBBsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs,
-    boost::unordered_map<BPatch_basicBlock *, vector<BPatch_basicBlock *>> *backEdges = NULL);
-
 namespace boost {
   class StackStore {
   private:
@@ -139,6 +88,67 @@ namespace boost {
     return ss.hash;
   }
 }
+
+BPatch_addressSpace *startInstrumenting(accessType_t accessType, const char *name, int pid, const char *argv[]);
+BPatch_image *getImage(const char *progName);
+
+void getLineInfo(BPatch_basicBlock *block, vector<unsigned short> &allLines);
+void printLineInfo(BPatch_basicBlock *block);
+void printAddrToLineMappings(BPatch_image *appImage, const char *funcName);
+
+void getAllControlFlowPredecessors(vector<BPatch_basicBlock *> &predecessors,
+		BPatch_image *appImage, const char *funcName, long unsigned int addr);
+
+BPatch_basicBlock *getImmediateDominator(BPatch_image *appImage, const char *funcName, long unsigned int addr);
+Block *getImmediateDominator2(Function *f, long unsigned int addr);
+
+BPatch_function *getFunction(BPatch_image *appImage, const char *funcName);
+Function *getFunction2(const char *binaryPath, const char *funcName);
+
+Instruction getIfCondition(BPatch_basicBlock *block);
+Instruction getIfCondition2(Block *b);
+
+BPatch_basicBlock *getBasicBlock(BPatch_flowGraph *fg, long unsigned int addr);
+Block *getBasicBlock2(Function *f, long unsigned int addr);
+Block *getBasicBlockContainingInsnBeforeAddr(Function *f, long unsigned int addr);
+
+GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsigned int addr, char *regName);
+void backwardSliceHelper(cJSON *json_reads, char *progName, char *funcName, long unsigned int addr, char *regName, bool isKnownBitVar = false);
+
+void getReversePostOrderListHelper(Node::Ptr node, std::vector<Node::Ptr> *list);
+void getReversePostOrderList(GraphPtr slice, std::vector<Node::Ptr> *list);
+
+void locateBitVariables(GraphPtr slice, 
+		boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
+                boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
+                boost::unordered_map<Assignment::Ptr, AbsRegion> &bitOperands,
+                boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations);
+
+void analyzeKnownBitVariables(GraphPtr slice,
+                              Expression::Ptr memWrite,
+                              boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
+                              boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
+                              boost::unordered_map<Assignment::Ptr, AbsRegion> &bitOperands,
+                              boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations);
+
+boost::unordered_set<Address> checkAndGetStackWrites(Function *f, Instruction readInsn, Address readAddr,
+                                                     MachRegister readReg, long readOff);
+void getStackHeights(std::vector<Block *> &list, boost::unordered_map<Address, long> &insnToStackHeight);
+bool readsFromStack(Instruction insn, Address addr, MachRegister *reg, long *off);
+bool writesToStack(Operand op, Instruction insn, Address addr);
+void getRegAndOff(Expression::Ptr exp, MachRegister *machReg, long *off);
+void printReachableStores(boost::unordered_map<StackStore, boost::unordered_set<Address>> &reachableStores);
+
+boost::unordered_set<Address> checkAndGetWritesToStaticAddrs(Function *f, Instruction readInsn,
+                                                             Address readAddr, long readOff);
+bool readsFromStaticAddr(Instruction insn, Address addr, long *off); // TODO rename off
+bool writesToStaticAddr(Instruction insn, Address addr, long *off);
+
+std::string findMatchingOpExprStr(Assignment::Ptr assign, AbsRegion region);
+
+cJSON * printBBIdsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs);
+cJSON *printBBsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs,
+    boost::unordered_map<BPatch_basicBlock *, vector<BPatch_basicBlock *>> *backEdges = NULL);
 
 // Attach, create, or open a file for rewriting
 BPatch_addressSpace *startInstrumenting(accessType_t accessType, const char *name, int pid, const char *argv[]) {
@@ -615,13 +625,13 @@ bool readsFromStack(Instruction insn, Address addr, MachRegister *reg, long *off
   std::set<Expression::Ptr> memReads;
   insn.getMemoryReadOperands(memReads);
   // FIXME: For now just handle those that have one memory write.
-  //if (DEBUG && DEBUG_STACK)
+  if (DEBUG && DEBUG_STACK)
     cout << "[stack] Number of memory reads: " << memReads.size() << endl;
 
   for (auto it = memReads.begin(); it != memReads.end(); it++) {
-    cout << "[stack] Checking memory read " << (*it)->format() << endl;
+    if (DEBUG && DEBUG_STACK) cout << "[stack] Checking memory read " << (*it)->format() << endl;
     getRegAndOff(*it, reg, off);
-    cout << "[stack] Register read is " << reg->name() << endl;
+    if (DEBUG && DEBUG_STACK) cout << "[stack] Register read is " << reg->name() << endl;
     if ((*reg) == x86_64::rsp || (*reg) == x86_64::esp) {
       if (DEBUG_STACK) cout << "[stack] Found store to stack: " << " @ " << insn.format() << " @ " << addr << endl;
       return true;
@@ -666,7 +676,7 @@ void getRegAndOff(Expression::Ptr exp, MachRegister *machReg, long *off) {
   }
 }
 
-void getStackHeights(std::vector<Block *> &list, boost::unordered_map<Address, long> &insnToStackHeight) { // TODO add declaration to front
+void getStackHeights(std::vector<Block *> &list, boost::unordered_map<Address, long> &insnToStackHeight) {
   // FIXME: just one pass, multiple predecessors are supposed to have the same stack height right?
   long currHeight = 0;
   for (auto bit = list.begin(); bit != list.end(); bit++) {
@@ -741,7 +751,8 @@ void getStackHeights(std::vector<Block *> &list, boost::unordered_map<Address, l
   }
 }
 
-boost::unordered_set<Address> checkAndGetStackWrites(Function *f, Instruction readInsn, Address readAddr, MachRegister readReg, long readOff) { //TODO, add the declaration to top
+boost::unordered_set<Address> checkAndGetStackWrites(Function *f, Instruction readInsn, Address readAddr,
+                                        MachRegister readReg, long readOff) {
   cout << "[stack] Checking function: " << f->name() << " for "
        << readReg.name() << " + " << readOff << " @ " << readInsn.format() << endl;
   std::vector<Block *> list;
@@ -901,11 +912,209 @@ boost::unordered_set<Address> checkAndGetStackWrites(Function *f, Instruction re
   return insnToReachableStores[readAddr][stackRead];
 }
 
+bool readsFromStaticAddr(Instruction insn, Address addr, long *off) {
+  if (DEBUG && DEBUG_STACK) cout << "[sa] Checking memory read @ " << insn.format() << endl;
+
+  std::set<Expression::Ptr> memReads;
+  insn.getMemoryReadOperands(memReads);
+  // FIXME: For now just handle those that have one memory write.
+  if (DEBUG)
+    cout << "[sa] Number of memory reads: " << memReads.size() << endl;
+
+  MachRegister reg;
+  for (auto it = memReads.begin(); it != memReads.end(); it++) {
+    // FIXME: is this check better or the check in getMemWritesToStaticAddresses?
+    if (DEBUG) cout << "[sa] Checking memory read " << (*it)->format() << endl;
+    getRegAndOff(*it, &reg, off);
+    if (DEBUG) cout << "[sa] Register read is " << reg.name() << endl;
+    if (reg == InvalidReg) {
+      if (DEBUG) cout << "[stack] Found read from static addr: " << " @ " << insn.format() << " @ " << addr << endl;
+      return true;
+    }
+  }
+  return false;
+}
+
+bool writesToStaticAddr(Instruction insn, Address addr, long *off) {
+  //TODO refactor and combine with readsFromStaticAddr?
+  if (DEBUG) cout << "[sa] Checking memory write @ " << insn.format() << endl;
+
+  std::set<Expression::Ptr> memWrites;
+  insn.getMemoryWriteOperands(memWrites);
+  // FIXME: For now just handle those that have one memory write.
+  if (DEBUG)
+    cout << "[sa] Number of memory reads: " << memWrites.size() << endl;
+
+  MachRegister reg;
+  for (auto it = memWrites.begin(); it != memWrites.end(); it++) {
+    // FIXME: is this check better or the check in getMemWritesToStaticAddresses?
+    if (DEBUG) cout << "[sa] Checking memory write " << (*it)->format() << endl;
+    getRegAndOff(*it, &reg, off);
+    if (DEBUG) cout << "[sa] Register read is " << reg.name() << endl;
+    if (reg == InvalidReg) {
+      if (DEBUG) cout << "[stack] Found write to static addr: " << " @ " << insn.format() << " @ " << addr << endl;
+      return true;
+    }
+  }
+  return false;
+}
+
+boost::unordered_set<Address> checkAndGetWritesToStaticAddrs(Function *f, Instruction readInsn,
+    Address readAddr, long readOff) { // TODO can we refactor and combine this with the stack store logic?
+  cout << "[sa] Checking function: " << f->name() << " for "
+       << readOff << " @ " << readInsn.format() << endl;
+  std::vector<Block *> list;
+  boost::unordered_set<Block *> visited;
+  getReversePostOrderListHelper(f->entry(), list, visited);
+  std::reverse(list.begin(), list.end());
+
+  boost::unordered_map<Address, boost::unordered_map<long, boost::unordered_set<Address>>>
+      insnToReachableStores; //FIXME if I'm more comfortable with pointers store pointers instead ... // FIXME store or write?
+  for (auto bit = list.begin(); bit != list.end(); bit++) {
+    Block::Insns insns;
+    Block *b = *bit;
+    b->getInsns(insns);
+    for (auto iit = insns.begin(); iit != insns.end(); iit++) {
+      Address addr = (*iit).first;
+      Instruction insn = (*iit).second;
+      std::vector<Operand> ops;
+      insn.getOperands(ops);
+      if (DEBUG) cout << "[sa] checking instruction: " << insn.format() << " @" << addr << endl;
+      boost::unordered_map<long, boost::unordered_set<Address>> reachableStores;
+
+      for (auto oit = ops.begin(); oit != ops.end(); ++oit) {
+        Operand op = *oit;
+        long off = 0;
+        if (!writesToStaticAddr(insn, addr, &off)) continue;
+
+        boost::unordered_set<Address> s;
+        s.insert(addr);
+
+        if (off == readOff) {
+          reachableStores.insert({off, s});
+        }
+      }
+      insnToReachableStores.insert({addr, reachableStores});
+    }
+  }
+
+  bool changed = true;
+  int iter = 0;
+  while (changed) {
+    iter ++;
+    if (DEBUG) cout << "[sa] Updating for " << iter << " iterations. " << endl;
+    changed = false;
+    for (auto bit = list.begin(); bit != list.end(); bit++) {
+      Block::Insns insns;
+      Block *b = *bit;
+      if (DEBUG && DEBUG_STACK) cout << "[sa] ===========================================================" << endl;
+      if (DEBUG && DEBUG_STACK) cout << "[sa] Checking basic block from " << b->start() << " to " << b->end() << endl;
+      b->getInsns(insns);
+      // for the first instruction get sources, union them
+      // otherwise, just get the previous
+      // then, for the same entry, override
+      // if any update, then changed .. how to compare two vectors are equal?
+      boost::unordered_map<long, boost::unordered_set<Address>> prevReachableStores;
+      Block::edgelist sources = b->sources();
+      for (auto eit = sources.begin(); eit != sources.end(); eit++) {
+        if ((*eit)->type() == CALL || (*eit)->type() == RET || (*eit)->type() == CATCH)
+          continue;
+        Block* src = (*eit)->src();
+        Block* trg = (*eit)->trg();
+        assert(trg == b);
+        if (DEBUG) cout << "[sa]     predecessor block " << src->start() << " to " << src->end() << endl;
+        boost::unordered_map<long, boost::unordered_set<Address>> predReachableStores =
+            insnToReachableStores[src->last()];
+        for (auto mit = predReachableStores.begin(); mit != predReachableStores.end(); mit++) {
+          long currOff = (*mit).first;
+          boost::unordered_set<Address> s = (*mit).second;
+          if (prevReachableStores.find(currOff) == prevReachableStores.end()) {
+            prevReachableStores.insert({currOff, s}); // Should be a separate copy otherwise wouldn't work
+          } else {
+            for (auto sit = s.begin(); sit != s.end(); sit++) {
+              prevReachableStores[currOff].insert(*sit);
+            }
+          }
+        }
+      }
+      if (DEBUG) cout << "[sa] aggregated stores from predecessors:" << endl;
+      // (DEBUG) printReachableStores(prevReachableStores);
+
+      for (auto iit = insns.begin(); iit != insns.end(); iit++) {
+        Address addr = (*iit).first;
+        Instruction insn = (*iit).second;
+        if (DEBUG_STACK)
+          cout << "[sa] Working on instruction: " << insn.format()
+               << " @" << std::hex << addr << std::dec << endl;
+
+        boost::unordered_map<long, boost::unordered_set<Address>> currReachableStores =
+            insnToReachableStores[addr];
+
+        /*
+        if (addr != b->start() && addr != b->last() && currReachableStores.size() == 0) {
+          continue;
+        }*/
+
+        //if (DEBUG && DEBUG_STACK) cout << "[sa]   stores to static addresses before update:" << endl;
+        //if (DEBUG && DEBUG_STACK) printReachableStores(insnToReachableStores[addr]);
+
+        for (auto mit = currReachableStores.begin(); mit != currReachableStores.end(); mit++) {
+          long currOff = (*mit).first;
+          boost::unordered_set<Address> s = (*mit).second;
+          prevReachableStores.insert({currOff, s});
+        }
+
+        if (currReachableStores.size() != prevReachableStores.size()) {
+          changed = true;
+        } else {
+          for (auto mit = currReachableStores.begin(); mit != currReachableStores.end(); mit++) {
+            long currOff = (*mit).first;
+            /*
+            if (prevReachableStores.find(ss) == prevReachableStores.end()) {
+              changed = true;
+              break;
+            }*/
+
+            boost::unordered_set<Address> s1 = (*mit).second;
+            boost::unordered_set<Address> s2 = prevReachableStores[currOff];
+            if (s1.size() != s2.size()) {
+              changed = true;
+              break;
+            }
+
+            for (auto sit = s1.begin(); sit != s1.end(); sit++) {
+              if (s2.find(*sit) == s2.end()) {
+                changed = true;
+                break;
+              }
+            }
+            if (changed) break;
+          }
+        }
+
+        insnToReachableStores[addr] = prevReachableStores;
+
+        //if (DEBUG)
+        //  cout << "[sa]   stores to static addresses after update:" << endl;
+        //if (DEBUG)
+        //  printReachableStores(insnToReachableStores[addr]);
+
+        //prevReachableStores = currReachableStores;
+        //if (DEBUG) cout << "[sa]   stores to static addresses from previous instructions:" << endl;
+        //if (DEBUG) printReachableStores(prevReachableStores);
+        //if (DEBUG) cout << "[sa]" << endl;
+      }
+    }
+  }
+  return insnToReachableStores[readAddr][readOff];
+}
+
+
 void backwardSliceHelper(cJSON *json_reads, char *progName, char *funcName,
                           long unsigned int addr, char *regName, bool isKnownBitVar) {
 
   if (INFO) cout << endl;
-  if (INFO) cout << "[sa] ================================" << endl;
+  if (INFO) cout << "[sa] -------------------------------" << endl;
   if (INFO) cout << "[sa] Making a backward slice: " << endl;
   if (INFO) cout << "[sa] prog: " << progName << endl;
   if (INFO) cout << "[sa] func: " << funcName << endl;
@@ -964,12 +1173,22 @@ void backwardSliceHelper(cJSON *json_reads, char *progName, char *funcName,
       continue;
     }
 
+    // TODO, technically for both below scenarios should verify with RR cuz no guarantee there's no other writes
+    //       low prioirty for now.
     MachRegister readReg; long readOff;
     if (readsFromStack(assign->insn(), assign->addr(), &readReg, &readOff)) {
       cout << "[sa] result of slicing is reading from stack, perform stack analysis..." << endl;
       boost::unordered_set<Address> stackWrites = checkAndGetStackWrites(func, assign->insn(), assign->addr(), readReg, readOff);
       for (auto stit = stackWrites.begin(); stit != stackWrites.end(); stit++) {
         backwardSliceHelper(json_reads, progName, funcName, *stit, "", isKnownBitVar);
+      }
+      continue;
+    } else if (readsFromStaticAddr(assign->insn(), assign->addr(), &readOff)) {
+      cout << "[sa] result of slicing is reading from static addr, looking for writes to static addrs..." << endl;
+      boost::unordered_set<Address> writesToStaticAddrs = checkAndGetWritesToStaticAddrs(
+          func, assign->insn(), assign->addr(), readOff);
+      for (auto wit = writesToStaticAddrs.begin(); wit != writesToStaticAddrs.end(); wit++) {
+        backwardSliceHelper(json_reads, progName, funcName, *wit, "", isKnownBitVar);
       }
       continue;
     }
@@ -1885,10 +2104,10 @@ void getCalleeToCallsites(char *progName) {
   }
 
   void backwardSlices(char *addrToRegNames, char *progName) {
-    if (DEBUG) cout << "[sa] ================================" << endl;
-    if (DEBUG) cout << "[sa] Making multiple backward slices: " << endl;
-    if (DEBUG) cout << "[sa] addr to reg: " << addrToRegNames << endl; // FIXME: maybe change to insn to reg, addr is instruction addr
-    if (DEBUG) cout << "[sa] prog: " << progName << endl;
+    if (INFO) cout << "[sa] ================================" << endl;
+    if (INFO) cout << "[sa] Making multiple backward slices: " << endl;
+    if (INFO) cout << "[sa] addr to reg: " << addrToRegNames << endl; // FIXME: maybe change to insn to reg, addr is instruction addr
+    if (INFO) cout << "[sa] prog: " << progName << endl;
 
     cJSON *json_slices = cJSON_CreateArray();
 
