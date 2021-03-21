@@ -50,8 +50,8 @@ def test_sa_slices2():
 
 def test_sa_slices3():
     slice_starts = []
-    #slice_starts.append(['', int('0x43c46c', 16), 'unicode.init', False])
-    slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
+    slice_starts.append(['', int('0x43c46c', 16), 'unicode.init', False])
+    #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
     results = static_backslices(slice_starts, '909_ziptest_exe9')
     print(results)
 
