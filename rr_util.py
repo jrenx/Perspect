@@ -46,7 +46,8 @@ def dynamic_backslice2_old(branch, target, reg, off, insn):
                                  insn_str, reg, off)
     return list(rr_result_defs[0].union(rr_result_defs[1]))
 
-def rr_backslice(prog, branch, target, insn, reg, shift = 0, off = 0, off_reg = None, rr_result_cache = None):
+#FIXME: just pass in the MemoryAccess struct?
+def rr_backslice(prog, branch, target, insn, reg, shift = 0, off = 0, off_reg = None): #, rr_result_cache = None):
     #TODO, the offset and shift are stored as decimals,
     # should they be passes dec or hex to RR?
     # Looks like they take hex strings
@@ -59,18 +60,30 @@ def rr_backslice(prog, branch, target, insn, reg, shift = 0, off = 0, off_reg = 
     off_reg_str = None if off_reg is None else off_reg.lower()
     key = prog + "_" + branch_str + "_" + target_str + "_" \
           + insn_str + "_" + reg_str + "_" + shift_str + "_" + off_str + "_" + str(off_reg_str)
+
+    rr_result_cache = {}
+    rr_result_file = os.path.join(curr_dir, 'rr_results.json')
+    if os.path.exists(rr_result_file):
+        with open(rr_result_file) as file:
+            rr_result_cache = json.load(file)
+
     if key in rr_result_cache:
         return rr_result_cache[key]
 
     print("[main] Inputtng to RR: " \
-        + " reg: " + str(reg_str) + " off: " + str(off_str) + " @ " + str(insn_str)\
-        + " branch @" + str(branch_str) + " target @" + str(target_str)\
-        + " program: " +str(prog))
+        + " reg: " + str(reg_str) + " shift: " + str(shift_str) + " off_reg: " + str(off_reg_str) + " off: " + str(off_str)\
+        + " @ " + str(insn_str) + " branch @" + str(branch_str) + " target @" + str(target_str)\
+        + " program: " +str(prog), flush=True)
 
     rr_result_defs = get_def(prog, branch_str, target_str, insn_str, reg_str, shift_str, off_str, off_reg_str)
-    print("[main] Result: " + str(len(rr_result_defs)) + " def points: " + str(rr_result_defs))
+    print("[main] Result from RR: " + str(len(rr_result_defs)) + " def points: " + str(rr_result_defs))
 
     rr_result_cache[key] = rr_result_defs
+
+    #rr_result_file = os.path.join(curr_dir, 'rr_results.json')
+    with open(rr_result_file, 'w') as f:
+        json.dump(rr_result_cache, f)
+
     return rr_result_defs
 
 ################################################################

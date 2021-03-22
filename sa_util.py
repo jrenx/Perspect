@@ -23,7 +23,9 @@ def parseLoadsOrStores(json_exprs):
         insn_addr = None
         if 'insn_addr' in json_expr:
             insn_addr = json_expr['insn_addr']
-        read_same_as_write = True if json_expr['read_same_as_write'] == 1 else False
+        read_same_as_write = None
+        if 'read_same_as_write' in json_expr:
+            read_same_as_write = True if json_expr['read_same_as_write'] == 1 else False
         expr = json_expr['expr']
         expr_str = str(insn_addr) + str(expr)
         if expr_str in data_points_set:
@@ -95,7 +97,7 @@ def get_func_to_callsites(prog):
     prog_name = c_char_p(str.encode(prog))
 
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
-    if DEBUG_CTYPE: print( "[main] : " + "Calling C")
+    if DEBUG_CTYPE: print( "[main] : " + "Calling C", flush=True)
 
     lib.getCalleeToCallsites(prog_name)
     if DEBUG_CTYPE: print( "[main] : Back from C")
@@ -104,7 +106,7 @@ def get_func_to_callsites(prog):
     json_func_to_callsites_array = json.load(f)
     data_points = {}
     for json_func_to_callsites in json_func_to_callsites_array:
-        func_name = json_func_to_callsites['func']
+        func_name = json_func_to_callsites['func'] #FIXME unify the field names..
         json_callsites = json_func_to_callsites['callsites']
         callsites = []
         for json_callsite in json_callsites:
@@ -126,7 +128,7 @@ def get_mem_writes_to_static_addrs(prog):
     prog_name = c_char_p(str.encode(prog))
 
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
-    if DEBUG_CTYPE: print( "[main] : " + "Calling C")
+    if DEBUG_CTYPE: print( "[main] : " + "Calling C", flush=True)
 
     lib.getMemWritesToStaticAddresses(prog_name)
     if DEBUG_CTYPE: print( "[main] : Back from C")
@@ -143,8 +145,8 @@ def get_mem_writes_to_static_addrs(prog):
             data_points[expr] = []
         data_points[expr].append([insn_addr, func])
     f.close()
-
-    if DEBUG_CTYPE: print( "[main] sa returned " + str(data_points))
+    if DEBUG_CTYPE: print("[main] sa returned " + str(len(data_points)) + " results")
+    #if DEBUG_CTYPE: print( "[main] sa returned " + str(data_points))
     return data_points
 
 
@@ -166,7 +168,7 @@ def get_mem_writes(insn_to_func, prog):
 
     if DEBUG_CTYPE: print( "[main] addr to func: " + json_str)
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
-    if DEBUG_CTYPE: print( "[main] : " + "Calling C")
+    if DEBUG_CTYPE: print( "[main] : " + "Calling C", flush=True)
 
     lib.getMemWrites(addr_to_func_str, prog_name)
     if DEBUG_CTYPE: print( "[main] : Back from C")
@@ -219,7 +221,7 @@ def static_backslices(slice_starts, prog):
 
     if DEBUG_CTYPE: print( "[main] slice starts: " + json_str)
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
-    if DEBUG_CTYPE: print( "[main] : " + "Calling C")
+    if DEBUG_CTYPE: print( "[main] : " + "Calling C", flush=True)
 
     lib.backwardSlices(slice_starts_str, prog_name)
     if DEBUG_CTYPE: print( "[main] : Back from C")
@@ -259,7 +261,7 @@ def static_backslice(reg, insn, func, prog):
     if DEBUG_CTYPE: print( "[main] addr: " + str(insn))
     if DEBUG_CTYPE: print( "[main] func: " + func)
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
-    if DEBUG_CTYPE: print( "[main] : " + "Calling C")
+    if DEBUG_CTYPE: print( "[main] : " + "Calling C", flush=True)
     lib.backwardSlice(prog_name, func_name, addr, reg_name)
     if DEBUG_CTYPE: print( "[main] : Back from C")
 
@@ -304,7 +306,7 @@ def getAllPredes(insn, func, prog):
     prog_name = c_char_p(str.encode(prog))
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] func: " + func)
-    if DEBUG_CTYPE: print( "[main] addr: " + str(insn))
+    if DEBUG_CTYPE: print( "[main] addr: " + str(insn), flush=True)
     lib.getAllPredes(prog_name, func_name, addr)
     f = open(os.path.join(curr_dir, 'getAllPredes_result'))
     json_bbs = json.load(f)
@@ -318,7 +320,7 @@ def getAllBBs(insn, func, prog):
     prog_name = c_char_p(str.encode(prog))
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] func: " + func)
-    if DEBUG_CTYPE: print( "[main] addr: " + str(insn))
+    if DEBUG_CTYPE: print( "[main] addr: " + str(insn), flush=True)
     lib.getAllBBs(prog_name, func_name, addr)
     f = open(os.path.join(curr_dir, 'getAllBBs_result'))
     json_bbs = json.load(f)
@@ -359,7 +361,7 @@ def getInstrAfter(insn, func, prog):
     prog_name = c_char_p(str.encode(prog))
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] func: " + func)
-    if DEBUG_CTYPE: print( "[main] addr: " + str(insn))
+    if DEBUG_CTYPE: print( "[main] addr: " + str(insn), flush=True)
     f_insn = lib.getInstrAfter(prog_name, func_name, addr)
     if DEBUG_CTYPE: print( "[main] first instr: " + str(f_insn))
     return f_insn
@@ -385,7 +387,7 @@ def getLastInstrInBB(insn, func, prog):
     prog_name = c_char_p(str.encode(prog))
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] func: " + func)
-    if DEBUG_CTYPE: print( "[main] addr: " + str(insn))
+    if DEBUG_CTYPE: print( "[main] addr: " + str(insn), flush=True)
     l_insn = lib.getLastInstrInBB(prog_name, func_name, addr)
     if DEBUG_CTYPE: print( "[main] first instr: " + str(l_insn))
     return l_insn

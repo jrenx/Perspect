@@ -108,7 +108,7 @@ class CFG:
         print("[Postorder] Current bb: " + str(bb.id) + " " + str(bb.lines))
         for succe in bb.succes:
             print("[Postorder] Examining succe: " + str(succe.id) + " " + str(succe.lines))
-            if succe in self.postorder_list: #TODO use a set?
+            if succe in self.postorder_list:
                 print("[Postorder] Skipping cuz already in list")
                 continue
             if succe in bb.backedge_targets:
@@ -235,7 +235,7 @@ class CFG:
                     worklist.append(succe)
 
             if len(self.target_bbs.intersection(all_succes_before_immed_pdom)) > 0:
-                ignore_set.union(all_succes_before_immed_pdom) #TODO, do not assign after union why???
+                ignore_set.union(all_succes_before_immed_pdom) #FIXME, do not assign after union why???
                 continue
 
             #remove_set.add(bb) not really needed
@@ -273,9 +273,9 @@ class CFG:
             self.id_to_bb_in_slice[bb.id] = bb
             self.ordered_bbs_in_slice.append(bb)
             for prede in bb.predes:
-                #if bb in prede.backedge_targets:
-                #    print("  Ignoring prede " + str(prede.id) + "because it is part of a backedge")
-                #    continue
+                if bb in prede.backedge_targets:
+                    print("  Ignoring prede " + str(prede.id) + "because it is part of a backedge")
+                    continue
                 worklist.append(prede)
 
         print("=======================================================")
@@ -283,7 +283,7 @@ class CFG:
             print(str(bb))
         assert len(self.id_to_bb_in_slice) == len(self.ordered_bbs_in_slice), \
             str(len(self.id_to_bb_in_slice)) + " " + str(len(self.ordered_bbs_in_slice))
-        print("Total number of basic blocks after slicing: " + str(len(self.ordered_bbs_in_slice)))
+        print("[static_dep] Total number of basic blocks after slicing: " + str(len(self.ordered_bbs_in_slice)))
 
         # Simplify the slice
         self.simplify()
@@ -293,7 +293,7 @@ class CFG:
             print(str(bb))
         assert len(self.id_to_bb_in_slice) == len(self.ordered_bbs_in_slice), \
             str(len(self.id_to_bb_in_slice)) + " " + str(len(self.ordered_bbs_in_slice))
-        print("Total number of basic blocks after simplifying: " + str(len(self.ordered_bbs_in_slice)))
+        print("[static_dep] Total number of basic blocks after simplifying: " + str(len(self.ordered_bbs_in_slice)))
 
     def build(self, insn):
         self.built = True
@@ -362,18 +362,21 @@ class CFG:
             print(str(bb))
         assert len(self.id_to_bb) == len(self.ordered_bbs), \
             str(len(self.id_to_bb)) + " " + str(len(self.ordered_bbs))
-        print("Total number of basic blocks in the entire cfg: " + str(len(self.ordered_bbs)))
+        print("[static_dep] number of basic blocks in the entire cfg: " + str(len(self.ordered_bbs)))
 
 
 class MemoryAccess:
-    def __init__(self, reg, shift, off):
+    def __init__(self, reg, shift, off, off_reg=None):
         self.reg = reg
         self.shift = shift
         self.off = off
+        self.off_reg = off_reg
 
     def __str__(self):
         s = " address: " + str(self.reg) + " * " \
             + str(self.shift) + " + " + str(self.off)
+        if self.off_reg is not None:
+            s += " * " + str(self.off_reg)
         return s
 
 
@@ -383,8 +386,8 @@ class StaticNode:
     def __init__(self, insn, bb, function):
         self.id = StaticNode.id
         StaticNode.id += 1
-        self.insn = insn #TODO, this is long type right
-        self.function = function #TODO, maybe rename this to func?
+        self.insn = insn #FIXME, this is long type right
+        self.function = function #FIXME, maybe rename this to func?
         self.explained = False
 
         ##### for control flow #####
@@ -405,7 +408,7 @@ class StaticNode:
         self.reg_load = None
 
         self.mem_store = None # none-local data flow dependency
-        self.reg_store = None # local data flow dependency TODO fill in something
+        self.reg_store = None # local data flow dependency FIXME fill in something
 
         self.df_predes = []
         self.df_succes = []
@@ -461,7 +464,7 @@ class StaticNode:
 
 class StaticDepGraph:
     func_to_graph = {}
-    rr_result_cache = {}
+    #rr_result_cache = {}
 
     def __init__(self, func, prog):
         self.func = func
@@ -503,28 +506,68 @@ class StaticDepGraph:
         self.insn_to_node[insn] = node
         return node
 
+    def get_closest_dep_branch(self, node): #TODO, is getting the farthest one
+        # TODO, what if has no direct cf predecessor, is that possible?
+        succes = set([])
+        for succe in node.df_succes:
+            if succe.bb.ends_in_branch:
+                succes.add(succe.bb)
+        last_bb = None
+        for bb in self.cfg.postorder_list:
+            if bb in succes:
+                last_bb = bb
+                #break
+        return self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
+
+    def get_farthest_target(self, node):
+        visited = set([])
+        reachable_targets = set([])
+        worklist = deque()
+        worklist.append(node.bb)
+        while (len(worklist) > 0):
+            bb = worklist.popleft()
+            if bb in visited:
+                continue
+            visited.add(bb)
+            if bb in self.cfg.target_bbs:
+                reachable_targets.add(bb)
+            for succe in bb.succes:
+                worklist.append(succe)
+        last_bb = None
+        for bb in self.cfg.postorder_list:
+            if bb in reachable_targets:
+                last_bb = bb
+                break
+        return self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
+
+
     @staticmethod
     def buildDependencies(insn, func, prog):
+        func = func
+        prog = prog
+        """
         rr_result_file = os.path.join(curr_dir, 'rr_results.json')
         if os.path.exists(rr_result_file):
             with open(rr_result_file) as file:
                 StaticDepGraph.rr_result_cache = json.load(file)
+        """
 
-        explained = set([])
         worklist = deque()
         worklist.append([insn, func, prog, None])
         while len(worklist) > 0:
             curr_insn, curr_func, curr_prog, curr_node = worklist.popleft()
             new_nodes = StaticDepGraph.buildDependenciesInFunction(curr_insn, curr_func, curr_prog, curr_node)
             for new_node in new_nodes:
-                worklist.append([new_node.insn, new_node.function, prog, new_node]) #TODO, ensure there is no duplicate work
+                worklist.append([new_node.insn, new_node.function, prog, new_node]) #FIMXE, ensure there is no duplicate work
+        """
         rr_result_file = os.path.join(curr_dir, 'rr_results.json')
         with open(rr_result_file, 'w') as f:
             json.dump(StaticDepGraph.rr_result_cache, f)
+        """
 
     @staticmethod
     def buildDependenciesInFunction(insn, func, prog, df_node = None):
-        print("Building dependencies for function: " + str(func))
+        print("[static_dep] Building dependencies for function: " + str(func))
         target_bbs = set([])
 
         if func in StaticDepGraph.func_to_graph:
@@ -536,7 +579,6 @@ class StaticDepGraph:
             target_bbs.add(graph.cfg.ordered_bbs[0])
             graph.buildControlFlowDependencies(target_bbs)
         if df_node is not None:
-            df_node.explained = True
             assert df_node.bb is None
             graph.mergeDataFlowNodes([df_node])
             #TODO, also need to do dataflow tracing for this one!!
@@ -550,18 +592,18 @@ class StaticDepGraph:
                 return all_defs_in_diff_func
             new_bbs = [graph.cfg.getBB(defn.insn) for defn in defs_in_same_func]
             target_bbs = target_bbs.union(new_bbs)
-            #TODO, add the dataflow nodes into the whole graph?? including its corresponding CF deps?
             graph.buildControlFlowDependencies(target_bbs)
             graph.mergeDataFlowNodes(defs_in_same_func)
 
         return all_defs_in_diff_func
-        #TODO, also need to know which target some branch is responsible for tho ... 2 targets can be conflicting...
-        # Think about this ... or just get the aggregate??
 
-    #TODO, think about if this makes sense
+
+    #FIXME, think about if this makes sense
     def mergeDataFlowNodes(self, df_nodes):
         for node in df_nodes:
             assert node.is_df is True
+            assert node.explained is False, str(node)
+            node.explained = True
             bb = self.cfg.getBB(node.insn)
             node.bb = bb
             for prede in bb.predes:
@@ -574,6 +616,7 @@ class StaticDepGraph:
                     node.cf_succes.append(self.id_to_node[succe_node_id])
 
     def buildDataFlowDependencies(self, func, prog):
+        print("[static_dep] Building dataflow dependencies local in function: " + str(func))
         defs_in_same_func = set([])
         defs_in_diff_func = set([])
 
@@ -607,43 +650,66 @@ class StaticDepGraph:
                 prede_reg = load[1]
                 shift = load[2]
                 off = load[3]
+                off_reg = load[4]
                 read_same_as_write = load[5]
                 if read_same_as_write is True:
                     continue
 
-                #TODO, find the corresponding BB?
                 prede = self.make_or_get_df_node(prede_insn, None, func) #TODO, might need to include func here too
                 if prede is None:
                     continue
 
                 #if prede not in self.nodes_in_df_slice:
                 #    self.nodes_in_df_slice.append(prede)
-                prede.mem_load = MemoryAccess(prede_reg, shift, off)
+                prede.mem_load = MemoryAccess(prede_reg, shift, off, off_reg)
                 prede.reg_write = '' #TODO put actual register name here
                 succe.df_predes.append(prede)
                 prede.df_succes.append(succe)
                 defs_in_same_func.add(prede)
 
+        print("[static_dep] Found " + str(len(defs_in_same_func)) + " dataflow nodes local in function ")
         tmp_defs_in_same_func = set([])
+
+        print("[static_dep] Building dataflow dependencies non-local to function: " + str(func))
         for node in defs_in_same_func:
             print(str(node))
             assert node.is_cf is False
             assert node.is_df is True
             assert node.explained is False
-
+            print("[static_dep] Looking for dataflow dependencies non-local to function: " + str(func) \
+                  + " for read " + str(node.mem_load) + " @ " + hex(node.insn))
+            """
             if func == "sweep" and node.insn != 4234276: #TODO: eventually remove this filter
                 continue
+            if func == "scanblock" and node.insn == int('0x40956c', 16): #TODO, need to fix a bug here
+                continue
+            if func == "scanblock" and node.insn == int('0x4096d4', 16): #TODO, need to fix a bug here
+                continue
+            #if func == "scanblock" and node.insn == int('0x409379', 16): #TODO, need to fix a bug here
+            #    continue
+            if func == "scanblock" and node.insn == int('0x40957f', 16): #TODO, need to fix a bug here
+                continue
+            """
 
-            results = rr_backslice('909_ziptest_exe9', 4234305, 4234325, \
-                                   node.insn, 'RBP', 0, 0, None, StaticDepGraph.rr_result_cache)
-            #^TODO fill in the right fields
+            if func == "scanblock" and node.insn != int('0x409379', 16): #TODO, need to fix a bug here
+                continue
 
+            closest_dep_branch_node = self.get_closest_dep_branch(node)
+            farthest_target_node = self.get_farthest_target(closest_dep_branch_node)
+            print("Cloest dependent branch is at " + hex(closest_dep_branch_node.bb.last_insn))
+            print("Farthest target is at " + hex(farthest_target_node.insn))
+            results = rr_backslice(prog, closest_dep_branch_node.bb.last_insn,
+                                   farthest_target_node.insn, #4234305, 0x409C41 | 4234325, 0x409C55
+                                   node.insn, node.mem_load.reg, node.mem_load.shift, node.mem_load.off,
+                                   node.mem_load.off_reg) #, StaticDepGraph.rr_result_cache)
+
+            print("[static_dep] found " + str(len(results)) + " dataflow dependencies non-local to function")
             print(results)
             for result in results:
                 # reg_name = result[0]
                 load = result[0]
                 prede_insn = result[1]
-                curr_func = result[2].encode('ascii')
+                curr_func = result[2]
                 if load is None: #TODO why?
                     continue
 
@@ -665,12 +731,12 @@ class StaticDepGraph:
                     tmp_defs_in_same_func.add(prede)
 
         defs_in_same_func = defs_in_same_func.union(tmp_defs_in_same_func)
-        print("Total number of new nodes in local  dataflow slice: " + str(len(defs_in_same_func)))
-        print("Total number of new nodes in remote dataflow slice: " + str(len(defs_in_diff_func)))
+        print("[static_dep] Total number of new nodes in local  dataflow slice: " + str(len(defs_in_same_func)))
+        print("[static_dep] Total number of new nodes in remote dataflow slice: " + str(len(defs_in_diff_func)))
         self.nodes_in_df_slice.extend(defs_in_same_func)
         for node in self.nodes_in_df_slice:
             print(str(node))
-        print("Total number of nodes in data flow slice: " + str(len(self.nodes_in_df_slice)))
+        print("[static_dep] Total number of nodes in data flow slice: " + str(len(self.nodes_in_df_slice)))
 
         return defs_in_same_func, defs_in_diff_func
 
@@ -680,14 +746,13 @@ class StaticDepGraph:
         self.cfg.build(insn)  # FIXME: for now, order the BBs such that the one that contains insn appears first
 
         first = True
-        # TODO, might want to keep track of the starting instruction
+        # FIXME, make the logic less awkward?
         for bb in self.cfg.ordered_bbs:
             if first:
                 node = self.make_or_get_cf_node(insn, bb, self.func)
                 first = False
             else:
                 node = self.make_or_get_cf_node(bb.last_insn, bb, self.func)
-                # TODO,does it matter if we use the first instruction instead?
             if node is None:
                 continue
             self.bb_id_to_node_id[bb.id] = node.id
@@ -713,7 +778,7 @@ class StaticDepGraph:
                 self.nodes_in_cf_slice.append(node)
         for node in self.nodes_in_cf_slice:
             print(str(node))
-        print("Total number of nodes in control flow slice: " + str(len(self.nodes_in_cf_slice)))
+        print("[static_dep] Total number of nodes in control flow slice: " + str(len(self.nodes_in_cf_slice)))
 
 if __name__ == "__main__":
 
