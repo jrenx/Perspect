@@ -30,8 +30,8 @@ using namespace boost;
 /***************************************************************/
 BPatch bpatch;
 bool INFO = true;
-bool DEBUG = false;
-bool DEBUG_SLICE = false;
+bool DEBUG = true;
+bool DEBUG_SLICE = true;
 bool DEBUG_BIT = false;
 bool DEBUG_STACK = false;
 
@@ -113,9 +113,15 @@ Block *getBasicBlock2(Function *f, long unsigned int addr);
 Block *getBasicBlockContainingInsnBeforeAddr(Function *f, long unsigned int addr);
 
 GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsigned int addr, char *regName);
-void backwardSliceHelper(cJSON *json_reads, char *progName, char *funcName, long unsigned int addr, char *regName, bool isKnownBitVar = false);
+void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visited,
+                         char *progName, char *funcName,
+                         long unsigned int addr, char *regName, bool isKnownBitVar=false);
 
-void getReversePostOrderListHelper(Node::Ptr node, std::vector<Node::Ptr> *list);
+void getReversePostOrderListHelper(Block *b,
+                                   std::vector<Block *> &list,
+                                   boost::unordered_set<Block *> &visited);
+
+void getReversePostOrderListHelper(Node::Ptr node, std::vector<Node::Ptr> *list, boost::unordered_set<Node::Ptr> &visited);
 void getReversePostOrderList(GraphPtr slice, std::vector<Node::Ptr> *list);
 
 void locateBitVariables(GraphPtr slice, 
@@ -424,6 +430,7 @@ public:
   char *regName = NULL;
   bool filter = false;
   Instruction insn;
+  bool init = true;
   virtual bool endAtPoint(Assignment::Ptr ap) {
     if(DEBUG || DEBUG_SLICE) cout << endl;
     if(DEBUG || DEBUG_SLICE) cout << "[slice] Should continue slicing the assignment?" << endl;
@@ -431,6 +438,7 @@ public:
     //cout << "  ";
     //cout << ap->insn().readsMemory();
     if(DEBUG_SLICE) cout << endl;
+    init = false;
     filter = false;
     if (ap->insn().readsMemory()) {
       std::set<Expression::Ptr> memReads;
@@ -454,12 +462,33 @@ public:
     if(DEBUG || DEBUG_SLICE) cout << endl;
     if(DEBUG || DEBUG_SLICE) cout << "[slice] Should add the dataflow predecessor?" << endl;
     if(DEBUG_SLICE) cout << "[slice] " << "predecessor reg: " << regStr << endl;
-    if (insn.readsMemory()) return false;
+    if (init && insn.readsMemory()) return false;
     if (filter) {
       if (reg.format().compare(regName) != 0) {
 	      if(DEBUG_SLICE) cout << "[slice] " << "Filtering against " << regName <<
 	       				      " filter out: " << regStr << endl;
         return false;
+      }
+    }
+
+    if (init) {
+      std::vector<Operand> ops;
+      insn.getOperands(ops);
+      AbsRegionConverter arc(true, false);
+      for (auto oit = ops.begin(); oit != ops.end(); ++oit) {
+        if (!(*oit).writesMemory()) continue;
+
+        if (DEBUG || DEBUG_SLICE) cout << "[slice] memory write op: " << (*oit).format(insn.getArch()) << endl;
+        std::set<RegisterAST::Ptr> regsRead;
+        (*oit).getReadSet(regsRead);
+        for (auto rit = regsRead.begin(); rit != regsRead.end(); ++rit) {
+          AbsRegion curr = arc.convert(*rit);
+          if (DEBUG || DEBUG_SLICE) cout << "[slice] reg read: " << curr.format() << endl;
+          if (curr == reg) {
+            if (DEBUG || DEBUG_SLICE) cout << "[sa] register is a memory address, ignore..." << endl;
+            return false;
+          }
+        }
       }
     }
 
@@ -491,7 +520,7 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsign
              << insn.format() << endl;
   Assignment::Ptr assign; //TODO, how to handle multiple ones?
   for (auto ait = assignments.begin(); ait != assignments.end(); ++ait) {
-    if(DEBUG_SLICE) cout << "[slice] " << "assignment: " << (*ait)->format() << endl;
+    if(INFO) cout << "[slice] " << "assignment: " << (*ait)->format() << endl;
     assign = *ait;
   }
   if(DEBUG_SLICE) cout << endl;
@@ -1110,7 +1139,8 @@ boost::unordered_set<Address> checkAndGetWritesToStaticAddrs(Function *f, Instru
 }
 
 
-void backwardSliceHelper(cJSON *json_reads, char *progName, char *funcName,
+void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visited,
+                          char *progName, char *funcName,
                           long unsigned int addr, char *regName, bool isKnownBitVar) {
 
   if (INFO) cout << endl;
@@ -1119,6 +1149,12 @@ void backwardSliceHelper(cJSON *json_reads, char *progName, char *funcName,
   if (INFO) cout << "[sa] prog: " << progName << endl;
   if (INFO) cout << "[sa] func: " << funcName << endl;
   if (INFO) cout << "[sa] addr:  0x" << std::hex << addr << std::dec << endl;
+
+  if (visited.find(addr) != visited.end()) {
+    if (INFO) cout << "[sa] address already visited, returning... " << endl;
+    return;
+  }
+  visited.insert(addr);
 
   Function *func = getFunction2(progName, funcName);
   Block *bb = getBasicBlock2(func, addr);
@@ -1159,7 +1195,8 @@ void backwardSliceHelper(cJSON *json_reads, char *progName, char *funcName,
     if(DEBUG) cout << endl;
     if(INFO) cout << "[sa] In result slice: " << endl;
     if(INFO) cout << "[sa]" << assign->format() << " ";
-    if(INFO) cout << "insn: " << assign->insn().format() << " " << endl;
+    if(INFO) cout << "insn: " << assign->insn().format() << " ";
+    if(INFO) cout << "addr: " << assign->addr() << endl;
 
     bool isBitVar = bitVariables.find(assign) != bitVariables.end();
     bool isIgnoredBitVar = bitVariablesToIgnore.find(assign) != bitVariablesToIgnore.end();
@@ -1179,16 +1216,18 @@ void backwardSliceHelper(cJSON *json_reads, char *progName, char *funcName,
     if (readsFromStack(assign->insn(), assign->addr(), &readReg, &readOff)) {
       cout << "[sa] result of slicing is reading from stack, perform stack analysis..." << endl;
       boost::unordered_set<Address> stackWrites = checkAndGetStackWrites(func, assign->insn(), assign->addr(), readReg, readOff);
+      cout << "[sa]  found " << stackWrites.size() << " stack writes " << endl;
       for (auto stit = stackWrites.begin(); stit != stackWrites.end(); stit++) {
-        backwardSliceHelper(json_reads, progName, funcName, *stit, "", isKnownBitVar);
+        backwardSliceHelper(json_reads, visited, progName, funcName, *stit, "", isKnownBitVar);
       }
       continue;
     } else if (readsFromStaticAddr(assign->insn(), assign->addr(), &readOff)) {
       cout << "[sa] result of slicing is reading from static addr, looking for writes to static addrs..." << endl;
       boost::unordered_set<Address> writesToStaticAddrs = checkAndGetWritesToStaticAddrs(
           func, assign->insn(), assign->addr(), readOff);
+      cout << " [sa]  found " << writesToStaticAddrs.size() << " writes to static addresses " << endl;
       for (auto wit = writesToStaticAddrs.begin(); wit != writesToStaticAddrs.end(); wit++) {
-        backwardSliceHelper(json_reads, progName, funcName, *wit, "", isKnownBitVar);
+        backwardSliceHelper(json_reads, visited, progName, funcName, *wit, "", isKnownBitVar);
       }
       continue;
     }
@@ -1213,6 +1252,7 @@ void backwardSliceHelper(cJSON *json_reads, char *progName, char *funcName,
     if (isBitVar) {
       std::vector<Assignment::Ptr> operations = bitOperations[assign];
       if (INFO) cout << "[sa] bit operations: " << endl;
+      cJSON_AddNumberToObject(json_read, "is_bit_var",  1);
       cJSON *json_bitOps = cJSON_CreateArray();
       for (auto oit = operations.begin(); oit != operations.end(); ++oit) {
         cJSON *json_bitOp  = cJSON_CreateObject();
@@ -1228,6 +1268,8 @@ void backwardSliceHelper(cJSON *json_reads, char *progName, char *funcName,
         cJSON_AddItemToArray(json_bitOps, json_bitOp);
       }
       cJSON_AddItemToObject(json_read, "bit_operations",  json_bitOps);
+    } else {
+      cJSON_AddNumberToObject(json_read, "is_bit_var",  0);
     }
     cJSON_AddItemToArray(json_reads, json_read);
 
@@ -1273,7 +1315,7 @@ bool findMemoryLoadHelper(Expression::Ptr memWrite,
 
 void findMemoryLoad(Expression::Ptr memWrite,
                     GraphPtr slice,
-                    std::vector<Node::Ptr> *list) {
+                    std::vector<Node::Ptr> *list) { //TODO, give it a better name???
   NodeIterator begin, end;
   slice->exitNodes(begin, end);//Exit nods are the root nodes.
   for (NodeIterator it = begin; it != end; ++it) {
@@ -1307,6 +1349,10 @@ void analyzeKnownBitVariables(GraphPtr slice,
   //getReversePostOrderList(slice, &list);
   //std::reverse(list.begin(), list.end());
   findMemoryLoad(memWrite, slice, &list);
+  if (list.begin() == list.end()) {
+    if (INFO) cout << "[bit_var] no memory loads found for bit var, returning ..." << endl;
+    return;
+  }
 
   //boost::unordered_set<Assignment::Ptr> visitedVariables;
   AbsRegion source;
@@ -1390,24 +1436,29 @@ void analyzeKnownBitVariables(GraphPtr slice,
 }
 
 void getReversePostOrderListHelper(Node::Ptr node,
-                                   std::vector<Node::Ptr> *list) {
+                                   std::vector<Node::Ptr> *list,
+                                   boost::unordered_set<Node::Ptr> &visited) {
+  if (visited.find(node) != visited.end()) {
+    return;
+  }
+  visited.insert(node);
   NodeIterator iBegin, iEnd;
   node->ins(iBegin, iEnd);
   // Checking through successors.
   for (NodeIterator it = iBegin; it != iEnd; ++it) {
     SliceNode::Ptr iNode = boost::static_pointer_cast<SliceNode>(*it);
-    getReversePostOrderListHelper(iNode, list);
+    getReversePostOrderListHelper(iNode, list, visited);
   }
   list->push_back(node);
 }
 
 void getReversePostOrderList(GraphPtr slice,
                              std::vector<Node::Ptr> *list) {
-
+  boost::unordered_set<Node::Ptr> visited;
   NodeIterator begin, end;
   slice->exitNodes(begin, end);//Exit nods are the root nodes.
   for (NodeIterator it = begin; it != end; ++it) {
-    getReversePostOrderListHelper(*it, list);
+    getReversePostOrderListHelper(*it, list, visited);
   }
 }
 
@@ -2142,7 +2193,8 @@ void getCalleeToCallsites(char *progName) {
       if (INFO) cout << "[sa] reg: " << regName << endl;
 
       cJSON *json_reads = cJSON_CreateArray();
-      backwardSliceHelper(json_reads, progName, funcName, addr, regName, isKnownBitVar);
+      boost::unordered_set<Address> visited;
+      backwardSliceHelper(json_reads, visited, progName, funcName, addr, regName, isKnownBitVar);
       cJSON_AddItemToObject(json_slice, "reads", json_reads);
       cJSON_AddItemToArray(json_slices, json_slice);
       if (DEBUG) cout << endl;
@@ -2160,7 +2212,8 @@ void getCalleeToCallsites(char *progName) {
   void backwardSlice(char *progName, char *funcName, long unsigned int addr, char *regName) {
 
     cJSON *json_reads = cJSON_CreateArray();
-    backwardSliceHelper(json_reads, progName, funcName, addr, regName);
+    boost::unordered_set<Address> visited;
+    backwardSliceHelper(json_reads, visited, progName, funcName, addr, regName);
 
     char *rendered = cJSON_Print(json_reads);
     cJSON_Delete(json_reads);

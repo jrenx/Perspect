@@ -25,7 +25,7 @@ def filter_branch(branch_point, target_point, trace):
         #print("[tmp] point " + str(point) + " value " + str(value))
         if point == branch_point and value is None:
             if i + 1 < len(trace) and trace[i + 1][0] == target_point:
-                assert trace[i + 1][1] is None, str(trace[i]) + str(trace[i + 1])
+                #assert trace[i + 1][1] is None, str(trace[i]) + str(trace[i + 1])
                 taken_indices.append(i)
             else:
                 not_taken_indices.append(i)
@@ -289,7 +289,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
             off_regs.append('')
             src_regs.append('')
             loop_insn_flags.append('0')
-            results.append([static_addr, curr_insn, func])
+            results.append([['', '', static_addr], insn, func])
 
     addrs = set()
     for a in all_addrs:

@@ -26,6 +26,9 @@ def parseLoadsOrStores(json_exprs):
         read_same_as_write = None
         if 'read_same_as_write' in json_expr:
             read_same_as_write = True if json_expr['read_same_as_write'] == 1 else False
+        is_bit_var = None
+        if 'is_bit_var' in json_expr:
+            is_bit_var = True if json_expr['is_bit_var'] == 1 else False
         expr = json_expr['expr']
         expr_str = str(insn_addr) + str(expr)
         if expr_str in data_points_set:
@@ -84,7 +87,7 @@ def parseLoadsOrStores(json_exprs):
         #both shift and offset are in hex form
         if DEBUG: print("Parsing result reg: " + expr_reg + \
                         " shift " + str(shift) + " off " + str(off) + " insn addr: " + str(insn_addr))
-        data_points.append([insn_addr, reg, shift, off, off_reg, read_same_as_write])
+        data_points.append([insn_addr, reg, shift, off, off_reg, read_same_as_write, is_bit_var])
     return data_points
 
 #FIXME: call instructions insns and not addrs
