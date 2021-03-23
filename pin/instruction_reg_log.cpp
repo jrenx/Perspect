@@ -126,6 +126,7 @@ int main (INT32 argc, CHAR *argv[])
     TraceFile.setf(ios::showbase);
 
     // Initialize reg_map
+    reg_map["rax"] = REG_RAX;
     reg_map["rbp"] = REG_RBP;
     reg_map["rsp"] = REG_RSP;
     reg_map["rdx"] = REG_RDX;
