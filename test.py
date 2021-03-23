@@ -25,7 +25,8 @@ def test_rr_slice():
     #rr_backslice('909_ziptest_exe9', 4234305, 4234325, 4234276, 'RBP', 0, 0, None)
     #rr_backslice('909_ziptest_exe9', 4232057, 'RDX', 0, 8, 'R13')
     #rr_backslice('909_ziptest_exe9', 4232061, 4232084, 4232057, 'RDX', 0, 8, 'R13')
-    rr_backslice('909_ziptest_exe9', 4232061, 4232200, 4232057, 'RDX', 0, 8, 'R13')
+    #rr_backslice('909_ziptest_exe9', 4232061, 4232200, 4232057, 'RDX', 0, 8, 'R13')
+    # 0x40937D 0x409408 0x409379
     b = datetime.datetime.now()
     print("Took: " + str(b-a))
 
@@ -42,13 +43,26 @@ def test_sa_slices():
     results = static_backslices(slice_starts, '909_ziptest_exe9')
     print(results)
 
+def test_sa_slices2():
+    slice_starts = []
+    slice_starts.append(['', 4234294, 'sweep', False])
+    results = static_backslices(slice_starts, '909_ziptest_exe9')
+    print(results)
+
+def test_sa_slices3():
+    slice_starts = []
+    slice_starts.append(['', int('0x43c46c', 16), 'unicode.init', False])
+    #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
+    results = static_backslices(slice_starts, '909_ziptest_exe9')
+    print(results)
+
 def main():
     #test_ins_trace()
     #test_func_trace()
     #test_rr_slice()
     #get_mem_writes_to_static_addrs('909_ziptest_exe9')
     #get_func_to_callsites('909_ziptest_exe9')
-    test_sa_slices()
+    test_sa_slices3()
  
 if __name__ == "__main__":
     main()
