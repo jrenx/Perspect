@@ -69,9 +69,6 @@ class DynamicNode:
         s += "    mem_load_addr: " + str(self.mem_load_addr) + "\n"
         s += "    mem_store_addr: " + str(self.mem_store_addr) + "\n"
 
-        if self.mem_load_addr is not None:
-            s += self.mem_load_addr + "\n"
-
         return s
 
 
@@ -158,17 +155,15 @@ class DynamicDependence:
 
         dividing_line.append(-1)
 
-        start_index = dividing_line[0] - line_num
+        start_index = dividing_line[0]
         graph_number = 0
         for index in dividing_line[1:]:
-            if graph_number > 10:
-                break
             executable = insn_seq[start_index:index]
             dynamicGraph = DynamicGraph(func, prog, insn, graph_number)
             dynamicGraph.build_dynamicGraph(executable, self.insn_to_nodes, self.insn_of_cf_nodes,
                                             self.insn_of_df_nodes, self.insn_of_local_df_nodes,
                                             self.insn_of_remote_df_nodes)
-            start_index = index - line_num
+            start_index = index
             graph_number += 1
 
     def buildDynamicDep(self, insn, func, prog):
@@ -205,7 +200,7 @@ class DynamicGraph:
             executable = executable[index:]
         else:
             print("There is no target instruction detected during Execution " + str(self.number))
-            return 
+            return
 
         # init
         previous_node = None
@@ -214,6 +209,7 @@ class DynamicGraph:
         local_df_pred = {}
         current_branch_nodes = {}
         succ_of_df_node = {}
+        previous_line = None
 
         # traverse
         for insn_line in executable:
@@ -232,7 +228,7 @@ class DynamicGraph:
             # the leaf
             if insn == str(hex(self.start_insn)):
                 dynamicNode = DynamicNode(self.insn_to_id[insn], insn_to_nodes[insn])
-                if insn_to_nodes[insn].df_predes:
+                if insn_to_nodes[insn].df_predes and insn not in insn_of_df_nodes:
                     for node in insn_to_nodes[insn].df_predes:
                         node_insn = str(hex(node.insn))
                         if node_insn in insn_of_df_nodes:
@@ -268,17 +264,15 @@ class DynamicGraph:
                             self.dynamicNodes.append(dynamicNode)
                             dynamicNode.cf_success.append(previous_node)
 
-                            if insn_to_nodes[insn].df_predes:
-                                for node in insn_to_nodes[insn].df_predes:
-                                    node_insn = str(hex(node.insn))
-
-                                    if node_insn in insn_of_df_nodes:
-                                        if node_insn not in succ_of_df_node:
-                                            succ_of_df_node[node_insn] = [dynamicNode]
-                                        else:
-                                            succ_of_df_node[node_insn].append(dynamicNode)
-
                             if insn in insn_of_cf_nodes:
+                                if insn_to_nodes[insn].df_predes:
+                                    for node in insn_to_nodes[insn].df_predes:
+                                        node_insn = str(hex(node.insn))
+                                        if node_insn in insn_of_df_nodes:
+                                            if node_insn not in succ_of_df_node:
+                                                succ_of_df_node[node_insn] = [dynamicNode]
+                                            else:
+                                                succ_of_df_node[node_insn].append(dynamicNode)
                                 previous_node.cf_predes.append(dynamicNode)
                                 previous_node = dynamicNode
                                 visited_node.append(dynamicNode.insn_id)
@@ -295,26 +289,25 @@ class DynamicGraph:
                                 elif insn in insn_of_remote_df_nodes:
                                     dynamicNode.mem_store_addr = self.mem_addr_calculate(reg,
                                                                                          str(dynamicNode.staticNode.mem_store))
-                                    for node in local_df_pred[dynamicNode.mem_store_addr]:
-                                        node.df_predes.append(dynamicNode)
-                                        dynamicNode.df_success.append(node)
-                                    del local_df_pred[dynamicNode.mem_store_addr]
+                                    if dynamicNode.mem_store_addr in local_df_pred:
+                                        for node in local_df_pred[dynamicNode.mem_store_addr]:
+                                            node.df_predes.append(dynamicNode)
+                                            dynamicNode.df_success.append(node)
+                                        del local_df_pred[dynamicNode.mem_store_addr]
 
                                 current_node_in_dict = False
-                                if insn in self.succ_of_df_node:
-                                    for node in self.succ_of_df_node[insn]:
+                                if insn in succ_of_df_node:
+                                    for node in succ_of_df_node[insn]:
                                         if node.id != dynamicNode.id:
                                             node.df_predes.append(dynamicNode)
                                             dynamicNode.df_success.append(node)
                                         else:
                                             current_node_in_dict = True
 
-                                    del self.succ_of_df_node[insn]
+                                    del succ_of_df_node[insn]
                                     if current_node_in_dict:
-                                        self.succ_of_df_node[insn] = [dynamicNode]
+                                        succ_of_df_node[insn] = [dynamicNode]
 
-                                dynamicNode.mem_load_addr = self.mem_addr_calculate(reg,
-                                                                                    str(dynamicNode.staticNode.mem_load))
 
             if is_first:
                 is_first = False
@@ -378,10 +371,6 @@ class DynamicGraph:
 
 if __name__ == '__main__':
     dynamic_graph = DynamicDependence()
-    #dynamic_graph.buildDynamicDep(0x409daa, "sweep", "909_ziptest_exe9")
-    dynamic_graph.buildDynamicDep(0x409408, "scanblock", "909_ziptest_exe9")
-
-
-
-
+    dynamic_graph.buildDynamicDep(0x409daa, "sweep", "909_ziptest_exe9")
+    #dynamic_graph.buildDynamicDep(0x409408, "scanblock", "909_ziptest_exe9")
 
