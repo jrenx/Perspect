@@ -108,19 +108,19 @@ class CFG:
 
     def traversalHelper(self, bb):
         #print(" Traversing bb: " + str(bb.id))
-        print("[Postorder] Current bb: " + str(bb.id) + " " + str(bb.lines))
+        if DEBUG_SIMPLIFY: print("[Postorder] Current bb: " + str(bb.id) + " " + str(bb.lines))
         for succe in bb.succes:
-            print("[Postorder] Examining succe: " + str(succe.id) + " " + str(succe.lines))
+            if DEBUG_SIMPLIFY: print("[Postorder] Examining succe: " + str(succe.id) + " " + str(succe.lines))
             if succe in self.postorder_list:
-                print("[Postorder] Skipping cuz already in list")
+                if DEBUG_SIMPLIFY: print("[Postorder] Skipping cuz already in list")
                 continue
             if succe in bb.backedge_targets:
-                print("[Postorder] Skipping cuz is backedge")
+                if DEBUG_SIMPLIFY: print("[Postorder] Skipping cuz is backedge")
                 continue
             if succe.id not in self.id_to_bb_in_slice:
                 if succe not in self.postorder_list:
                     self.postorder_list.append(succe)
-                print("[Postorder] Skipping cuz is not in slice")
+                if DEBUG_SIMPLIFY: print("[Postorder] Skipping cuz is not in slice")
                 continue
             self.traversalHelper(succe)
         if bb not in self.postorder_list:
