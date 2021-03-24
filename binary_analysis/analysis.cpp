@@ -152,9 +152,13 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
                                                            boost::unordered_map<Address, long> &insnToStackHeight,
                                                            boost::unordered_set<Address> &readAddrs,
                                                            StackStore &stackRead, int level);
+void checkAndGetStackWritesInCallee(Block *b, Instruction insn, Address addr,
+                                    StackStore &stackRead, int level, long stackHeight,
+                                    boost::unordered_map<Address, Function *> &allRets);
 void getStackHeights(std::vector<Block *> &list, boost::unordered_map<Address, long> &insnToStackHeight, int initHeight);
 bool readsFromStack(Instruction insn, Address addr, MachRegister *reg, long *off);
 bool writesToStack(Operand op, Instruction insn, Address addr);
+
 void getRegAndOff(Expression::Ptr exp, MachRegister *machReg, long *off);
 void printReachableStores(boost::unordered_map<StackStore, boost::unordered_map<Address, Function *>> &reachableStores);
 void getAllRets(Function *f, boost::unordered_set<Address> &rets);
@@ -888,6 +892,50 @@ boost::unordered_map<Address, Function *> checkAndGetStackWrites(Function *f, In
   return checkAndGetStackWritesHelper(f, list, insnToStackHeight, readAddrs, stackRead, level);
 }
 
+void checkAndGetStackWritesInCallee(Block *b, Instruction insn, Address addr,
+                                    StackStore &stackRead, int level, long stackHeight, // TODO refactor param list...
+                                    boost::unordered_map<Address, Function *> &allRets) {
+  Block::edgelist targets = b->targets();
+  for (auto it = targets.begin(); it != targets.end(); it++) {
+    if ((*it)->type() != CALL)
+      continue;
+    Block *src = (*it)->src();
+    Block *trg = (*it)->trg();
+
+    std::vector<Function *> funcs;
+    trg->getFuncs(funcs);
+    if (funcs.size() > 1) {
+      for (auto fit = funcs.begin(); fit != funcs.end(); fit++) {
+        cout << "[stack] function: " << (*fit)->name() << endl;
+      }
+    } else if (funcs.size() == 0) {
+      cout << "[stack][warn] call function cannot be determined, unhandled dynamic invocation site: "
+           << insn.format() << endl;
+      continue;
+    }
+    assert(funcs.size() == 1);
+    Function *callee = *funcs.begin();
+    if (DEBUG_STACK) cout << "[stack] Checking for stack writes in in callee " << callee->name() << endl;
+    std::vector<Block *> calleeList;
+    boost::unordered_set<Block *> visited;
+    getReversePostOrderListHelper(callee->entry(), calleeList, visited);
+    std::reverse(calleeList.begin(), calleeList.end());
+
+    boost::unordered_map<Address, long> calleeInsnToStackHeight;
+    getStackHeights(calleeList, calleeInsnToStackHeight, stackHeight - 8);
+
+    boost::unordered_set<Address> calleeReadAddrs;
+    getAllRets(callee, calleeReadAddrs);
+
+    boost::unordered_map<Address, Function *> ret =
+        checkAndGetStackWritesHelper(callee, calleeList, calleeInsnToStackHeight, calleeReadAddrs, stackRead,
+                                     level + 1);
+    allRets.insert(ret.begin(), ret.end());
+    if (DEBUG_STACK && DEBUG)
+      cout << "[stack] stores at " << std::hex << addr << std::dec << " from callee " << callee->name() << endl;
+  }
+}
+
 boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function *f,
                                                             std::vector<Block *> &list,
                                                            boost::unordered_map<Address, long> &insnToStackHeight,
@@ -911,42 +959,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
         if (id == e_call || id == e_callq) { //TODO rename level to calstackdepth?
           boost::unordered_map<Address, Function *> allRets;
           Block::edgelist targets = b->targets();
-          for (auto it = targets.begin(); it != targets.end(); it++) {
-            if ((*it)->type() != CALL)
-              continue;
-            Block *src = (*it)->src();
-            Block *trg = (*it)->trg();
-
-            std::vector<Function *> funcs;
-            trg->getFuncs(funcs);
-            if (funcs.size() > 1) {
-              for (auto fit = funcs.begin(); fit != funcs.end(); fit++) {
-                cout << "[stack] function: " << f->name() << endl;
-              }
-            } else if (funcs.size() == 0) {
-              cout << "[stack][warn] call function cannot be determined, unhandled dynamic invocation site: "
-                   << insn.format() << endl;
-              continue;
-            }
-            assert(funcs.size() == 1);
-            Function *callee = *funcs.begin();
-            if (DEBUG_STACK) cout << "[stack] Checking for stack writes in in callee " << callee->name() << endl;
-            std::vector<Block *> calleeList;
-            boost::unordered_set<Block *> visited;
-            getReversePostOrderListHelper(callee->entry(), calleeList, visited);
-            std::reverse(calleeList.begin(), calleeList.end());
-
-            boost::unordered_map<Address, long> calleeInsnToStackHeight;
-            getStackHeights(calleeList, calleeInsnToStackHeight, insnToStackHeight[addr] - 8);
-
-            boost::unordered_set<Address> calleeReadAddrs;
-            getAllRets(callee, calleeReadAddrs);
-
-            boost::unordered_map<Address, Function *> ret =
-                checkAndGetStackWritesHelper(callee, calleeList, calleeInsnToStackHeight, calleeReadAddrs, stackRead, level + 1);
-            allRets.insert(ret.begin(), ret.end());
-            if (DEBUG_STACK && DEBUG) cout << "[stack] stores at " << std::hex << addr << std::dec << " from callee " << callee->name() << endl;
-          }
+          checkAndGetStackWritesInCallee(b, insn, addr, stackRead, level, insnToStackHeight[addr], allRets);
           if (allRets.size() > 0) {
             reachableStores.insert({stackRead, allRets});
             insnToReachableStores.insert({addr, reachableStores});
