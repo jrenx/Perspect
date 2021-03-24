@@ -30,10 +30,10 @@ using namespace boost;
 /***************************************************************/
 BPatch bpatch;
 bool INFO = true;
-bool DEBUG = true;
-bool DEBUG_SLICE = true;
+bool DEBUG = false;
+bool DEBUG_SLICE = false;
 bool DEBUG_BIT = false;
-bool DEBUG_STACK = true;
+bool DEBUG_STACK = false;
 
 typedef enum {
   create,
@@ -639,25 +639,25 @@ void getReversePostOrderListHelper(Block *b,
 bool writesToStack(Operand op, Instruction insn, Address addr) { // TODO add signature to top //TODO maybe refactor this
   if (!op.writesMemory()) return false;
 
-  //if (DEBUG && DEBUG_STACK)
+  if (DEBUG && DEBUG_STACK)
     cout << "[stack] Checking memory write @ " << op.format(insn.getArch()) << endl;
 
   std::set<Expression::Ptr> memWrites;
   insn.getMemoryWriteOperands(memWrites);
   // FIXME: For now just handle those that have one memory write.
-  //if (DEBUG && DEBUG_STACK)
+  if (DEBUG && DEBUG_STACK)
     cout << "[stack] Number of memory writes: " << memWrites.size() << endl;
   assert(memWrites.size() == 1);
 
   std::set<RegisterAST::Ptr> regsRead;
   op.getReadSet(regsRead);
-  //if (DEBUG && DEBUG_STACK)
+  if (DEBUG && DEBUG_STACK)
     cout << "[stack] Register read count: " << regsRead.size() << endl;
   for (auto rit = regsRead.begin(); rit != regsRead.end(); rit++) {
     RegisterAST::Ptr regAst = *rit;
     MachRegister reg = regAst->getID();
     if (reg == x86_64::rsp || reg == x86_64::esp) {
-      //if (DEBUG_STACK)
+      if (DEBUG_STACK)
         cout << "[stack] Found store to stack: " << op.format(insn.getArch())
                             << " @ " << insn.format() << " @ " << addr << endl;
 
@@ -751,11 +751,16 @@ void getStackHeights(std::vector<Block *> &list,
 
           Block::edgelist sources = b->sources();
           int prevHeight = 0;
+          bool hasAnAnalyzedPrede = false;
           for (auto eit = sources.begin(); eit != sources.end(); eit++) {
             Block *src = (*eit)->src();
             Block *trg = (*eit)->trg();
-            cout << "[stack]     predecessor @ " << std::hex << src->start() << std::dec << " to "
-                           << std::hex << src->last() << std::dec << endl;
+            /*
+            if (DEBUG_STACK && DEBUG) {
+              cout << "[stack]     predecessor @ " << std::hex << src->start() << std::dec << " to "
+                   << std::hex << src->last() << std::dec << endl;
+            }*/
+
             if ((*eit)->type() == CALL || (*eit)->type() == RET || (*eit)->type() == CATCH)
               continue;
 
@@ -771,10 +776,13 @@ void getStackHeights(std::vector<Block *> &list,
               cout << "[stack]     predecessor height @ " << std::hex << src->last() << std::dec
                    << " is " << insnToStackHeight[src->last()] << endl;
             }
-            assert(prevHeight == 0 || insnToStackHeight[src->last()] == prevHeight);
+            assert(!hasAnAnalyzedPrede || insnToStackHeight[src->last()] == prevHeight);
             prevHeight = insnToStackHeight[src->last()];
+            hasAnAnalyzedPrede = true;
           }
-          currHeight = prevHeight;
+          if (hasAnAnalyzedPrede) {
+            currHeight = prevHeight;
+          }
         }
         if (DEBUG && DEBUG_STACK) cout << "[stack] Checking register write @ " << insn.format() << endl;
         std::set<RegisterAST::Ptr> regsWrite;
@@ -885,7 +893,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
                                                            boost::unordered_map<Address, long> &insnToStackHeight,
                                                            boost::unordered_set<Address> &readAddrs,
                                                            StackStore &stackRead, int level) {
-  cout << "[stack] Looking for writes to " << stackRead << " at level " << level << endl;
+  if (DEBUG_STACK) cout << "[stack] Looking for writes to " << stackRead << " at level " << level << endl;
   boost::unordered_map<Address, boost::unordered_map<StackStore, boost::unordered_map<Address, Function *>>>
       insnToReachableStores; //FIXME if I'm more comfortable with pointers store pointers instead ...
   for (auto bit = list.begin(); bit != list.end(); bit++) {
@@ -895,7 +903,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
     for (auto iit = insns.begin(); iit != insns.end(); iit++) {
       Address addr = (*iit).first;
       Instruction insn = (*iit).second;
-      //if (DEBUG && DEBUG_STACK)
+      if (DEBUG && DEBUG_STACK)
         cout << "[stack] checking instruction: " << insn.format() << " @" << addr << endl;
       boost::unordered_map<StackStore, boost::unordered_map<Address, Function *>> reachableStores;
       if (level == 0) {
@@ -922,7 +930,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
             }
             assert(funcs.size() == 1);
             Function *callee = *funcs.begin();
-            cout << "[stack] Checking for stack writes in in callee " << callee->name() << endl;
+            if (DEBUG_STACK) cout << "[stack] Checking for stack writes in in callee " << callee->name() << endl;
             std::vector<Block *> calleeList;
             boost::unordered_set<Block *> visited;
             getReversePostOrderListHelper(callee->entry(), calleeList, visited);
@@ -937,12 +945,12 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
             boost::unordered_map<Address, Function *> ret =
                 checkAndGetStackWritesHelper(callee, calleeList, calleeInsnToStackHeight, calleeReadAddrs, stackRead, level + 1);
             allRets.insert(ret.begin(), ret.end());
-            cout << "[stack] stores at " << std::hex << addr << std::dec << " from callee " << callee->name() << endl;
+            if (DEBUG_STACK && DEBUG) cout << "[stack] stores at " << std::hex << addr << std::dec << " from callee " << callee->name() << endl;
           }
           if (allRets.size() > 0) {
             reachableStores.insert({stackRead, allRets});
             insnToReachableStores.insert({addr, reachableStores});
-            printReachableStores(reachableStores);
+            if (DEBUG_STACK && DEBUG) printReachableStores(reachableStores);
           }
           continue;
         }
@@ -964,15 +972,15 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
 
         //assert(reachableStores.find(exp) == reachableStores.end());
         StackStore stackStore(machReg, off, insnToStackHeight[addr]);
-        cout << "[stack] current stack store " << stackStore << " @ " << std::hex << addr << std::dec << endl;
+        if (DEBUG_STACK && DEBUG) cout << "[stack] current stack store " << stackStore << " @ " << std::hex << addr << std::dec << endl;
         if (stackStore == stackRead) {
           reachableStores.insert({stackRead, s});
-          cout << "[stack] found a match!" << endl;
+          if (DEBUG_STACK && DEBUG) cout << "[stack] found a match!" << endl;
         }
       }
       insnToReachableStores.insert({addr, reachableStores});
-      cout << "[stack] stores at " << std::hex << addr << std::dec << endl;
-      printReachableStores(insnToReachableStores[addr]);
+      if (DEBUG_STACK && DEBUG) cout << "[stack] stores at " << std::hex << addr << std::dec << endl;
+      if (DEBUG_STACK && DEBUG) printReachableStores(insnToReachableStores[addr]);
     }
   }
 
