@@ -383,6 +383,8 @@ class MemoryAccess:
             + str(self.shift) + " + " + str(self.off)
         if self.off_reg is not None:
             s += " * " + str(self.off_reg)
+        if self.is_bit_var is not None:
+            s += " is bit var: " + str(self.is_bit_var) + "\n"
         return s
 
 
@@ -431,8 +433,12 @@ class StaticNode:
     def __str__(self):
         s = "===============================================\n"
         s += "   Node id: " + str(self.id) + "\n"
-        s += "      insn: " + str(hex(self.insn)) + "\n"
+        s += " insn addr: " + str(hex(self.insn)) + "\n"
+        if self.bb is not None:
+            s += "      lines: " + str(self.bb.lines) + "\n"
         s += "      func: " + self.function + "\n"
+        s += "     is df: " + str(self.is_df) + "\n"
+        s += "     is cf: " + str(self.is_df) + "\n"
         s += "    ------------Basic Block--------------\n"
         if self.bb is None:
             s += "\n"
@@ -500,7 +506,7 @@ class StaticDepGraph:
         if node.explained is True:
             if node.is_df is True:
                 assert node.is_cf is False, str(node)
-                return None
+                return node
             if node.is_cf is True:
                 assert node.is_df is False
                 node.is_cf = False
@@ -511,7 +517,7 @@ class StaticDepGraph:
     def make_or_get_cf_node(self, insn, bb, function):
         node = self.make_node(insn, bb, function)
         if node.explained is True:
-            return None
+            return node
         if node.is_df is not True:
             node.is_cf = True
         return node
@@ -561,18 +567,30 @@ class StaticDepGraph:
 
     @staticmethod
     def buildDependencies(insn, func, prog):
-        func = func
-        prog = prog
+        """
+        key = str(insn) + "_" + func + "_" + prog
+        static_dep_result_cache = {}
+        static_dep_result_file = os.path.join(curr_dir, 'static_dep_results.json')
+        if os.path.exists(static_dep_result_file):
+            with open(static_dep_result_file) as file:
+                static_dep_result_cache = json.load(file)
+        if key in static_dep_result_cache:
+            StaticDepGraph.func_to_graph = static_dep_result_cache[key]
+            return
+        """
         """
         rr_result_file = os.path.join(curr_dir, 'rr_results.json')
         if os.path.exists(rr_result_file):
             with open(rr_result_file) as file:
                 StaticDepGraph.rr_result_cache = json.load(file)
         """
-
+        iteration = 10
         worklist = deque()
         worklist.append([insn, func, prog, None])
         while len(worklist) > 0:
+            if iteration <= 0:
+                break
+            iteration -= 1
             curr_insn, curr_func, curr_prog, curr_node = worklist.popleft()
             new_nodes = StaticDepGraph.buildDependenciesInFunction(curr_insn, curr_func, curr_prog, curr_node)
             for new_node in new_nodes:
@@ -581,6 +599,11 @@ class StaticDepGraph:
         rr_result_file = os.path.join(curr_dir, 'rr_results.json')
         with open(rr_result_file, 'w') as f:
             json.dump(StaticDepGraph.rr_result_cache, f)
+        """
+        """
+        static_dep_result_cache[key] = StaticDepGraph.func_to_graph
+        with open(static_dep_result_file, 'w') as f:
+            json.dump(static_dep_result_cache, f)
         """
 
     @staticmethod
@@ -693,16 +716,18 @@ class StaticDepGraph:
                     continue
 
                 prede = self.make_or_get_df_node(prede_insn, None, func) #TODO, might need to include func here too
-                if prede is None:
-                    continue
-
-                #if prede not in self.nodes_in_df_slice:
-                #    self.nodes_in_df_slice.append(prede)
-                prede.mem_load = MemoryAccess(prede_reg, shift, off, off_reg, is_bit_var)
-                prede.reg_write = '' #TODO put actual register name here
+                if prede.explained is False:
+                    #if prede not in self.nodes_in_df_slice:
+                    #    self.nodes_in_df_slice.append(prede)
+                    prede.mem_load = MemoryAccess(prede_reg, shift, off, off_reg, is_bit_var)
+                    prede.reg_write = '' #TODO put actual register name here
+                    defs_in_same_func.add(prede)
+                else:
+                    assert prede.mem_load is not None, str(prede)
+                    assert prede.reg_write == ''
                 succe.df_predes.append(prede)
                 prede.df_succes.append(succe)
-                defs_in_same_func.add(prede)
+
 
         print("[static_dep] Found " + str(len(defs_in_same_func)) + " dataflow nodes local in function ")
         tmp_defs_in_same_func = set([])
@@ -734,7 +759,7 @@ class StaticDepGraph:
 
             closest_dep_branch_node = self.get_closest_dep_branch(node)
             farthest_target_node = self.get_farthest_target(closest_dep_branch_node)
-            print("Cloest dependent branch is at " + hex(closest_dep_branch_node.bb.last_insn))
+            print("Closest dependent branch is at " + hex(closest_dep_branch_node.bb.last_insn))
             print("Farthest target is at " + hex(farthest_target_node.insn))
             results = rr_backslice(prog, closest_dep_branch_node.bb.last_insn,
                                    farthest_target_node.insn, #4234305, 0x409C41 | 4234325, 0x409C55
@@ -756,17 +781,19 @@ class StaticDepGraph:
                 off = load[2]
                 print(str(prede_insn))
                 prede = self.make_or_get_df_node(prede_insn, None, curr_func)
-                if prede is None:
-                    continue
-
-                prede.mem_store = MemoryAccess(prede_reg, shift, off, None, node.mem_load.is_bit_var)
-                prede.reg_read = ''  # TODO put actual register name here
+                if prede.explained is False:
+                    prede.mem_store = MemoryAccess(prede_reg, shift, off, None, node.mem_load.is_bit_var)
+                    prede.reg_read = ''  # TODO put actual register name here
+                    if curr_func != func:
+                        defs_in_diff_func.add(prede)
+                    else:
+                        tmp_defs_in_same_func.add(prede)
+                else:
+                    assert prede.mem_store is not None
+                    assert prede.reg_read == ''
                 node.df_predes.append(prede)
                 prede.df_succes.append(node)
-                if curr_func != func:
-                    defs_in_diff_func.add(prede)
-                else:
-                    tmp_defs_in_same_func.add(prede)
+
 
         defs_in_same_func = defs_in_same_func.union(tmp_defs_in_same_func)
         print("[static_dep] Total number of new nodes in local  dataflow slice: " + str(len(defs_in_same_func)))

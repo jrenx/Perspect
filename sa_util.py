@@ -224,15 +224,33 @@ def static_backslices(slice_starts, prog):
 
     if DEBUG_CTYPE: print( "[main] slice starts: " + json_str)
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
-    if DEBUG_CTYPE: print( "[main] : " + "Calling C", flush=True)
 
-    lib.backwardSlices(slice_starts_str, prog_name)
-    if DEBUG_CTYPE: print( "[main] : Back from C")
+    sa_result_cache = {}
+    sa_result_file = os.path.join(curr_dir, 'sa_results.json')
+    if os.path.exists(sa_result_file):
+        with open(sa_result_file) as cache_file:
+            sa_result_cache = json.load(cache_file)
+
+    key = json_str + "_" + prog
+    if key in sa_result_cache:
+        json_loads_per_reg = sa_result_cache[key]
+    else:
+        if DEBUG_CTYPE: print("[main] : " + "Calling C", flush=True)
+        lib.backwardSlices(slice_starts_str, prog_name)
+        if DEBUG_CTYPE: print( "[main] : Back from C")
+
+        f = open(os.path.join(curr_dir, 'backwardSlices_result'))
+        json_loads_per_reg = json.load(f)
+        f.close()
+        sa_result_cache[key] = json_loads_per_reg
+
+        # rr_result_file = os.path.join(curr_dir, 'rr_results.json')
+        with open(sa_result_file, 'w') as cache_file:
+            json.dump(sa_result_cache, cache_file)
+
+    if DEBUG_CTYPE: print("[main] : returned: " + str(json_loads_per_reg))
 
     data_points_per_reg = []
-    f = open(os.path.join(curr_dir, 'backwardSlices_result'))
-    json_loads_per_reg = json.load(f)
-    if DEBUG_CTYPE: print("[main] : returned: " + str(json_loads_per_reg))
     for json_loads in json_loads_per_reg:
         if len(json_loads) == 0:
             continue
@@ -242,10 +260,10 @@ def static_backslices(slice_starts, prog):
         data_points = parseLoadsOrStores(json_loads['reads'])
 
         data_points_per_reg.append([reg_name, addr, data_points])
-    f.close()
 
     if DEBUG_CTYPE: print( "[main] returned" + str(data_points_per_reg))
     return data_points_per_reg
+
 
 def static_backslice(reg, insn, func, prog):
     print()
