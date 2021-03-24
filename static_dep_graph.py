@@ -457,10 +457,16 @@ class StaticNode:
         s += "] \n"
 
         if self.mem_load is not None:
-            s += "    memory load " + str(self.mem_load)
+            s += "     memory load " + str(self.mem_load)
+
+        if self.reg_load is not None:
+            s += "    register load " + str(self.reg_load)
 
         if self.mem_store is not None:
-            s += "    memory store " + str(self.mem_store)
+            s += "     memory store " + str(self.mem_store)
+
+        if self.reg_store is not None:
+            s += "    register store " + str(self.reg_store)
 
         s += "    dataflow predecessors: ["
         for prede in self.df_predes:
@@ -584,13 +590,13 @@ class StaticDepGraph:
             with open(rr_result_file) as file:
                 StaticDepGraph.rr_result_cache = json.load(file)
         """
-        iteration = 10
+        #iteration = 10
         worklist = deque()
         worklist.append([insn, func, prog, None])
         while len(worklist) > 0:
-            if iteration <= 0:
-                break
-            iteration -= 1
+            #if iteration <= 0:
+            #    break
+            #iteration -= 1
             curr_insn, curr_func, curr_prog, curr_node = worklist.popleft()
             new_nodes = StaticDepGraph.buildDependenciesInFunction(curr_insn, curr_func, curr_prog, curr_node)
             for new_node in new_nodes:
@@ -685,12 +691,13 @@ class StaticDepGraph:
             if bb.ends_in_branch is False:
                 continue
             insn = bb.last_insn
-            print(hex(insn))
+            #print(hex(insn))
             slice_starts.append(["", insn, func, False])
             assert insn not in addr_to_node
             addr_to_node[insn] = node
         if df_node is not None: #TODO, registers?
-            slice_starts.append(["", df_node.insn, df_node.function, df_node.contains_bit_var()])
+            regLoad = "" if df_node.reg_load is None else df_node.reg_load
+            slice_starts.append([regLoad, df_node.insn, df_node.function, df_node.contains_bit_var()])
             #TODO for now, just ignore those that writes to memory in SA
             assert df_node.insn not in addr_to_node
             addr_to_node[df_node.insn] = df_node
@@ -712,6 +719,7 @@ class StaticDepGraph:
                 off_reg = load[4]
                 read_same_as_write = load[5]
                 is_bit_var = load[6]
+                type = load[7]
                 if read_same_as_write is True:
                     continue
 
@@ -719,9 +727,17 @@ class StaticDepGraph:
                 if prede.explained is False:
                     #if prede not in self.nodes_in_df_slice:
                     #    self.nodes_in_df_slice.append(prede)
-                    prede.mem_load = MemoryAccess(prede_reg, shift, off, off_reg, is_bit_var)
-                    prede.reg_write = '' #TODO put actual register name here
                     defs_in_same_func.add(prede)
+                    if type == 'mem':
+                        prede.mem_load = MemoryAccess(prede_reg, shift, off, off_reg, is_bit_var)
+                        prede.reg_write = '' #TODO put actual register name here
+                    elif type == 'reg':
+                        prede.reg_load = prede_reg
+
+                    else:
+                        print("type not supported " + str(type))
+                        raise Exception
+
                 else:
                     assert prede.mem_load is not None, str(prede)
                     assert prede.reg_write == ''

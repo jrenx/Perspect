@@ -18,7 +18,7 @@ DEBUG = False
 def parseLoadsOrStores(json_exprs):
     # TODO, why is it called a read again?
     data_points = []
-    data_points_set = set()
+    visited = set()
     for json_expr in json_exprs:
         insn_addr = None
         if 'insn_addr' in json_expr:
@@ -31,9 +31,13 @@ def parseLoadsOrStores(json_exprs):
             is_bit_var = True if json_expr['is_bit_var'] == 1 else False
         expr = json_expr['expr']
         expr_str = str(insn_addr) + str(expr)
-        if expr_str in data_points_set:
+        if expr_str in visited:
             continue
-        data_points_set.add(expr_str)
+        visited.add(expr_str)
+
+        expr = expr.strip()
+        type = expr.split('|')[0]
+        expr = expr.split('|')[1]
 
         reg = None
         shift = "0"
@@ -41,7 +45,8 @@ def parseLoadsOrStores(json_exprs):
         off_reg = None
 
         #if DEBUG: print("Parsing expression: " + expr)
-        segs = expr.strip().split('+')
+        expr = expr.strip()
+        segs = expr.split('+')
         assert len(segs) >= 1 and len(segs) <= 3, str(expr)
         for seg in segs:
             try:
@@ -87,7 +92,7 @@ def parseLoadsOrStores(json_exprs):
         #both shift and offset are in hex form
         if DEBUG: print("Parsing result reg: " + expr_reg + \
                         " shift " + str(shift) + " off " + str(off) + " insn addr: " + str(insn_addr))
-        data_points.append([insn_addr, reg, shift, off, off_reg, read_same_as_write, is_bit_var])
+        data_points.append([insn_addr, reg, shift, off, off_reg, read_same_as_write, is_bit_var, type])
     return data_points
 
 #FIXME: call instructions insns and not addrs

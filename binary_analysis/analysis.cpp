@@ -1352,13 +1352,14 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
 
   // get all the leaf nodes.
   NodeIterator begin, end;
-  slice->entryNodes(begin, end);
+  if (!atEndPoint) slice->entryNodes(begin, end);
+  else slice->exitNodes(begin, end);
 
   for(NodeIterator it = begin; it != end; ++it) {
     SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(*it);
     Assignment::Ptr assign = aNode->assign();
-    //cout << assign->format() << " " << assign->insn().format() << " " << assign->insn().getOperation().getID() << " " << endl;
-    if (!assign->insn().readsMemory()) continue;
+    cout << assign->format() << " " << assign->insn().format() << " " << assign->insn().getOperation().getID() << " " << endl;
+    //if (!atEndPoint && !assign->insn().readsMemory()) continue;
 
     if(DEBUG) cout << endl;
     if(INFO) cout << "[sa] In result slice: " << endl;
@@ -1402,18 +1403,44 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
       continue;
     }
 
+    if (INFO) cout << "[sa] checking result instruction: " << assign->insn().format() << endl;
+
+    Expression::Ptr read;
+    std::string readStr;
+
     std::set<Expression::Ptr> memReads;
     assign->insn().getMemoryReadOperands(memReads);
-    assert(memReads.size() == 1);
-    Expression::Ptr read = *memReads.begin();
-    //	cout << read->eval() << endl;
-    if (INFO) cout << "[sa] Memory read: " << read->format() << endl;
-    std::string readStr = read->format();
-    // TODO, so, right now only include it if there is a letter in the expression,
-    // constants are ignored, need to fix this.
-    if (!std::any_of(std::begin(readStr), std::end(readStr), ::isalpha)) //TODO, reads from constant addresses should be OK too
-      continue;
+    if (memReads.size() > 0) { // prioritize reads from memory
+      assert (memReads.size() == 1);
+      Expression::Ptr read = *memReads.begin();
+      if (INFO) cout << "[sa] Memory read: " << read->format() << endl;
+      readStr.append("mem|");
+      readStr.append(read->format());
+    } else { // then check reads from register
+      int readCount = 0;
+      std::vector<Operand> ops;
+      assign->insn().getOperands(ops);
 
+      for (auto oit = ops.begin(); oit != ops.end(); ++oit) {
+        if (assign->insn().isRead((*oit).getValue())) {
+          read = (*oit).getValue();
+          if (INFO) cout << "[sa] current read: " << read->format() << endl;
+          readCount++;
+        }
+      }
+      if (INFO) cout << "[sa] total number of reads: " << readCount << endl;
+      if (readCount == 1) {
+        readStr.append("reg|");
+        readStr.append(read->format());
+      } else {
+        if (INFO) cout << "[sa][warn] multiple reads! " << endl;
+      }
+    }
+
+    if (INFO) cout << "[sa] => Instruction addr: " << std::hex << assign->addr() << std::dec << endl;
+    if (INFO) cout << "[sa] => Read expr: " << readStr << endl;
+    if (INFO) cout << "[sa] => Read same as write: " << (isKnownBitVar ? 1 : 0) << endl; // TODO maybe fix this
+    if (INFO) cout << "[sa] => Is bit var: " << isBitVar << endl;
     cJSON *json_read = cJSON_CreateObject();
     cJSON_AddNumberToObject(json_read, "insn_addr", assign->addr());
     cJSON_AddStringToObject(json_read, "expr", readStr.c_str());
