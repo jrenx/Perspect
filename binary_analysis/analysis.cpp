@@ -131,6 +131,7 @@ void getReversePostOrderListHelper(Block *b,
 void getReversePostOrderListHelper(Node::Ptr node, std::vector<Node::Ptr> *list, boost::unordered_set<Node::Ptr> &visited);
 void getReversePostOrderList(GraphPtr slice, std::vector<Node::Ptr> *list);
 
+int getBitMaskDigits(Instruction insn, std::vector<AbsRegion> &regions);
 void locateBitVariables(GraphPtr slice, 
 		boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
                 boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
@@ -1623,6 +1624,35 @@ void getReversePostOrderList(GraphPtr slice,
   }
 }
 
+int getBitMaskDigits(Instruction insn, std::vector<AbsRegion> &regions) {
+  //cout << insn.format() << endl;
+  std::vector<Operand> ops;
+  insn.getOperands(ops);
+  int digits = 0;
+  AbsRegionConverter arc(true, false);
+  for (auto oit = ops.begin(); oit != ops.end(); ++oit) {
+    //cout << (*oit).getValue()->format() << endl;
+    std::set<RegisterAST::Ptr> regsRead;
+    (*oit).getReadSet(regsRead);
+    bool ignore = false;
+    for (auto rrit = regsRead.begin(); rrit != regsRead.end(); ++rrit) {
+      AbsRegion curr = arc.convert(*rrit);
+      if (std::find(regions.begin(), regions.end(), curr) != regions.end()) {
+        ignore = true;
+      }
+    }
+    if (ignore)  continue;
+    MachRegister machReg;
+    long off = 0;
+    getRegAndOff((*oit).getValue(), &machReg, &off);
+    while (off > 0) {
+      digits += off*0x1;
+      off = off >> 1;
+    }
+  }
+  return digits;
+}
+
 void locateBitVariables(GraphPtr slice, 
 		  boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
 		  boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
@@ -1775,6 +1805,12 @@ void locateBitVariables(GraphPtr slice,
           regions.push_back(*iit);
         else
           regionsToIgnore.push_back(*iit);
+      }
+      int bitMaskDigits = getBitMaskDigits(assign->insn(), regions);
+      cout << "[bit_var] number of digits in bit mask: " << bitMaskDigits << endl;
+      if (bitMaskDigits != 1) {
+        cout << "[bit_var][warn] unhandled bit mask... " << endl;
+        continue;
       }
       bitVariables.insert({assign, regions});
       bitVariablesToIgnore.insert({assign, regionsToIgnore});
