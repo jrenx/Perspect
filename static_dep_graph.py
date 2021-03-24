@@ -542,14 +542,14 @@ class StaticDepGraph:
         # TODO, what if has no direct cf predecessor, is that possible?
         succes = set([])
         for succe in node.df_succes:
-            if succe.bb.ends_in_branch:
+            if succe.bb is not None and succe.bb.ends_in_branch:
                 succes.add(succe.bb)
         last_bb = None
         for bb in self.cfg.postorder_list:
             if bb in succes:
                 last_bb = bb
                 #break
-        return self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
+        return last_bb if last_bb is None else self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
     def get_farthest_target(self, node):
         visited = set([])
@@ -781,12 +781,16 @@ class StaticDepGraph:
                 print("[warn] node does not have memory load?")
                 continue
 
+            branch_insn = None
+            target_insn = None
             closest_dep_branch_node = self.get_closest_dep_branch(node)
-            farthest_target_node = self.get_farthest_target(closest_dep_branch_node)
-            print("Closest dependent branch is at " + hex(closest_dep_branch_node.bb.last_insn))
-            print("Farthest target is at " + hex(farthest_target_node.insn))
-            results = rr_backslice(prog, closest_dep_branch_node.bb.last_insn,
-                                   farthest_target_node.insn, #4234305, 0x409C41 | 4234325, 0x409C55
+            if closest_dep_branch_node is not None:
+                farthest_target_node = self.get_farthest_target(closest_dep_branch_node)
+                print("Closest dependent branch is at " + str(branch_insn))
+                print("Farthest target is at " + str(target_insn))
+                branch_insn = closest_dep_branch_node.bb.last_insn
+                target_insn = farthest_target_node.insn
+            results = rr_backslice(prog, branch_insn, target_insn, #4234305, 0x409C41 | 4234325, 0x409C55
                                    node.insn, node.mem_load.reg, node.mem_load.shift, node.mem_load.off,
                                    node.mem_load.off_reg) #, StaticDepGraph.rr_result_cache)
 

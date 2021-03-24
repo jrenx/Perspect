@@ -23,6 +23,11 @@ def filter_branch(branch_point, target_point, trace):
 
     for i, (point, value, _) in enumerate(trace):
         #print("[tmp] point " + str(point) + " value " + str(value))
+        if branch_point is None or target_point is None:
+            assert branch_point is None and target_point is None
+            taken_indices.append(i + 1)
+            continue
+
         if point == branch_point and value is None:
             if i + 1 < len(trace) and trace[i + 1][0] == target_point:
                 #assert trace[i + 1][1] is None, str(trace[i]) + str(trace[i + 1])
@@ -234,7 +239,7 @@ def get_addrs(breakpoint_trace, shift, offset, offset_reg):
 
 #TODO, shift should be shift to the right
 def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_reg = None, iter=30):
-    print("[rr] In get_def, branch: " + branch + " target: " + target)
+    print("[rr] In get_def, branch: " + str(branch) + " target: " + str(target))
     #positive = set()
     #negative = set()
 
@@ -255,8 +260,14 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     print("[rr] Running breakpoints for first step")
     print("[rr] Breakpoints: " + str(reg_points))
     print("[rr] Registers: " + str(regs), flush=True)
-    run_breakpoint([branch, target], reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, False, False)
-    breakpoint_trace = parse_breakpoint([branch, target], reg_points, False)
+    if branch is None or target is None:
+        assert branch is None and target is None
+
+    branch_target = []
+    if branch is not None and target is not None:
+        branch_target = [branch, target]
+    run_breakpoint(branch_target, reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, False, False)
+    breakpoint_trace = parse_breakpoint(branch_target, reg_points, False)
     print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoint hits")
 
     taken_indices, not_taken_indices = filter_branch(branch, target, breakpoint_trace)
@@ -395,8 +406,8 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
             print("[rr] Breakpoints: " + str(reg_points))
             print("[rr] Registers: " + str(regs), flush=True)
             #TODO, how to distinguish diff insn and regs? looks like it's according to order
-            run_breakpoint([branch, target], reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, True, True)
-            breakpoint_trace = parse_breakpoint([branch, target], reg_points, True)
+            run_breakpoint(branch_target, reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, True, True)
+            breakpoint_trace = parse_breakpoint(branch_target, reg_points, True)
             print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoint hits")
             print("[rr] Third step finished")
 

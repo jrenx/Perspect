@@ -30,7 +30,13 @@ def test_rr_slice():
     b = datetime.datetime.now()
     print("Took: " + str(b-a))
 
-def test_sa_slices():
+def test_rr_slice2():
+    a = datetime.datetime.now()
+    rr_backslice('909_ziptest_exe9', None, None, int('0x40bcbd', 16), 'RSI', 0, 0, None)
+    b = datetime.datetime.now()
+    print("Took: " + str(b-a))
+
+def test_sa_slices1():
     slice_starts = []
     #slice_starts.append(['rax', 4234536, 'sweep', True]) #why is the filtered against?
     slice_starts.append(['rax', 4232216, 'scanblock', True])
@@ -69,7 +75,7 @@ def main():
     #test_rr_slice()
     #get_mem_writes_to_static_addrs('909_ziptest_exe9')
     #get_func_to_callsites('909_ziptest_exe9')
-    test_sa_slices3()
+    test_rr_slice2()
  
 if __name__ == "__main__":
     main()
