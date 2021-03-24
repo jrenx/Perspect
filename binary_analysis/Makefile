@@ -20,7 +20,10 @@ analysis.o: analysis.cpp
 cJSON.o: cJSON.c
 	$(CC) -g -c -fPIC $(CFLAGS) cJSON.c #-std=c++11
 
+#clean:
+#	rm cJSON.o analysis.o analysis
+
 clean:
-	rm cJSON.o analysis.o analysis
+	rm static_analysis.so
 
 
