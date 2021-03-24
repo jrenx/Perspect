@@ -383,6 +383,8 @@ class MemoryAccess:
             + str(self.shift) + " + " + str(self.off)
         if self.off_reg is not None:
             s += " * " + str(self.off_reg)
+        if self.is_bit_var is not None:
+            s += " is bit var: " + str(self.is_bit_var) + "\n"
         return s
 
 
@@ -561,6 +563,7 @@ class StaticDepGraph:
 
     @staticmethod
     def buildDependencies(insn, func, prog):
+        """
         key = str(insn) + "_" + func + "_" + prog
         static_dep_result_cache = {}
         static_dep_result_file = os.path.join(curr_dir, 'static_dep_results.json')
@@ -571,15 +574,19 @@ class StaticDepGraph:
             StaticDepGraph.func_to_graph = static_dep_result_cache[key]
             return
         """
+        """
         rr_result_file = os.path.join(curr_dir, 'rr_results.json')
         if os.path.exists(rr_result_file):
             with open(rr_result_file) as file:
                 StaticDepGraph.rr_result_cache = json.load(file)
         """
-
+        iteration = 10
         worklist = deque()
         worklist.append([insn, func, prog, None])
         while len(worklist) > 0:
+            if iteration <= 0:
+                break
+            iteration -= 1
             curr_insn, curr_func, curr_prog, curr_node = worklist.popleft()
             new_nodes = StaticDepGraph.buildDependenciesInFunction(curr_insn, curr_func, curr_prog, curr_node)
             for new_node in new_nodes:
@@ -589,9 +596,11 @@ class StaticDepGraph:
         with open(rr_result_file, 'w') as f:
             json.dump(StaticDepGraph.rr_result_cache, f)
         """
+        """
         static_dep_result_cache[key] = StaticDepGraph.func_to_graph
         with open(static_dep_result_file, 'w') as f:
             json.dump(static_dep_result_cache, f)
+        """
 
     @staticmethod
     def buildDependenciesInFunction(insn, func, prog, df_node = None):
