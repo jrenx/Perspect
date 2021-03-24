@@ -1414,7 +1414,7 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
       assert (memReads.size() == 1);
       Expression::Ptr read = *memReads.begin();
       if (INFO) cout << "[sa] Memory read: " << read->format() << endl;
-      readStr.append("mem|");
+      readStr.append("memread|");
       readStr.append(read->format());
     } else { // then check reads from register
       int readCount = 0;
@@ -1430,7 +1430,7 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
       }
       if (INFO) cout << "[sa] total number of reads: " << readCount << endl;
       if (readCount == 1) {
-        readStr.append("reg|");
+        readStr.append("regread|");
         readStr.append(read->format());
       } else {
         if (INFO) cout << "[sa][warn] multiple reads! " << endl;
@@ -1444,6 +1444,7 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
     cJSON *json_read = cJSON_CreateObject();
     cJSON_AddNumberToObject(json_read, "insn_addr", assign->addr());
     cJSON_AddStringToObject(json_read, "expr", readStr.c_str());
+    cJSON_AddStringToObject(json_read, "func", funcName);
     cJSON_AddNumberToObject(json_read, "read_same_as_write", isKnownBitVar ? 1 : 0); // TODO, see analyzeKnownBitVariables for proper way to handle this
 
     if (isBitVar) {
@@ -2334,7 +2335,9 @@ void getCalleeToCallsites(char *progName) {
       for (auto wit = memWrites.begin(); wit != memWrites.end(); wit ++) {
         Expression::Ptr write = *wit;
         if (INFO) cout << "[sa] Memory write: " << write->format() << endl;
-        std::string writeStr = write->format();
+        std::string writeStr;
+        writeStr.append("memwrite|");
+        writeStr.append(write->format());
         if (!std::any_of(std::begin(writeStr), std::end(writeStr), ::isalpha)) {
           cout << "[sa][warn] Memory write expression has not register in it? " << writeStr << endl;
         }

@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 DEBUG_CFG = False
 DEBUG_SIMPLIFY = False
-DEBUG_SLICE = False
+DEBUG_SLICE = True
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 class BasicBlock:
     def __init__(self, id, ends_in_branch, is_entry, lines):
@@ -104,7 +104,9 @@ class CFG:
         for bb in self.ordered_bbs:
             if bb.start_insn <= insn <= bb.last_insn:
                 return bb
-        return None
+        print("bb for " + hex(insn) + " not found")
+        raise Exception
+        #return None
 
     def traversalHelper(self, bb):
         #print(" Traversing bb: " + str(bb.id))
@@ -720,27 +722,30 @@ class StaticDepGraph:
                 read_same_as_write = load[5]
                 is_bit_var = load[6]
                 type = load[7]
+                curr_func = load[8]
                 if read_same_as_write is True:
                     continue
 
-                prede = self.make_or_get_df_node(prede_insn, None, func) #TODO, might need to include func here too
+                prede = self.make_or_get_df_node(prede_insn, None, curr_func) #TODO, might need to include func here too
                 if prede.explained is False:
                     #if prede not in self.nodes_in_df_slice:
                     #    self.nodes_in_df_slice.append(prede)
-                    defs_in_same_func.add(prede)
-                    if type == 'mem':
+                    if type == 'memread':
                         prede.mem_load = MemoryAccess(prede_reg, shift, off, off_reg, is_bit_var)
                         prede.reg_write = '' #TODO put actual register name here
-                    elif type == 'reg':
+                    elif type == 'regread':
                         prede.reg_load = prede_reg
-
+                    elif type == 'empty':
+                        pass
                     else:
                         print("type not supported " + str(type))
                         raise Exception
-
-                else:
-                    assert prede.mem_load is not None, str(prede)
-                    assert prede.reg_write == ''
+                    if curr_func != func:
+                        defs_in_diff_func.add(prede)
+                    else:
+                        defs_in_same_func.add(prede)
+                #else:
+                    #assert prede.mem_load is not None or prede.reg_load is not None, str(prede)
                 succe.df_predes.append(prede)
                 prede.df_succes.append(succe)
 
@@ -771,6 +776,9 @@ class StaticDepGraph:
             """
 
             if func == "scanblock" and node.insn != int('0x409379', 16): #TODO, need to fix a bug here
+                continue
+            if node.mem_load is None:
+                print("[warn] node does not have memory load?")
                 continue
 
             closest_dep_branch_node = self.get_closest_dep_branch(node)
