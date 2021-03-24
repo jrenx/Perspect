@@ -433,8 +433,12 @@ class StaticNode:
     def __str__(self):
         s = "===============================================\n"
         s += "   Node id: " + str(self.id) + "\n"
-        s += "      insn: " + str(hex(self.insn)) + "\n"
+        s += " insn addr: " + str(hex(self.insn)) + "\n"
+        if self.bb is not None:
+            s += "      lines: " + str(self.bb.lines) + "\n"
         s += "      func: " + self.function + "\n"
+        s += "     is df: " + str(self.is_df) + "\n"
+        s += "     is cf: " + str(self.is_df) + "\n"
         s += "    ------------Basic Block--------------\n"
         if self.bb is None:
             s += "\n"
@@ -755,7 +759,7 @@ class StaticDepGraph:
 
             closest_dep_branch_node = self.get_closest_dep_branch(node)
             farthest_target_node = self.get_farthest_target(closest_dep_branch_node)
-            print("Cloest dependent branch is at " + hex(closest_dep_branch_node.bb.last_insn))
+            print("Closest dependent branch is at " + hex(closest_dep_branch_node.bb.last_insn))
             print("Farthest target is at " + hex(farthest_target_node.insn))
             results = rr_backslice(prog, closest_dep_branch_node.bb.last_insn,
                                    farthest_target_node.insn, #4234305, 0x409C41 | 4234325, 0x409C55
