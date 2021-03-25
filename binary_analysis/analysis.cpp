@@ -31,9 +31,9 @@ using namespace boost;
 BPatch bpatch;
 bool INFO = true;
 bool DEBUG = false;
-bool DEBUG_SLICE = false;
-bool DEBUG_BIT = false;
-bool DEBUG_STACK = false;
+bool DEBUG_SLICE = true;
+bool DEBUG_BIT = true;
+bool DEBUG_STACK = true;
 
 typedef enum {
   create,
@@ -152,7 +152,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
                                                            boost::unordered_map<Address, long> &insnToStackHeight,
                                                            boost::unordered_set<Address> &readAddrs,
                                                            StackStore &stackRead, int level);
-void getStackHeights(std::vector<Block *> &list, boost::unordered_map<Address, long> &insnToStackHeight, int initHeight);
+void getStackHeights(Function *f, std::vector<Block *> &list, boost::unordered_map<Address, long> &insnToStackHeight, int initHeight);
 bool readsFromStack(Instruction insn, Address addr, MachRegister *reg, long *off);
 bool writesToStack(Operand op, Instruction insn, Address addr);
 
@@ -677,7 +677,7 @@ bool writesToStack(Operand op, Instruction insn, Address addr) { // TODO add sig
     RegisterAST::Ptr regAst = *rit;
     MachRegister reg = regAst->getID();
     if (reg == x86_64::rsp || reg == x86_64::esp) {
-      if (DEBUG_STACK)
+      if (DEBUG_STACK && DEBUG)
         cout << "[stack] Found store to stack: " << op.format(insn.getArch())
                             << " @ " << insn.format() << " @ " << addr << endl;
 
@@ -728,7 +728,7 @@ void getRegAndOff(Expression::Ptr exp, MachRegister *machReg, long *off) {
   RegisterAST::Ptr regAST = boost::dynamic_pointer_cast<RegisterAST>(exp);
   if (regAST != NULL) {
     (*machReg) = regAST->getID();
-    if (DEBUG_STACK)
+    if (DEBUG_STACK && DEBUG)
       cout << "[stack]   found register: " << machReg->name() << endl; //TODO
   } else {
     Immediate::Ptr immedAST = boost::dynamic_pointer_cast<Immediate>(exp);
@@ -736,7 +736,7 @@ void getRegAndOff(Expression::Ptr exp, MachRegister *machReg, long *off) {
       std::stringstream ss;
       ss << std::hex << immedAST->format();
       ss >> (*off);
-      if (DEBUG_STACK)
+      if (DEBUG_STACK && DEBUG)
         cout << "[stack]   found immediate: " << *off << endl;//TODO
     }
   }
@@ -748,7 +748,7 @@ void getRegAndOff(Expression::Ptr exp, MachRegister *machReg, long *off) {
   }
 }
 
-void getStackHeights(std::vector<Block *> &list,
+void getStackHeights(Function *f, std::vector<Block *> &list,
     boost::unordered_map<Address, long> &insnToStackHeight, int initHeight) {
   // FIXME: just one pass, multiple predecessors are supposed to have the same stack height right?
   long currHeight = initHeight;
@@ -784,6 +784,22 @@ void getStackHeights(std::vector<Block *> &list,
             if ((*eit)->type() == CALL || (*eit)->type() == RET || (*eit)->type() == CATCH)
               continue;
 
+            // Even jump edges can go to other functions
+            std::vector<Function *> funcs;
+            src->getFuncs(funcs);
+            bool inSameFunction = false;
+            for (auto fit = funcs.begin(); fit != funcs.end(); fit ++) {
+              if (*fit == f) {
+                inSameFunction = true;
+              }
+            }
+            if (!inSameFunction) {
+              cout << "[stack] predecessor not in the same function even through is not a call edge. " << endl;
+              cout << "[stack]     predecessor @ " << std::hex << src->start() << " to "
+                   << src->last() << std::dec << endl;
+              continue;
+            }
+
             if (insnToStackHeight.find(src->last()) == insnToStackHeight.end()) {
               if (DEBUG_STACK && DEBUG) {
                 cout << "[stack]     predecessor height @ " << std::hex << src->last() << std::dec
@@ -812,7 +828,7 @@ void getStackHeights(std::vector<Block *> &list,
           RegisterAST::Ptr regAst = *rit;
           MachRegister reg = regAst->getID();
           if (reg == x86_64::rsp || reg == x86_64::esp) {
-            if (DEBUG_STACK) cout << "[stack] Found stack pointer manipulation @ " << insn.format() << endl;
+            if (DEBUG_STACK && DEBUG) cout << "[stack] Found stack pointer manipulation @ " << insn.format() << endl;
             changesStackPointer = true;
             break;
           }
@@ -867,7 +883,7 @@ void getStackHeights(std::vector<Block *> &list,
             if (DEBUG_STACK)
               cout << "[stack][warn] Unhandled case: " << insn.format() << endl;
         }
-        if (DEBUG_STACK) cout << "[stack] height @ " << addr << " is " << currHeight << endl;
+        if (DEBUG_STACK && DEBUG) cout << "[stack] height @ " << addr << " is " << currHeight << endl;
         insnToStackHeight[addr] = currHeight;
       }
     }
@@ -926,7 +942,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWrites(Function *f, In
   std::reverse(list.begin(), list.end());
 
   boost::unordered_map<Address, long> insnToStackHeight;
-  getStackHeights(list, insnToStackHeight, initHeight);
+  getStackHeights(f, list, insnToStackHeight, initHeight);
 
   boost::unordered_set<Address> readAddrs;
   readAddrs.insert(readAddr);
@@ -954,7 +970,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
                                                            boost::unordered_set<Address> &readAddrs,
                                                            StackStore &stackRead, int level) {
   if (DEBUG_STACK)
-    cout << "[stack] Looking for writes to in function " << f->name()
+    cout << "[stack] Looking for writes in function " << f->name()
          << " at level " << level << " for " << stackRead << endl;
   boost::unordered_map<Address, boost::unordered_map<StackStore, boost::unordered_map<Address, Function *>>>
       insnToReachableStores; //FIXME if I'm more comfortable with pointers store pointers instead ...
@@ -972,13 +988,14 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
 
       if (level == 0) {
         boost::unordered_map<Address, Function *> allRets;
-
         if (iit == insns.begin()) {
+          boost::unordered_set<Function *> allCallers;
           Block::edgelist sources = b->sources();
           for (auto it = sources.begin(); it != sources.end(); it++) {
-            if ((*it)->type() != CALL)
+            if ((*it)->type() == RET || (*it)->type() == CATCH || (*it)->type() == FALLTHROUGH ||
+                (*it)->type() == CALL_FT)
               continue;
-            Block* src = (*it)->src();
+            Block *src = (*it)->src();
             std::vector<Function *> funcs;
             src->getFuncs(funcs);
             Function *caller = getFunction(funcs);
@@ -987,23 +1004,34 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
                    << insn.format() << endl;
               continue;
             }
+            if (caller == f) {
+              cout << "[stack] Still in the same function, ignore ... " << endl;
+            }
+            allCallers.insert(caller);
+          }
+          for (auto fit = allCallers.begin(); fit != allCallers.end(); fit++) {
+            Function *caller = *fit;
             if (DEBUG_STACK)
-              cout << "[stack] => Checking for stack writes in in caller " << caller->name() << endl;
+              cout << "[stack] checking instruction: " << insn.format() << " @" << std::hex << addr << std::dec << endl;
+            if (DEBUG_STACK)
+              cout << "[stack] => Checking for stack writes in caller " << caller->name()
+                   << " callee is " << f->name() << endl;
             boost::unordered_set<Address> readAddrs;
             getAllInvokes(caller, f, readAddrs); // TODO verify this
 
+            std::vector<Block *> callerList;
+            boost::unordered_set<Block *> visited;
+            getReversePostOrderListHelper(caller->entry(), callerList, visited);
+            std::reverse(callerList.begin(), callerList.end());
+
             for (auto rait = readAddrs.begin(); rait != readAddrs.end(); rait++) {
               Address readAddr = *rait;
-              std::vector<Block *> callerList;
-              boost::unordered_set<Block *> visited;
-              getReversePostOrderListHelper(caller->entry(), callerList, visited);
-              std::reverse(callerList.begin(), callerList.end());
-
+              cout << "[stack] => Checking for read address " << std::hex << readAddr << std::dec  << endl;
               boost::unordered_map<Address, long> callerInsnToStackHeight;
-              getStackHeights(callerList, callerInsnToStackHeight, 0);
+              getStackHeights(caller, callerList, callerInsnToStackHeight, 0);
               int stackOffSet = 8 - callerInsnToStackHeight[readAddr];
               callerInsnToStackHeight.clear();
-              getStackHeights(callerList, callerInsnToStackHeight, stackOffSet);
+              getStackHeights(caller, callerList, callerInsnToStackHeight, stackOffSet);
               boost::unordered_set<Address> cuuReadAddrs;
               cuuReadAddrs.insert(readAddr);
               boost::unordered_map<Address, Function *> ret =
@@ -1020,7 +1048,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
         }
 
         entryID id = insn.getOperation().getID();
-        if (id == e_call || id == e_callq) { //TODO rename level to calstackdepth?
+        if (id == e_call || id == e_callq) { //TODO rename level to calstackdepth? //TODO add jump here
           Block::edgelist targets = b->targets();
           for (auto it = targets.begin(); it != targets.end(); it++) {
             if ((*it)->type() != CALL)
@@ -1035,7 +1063,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
               continue;
             }
             if (DEBUG_STACK)
-              cout << "[stack] =>Checking for stack writes in in callee " << callee->name() << endl;
+              cout << "[stack] =>Checking for stack writes in callee " << callee->name() << endl;
             boost::unordered_set<Address> readAddrs;
             getAllRets(callee, readAddrs);
 
@@ -1045,7 +1073,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
             std::reverse(calleeList.begin(), calleeList.end());
 
             boost::unordered_map<Address, long> calleeInsnToStackHeight;
-            getStackHeights(calleeList, calleeInsnToStackHeight, insnToStackHeight[addr] - 8);
+            getStackHeights(callee, calleeList, calleeInsnToStackHeight, insnToStackHeight[addr] - 8);
 
             boost::unordered_map<Address, Function *> ret =
                 checkAndGetStackWritesHelper(callee, calleeList, calleeInsnToStackHeight, readAddrs, stackRead,
@@ -1142,7 +1170,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
       for (auto iit = insns.begin(); iit != insns.end(); iit++) {
         Address addr = (*iit).first;
         Instruction insn = (*iit).second;
-        if (DEBUG_STACK)
+        if (DEBUG_STACK && DEBUG)
           cout << "[stack] Working on instruction: " << insn.format()
                                        << " @" << std::hex << addr << std::dec << endl;
 
@@ -1199,9 +1227,9 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
 
         insnToReachableStores[addr] = prevReachableStores;
 
-        if (DEBUG_STACK)
+        if (DEBUG_STACK && DEBUG)
           cout << "[stack]   stack stores after update:" << endl;
-        if (DEBUG_STACK)
+        if (DEBUG_STACK && DEBUG)
           printReachableStores(insnToReachableStores[addr]);
 
         //prevReachableStores = currReachableStores;
@@ -2584,7 +2612,7 @@ int main() {
   std::reverse(list.begin(), list.end());
   boost::unordered_map<Address, long> insnToStackHeight;
   int initHeight = 0;
-  getStackHeights(list, insnToStackHeight, initHeight);
+  getStackHeights(f, list, insnToStackHeight, initHeight);
 
   //getCalleeToCallsites(progName);
   //getMemWritesToStaticAddresses(progName);
