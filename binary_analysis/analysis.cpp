@@ -1617,25 +1617,34 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
 
 bool findMemoryLoadHelper(Expression::Ptr memWrite,
                           SliceNode::Ptr node,
-                          std::vector<Node::Ptr> *list) {
+                          std::vector<Node::Ptr> *list,
+                          boost::unordered_set<Assignment::Ptr> &visited) {
+
+  Assignment::Ptr assign = node->assign();
+  if (visited.find(assign) != visited.end()) {
+    if(DEBUG && DEBUG_BIT) cout << "[bit_var] Node already visited, returning ..." << endl;
+    return false;
+  }
+  visited.insert(assign);
+
   NodeIterator iBegin, iEnd;
   node->ins(iBegin, iEnd);
   // Checking through successors.
   bool containsMemLoad = false;
-  Assignment::Ptr assign = node->assign();
+
   Instruction insn = assign->insn();
   std::set<Expression::Ptr> memReads;
   insn.getMemoryReadOperands(memReads);
   if (memReads.size() > 1) {
-    if(DEBUG && DEBUG_BIT) cout << "Instruction has more than one memory read? " << insn.format() << endl;
+    if(DEBUG && DEBUG_BIT) cout << "[bit_var] Instruction has more than one memory read? " << insn.format() << endl;
   }
-  if(DEBUG && DEBUG_BIT) cout << "Instruction " << insn.format() << " has " << memReads.size() << endl;
+  if(DEBUG && DEBUG_BIT) cout << "[bit_var] Instruction " << insn.format() << " has " << memReads.size() << endl;
   if (memReads.size() == 1) {
     Expression::Ptr memRead = *memReads.begin();
     std::string readStr = memRead->format();
     std::string writeStr = memWrite->format();
-    if(DEBUG && DEBUG_BIT) cout << "Read str: " << readStr << endl;
-    if(DEBUG && DEBUG_BIT) cout << "Write str: " << writeStr << endl;
+    if(DEBUG && DEBUG_BIT) cout << "[bit_var] Read str: " << readStr << endl;
+    if(DEBUG && DEBUG_BIT) cout << "[bit_var] Write str: " << writeStr << endl;
     if (readStr.compare(writeStr) == 0) {
       list->push_back(node);
       return true;
@@ -1644,7 +1653,7 @@ bool findMemoryLoadHelper(Expression::Ptr memWrite,
 
   for (NodeIterator it = iBegin; it != iEnd; ++it) {
     SliceNode::Ptr iNode = boost::static_pointer_cast<SliceNode>(*it);
-    containsMemLoad = (containsMemLoad == true) ? true : findMemoryLoadHelper(memWrite, iNode, list);
+    containsMemLoad = (containsMemLoad == true) ? true : findMemoryLoadHelper(memWrite, iNode, list, visited);
   }
   if (containsMemLoad == true) {
     list->push_back(node);
@@ -1659,7 +1668,8 @@ void findMemoryLoad(Expression::Ptr memWrite,
   slice->exitNodes(begin, end);//Exit nods are the root nodes.
   for (NodeIterator it = begin; it != end; ++it) {
     SliceNode::Ptr iNode = boost::static_pointer_cast<SliceNode>(*it);
-    findMemoryLoadHelper(memWrite, iNode, list);
+    boost::unordered_set<Assignment::Ptr> visited;
+    findMemoryLoadHelper(memWrite, iNode, list, visited);
   }
 }
 
