@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 DEBUG_CFG = False
 DEBUG_SIMPLIFY = False
-DEBUG_SLICE = True
+DEBUG_SLICE = False
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 class BasicBlock:
     def __init__(self, id, ends_in_branch, is_entry, lines):
@@ -116,15 +116,17 @@ class CFG:
             if succe in visited:
                 if DEBUG_SIMPLIFY: print("[Postorder] Skipping cuz visited")
                 continue
-            visited.add(succe)
             if succe in bb.backedge_targets:
                 if DEBUG_SIMPLIFY: print("[Postorder] Skipping cuz is backedge")
                 continue
+            visited.add(succe)
+            """
             if succe.id not in self.id_to_bb_in_slice:
                 if succe not in self.postorder_list:
                     self.postorder_list.append(succe)
                 if DEBUG_SIMPLIFY: print("[Postorder] Skipping cuz is not in slice")
                 continue
+            """
             self.traversalHelper(succe, visited)
         if bb not in self.postorder_list:
             self.postorder_list.append(bb)
@@ -139,6 +141,7 @@ class CFG:
             postorder_map[self.postorder_list[i].id] = i
 
         if DEBUG_SIMPLIFY: print("[Simplify] Postorder list: " + str([bb.lines for bb in self.postorder_list]))
+        if DEBUG_SIMPLIFY: print("[Simplify] Postorder list: " + str([bb.id for bb in self.postorder_list]))
         bb_id_to_pdom_ids = {}
 
         retry = True
@@ -236,13 +239,18 @@ class CFG:
                     if DEBUG_SIMPLIFY: print("[Simplify]   child: " + str(child_bb.id) + \
                           " is the immed pdom: " + str(bb.immed_pdom.id))
                     continue
+                print("=======================")
+                print(bb)
+                print("=======================")
+                print(child_bb)
+                print("=======================")
                 assert bb.immed_pdom in child_bb.pdoms
                 all_succes_before_immed_pdom.add(child_bb)
                 for succe in child_bb.succes:
                     worklist.append(succe)
 
             if len(self.target_bbs.intersection(all_succes_before_immed_pdom)) > 0:
-                ignore_set.union(all_succes_before_immed_pdom) #FIXME, do not assign after union why???
+                #ignore_set.union(all_succes_before_immed_pdom) #FIXME, do not assign after union why???
                 continue
 
             #remove_set.add(bb) not really needed
@@ -512,25 +520,28 @@ class StaticDepGraph:
         self.nodes_in_cf_slice = []
         self.nodes_in_df_slice = []
 
-    def make_or_get_df_node(self, insn, bb, function):
+    def make_or_get_df_node(self, insn, bb, function): #TODO: think this through again
         node = self.make_node(insn, bb, function)
         if node.explained is True:
             if node.is_df is True:
-                assert node.is_cf is False, str(node)
+                #assert node.is_cf is False, str(node)
                 return node
-            if node.is_cf is True:
-                assert node.is_df is False
-                node.is_cf = False
+            #if node.is_cf is True:
+                #assert node.is_df is False
+                #node.is_cf = False
         node.is_df = True
+        #node.is_cf = False
         node.explained = False
         return node
 
     def make_or_get_cf_node(self, insn, bb, function):
         node = self.make_node(insn, bb, function)
         if node.explained is True:
-            return node
-        if node.is_df is not True:
-            node.is_cf = True
+            if node.is_cf is True:
+                return node
+        #if node.is_df is not True:
+        node.is_cf = True
+        node.explained = False
         return node
 
     def make_node(self, insn, bb, function):
@@ -795,6 +806,10 @@ class StaticDepGraph:
             if node.mem_load is None:
                 print("[warn] node does not have memory load?")
                 continue
+            if node.insn == int('0x412327', 16): #TODO, has two definitions!
+                continue
+            if node.insn == int('0x412451', 16): #TODO, has two definitions!
+                continue
 
             branch_insn = None
             target_insn = None
@@ -822,21 +837,19 @@ class StaticDepGraph:
                 prede_reg = load[0]
                 shift = load[1]
                 off = load[2]
-                print(str(prede_insn))
+                #print(str(prede_insn))
                 prede = self.make_or_get_df_node(prede_insn, None, curr_func)
                 if prede.explained is False:
                     prede.mem_store = MemoryAccess(prede_reg, shift, off, None, node.mem_load.is_bit_var)
-                    prede.reg_read = ''  # TODO put actual register name here
+                    prede.reg_load = ''  # TODO put actual register name here
                     if curr_func != func:
                         defs_in_diff_func.add(prede)
                     else:
                         tmp_defs_in_same_func.add(prede)
                 else:
-                    assert prede.mem_store is not None, prede
-                    assert prede.reg_read == '', prede
+                    assert prede.mem_store is not None or prede.reg_load is not None, prede
                 node.df_predes.append(prede)
                 prede.df_succes.append(node)
-
 
         defs_in_same_func = defs_in_same_func.union(tmp_defs_in_same_func)
         print("[static_dep] Total number of new nodes in local  dataflow slice: " + str(len(defs_in_same_func)) + " " + \
