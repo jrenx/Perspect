@@ -152,10 +152,6 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
                                                            boost::unordered_map<Address, long> &insnToStackHeight,
                                                            boost::unordered_set<Address> &readAddrs,
                                                            StackStore &stackRead, int level);
-void checkAndGetStackWritesInCalleeOrCaller(Function *f,
-                                            StackStore &stackRead, int level, long stackHeight, // TODO refactor param list...
-                                            boost::unordered_set<Address> &readAddrs,
-                                            boost::unordered_map<Address, Function *> &allRets);
 void getStackHeights(std::vector<Block *> &list, boost::unordered_map<Address, long> &insnToStackHeight, int initHeight);
 bool readsFromStack(Instruction insn, Address addr, MachRegister *reg, long *off);
 bool writesToStack(Operand op, Instruction insn, Address addr);
@@ -923,26 +919,6 @@ boost::unordered_map<Address, Function *> checkAndGetStackWrites(Function *f, In
   return checkAndGetStackWritesHelper(f, list, insnToStackHeight, readAddrs, stackRead, level);
 }
 
-void checkAndGetStackWritesInCalleeOrCaller(Function *f,
-                                    StackStore &stackRead, int level, long stackHeight, // TODO refactor param list...
-                                    boost::unordered_set<Address> &readAddrs,
-                                    boost::unordered_map<Address, Function *> &allRets) {
-
-    std::vector<Block *> list;
-    boost::unordered_set<Block *> visited;
-    getReversePostOrderListHelper(f->entry(), list, visited);
-    std::reverse(list.begin(), list.end());
-
-    boost::unordered_map<Address, long> insnToStackHeight;
-    getStackHeights(list, insnToStackHeight, stackHeight);
-
-    boost::unordered_map<Address, Function *> ret =
-        checkAndGetStackWritesHelper(f, list, insnToStackHeight, readAddrs, stackRead,
-                                     level);
-    allRets.insert(ret.begin(), ret.end());
-
-}
-
 Function *getFunction(std::vector<Function *> &funcs) {
   if (funcs.size() > 1) {
     for (auto fit = funcs.begin(); fit != funcs.end(); fit++) {
@@ -978,6 +954,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
 
       if (level == 0) {
         boost::unordered_map<Address, Function *> allRets;
+
         if (iit == insns.begin()) {
           Block::edgelist sources = b->sources();
           for (auto it = sources.begin(); it != sources.end(); it++) {
@@ -995,12 +972,32 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
             //if (DEBUG_STACK)
               cout << "[stack] Checking for stack writes in in caller " << caller->name() << endl;
             boost::unordered_set<Address> readAddrs;
-            getAllInvokes(caller, f, readAddrs);
-            checkAndGetStackWritesInCalleeOrCaller(caller, stackRead, level - 1, 8, readAddrs, allRets);
-            //if (DEBUG_STACK && DEBUG)
+            getAllInvokes(caller, f, readAddrs); // TODO verify this
+
+            for (auto rait = readAddrs.begin(); rait != readAddrs.end(); rait++) {
+              Address readAddr = *rait;
+              std::vector<Block *> callerList;
+              boost::unordered_set<Block *> visited;
+              getReversePostOrderListHelper(caller->entry(), callerList, visited);
+              std::reverse(callerList.begin(), callerList.end());
+
+              boost::unordered_map<Address, long> callerInsnToStackHeight;
+              getStackHeights(callerList, callerInsnToStackHeight, 0);
+              int stackOffSet = 8 - callerInsnToStackHeight[rait];
+              callerInsnToStackHeight.clear();
+              getStackHeights(callerList, callerInsnToStackHeight, stackOffSet);
+              boost::unordered_set<Address> cuuReadAddrs;
+              cuuReadAddrs.insert(readAddr);
+              boost::unordered_map<Address, Function *> ret =
+                  checkAndGetStackWritesHelper(caller, callerList, callerInsnToStackHeight, cuuReadAddrs, stackRead,
+                                               level - 1);
+              allRets.insert(ret.begin(), ret.end());
+
+              //if (DEBUG_STACK && DEBUG)
               cout << "[stack] looked for stores" // at " << std::hex << addr << std::dec
                    << " from caller " << caller->name()
                    << " currently found " << allRets.size() << " stores " << endl;
+            }
           }
         }
 
@@ -1023,7 +1020,20 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
               cout << "[stack] Checking for stack writes in in callee " << callee->name() << endl;
             boost::unordered_set<Address> readAddrs;
             getAllRets(callee, readAddrs);
-            checkAndGetStackWritesInCalleeOrCaller(callee, stackRead, level + 1, insnToStackHeight[addr] - 8, readAddrs, allRets);
+
+            std::vector<Block *> calleeList;
+            boost::unordered_set<Block *> visited;
+            getReversePostOrderListHelper(callee->entry(), calleeList, visited);
+            std::reverse(calleeList.begin(), calleeList.end());
+
+            boost::unordered_map<Address, long> calleeInsnToStackHeight;
+            getStackHeights(calleeList, calleeInsnToStackHeight, insnToStackHeight[addr] - 8);
+
+            boost::unordered_map<Address, Function *> ret =
+                checkAndGetStackWritesHelper(callee, calleeList, calleeInsnToStackHeight, readAddrs, stackRead,
+                                             level + 1);
+            allRets.insert(ret.begin(), ret.end());
+
             //if (DEBUG_STACK && DEBUG)
               cout << "[stack] looked for stores" // at " << std::hex << addr << std::dec
                    << " from callee " << callee->name()
