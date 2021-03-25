@@ -152,9 +152,10 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
                                                            boost::unordered_map<Address, long> &insnToStackHeight,
                                                            boost::unordered_set<Address> &readAddrs,
                                                            StackStore &stackRead, int level);
-void checkAndGetStackWritesInCallee(Block *b, Instruction insn, Address addr,
-                                    StackStore &stackRead, int level, long stackHeight,
-                                    boost::unordered_map<Address, Function *> &allRets);
+void checkAndGetStackWritesInCalleeOrCaller(Function *f,
+                                            StackStore &stackRead, int level, long stackHeight, // TODO refactor param list...
+                                            boost::unordered_set<Address> &readAddrs,
+                                            boost::unordered_map<Address, Function *> &allRets);
 void getStackHeights(std::vector<Block *> &list, boost::unordered_map<Address, long> &insnToStackHeight, int initHeight);
 bool readsFromStack(Instruction insn, Address addr, MachRegister *reg, long *off);
 bool writesToStack(Operand op, Instruction insn, Address addr);
@@ -162,6 +163,8 @@ bool writesToStack(Operand op, Instruction insn, Address addr);
 void getRegAndOff(Expression::Ptr exp, MachRegister *machReg, long *off);
 void printReachableStores(boost::unordered_map<StackStore, boost::unordered_map<Address, Function *>> &reachableStores);
 void getAllRets(Function *f, boost::unordered_set<Address> &rets);
+void getAllInvokes(Function *f, Function *callee, boost::unordered_set<Address> &rets);
+Function *getFunction(std::vector<Function *> &funcs);
 
 boost::unordered_set<Address> checkAndGetWritesToStaticAddrs(Function *f, Instruction readInsn,
                                                              Address readAddr, long readOff);
@@ -872,6 +875,34 @@ void getAllRets(Function *f, boost::unordered_set<Address> &rets) {
   }
 }
 
+void getAllInvokes(Function *f, Function *callee, boost::unordered_set<Address> &rets) {
+  for (auto bit = f->blocks().begin(); bit != f->blocks().end(); ++bit) {
+    Block::Insns insns;
+    (*bit)->getInsns(insns);
+    for (auto iit = insns.begin(); iit != insns.end(); iit++) {
+      Address addr = (*iit).first;
+      Instruction insn = (*iit).second;
+      entryID id = insn.getOperation().getID();
+      if (id == e_call || id == e_callq) {
+        Block::edgelist targets = (*bit)->targets();
+        bool found = false;
+        for (auto it = targets.begin(); it != targets.end(); it++) {
+          if ((*it)->type() != CALL)
+            continue;
+          Block *trg = (*it)->trg();
+          std::vector<Function *> funcs;
+          trg->getFuncs(funcs);
+          if (getFunction(funcs) == callee) {
+            found = true;
+            break;
+          }
+        }
+        if (found) rets.insert(addr);
+      }
+    }
+  }
+}
+
 boost::unordered_map<Address, Function *> checkAndGetStackWrites(Function *f, Instruction readInsn, Address readAddr,
                                         MachRegister readReg, long readOff, int initHeight, int level) {
   cout << "[stack] Checking function: " << f->name() << " for "
@@ -892,48 +923,36 @@ boost::unordered_map<Address, Function *> checkAndGetStackWrites(Function *f, In
   return checkAndGetStackWritesHelper(f, list, insnToStackHeight, readAddrs, stackRead, level);
 }
 
-void checkAndGetStackWritesInCallee(Block *b, Instruction insn, Address addr,
+void checkAndGetStackWritesInCalleeOrCaller(Function *f,
                                     StackStore &stackRead, int level, long stackHeight, // TODO refactor param list...
+                                    boost::unordered_set<Address> &readAddrs,
                                     boost::unordered_map<Address, Function *> &allRets) {
-  Block::edgelist targets = b->targets();
-  for (auto it = targets.begin(); it != targets.end(); it++) {
-    if ((*it)->type() != CALL)
-      continue;
-    Block *src = (*it)->src();
-    Block *trg = (*it)->trg();
 
-    std::vector<Function *> funcs;
-    trg->getFuncs(funcs);
-    if (funcs.size() > 1) {
-      for (auto fit = funcs.begin(); fit != funcs.end(); fit++) {
-        cout << "[stack] function: " << (*fit)->name() << endl;
-      }
-    } else if (funcs.size() == 0) {
-      cout << "[stack][warn] call function cannot be determined, unhandled dynamic invocation site: "
-           << insn.format() << endl;
-      continue;
-    }
-    assert(funcs.size() == 1);
-    Function *callee = *funcs.begin();
-    if (DEBUG_STACK) cout << "[stack] Checking for stack writes in in callee " << callee->name() << endl;
-    std::vector<Block *> calleeList;
+    std::vector<Block *> list;
     boost::unordered_set<Block *> visited;
-    getReversePostOrderListHelper(callee->entry(), calleeList, visited);
-    std::reverse(calleeList.begin(), calleeList.end());
+    getReversePostOrderListHelper(f->entry(), list, visited);
+    std::reverse(list.begin(), list.end());
 
-    boost::unordered_map<Address, long> calleeInsnToStackHeight;
-    getStackHeights(calleeList, calleeInsnToStackHeight, stackHeight - 8);
-
-    boost::unordered_set<Address> calleeReadAddrs;
-    getAllRets(callee, calleeReadAddrs);
+    boost::unordered_map<Address, long> insnToStackHeight;
+    getStackHeights(list, insnToStackHeight, stackHeight);
 
     boost::unordered_map<Address, Function *> ret =
-        checkAndGetStackWritesHelper(callee, calleeList, calleeInsnToStackHeight, calleeReadAddrs, stackRead,
-                                     level + 1);
+        checkAndGetStackWritesHelper(f, list, insnToStackHeight, readAddrs, stackRead,
+                                     level);
     allRets.insert(ret.begin(), ret.end());
-    if (DEBUG_STACK && DEBUG)
-      cout << "[stack] stores at " << std::hex << addr << std::dec << " from callee " << callee->name() << endl;
+
+}
+
+Function *getFunction(std::vector<Function *> &funcs) {
+  if (funcs.size() > 1) {
+    for (auto fit = funcs.begin(); fit != funcs.end(); fit++) {
+      cout << "[stack] function: " << (*fit)->name() << endl;
+    }
+  } else if (funcs.size() == 0) {
+    return NULL;
   }
+  assert(funcs.size() == 1);
+  return *funcs.begin();
 }
 
 boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function *f,
@@ -941,9 +960,11 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
                                                            boost::unordered_map<Address, long> &insnToStackHeight,
                                                            boost::unordered_set<Address> &readAddrs,
                                                            StackStore &stackRead, int level) {
-  if (DEBUG_STACK) cout << "[stack] Looking for writes to " << stackRead << " at level " << level << endl;
+  //if (DEBUG_STACK)
+    cout << "[stack] Looking for writes to " << stackRead << " at level " << level << endl;
   boost::unordered_map<Address, boost::unordered_map<StackStore, boost::unordered_map<Address, Function *>>>
       insnToReachableStores; //FIXME if I'm more comfortable with pointers store pointers instead ...
+
   for (auto bit = list.begin(); bit != list.end(); bit++) {
     Block::Insns insns;
     Block *b = *bit;
@@ -951,21 +972,68 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
     for (auto iit = insns.begin(); iit != insns.end(); iit++) {
       Address addr = (*iit).first;
       Instruction insn = (*iit).second;
-      if (DEBUG && DEBUG_STACK)
+      //if (DEBUG && DEBUG_STACK)
         cout << "[stack] checking instruction: " << insn.format() << " @" << addr << endl;
       boost::unordered_map<StackStore, boost::unordered_map<Address, Function *>> reachableStores;
+
       if (level == 0) {
+        boost::unordered_map<Address, Function *> allRets;
+        if (iit == insns.begin()) {
+          Block::edgelist sources = b->sources();
+          for (auto it = sources.begin(); it != sources.end(); it++) {
+            if ((*it)->type() != CALL)
+              continue;
+            Block* src = (*it)->src();
+            std::vector<Function *> funcs;
+            src->getFuncs(funcs);
+            Function *caller = getFunction(funcs);
+            if (caller == NULL) {
+              cout << "[stack][warn] caller function cannot be determined, unhandled dynamic invocation site: "
+                   << insn.format() << endl;
+              continue;
+            }
+            //if (DEBUG_STACK)
+              cout << "[stack] Checking for stack writes in in caller " << caller->name() << endl;
+            boost::unordered_set<Address> readAddrs;
+            getAllInvokes(caller, f, readAddrs);
+            checkAndGetStackWritesInCalleeOrCaller(caller, stackRead, level - 1, 8, readAddrs, allRets);
+            //if (DEBUG_STACK && DEBUG)
+              cout << "[stack] looked for stores" // at " << std::hex << addr << std::dec
+                   << " from caller " << caller->name()
+                   << " currently found " << allRets.size() << " stores " << endl;
+          }
+        }
+
         entryID id = insn.getOperation().getID();
         if (id == e_call || id == e_callq) { //TODO rename level to calstackdepth?
-          boost::unordered_map<Address, Function *> allRets;
           Block::edgelist targets = b->targets();
-          checkAndGetStackWritesInCallee(b, insn, addr, stackRead, level, insnToStackHeight[addr], allRets);
-          if (allRets.size() > 0) {
-            reachableStores.insert({stackRead, allRets});
-            insnToReachableStores.insert({addr, reachableStores});
-            if (DEBUG_STACK && DEBUG) printReachableStores(reachableStores);
+          for (auto it = targets.begin(); it != targets.end(); it++) {
+            if ((*it)->type() != CALL)
+              continue;
+            Block *trg = (*it)->trg();
+            std::vector<Function *> funcs;
+            trg->getFuncs(funcs);
+            Function *callee = getFunction(funcs);
+            if (callee == NULL) {
+              cout << "[stack][warn] callee function cannot be determined, unhandled dynamic invocation site: "
+                   << insn.format() << endl;
+              continue;
+            }
+            //if (DEBUG_STACK)
+              cout << "[stack] Checking for stack writes in in callee " << callee->name() << endl;
+            boost::unordered_set<Address> readAddrs;
+            getAllRets(callee, readAddrs);
+            checkAndGetStackWritesInCalleeOrCaller(callee, stackRead, level + 1, insnToStackHeight[addr] - 8, readAddrs, allRets);
+            //if (DEBUG_STACK && DEBUG)
+              cout << "[stack] looked for stores" // at " << std::hex << addr << std::dec
+                   << " from callee " << callee->name()
+                   << " currently found " << allRets.size() << " stores " << endl;
           }
-          continue;
+        }
+        if (allRets.size() > 0) {
+          reachableStores.insert({stackRead, allRets});
+          //insnToReachableStores.insert({addr, reachableStores});
+          if (DEBUG_STACK && DEBUG) printReachableStores(reachableStores);
         }
       }
 
@@ -985,10 +1053,12 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
 
         //assert(reachableStores.find(exp) == reachableStores.end());
         StackStore stackStore(machReg, off, insnToStackHeight[addr]);
-        if (DEBUG_STACK && DEBUG) cout << "[stack] current stack store " << stackStore << " @ " << std::hex << addr << std::dec << endl;
+        //if (DEBUG_STACK && DEBUG)
+          cout << "[stack] current stack store " << stackStore << " @ " << std::hex << addr << std::dec << endl;
         if (stackStore == stackRead) {
           reachableStores.insert({stackRead, s});
-          if (DEBUG_STACK && DEBUG) cout << "[stack] found a match!" << endl;
+          //if (DEBUG_STACK && DEBUG)
+            cout << "[stack] found a match!" << endl;
         }
       }
       insnToReachableStores.insert({addr, reachableStores});
