@@ -239,11 +239,6 @@ class CFG:
                     if DEBUG_SIMPLIFY: print("[Simplify]   child: " + str(child_bb.id) + \
                           " is the immed pdom: " + str(bb.immed_pdom.id))
                     continue
-                print("=======================")
-                print(bb)
-                print("=======================")
-                print(child_bb)
-                print("=======================")
                 assert bb.immed_pdom in child_bb.pdoms
                 all_succes_before_immed_pdom.add(child_bb)
                 for succe in child_bb.succes:
