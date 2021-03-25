@@ -278,9 +278,9 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     watched_addrs = set()
     all_addrs = set()
     for index in taken_indices:
-        print("[tmp] index: " + str(index))
+        #print("[tmp] index: " + str(index))
         def_insn_index = get_def_insn_index_for_branch(index, [read], breakpoint_trace)
-        print("[tmp] def_insn_index: " + str(def_insn_index))
+        #print("[tmp] def_insn_index: " + str(def_insn_index))
         all_addrs.add(breakpoint_trace[def_insn_index][1])
     #all_addrs = set([breakpoint_trace[get_def_insn_index_for_branch(index, [read], breakpoint_trace)][1]
     #                for index in taken_indices])
@@ -311,6 +311,9 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     #watchpoints = [offset_reg(addr, offset) for addr in addrs]
     watchpoints = [addr for addr in addrs]
     print("[rr] Picked watchpoints: " + str(watchpoints))
+    if len(watchpoints) == 0:
+        print("[warn] Analysis is not done, but no more watchpoints to watch... Returning now...")
+        return results
     all_addrs = all_addrs.difference(addrs)
     watched_addrs = watched_addrs.union(addrs)
 
@@ -447,6 +450,9 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
         #watchpoints = [offset_reg(addr, offset) for addr in addrs]
         watchpoints = [addr for addr in addrs]
         print("[rr] Picked watchpoints: " + str(watchpoints))
+        if len(watchpoints) == 0:
+            print("[warn] Analysis is not done, but no more watchpoints to watch... Returning now...")
+            return results
       
         #TODO populate the watchpoints again
         #branch_indices = random.sample(taken_indices, 4) + random.sample(not_taken_indices, 4)
