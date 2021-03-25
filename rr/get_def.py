@@ -280,6 +280,11 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     for index in taken_indices:
         #print("[tmp] index: " + str(index))
         def_insn_index = get_def_insn_index_for_branch(index, [read], breakpoint_trace)
+        if def_insn_index is None:
+            print("[rr][warn] No def point found, "
+                  "this branch could use a variable that has more than one local definitions,"
+                  "ignore for now as we will watch the other one.")
+            continue
         #print("[tmp] def_insn_index: " + str(def_insn_index))
         all_addrs.add(breakpoint_trace[def_insn_index][1])
     #all_addrs = set([breakpoint_trace[get_def_insn_index_for_branch(index, [read], breakpoint_trace)][1]
