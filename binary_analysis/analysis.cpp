@@ -824,7 +824,7 @@ void getStackHeights(std::vector<Block *> &list,
         if (!changesStackPointer) {
           if (DEBUG_STACK && DEBUG)
             cout << "[stack] height @ " << std::hex << addr << std::dec << " is " << currHeight << endl;
-          insnToStackHeight.insert({addr, currHeight});
+          insnToStackHeight[addr] = currHeight;
           continue;
         }
         //cout << "[stack] Operand ID: " << insn.getOperation().getID() << endl;
@@ -868,7 +868,7 @@ void getStackHeights(std::vector<Block *> &list,
               cout << "[stack][warn] Unhandled case: " << insn.format() << endl;
         }
         if (DEBUG_STACK) cout << "[stack] height @ " << addr << " is " << currHeight << endl;
-        insnToStackHeight.insert({addr, currHeight});
+        insnToStackHeight[addr] = currHeight;
       }
     }
   }
