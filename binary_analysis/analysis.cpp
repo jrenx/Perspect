@@ -953,8 +953,9 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
                                                            boost::unordered_map<Address, long> &insnToStackHeight,
                                                            boost::unordered_set<Address> &readAddrs,
                                                            StackStore &stackRead, int level) {
-  //if (DEBUG_STACK)
-    cout << "[stack] Looking for writes to " << stackRead << " at level " << level << endl;
+  if (DEBUG_STACK)
+    cout << "[stack] Looking for writes to in function " << f->name()
+         << " at level " << level << " for " << stackRead << endl;
   boost::unordered_map<Address, boost::unordered_map<StackStore, boost::unordered_map<Address, Function *>>>
       insnToReachableStores; //FIXME if I'm more comfortable with pointers store pointers instead ...
 
@@ -965,8 +966,8 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
     for (auto iit = insns.begin(); iit != insns.end(); iit++) {
       Address addr = (*iit).first;
       Instruction insn = (*iit).second;
-      //if (DEBUG && DEBUG_STACK)
-        cout << "[stack] checking instruction: " << insn.format() << " @" << addr << endl;
+      if (DEBUG && DEBUG_STACK)
+        cout << "[stack] checking instruction: " << insn.format() << " @" << std::hex << addr << std::dec << endl;
       boost::unordered_map<StackStore, boost::unordered_map<Address, Function *>> reachableStores;
 
       if (level == 0) {
@@ -986,8 +987,8 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
                    << insn.format() << endl;
               continue;
             }
-            //if (DEBUG_STACK)
-              cout << "[stack] Checking for stack writes in in caller " << caller->name() << endl;
+            if (DEBUG_STACK)
+              cout << "[stack] => Checking for stack writes in in caller " << caller->name() << endl;
             boost::unordered_set<Address> readAddrs;
             getAllInvokes(caller, f, readAddrs); // TODO verify this
 
@@ -1010,8 +1011,8 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
                                                level - 1);
               allRets.insert(ret.begin(), ret.end());
 
-              //if (DEBUG_STACK && DEBUG)
-              cout << "[stack] looked for stores" // at " << std::hex << addr << std::dec
+              if (DEBUG_STACK && DEBUG)
+                cout << "[stack] looked for stores" // at " << std::hex << addr << std::dec
                    << " from caller " << caller->name()
                    << " currently found " << allRets.size() << " stores " << endl;
             }
@@ -1033,8 +1034,8 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
                    << insn.format() << endl;
               continue;
             }
-            //if (DEBUG_STACK)
-              cout << "[stack] Checking for stack writes in in callee " << callee->name() << endl;
+            if (DEBUG_STACK)
+              cout << "[stack] =>Checking for stack writes in in callee " << callee->name() << endl;
             boost::unordered_set<Address> readAddrs;
             getAllRets(callee, readAddrs);
 
@@ -1051,7 +1052,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
                                              level + 1);
             allRets.insert(ret.begin(), ret.end());
 
-            //if (DEBUG_STACK && DEBUG)
+            if (DEBUG_STACK && DEBUG)
               cout << "[stack] looked for stores" // at " << std::hex << addr << std::dec
                    << " from callee " << callee->name()
                    << " currently found " << allRets.size() << " stores " << endl;
@@ -1080,15 +1081,15 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
 
         //assert(reachableStores.find(exp) == reachableStores.end());
         StackStore stackStore(machReg, off, insnToStackHeight[addr]);
-        //if (DEBUG_STACK && DEBUG)
+        if (DEBUG_STACK && DEBUG)
           cout << "[stack] current stack store " << stackStore << " @ " << std::hex << addr << std::dec << endl;
         if (stackStore == stackRead) {
-          reachableStores.insert({stackRead, s});
-          //if (DEBUG_STACK && DEBUG)
+          reachableStores.insert({stackRead, s}); // should not have duplicates
+          if (DEBUG_STACK && DEBUG)
             cout << "[stack] found a match!" << endl;
         }
       }
-      insnToReachableStores.insert({addr, reachableStores});
+      insnToReachableStores.insert({addr, reachableStores}); // should not have duplicates
       if (DEBUG_STACK && DEBUG) cout << "[stack] stores at " << std::hex << addr << std::dec << endl;
       if (DEBUG_STACK && DEBUG) printReachableStores(insnToReachableStores[addr]);
     }
@@ -1104,7 +1105,8 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
       Block::Insns insns;
       Block *b = *bit;
       if (DEBUG && DEBUG_STACK) cout << "[stack] ===========================================================" << endl;
-      if (DEBUG && DEBUG_STACK) cout << "[stack] Checking basic block from " << b->start() << " to " << b->end() << endl;
+      if (DEBUG && DEBUG_STACK) cout << "[stack] Checking basic block from "
+                                     << std::hex << b->start() << " to " << b->end() << std::dec << endl;
       b->getInsns(insns);
       // for the first instruction get sources, union them
       // otherwise, just get the previous
@@ -1126,9 +1128,10 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
           boost::unordered_map<Address, Function *> s = (*mit).second;
           if (prevReachableStores.find(ss) == prevReachableStores.end()) {
             prevReachableStores.insert({ss, s}); // Should be a separate copy otherwise wouldn't work
+            // also, it should be ok to not overwrite here
           } else {
             for (auto sit = s.begin(); sit != s.end(); sit++) {
-              prevReachableStores[ss].insert(*sit);
+              prevReachableStores[ss].insert(*sit); // FIXME: beware, if a key already exists will not insert
             }
           }
         }
@@ -1153,12 +1156,12 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
 
         if (DEBUG && DEBUG_STACK) cout << "[stack]   stack stores before update:" << endl;
         if (DEBUG && DEBUG_STACK) printReachableStores(insnToReachableStores[addr]);
-
         for (auto mit = currReachableStores.begin(); mit != currReachableStores.end(); mit++) {
           StackStore ss = (*mit).first;
           boost::unordered_map<Address, Function *> s = (*mit).second;
-          prevReachableStores.insert({ss, s});
+          prevReachableStores[ss] = s;
         }
+        if (DEBUG && DEBUG_STACK) printReachableStores(prevReachableStores);
 
         if (currReachableStores.size() != prevReachableStores.size()) {
           changed = true;
@@ -1213,7 +1216,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
     Address readAddr = *rait;
     // << "[stack] current stack read addr is: " << std::hex << readAddr << std::dec << endl;
     boost::unordered_map<Address, Function *> &curr = insnToReachableStores[readAddr][stackRead];
-    ret.insert(curr.begin(), curr.end());
+    ret.insert(curr.begin(), curr.end()); // FIXME maybe assert no duplicate
   }
   return ret;
 }

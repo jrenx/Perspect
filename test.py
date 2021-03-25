@@ -69,13 +69,18 @@ def test_sa_slices4():
     results = static_backslices(slice_starts, '909_ziptest_exe9')
     print(results)
 
+def test_get_all_bb():
+    results = getAllBBs(int('0x416a91', 16), 'bytes.*Buffer·Read', '909_ziptest_exe9')
+    print(len(results))
+
 def main():
     #test_ins_trace()
     #test_func_trace()
     #test_rr_slice()
     #get_mem_writes_to_static_addrs('909_ziptest_exe9')
     #get_func_to_callsites('909_ziptest_exe9')
-    test_rr_slice2()
+    test_sa_slices3()
+    #test_get_all_bb()
  
 if __name__ == "__main__":
     main()
