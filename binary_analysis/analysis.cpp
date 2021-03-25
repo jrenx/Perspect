@@ -875,8 +875,22 @@ void getStackHeights(Function *f, std::vector<Block *> &list,
               getRegAndOff((*oit).getValue(), &machReg, &off);
             }
             if (DEBUG_STACK && DEBUG)
-              cout << "[stack] increasing stack pointer " << machReg.name() << " by " << off << endl;
+              cout << "[stack] encountered add, increasing stack pointer " << machReg.name() << " by " << off << endl;
             currHeight += off;
+            break;
+          }
+          //https://stackoverflow.com/questions/45127993/how-many-bytes-does-the-push-instruction-push-onto-the-stack-when-i-dont-specif
+          //https://www.cs.uaf.edu/2015/fall/cs301/lecture/09_16_stack.html
+          case e_push: { //TODO, important!! for 32bit it's 4 bytes!! need a config for that!
+            if (DEBUG_STACK && DEBUG)
+              cout << "[stack] encountered push, decreasing stack pointer by 8" << endl;
+            currHeight -= 8;
+            break;
+          }
+          case e_pop: {
+            if (DEBUG_STACK && DEBUG)
+              cout << "[stack] encountered push, increasing stack pointer by 8" << endl;
+            currHeight += 8;
             break;
           }
           default:
@@ -988,7 +1002,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
 
       if (level == 0) {
         boost::unordered_map<Address, Function *> allRets;
-        if (iit == insns.begin()) {
+        if (iit == insns.begin() && bit == list.begin()) {
           boost::unordered_set<Function *> allCallers;
           Block::edgelist sources = b->sources();
           for (auto it = sources.begin(); it != sources.end(); it++) {
