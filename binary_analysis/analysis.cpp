@@ -246,16 +246,26 @@ void printLineInfo(BPatch_basicBlock *block) {
 
 void printAddrToLineMappings(BPatch_image *appImage, const char *funcName) {
 
-  vector < BPatch_function * > functions;
+  vector<BPatch_function *> functions;
   appImage->findFunction(funcName, functions);
+  BPatch_function *f;
   if (functions.size() == 0) {
     fprintf(stderr, "Loading function %s failed.\n", funcName);
     return;
+  } else if (functions.size() == 1) {
+    f = functions[0];
   } else if (functions.size() > 1) {
+    std::string funcStr(funcName);
     fprintf(stderr, "More than one function with name %s, using one.\n", funcName);
+    for (auto it = functions.begin(); it != functions.end(); it++) {
+      if ((*it)->getName() == funcStr) {
+        cout << "[sa] Using function " << (*it)->getName() << endl;
+        f = *it;
+      }
+    }
   }
 
-  BPatch_flowGraph *fg = functions[0]->getCFG();
+  BPatch_flowGraph *fg = f->getCFG();
 
   set <BPatch_basicBlock *> blocks;
   fg->getAllBasicBlocks(blocks);
@@ -320,7 +330,14 @@ BPatch_function *getFunction(BPatch_image *appImage, const char *funcName){
     fprintf(stderr, "Loading function %s failed.\n", funcName);
     return NULL;
   } else if (functions.size() > 1) {
+    std::string funcStr(funcName);
     fprintf(stderr, "More than one function with name %s, using one.\n", funcName);
+    for (auto it = functions.begin(); it != functions.end(); it++) {
+      if ((*it)->getName() == funcStr) {
+        cout << "[sa] Using function " << (*it)->getName() << endl;
+        return *it;
+      }
+    }
   }
   return functions[0]; // TODO is this gonna be a problem?
 }
@@ -983,7 +1000,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
 
               boost::unordered_map<Address, long> callerInsnToStackHeight;
               getStackHeights(callerList, callerInsnToStackHeight, 0);
-              int stackOffSet = 8 - callerInsnToStackHeight[rait];
+              int stackOffSet = 8 - callerInsnToStackHeight[readAddr];
               callerInsnToStackHeight.clear();
               getStackHeights(callerList, callerInsnToStackHeight, stackOffSet);
               boost::unordered_set<Address> cuuReadAddrs;
