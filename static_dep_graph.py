@@ -648,16 +648,18 @@ class StaticDepGraph:
 
         all_defs_in_diff_func = set([])
 
-        while True:
+        new_local_defs_found = True
+        while new_local_defs_found:
+            new_local_defs_found = False
             print("[static_dep] Building dependencies for function: " + str(func) + " iteration: " + str(iter))
             iter += 1
             defs_in_same_func, defs_in_diff_func = graph.buildDataFlowDependencies(func, prog, df_node)
             all_defs_in_diff_func = all_defs_in_diff_func.union(defs_in_diff_func)
-            if len(defs_in_same_func) == 0:
-                return all_defs_in_diff_func
-            new_bbs = [graph.cfg.getBB(defn.insn) for defn in defs_in_same_func]
-            target_bbs = target_bbs.union(new_bbs)
-            graph.buildControlFlowDependencies(target_bbs)
+            if len(defs_in_same_func) > 0:
+                new_bbs = [graph.cfg.getBB(defn.insn) for defn in defs_in_same_func]
+                target_bbs = target_bbs.union(new_bbs)
+                graph.buildControlFlowDependencies(target_bbs)
+                new_local_defs_found = True
             if df_node is not None:
                 assert df_node.bb is None
                 defs_in_same_func.add(df_node)
