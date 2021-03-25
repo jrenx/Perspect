@@ -281,7 +281,7 @@ class CFG:
             self.ordered_bbs_in_slice.append(bb)
             for prede in bb.predes:
                 if bb in prede.backedge_targets:
-                    if DEBUG_SLICE: print("  Ignoring prede " + str(prede.id) + "because it is part of a backedge")
+                    if DEBUG_SLICE: print("  Ignoring prede " + str(prede.id) + " because it is part of a backedge")
                     continue
                 worklist.append(prede)
 
@@ -415,7 +415,7 @@ class StaticNode:
         # There are 3 possibilities for the predecessor
         # 1. a constant 2. function parameter 3. memory load
         # "mem_load" describes the address of the memory load
-        self.is_df = True
+        self.is_df = False
         self.mem_load = None
         self.reg_load = None
 
@@ -442,7 +442,8 @@ class StaticNode:
             s += "      lines: " + str(self.bb.lines) + "\n"
         s += "      func: " + self.function + "\n"
         s += "     is df: " + str(self.is_df) + "\n"
-        s += "     is cf: " + str(self.is_df) + "\n"
+        s += "     is cf: " + str(self.is_cf) + "\n"
+        s += "     explained: " + str(self.explained) + "\n"
         s += "    ------------Basic Block--------------\n"
         if self.bb is None:
             s += "\n"
@@ -608,6 +609,10 @@ class StaticDepGraph:
             #    break
             #iteration -= 1
             curr_insn, curr_func, curr_prog, curr_node = worklist.popleft()
+            if curr_node is not None and curr_node.explained:
+                print("[static_dep] Node already explained, skipping ...")
+                print ("[static_dep] " + str(curr_node))
+                continue
             new_nodes = StaticDepGraph.buildDependenciesInFunction(curr_insn, curr_func, curr_prog, curr_node)
             for new_node in new_nodes:
                 worklist.append([new_node.insn, new_node.function, prog, new_node]) #FIMXE, ensure there is no duplicate work
@@ -661,7 +666,7 @@ class StaticDepGraph:
                 graph.buildControlFlowDependencies(target_bbs)
                 new_local_defs_found = True
             if df_node is not None:
-                assert df_node.bb is None
+                assert df_node.bb is None, df_node
                 defs_in_same_func.add(df_node)
                 df_node = None
                 # TODO, also need to do dataflow tracing for this one!!
@@ -766,10 +771,10 @@ class StaticDepGraph:
         print("[static_dep] Building dataflow dependencies non-local to function: " + str(func))
         for node in defs_in_same_func:
             print(str(node))
-            assert node.is_cf is False
+            #assert node.is_cf is False
             assert node.is_df is True
             assert node.explained is False
-            print("[static_dep] Looking for dataflow dependencies non-local to function: " + str(func) \
+            print("[static_dep] Looking for dataflow dependencies potentially non-local to function: " + str(func) \
                   + " for read " + str(node.mem_load) + " @ " + hex(node.insn))
 
             if func == "sweep" and node.insn != 4234276: #TODO: eventually remove this filter
@@ -827,8 +832,8 @@ class StaticDepGraph:
                     else:
                         tmp_defs_in_same_func.add(prede)
                 else:
-                    assert prede.mem_store is not None
-                    assert prede.reg_read == ''
+                    assert prede.mem_store is not None, prede
+                    assert prede.reg_read == '', prede
                 node.df_predes.append(prede)
                 prede.df_succes.append(node)
 
@@ -868,6 +873,12 @@ class StaticDepGraph:
             self.bb_id_to_node_id[bb.id] = node.id
             if bb.id in self.cfg.id_to_bb_in_slice:
                 self.nodes_in_cf_slice.append(node)
+
+        for node_id in self.id_to_node:
+            print(str(self.id_to_node[node_id]))
+        print("[static_dep] Total initial number of nodes in control flow slice: " + str(len(self.nodes_in_cf_slice)) + " " + \
+              str([hex(self.id_to_node[node_id].insn) for node_id in self.id_to_node]))
+
 
     def buildControlFlowDependencies(self, target_bbs):
         self.cfg.target_bbs = self.cfg.target_bbs.union(target_bbs)
