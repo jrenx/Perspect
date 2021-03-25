@@ -108,14 +108,15 @@ class CFG:
         raise Exception
         #return None
 
-    def traversalHelper(self, bb):
+    def traversalHelper(self, bb, visited):
         #print(" Traversing bb: " + str(bb.id))
         if DEBUG_SIMPLIFY: print("[Postorder] Current bb: " + str(bb.id) + " " + str(bb.lines))
         for succe in bb.succes:
             if DEBUG_SIMPLIFY: print("[Postorder] Examining succe: " + str(succe.id) + " " + str(succe.lines))
-            if succe in self.postorder_list:
-                if DEBUG_SIMPLIFY: print("[Postorder] Skipping cuz already in list")
+            if succe in visited:
+                if DEBUG_SIMPLIFY: print("[Postorder] Skipping cuz visited")
                 continue
+            visited.add(succe)
             if succe in bb.backedge_targets:
                 if DEBUG_SIMPLIFY: print("[Postorder] Skipping cuz is backedge")
                 continue
@@ -124,13 +125,14 @@ class CFG:
                     self.postorder_list.append(succe)
                 if DEBUG_SIMPLIFY: print("[Postorder] Skipping cuz is not in slice")
                 continue
-            self.traversalHelper(succe)
+            self.traversalHelper(succe, visited)
         if bb not in self.postorder_list:
             self.postorder_list.append(bb)
 
     def simplify(self):
         for entry in self.entry_bbs:
-            self.traversalHelper(entry)
+            visited = set([])
+            self.traversalHelper(entry, visited)
 
         postorder_map = {}
         for i in range(len(self.postorder_list)):
@@ -386,7 +388,7 @@ class MemoryAccess:
         if self.off_reg is not None:
             s += " * " + str(self.off_reg)
         if self.is_bit_var is not None:
-            s += " is bit var: " + str(self.is_bit_var) + "\n"
+            s += " is bit var: " + str(self.is_bit_var)# + "\n"
         return s
 
 
@@ -459,16 +461,16 @@ class StaticNode:
         s += "] \n"
 
         if self.mem_load is not None:
-            s += "     memory load " + str(self.mem_load)
+            s += "     memory load " + str(self.mem_load) + "\n"
 
         if self.reg_load is not None:
-            s += "    register load " + str(self.reg_load)
+            s += "    register load " + str(self.reg_load) + "\n"
 
         if self.mem_store is not None:
-            s += "     memory store " + str(self.mem_store)
+            s += "     memory store " + str(self.mem_store) + "\n"
 
         if self.reg_store is not None:
-            s += "    register store " + str(self.reg_store)
+            s += "    register store " + str(self.reg_store) + "\n"
 
         s += "    dataflow predecessors: ["
         for prede in self.df_predes:
@@ -556,8 +558,10 @@ class StaticDepGraph:
         reachable_targets = set([])
         worklist = deque()
         worklist.append(node.bb)
+        #print("All target BBs: " + str([bb.id for bb in self.cfg.target_bbs]))
         while (len(worklist) > 0):
             bb = worklist.popleft()
+            #print("Current BB: " + str(bb))
             if bb in visited:
                 continue
             visited.add(bb)
@@ -565,6 +569,10 @@ class StaticDepGraph:
                 reachable_targets.add(bb)
             for succe in bb.succes:
                 worklist.append(succe)
+        #print("All reachable BBs: " + str([bb.id for bb in reachable_targets]))
+        #print("All BBs in post order list: " + str([bb.id for bb in self.cfg.postorder_list]))
+        #print("All BBs in cfg: " + str([bb.id for bb in self.cfg.ordered_bbs]))
+
         last_bb = None
         for bb in self.cfg.postorder_list:
             if bb in reachable_targets:
@@ -824,15 +832,19 @@ class StaticDepGraph:
 
 
         defs_in_same_func = defs_in_same_func.union(tmp_defs_in_same_func)
-        print("[static_dep] Total number of new nodes in local  dataflow slice: " + str(len(defs_in_same_func)))
+        print("[static_dep] Total number of new nodes in local  dataflow slice: " + str(len(defs_in_same_func)) + " " + \
+              str([hex(node.insn) for node in defs_in_same_func]))
         for node in defs_in_same_func:
             print(str(node))
-        print("[static_dep] Total number of new nodes in remote dataflow slice: " + str(len(defs_in_diff_func)))
+        print("[static_dep] Total number of new nodes in remote dataflow slice: " + str(len(defs_in_diff_func)) + " " + \
+              str([hex(node.insn) for node in defs_in_diff_func]))
         for node in defs_in_diff_func:
             print(str(node))
 
         self.nodes_in_df_slice.extend(defs_in_same_func)
-        print("[static_dep] Total number of nodes in data flow slice: " + str(len(self.nodes_in_df_slice)))
+        print("[static_dep] Total number of nodes in data flow slice: " + str(len(self.nodes_in_df_slice)) + " " + \
+              str([hex(node.insn) for node in self.nodes_in_df_slice]))
+
 
         return defs_in_same_func, defs_in_diff_func
 
@@ -874,7 +886,8 @@ class StaticDepGraph:
                 self.nodes_in_cf_slice.append(node)
         for node in self.nodes_in_cf_slice:
             print(str(node))
-        print("[static_dep] Total number of nodes in control flow slice: " + str(len(self.nodes_in_cf_slice)))
+        print("[static_dep] Total number of nodes in control flow slice: " + str(len(self.nodes_in_cf_slice)) + " " + \
+              str([hex(node.insn) for node in self.nodes_in_cf_slice]))
 
 if __name__ == "__main__":
 

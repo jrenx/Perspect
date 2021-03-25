@@ -72,7 +72,7 @@ def get_def_insn_index_for_branch(branch_index, reg_points, trace):
     :return: dict of instruction -> value mappings
     """
     i = branch_index - 1
-    while trace[i][1] is not None:
+    while i >= 0 and i < len(trace) and trace[i][1] is not None:
         #print("[tmp] " + str(i) + " " + str(trace[i]))
         reg_point, reg_value, reg_deref = trace[i]
         if reg_point in reg_points:
