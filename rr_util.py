@@ -51,14 +51,14 @@ def rr_backslice(prog, branch, target, insn, reg, shift = 0, off = 0, off_reg = 
     #TODO, the offset and shift are stored as decimals,
     # should they be passes dec or hex to RR?
     # Looks like they take hex strings
-    branch_str = '*' + hex(branch)
-    target_str = '*' + hex(target)
+    branch_str = ('*' + hex(branch)) if branch is not None else branch
+    target_str = ('*' + hex(target)) if target is not None else target
     insn_str = '*' + hex(insn)
     reg_str = reg.lower()
     shift_str = hex(shift)
     off_str = hex(off)
     off_reg_str = None if off_reg is None else off_reg.lower()
-    key = prog + "_" + branch_str + "_" + target_str + "_" \
+    key = prog + "_" + str(branch_str) + "_" + str(target_str) + "_" \
           + insn_str + "_" + reg_str + "_" + shift_str + "_" + off_str + "_" + str(off_reg_str)
 
     rr_result_cache = {}

@@ -152,9 +152,13 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
                                                            boost::unordered_map<Address, long> &insnToStackHeight,
                                                            boost::unordered_set<Address> &readAddrs,
                                                            StackStore &stackRead, int level);
+void checkAndGetStackWritesInCallee(Block *b, Instruction insn, Address addr,
+                                    StackStore &stackRead, int level, long stackHeight,
+                                    boost::unordered_map<Address, Function *> &allRets);
 void getStackHeights(std::vector<Block *> &list, boost::unordered_map<Address, long> &insnToStackHeight, int initHeight);
 bool readsFromStack(Instruction insn, Address addr, MachRegister *reg, long *off);
 bool writesToStack(Operand op, Instruction insn, Address addr);
+
 void getRegAndOff(Expression::Ptr exp, MachRegister *machReg, long *off);
 void printReachableStores(boost::unordered_map<StackStore, boost::unordered_map<Address, Function *>> &reachableStores);
 void getAllRets(Function *f, boost::unordered_set<Address> &rets);
@@ -888,6 +892,50 @@ boost::unordered_map<Address, Function *> checkAndGetStackWrites(Function *f, In
   return checkAndGetStackWritesHelper(f, list, insnToStackHeight, readAddrs, stackRead, level);
 }
 
+void checkAndGetStackWritesInCallee(Block *b, Instruction insn, Address addr,
+                                    StackStore &stackRead, int level, long stackHeight, // TODO refactor param list...
+                                    boost::unordered_map<Address, Function *> &allRets) {
+  Block::edgelist targets = b->targets();
+  for (auto it = targets.begin(); it != targets.end(); it++) {
+    if ((*it)->type() != CALL)
+      continue;
+    Block *src = (*it)->src();
+    Block *trg = (*it)->trg();
+
+    std::vector<Function *> funcs;
+    trg->getFuncs(funcs);
+    if (funcs.size() > 1) {
+      for (auto fit = funcs.begin(); fit != funcs.end(); fit++) {
+        cout << "[stack] function: " << (*fit)->name() << endl;
+      }
+    } else if (funcs.size() == 0) {
+      cout << "[stack][warn] call function cannot be determined, unhandled dynamic invocation site: "
+           << insn.format() << endl;
+      continue;
+    }
+    assert(funcs.size() == 1);
+    Function *callee = *funcs.begin();
+    if (DEBUG_STACK) cout << "[stack] Checking for stack writes in in callee " << callee->name() << endl;
+    std::vector<Block *> calleeList;
+    boost::unordered_set<Block *> visited;
+    getReversePostOrderListHelper(callee->entry(), calleeList, visited);
+    std::reverse(calleeList.begin(), calleeList.end());
+
+    boost::unordered_map<Address, long> calleeInsnToStackHeight;
+    getStackHeights(calleeList, calleeInsnToStackHeight, stackHeight - 8);
+
+    boost::unordered_set<Address> calleeReadAddrs;
+    getAllRets(callee, calleeReadAddrs);
+
+    boost::unordered_map<Address, Function *> ret =
+        checkAndGetStackWritesHelper(callee, calleeList, calleeInsnToStackHeight, calleeReadAddrs, stackRead,
+                                     level + 1);
+    allRets.insert(ret.begin(), ret.end());
+    if (DEBUG_STACK && DEBUG)
+      cout << "[stack] stores at " << std::hex << addr << std::dec << " from callee " << callee->name() << endl;
+  }
+}
+
 boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function *f,
                                                             std::vector<Block *> &list,
                                                            boost::unordered_map<Address, long> &insnToStackHeight,
@@ -911,42 +959,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
         if (id == e_call || id == e_callq) { //TODO rename level to calstackdepth?
           boost::unordered_map<Address, Function *> allRets;
           Block::edgelist targets = b->targets();
-          for (auto it = targets.begin(); it != targets.end(); it++) {
-            if ((*it)->type() != CALL)
-              continue;
-            Block *src = (*it)->src();
-            Block *trg = (*it)->trg();
-
-            std::vector<Function *> funcs;
-            trg->getFuncs(funcs);
-            if (funcs.size() > 1) {
-              for (auto fit = funcs.begin(); fit != funcs.end(); fit++) {
-                cout << "[stack] function: " << f->name() << endl;
-              }
-            } else if (funcs.size() == 0) {
-              cout << "[stack][warn] call function cannot be determined, unhandled dynamic invocation site: "
-                   << insn.format() << endl;
-              continue;
-            }
-            assert(funcs.size() == 1);
-            Function *callee = *funcs.begin();
-            if (DEBUG_STACK) cout << "[stack] Checking for stack writes in in callee " << callee->name() << endl;
-            std::vector<Block *> calleeList;
-            boost::unordered_set<Block *> visited;
-            getReversePostOrderListHelper(callee->entry(), calleeList, visited);
-            std::reverse(calleeList.begin(), calleeList.end());
-
-            boost::unordered_map<Address, long> calleeInsnToStackHeight;
-            getStackHeights(calleeList, calleeInsnToStackHeight, insnToStackHeight[addr] - 8);
-
-            boost::unordered_set<Address> calleeReadAddrs;
-            getAllRets(callee, calleeReadAddrs);
-
-            boost::unordered_map<Address, Function *> ret =
-                checkAndGetStackWritesHelper(callee, calleeList, calleeInsnToStackHeight, calleeReadAddrs, stackRead, level + 1);
-            allRets.insert(ret.begin(), ret.end());
-            if (DEBUG_STACK && DEBUG) cout << "[stack] stores at " << std::hex << addr << std::dec << " from callee " << callee->name() << endl;
-          }
+          checkAndGetStackWritesInCallee(b, insn, addr, stackRead, level, insnToStackHeight[addr], allRets);
           if (allRets.size() > 0) {
             reachableStores.insert({stackRead, allRets});
             insnToReachableStores.insert({addr, reachableStores});
@@ -1352,13 +1365,14 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
 
   // get all the leaf nodes.
   NodeIterator begin, end;
-  slice->entryNodes(begin, end);
+  if (!atEndPoint) slice->entryNodes(begin, end);
+  else slice->exitNodes(begin, end);
 
   for(NodeIterator it = begin; it != end; ++it) {
     SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(*it);
     Assignment::Ptr assign = aNode->assign();
-    //cout << assign->format() << " " << assign->insn().format() << " " << assign->insn().getOperation().getID() << " " << endl;
-    if (!assign->insn().readsMemory()) continue;
+    cout << assign->format() << " " << assign->insn().format() << " " << assign->insn().getOperation().getID() << " " << endl;
+    //if (!atEndPoint && !assign->insn().readsMemory()) continue;
 
     if(DEBUG) cout << endl;
     if(INFO) cout << "[sa] In result slice: " << endl;
@@ -1402,21 +1416,48 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
       continue;
     }
 
+    if (INFO) cout << "[sa] checking result instruction: " << assign->insn().format() << endl;
+
+    Expression::Ptr read;
+    std::string readStr;
+
     std::set<Expression::Ptr> memReads;
     assign->insn().getMemoryReadOperands(memReads);
-    assert(memReads.size() == 1);
-    Expression::Ptr read = *memReads.begin();
-    //	cout << read->eval() << endl;
-    if (INFO) cout << "[sa] Memory read: " << read->format() << endl;
-    std::string readStr = read->format();
-    // TODO, so, right now only include it if there is a letter in the expression,
-    // constants are ignored, need to fix this.
-    if (!std::any_of(std::begin(readStr), std::end(readStr), ::isalpha)) //TODO, reads from constant addresses should be OK too
-      continue;
+    if (memReads.size() > 0) { // prioritize reads from memory
+      assert (memReads.size() == 1);
+      Expression::Ptr read = *memReads.begin();
+      if (INFO) cout << "[sa] Memory read: " << read->format() << endl;
+      readStr.append("memread|");
+      readStr.append(read->format());
+    } else { // then check reads from register
+      int readCount = 0;
+      std::vector<Operand> ops;
+      assign->insn().getOperands(ops);
 
+      for (auto oit = ops.begin(); oit != ops.end(); ++oit) {
+        if (assign->insn().isRead((*oit).getValue())) {
+          read = (*oit).getValue();
+          if (INFO) cout << "[sa] current read: " << read->format() << endl;
+          readCount++;
+        }
+      }
+      if (INFO) cout << "[sa] total number of reads: " << readCount << endl;
+      if (readCount == 1) {
+        readStr.append("regread|");
+        readStr.append(read->format());
+      } else {
+        if (INFO) cout << "[sa][warn] multiple reads! " << endl;
+      }
+    }
+
+    if (INFO) cout << "[sa] => Instruction addr: " << std::hex << assign->addr() << std::dec << endl;
+    if (INFO) cout << "[sa] => Read expr: " << readStr << endl;
+    if (INFO) cout << "[sa] => Read same as write: " << (isKnownBitVar ? 1 : 0) << endl; // TODO maybe fix this
+    if (INFO) cout << "[sa] => Is bit var: " << isBitVar << endl;
     cJSON *json_read = cJSON_CreateObject();
     cJSON_AddNumberToObject(json_read, "insn_addr", assign->addr());
     cJSON_AddStringToObject(json_read, "expr", readStr.c_str());
+    cJSON_AddStringToObject(json_read, "func", funcName);
     cJSON_AddNumberToObject(json_read, "read_same_as_write", isKnownBitVar ? 1 : 0); // TODO, see analyzeKnownBitVariables for proper way to handle this
 
     if (isBitVar) {
@@ -2307,7 +2348,9 @@ void getCalleeToCallsites(char *progName) {
       for (auto wit = memWrites.begin(); wit != memWrites.end(); wit ++) {
         Expression::Ptr write = *wit;
         if (INFO) cout << "[sa] Memory write: " << write->format() << endl;
-        std::string writeStr = write->format();
+        std::string writeStr;
+        writeStr.append("memwrite|");
+        writeStr.append(write->format());
         if (!std::any_of(std::begin(writeStr), std::end(writeStr), ::isalpha)) {
           cout << "[sa][warn] Memory write expression has not register in it? " << writeStr << endl;
         }

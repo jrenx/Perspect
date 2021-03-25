@@ -30,9 +30,15 @@ def test_rr_slice():
     b = datetime.datetime.now()
     print("Took: " + str(b-a))
 
-def test_sa_slices():
+def test_rr_slice2():
+    a = datetime.datetime.now()
+    rr_backslice('909_ziptest_exe9', None, None, int('0x40bcbd', 16), 'RSI', 0, 0, None)
+    b = datetime.datetime.now()
+    print("Took: " + str(b-a))
+
+def test_sa_slices1():
     slice_starts = []
-    slice_starts.append(['rax', 4234536, 'sweep', True]) #why is the filtered against?
+    #slice_starts.append(['rax', 4234536, 'sweep', True]) #why is the filtered against?
     slice_starts.append(['rax', 4232216, 'scanblock', True])
     slice_starts.append(['rax', 4234346, 'sweep', True])
     slice_starts.append(['rdx', 4236970, 'runtime.markallocated', True])
@@ -45,7 +51,7 @@ def test_sa_slices():
 
 def test_sa_slices2():
     slice_starts = []
-    slice_starts.append(['', 4234294, 'sweep', False])
+    slice_starts.append(['', 4234294, 'sweep', False]) #0x409C36
     results = static_backslices(slice_starts, '909_ziptest_exe9')
     print(results)
 
@@ -56,13 +62,20 @@ def test_sa_slices3():
     results = static_backslices(slice_starts, '909_ziptest_exe9')
     print(results)
 
+def test_sa_slices4():
+    slice_starts = []
+    slice_starts.append(['', int('0x40a9a6', 16), 'runtime.markspan', False])
+    #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
+    results = static_backslices(slice_starts, '909_ziptest_exe9')
+    print(results)
+
 def main():
     #test_ins_trace()
     #test_func_trace()
     #test_rr_slice()
     #get_mem_writes_to_static_addrs('909_ziptest_exe9')
     #get_func_to_callsites('909_ziptest_exe9')
-    test_sa_slices3()
+    test_rr_slice2()
  
 if __name__ == "__main__":
     main()
