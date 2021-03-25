@@ -111,26 +111,28 @@ class DynamicDependence:
     def getSlice(self, insn, func, prog):
 
         # Get slice
-        static_graph = StaticDepGraph()
-        static_graph.buildDependencies(insn, func, prog)
-        self.all_static_cf_nodes = static_graph.nodes_in_cf_slice
+        StaticDepGraph.buildDependencies(insn, func, prog)
+        for graph in StaticDepGraph.func_to_graph.values():
+            for node in graph.nodes_in_cf_slice:
+                self.all_static_cf_nodes.append(node)
 
         for node in self.all_static_cf_nodes:
             self.insn_to_nodes[str(hex(node.insn))] = node
             self.insn_of_cf_nodes.append(str(hex(node.insn)))
             print(node)
 
-        for node in static_graph.nodes_in_df_slice:
+        for graph in StaticDepGraph.func_to_graph.values():
+            for node in graph.nodes_in_df_slice:
 
             #trace local
-            if node.mem_load != None or node.mem_store != None:
-                self.all_static_df_nodes.append(node)
-                self.insn_to_nodes[str(hex(node.insn))] = node
-                self.insn_of_df_nodes.append(str(hex(node.insn)))
-                if node.mem_load != None :
-                    self.insn_of_local_df_nodes.append(str(hex(node.insn)))
-                elif node.mem_store != None:
-                    self.insn_of_remote_df_nodes.append(str(hex(node.insn)))
+                if node.mem_load != None or node.mem_store != None:
+                    self.all_static_df_nodes.append(node)
+                    self.insn_to_nodes[str(hex(node.insn))] = node
+                    self.insn_of_df_nodes.append(str(hex(node.insn)))
+                    if node.mem_load != None :
+                        self.insn_of_local_df_nodes.append(str(hex(node.insn)))
+                    elif node.mem_store != None:
+                        self.insn_of_remote_df_nodes.append(str(hex(node.insn)))
 
                 print(node)
 
@@ -281,14 +283,14 @@ class DynamicGraph:
 
                                 if insn in insn_of_local_df_nodes:
                                     dynamicNode.mem_load_addr = self.mem_addr_calculate(reg,
-                                                                                        str(dynamicNode.staticNode.mem_load))
+                                                                                        dynamicNode.staticNode.mem_load)
                                     if dynamicNode.mem_load_addr not in local_df_pred:
                                         local_df_pred[dynamicNode.mem_load_addr] = []
                                     local_df_pred[dynamicNode.mem_load_addr].append(dynamicNode)
 
                                 elif insn in insn_of_remote_df_nodes:
                                     dynamicNode.mem_store_addr = self.mem_addr_calculate(reg,
-                                                                                         str(dynamicNode.staticNode.mem_store))
+                                                                                         dynamicNode.staticNode.mem_store)
                                     if dynamicNode.mem_store_addr in local_df_pred:
                                         for node in local_df_pred[dynamicNode.mem_store_addr]:
                                             node.df_predes.append(dynamicNode)
@@ -321,6 +323,7 @@ class DynamicGraph:
         print(self.insn_to_id)
 
     def mem_addr_calculate(self, reg_addr, expr):
+        """
         dict = {}
         json_exprs = []
         dict['insn_addr'] = int(reg_addr, 16)
@@ -333,6 +336,17 @@ class DynamicGraph:
             data_point[2] = 1
 
         res = str(hex(data_point[0] * data_point[2] + data_point[3]))
+        """
+        print (reg_addr) 
+        print(str(expr))
+
+        reg_address = int(reg_addr, 16)
+        shift = int(str(expr.shift), 16)
+        off = int(str(expr.off), 16)
+
+        print(reg_address, shift, off)
+
+        res = str(hex(reg_address * shift + off))
 
         return res
 
