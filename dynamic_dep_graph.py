@@ -143,6 +143,7 @@ class DynamicDependence:
         with open(executable_path, 'r') as f1:
             insn_seq = f1.readlines()
 
+        """ 
         line_num = 0
         line = insn_seq[line_num]
         start_insn = line.split(": ", 1)[0]
@@ -167,6 +168,13 @@ class DynamicDependence:
                                             self.insn_of_remote_df_nodes)
             start_index = index
             graph_number += 1
+        """
+
+        executable = insn_seq[:-1]
+        dynamicGraph = DynamicGraph(func, prog, insn, 0)
+        dynamicGraph.build_dynamicGraph(executable, self.insn_to_nodes, self.insn_of_cf_nodes,
+                                        self.insn_of_df_nodes, self.insn_of_local_df_nodes,
+                                        self.insn_of_remote_df_nodes)
 
     def buildDynamicDep(self, insn, func, prog):
 
@@ -196,6 +204,7 @@ class DynamicGraph:
         # reverse the executetable, and remove insns beyond the start insn
         executable.reverse()
 
+        
         target_str = str(hex(self.start_insn)) + ": " + str(hex(self.start_insn)) + '\n'
         if target_str in executable:
             index = executable.index(target_str)
@@ -203,6 +212,7 @@ class DynamicGraph:
         else:
             print("There is no target instruction detected during Execution " + str(self.number))
             return
+        
 
         # init
         previous_node = None
@@ -303,6 +313,13 @@ class DynamicGraph:
                                         if node.id != dynamicNode.id:
                                             node.df_predes.append(dynamicNode)
                                             dynamicNode.df_success.append(node)
+
+                                            # Only save the closest pred
+                                            for df_pred in node.staticNode.df_predes:
+                                                ni = str(hex(df_pred.insn))
+                                                if ni in insn_of_df_nodes and ni in succ_of_df_node and node in succ_of_df_node[ni]:
+                                                    succ_of_df_node[ni].remove(node)
+
                                         else:
                                             current_node_in_dict = True
 
@@ -337,14 +354,13 @@ class DynamicGraph:
 
         res = str(hex(data_point[0] * data_point[2] + data_point[3]))
         """
-        print (reg_addr) 
-        print(str(expr))
-
         reg_address = int(reg_addr, 16)
         shift = int(str(expr.shift), 16)
-        off = int(str(expr.off), 16)
 
-        print(reg_address, shift, off)
+        if shift == 0:
+            shift = 1
+
+        off = int(str(expr.off), 16)
 
         res = str(hex(reg_address * shift + off))
 
@@ -387,4 +403,5 @@ if __name__ == '__main__':
     dynamic_graph = DynamicDependence()
     dynamic_graph.buildDynamicDep(0x409daa, "sweep", "909_ziptest_exe9")
     #dynamic_graph.buildDynamicDep(0x409408, "scanblock", "909_ziptest_exe9")
+
 
