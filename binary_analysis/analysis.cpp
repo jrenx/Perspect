@@ -2284,7 +2284,7 @@ void getCalleeToCallsites(char *progName) {
     return;
   }
 
-  boost::unordered_map<Function *, std::vector<std::pair<Instruction, long unsigned int>>>
+  boost::unordered_map<Function *, std::vector<std::pair<Function *, Address>>>
       functionToCallsite;
   for (auto fit = all.begin(); fit != all.end(); ++fit) {
     Function *f = *fit;
@@ -2309,20 +2309,21 @@ void getCalleeToCallsites(char *progName) {
         if (insn.getCategory() != c_CallInsn && insn.getCategory() != c_BranchInsn) continue;
         addr = (*iit).first;
       }
-      functionToCallsite[f].push_back(std::pair<Instruction, long unsigned int>(insn, addr));
+      functionToCallsite[trg_func].push_back(std::pair<Function *, Address>(f, addr));
     }
   }
 
   cJSON *json_funcs  = cJSON_CreateArray();
   for (auto mit = functionToCallsite.begin(); mit != functionToCallsite.end(); mit++) {
     Function *f = mit->first;
-    std::vector<std::pair<Instruction, long unsigned int>> callsites = mit->second;
+    std::vector<std::pair<Function *, Address>> callsites = mit->second;
     cJSON *json_func = cJSON_CreateObject();
     cJSON_AddStringToObject(json_func, "func", f->name().c_str());
     cJSON *json_callsites  = cJSON_CreateArray();
     for (auto cit = callsites.begin(); cit != callsites.end(); cit++) {
       cJSON *json_callsite = cJSON_CreateObject();
       cJSON_AddNumberToObject(json_callsite, "insn_addr", cit->second);
+      cJSON_AddStringToObject(json_callsite, "func_name", cit->first->name().c_str());
       cJSON_AddItemToArray(json_callsites, json_callsite);
     }
     cJSON_AddItemToObject(json_func, "callsites",  json_callsites);

@@ -127,7 +127,8 @@ def get_func_to_callsites(prog):
         callsites = []
         for json_callsite in json_callsites:
             call_insn = json_callsite['insn_addr']
-            callsites.append(call_insn)
+            caller = json_callsite['func_name']
+            callsites.append([call_insn, caller])
         data_points[func_name] = callsites
     f.close()
 
