@@ -31,9 +31,9 @@ using namespace boost;
 BPatch bpatch;
 bool INFO = true;
 bool DEBUG = false;
-bool DEBUG_SLICE = true;
-bool DEBUG_BIT = true;
-bool DEBUG_STACK = true;
+bool DEBUG_SLICE = false;
+bool DEBUG_BIT = false;
+bool DEBUG_STACK = false;
 
 typedef enum {
   create,
@@ -2591,8 +2591,10 @@ void getCalleeToCallsites(char *progName) {
         cout << " Encountered error " << errno << " while parsing " << json_isBitVar->valuestring << endl;
 
       cJSON *json_slice  = cJSON_CreateObject();
-      cJSON_AddNumberToObject(json_slice, "addr", addr);
       cJSON_AddStringToObject(json_slice, "reg_name", regName);
+      cJSON_AddNumberToObject(json_slice, "addr", addr);
+      cJSON_AddStringToObject(json_slice, "func_name", funcName);
+      cJSON_AddNumberToObject(json_slice, "is_bit_var", json_isBitVar->valueint);
 
       // parse string here, can the string be a json?
       if (INFO) cout << endl << "[sa] addr: 0x" << std::hex << addr << std::dec << endl;

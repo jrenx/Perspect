@@ -9,6 +9,7 @@ from collections import OrderedDict
 DEBUG_CFG = False
 DEBUG_SIMPLIFY = False
 DEBUG_SLICE = False
+VERBOSE = False
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 class BasicBlock:
     def __init__(self, id, ends_in_branch, is_entry, lines):
@@ -108,7 +109,7 @@ class CFG:
         raise Exception
         #return None
 
-    def traversalHelper(self, bb, visited):
+    def postorderTraversal(self, bb, visited):
         #print(" Traversing bb: " + str(bb.id))
         if DEBUG_SIMPLIFY: print("[Postorder] Current bb: " + str(bb.id) + " " + str(bb.lines))
         for succe in bb.succes:
@@ -127,14 +128,14 @@ class CFG:
                 if DEBUG_SIMPLIFY: print("[Postorder] Skipping cuz is not in slice")
                 continue
             """
-            self.traversalHelper(succe, visited)
+            self.postorderTraversal(succe, visited)
         if bb not in self.postorder_list:
             self.postorder_list.append(bb)
 
     def simplify(self):
         for entry in self.entry_bbs:
             visited = set([])
-            self.traversalHelper(entry, visited)
+            self.postorderTraversal(entry, visited)
 
         postorder_map = {}
         for i in range(len(self.postorder_list)):
@@ -507,7 +508,8 @@ class StaticNode:
 
 class StaticDepGraph:
     func_to_graph = {}
-    #rr_result_cache = {}
+    rr_result_cache = {}
+    sa_result_cache = {}
 
     def __init__(self, func, prog):
         self.func = func
@@ -594,52 +596,55 @@ class StaticDepGraph:
                 break
         return self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
-
     @staticmethod
     def buildDependencies(insn, func, prog):
-        """
-        key = str(insn) + "_" + func + "_" + prog
-        static_dep_result_cache = {}
-        static_dep_result_file = os.path.join(curr_dir, 'static_dep_results.json')
-        if os.path.exists(static_dep_result_file):
-            with open(static_dep_result_file) as file:
-                static_dep_result_cache = json.load(file)
-        if key in static_dep_result_cache:
-            StaticDepGraph.func_to_graph = static_dep_result_cache[key]
-            return
-        """
-        """
+
         rr_result_file = os.path.join(curr_dir, 'rr_results.json')
+        rr_result_size = 0
         if os.path.exists(rr_result_file):
             with open(rr_result_file) as file:
                 StaticDepGraph.rr_result_cache = json.load(file)
-        """
-        #StaticDepGraph.func_to_callsites = get_func_to_callsites(prog)
-        #iteration = 10
-        worklist = deque()
-        worklist.append([insn, func, prog, None])
-        while len(worklist) > 0:
-            #if iteration <= 0:
-            #    break
-            #iteration -= 1
-            curr_insn, curr_func, curr_prog, curr_node = worklist.popleft()
-            if curr_node is not None and curr_node.explained:
-                print("[static_dep] Node already explained, skipping ...")
-                print ("[static_dep] " + str(curr_node))
-                continue
-            new_nodes = StaticDepGraph.buildDependenciesInFunction(curr_insn, curr_func, curr_prog, curr_node)
-            for new_node in new_nodes:
-                worklist.append([new_node.insn, new_node.function, prog, new_node]) #FIMXE, ensure there is no duplicate work
-        """
-        rr_result_file = os.path.join(curr_dir, 'rr_results.json')
-        with open(rr_result_file, 'w') as f:
-            json.dump(StaticDepGraph.rr_result_cache, f)
-        """
-        """
-        static_dep_result_cache[key] = StaticDepGraph.func_to_graph
-        with open(static_dep_result_file, 'w') as f:
-            json.dump(static_dep_result_cache, f)
-        """
+                rr_result_size = len(StaticDepGraph.rr_result_cache)
+
+        sa_result_size = 0
+        sa_result_file = os.path.join(curr_dir, 'sa_results.json')
+        if os.path.exists(sa_result_file):
+            with open(sa_result_file) as cache_file:
+                StaticDepGraph.sa_result_cache = json.load(cache_file)
+                sa_result_size = len(StaticDepGraph.sa_result_cache)
+
+        try:
+            #StaticDepGraph.func_to_callsites = get_func_to_callsites(prog)
+            iteration = 0
+            worklist = deque()
+            worklist.append([insn, func, prog, None])
+            while len(worklist) > 0:
+                #if iteration >= 3000:
+                #    break
+                iteration += 1
+                print("[static_dep] Running analysis at iteration: " + str(iteration))
+                curr_insn, curr_func, curr_prog, curr_node = worklist.popleft()
+                if curr_node is not None and curr_node.explained:
+                    print("[static_dep] Node already explained, skipping ...")
+                    print ("[static_dep] " + str(curr_node))
+                    continue
+                new_nodes = StaticDepGraph.buildDependenciesInFunction(curr_insn, curr_func, curr_prog, curr_node)
+                for new_node in new_nodes:
+                    worklist.append([new_node.insn, new_node.function, prog, new_node]) #FIMXE, ensure there is no duplicate work
+        except Exception as e:
+            print("Caught exception: " + str(e))
+        except KeyboardInterrupt:
+            print('Interrupted')
+        finally:
+            if rr_result_size != len(StaticDepGraph.rr_result_cache):
+                print("Persisting rr result file")
+                with open(rr_result_file, 'w') as f:
+                    json.dump(StaticDepGraph.rr_result_cache, f)
+            if sa_result_size != len(StaticDepGraph.sa_result_cache):
+                print("Persisting sa result file")
+                with open(sa_result_file, 'w') as f:
+                    json.dump(StaticDepGraph.sa_result_cache, f)
+
 
     @staticmethod
     def buildDependenciesInFunction(insn, func, prog, df_node = None):
@@ -657,7 +662,8 @@ class StaticDepGraph:
             graph.buildControlFlowNodes(insn)
             StaticDepGraph.func_to_graph[func] = graph
             if len(graph.cfg.ordered_bbs) == 0:
-                print("[static_dep][warn] Failed to load the cfg, ignoring the function...")
+                print("[static_dep][warn] Failed to load the cfg for function: "
+                      + func + " ignoring the function...")
                 return set([])
             target_bbs.add(graph.cfg.ordered_bbs[0])
             graph.buildControlFlowDependencies(target_bbs)
@@ -678,6 +684,10 @@ class StaticDepGraph:
             iter += 1
             defs_in_same_func, defs_in_diff_func = graph.buildDataFlowDependencies(func, prog, df_node)
             all_defs_in_diff_func = all_defs_in_diff_func.union(defs_in_diff_func)
+            if len(graph.cfg.ordered_bbs) == 0:
+                print("[static_dep][warn] Previously failed to load the cfg for function: "
+                      + func + " ignoring the function...")
+                return all_defs_in_diff_func
             if len(defs_in_same_func) > 0:
                 new_bbs = [graph.cfg.getBB(defn.insn) for defn in defs_in_same_func]
                 target_bbs = target_bbs.union(new_bbs)
@@ -740,7 +750,7 @@ class StaticDepGraph:
             assert df_node.insn not in addr_to_node
             addr_to_node[df_node.insn] = df_node
 
-        results = static_backslices(slice_starts, prog)
+        results = static_backslices(slice_starts, prog, StaticDepGraph.sa_result_cache)
         for result in results:
             #reg_name = result[0]
             insn = result[1]
@@ -791,7 +801,7 @@ class StaticDepGraph:
 
         print("[static_dep] Building dataflow dependencies non-local to function: " + str(func))
         for node in defs_in_same_func:
-            print(str(node))
+            if VERBOSE: print(str(node))
             #assert node.is_cf is False
             assert node.is_df is True
             assert node.explained is False
@@ -801,22 +811,6 @@ class StaticDepGraph:
             if node.mem_load is None:
                 print("[warn] node does not have memory load?")
                 continue
-
-            """
-            if func == "sweep" and node.insn != 4234276: #TODO: eventually remove this filter
-                continue
-            if func == "scanblock" and node.insn != int('0x409379', 16):  # TODO, need to fix a bug here
-                continue
-
-            if node.insn == int('0x412327', 16): #TODO, has two definitions!
-                continue
-            if node.insn == int('0x412451', 16): #TODO, has two definitions!
-                continue
-            if node.insn == int('0x40b77f', 16):  # TODO, has two definitions!
-                continue
-            if node.insn == int('0x409989', 16):
-                continue
-            """
 
             branch_insn = None
             target_insn = None
@@ -831,11 +825,11 @@ class StaticDepGraph:
             try:
                 results = rr_backslice(prog, branch_insn, target_insn, #4234305, 0x409C41 | 4234325, 0x409C55
                                    node.insn, node.mem_load.reg, node.mem_load.shift, node.mem_load.off,
-                                   node.mem_load.off_reg) #, StaticDepGraph.rr_result_cache)
+                                   node.mem_load.off_reg, StaticDepGraph.rr_result_cache) #, StaticDepGraph.rr_result_cache)
             except Exception as e:
                 print(str(e))
             print("[static_dep] found " + str(len(results)) + " dataflow dependencies non-local to function")
-            print(results)
+            if VERBOSE: print(results)
             for result in results:
                 # reg_name = result[0]
                 load = result[0]
@@ -866,12 +860,15 @@ class StaticDepGraph:
         defs_in_same_func = defs_in_same_func.union(tmp_defs_in_same_func)
         print("[static_dep] Total number of new nodes in local  dataflow slice: " + str(len(defs_in_same_func)) + " " + \
               str([hex(node.insn) for node in defs_in_same_func]))
-        for node in defs_in_same_func:
-            print(str(node))
+        if VERBOSE:
+            for node in defs_in_same_func:
+                print(str(node))
+
         print("[static_dep] Total number of new nodes in remote dataflow slice: " + str(len(defs_in_diff_func)) + " " + \
               str([hex(node.insn) for node in defs_in_diff_func]))
-        for node in defs_in_diff_func:
-            print(str(node))
+        if VERBOSE:
+            for node in defs_in_diff_func:
+                print(str(node))
 
         self.nodes_in_df_slice.extend(defs_in_same_func)
         print("[static_dep] Total number of nodes in data flow slice: " + str(len(self.nodes_in_df_slice)) + " " + \
@@ -899,10 +896,12 @@ class StaticDepGraph:
             if bb.id in self.cfg.id_to_bb_in_slice:
                 self.nodes_in_cf_slice.append(node)
 
-        for node_id in self.id_to_node:
-            print(str(self.id_to_node[node_id]))
+
         print("[static_dep] Total initial number of nodes in control flow slice: " + str(len(self.nodes_in_cf_slice)) + " " + \
               str([hex(self.id_to_node[node_id].insn) for node_id in self.id_to_node]))
+        if VERBOSE:
+            for node_id in self.id_to_node:
+                print(str(self.id_to_node[node_id]))
 
 
     def buildControlFlowDependencies(self, target_bbs):
@@ -922,15 +921,12 @@ class StaticDepGraph:
                     node.cf_succes.append(self.id_to_node[succe_node_id])
             if node not in self.nodes_in_cf_slice:
                 self.nodes_in_cf_slice.append(node)
-        for node in self.nodes_in_cf_slice:
-            print(str(node))
         print("[static_dep] Total number of nodes in control flow slice: " + str(len(self.nodes_in_cf_slice)) + " " + \
               str([hex(node.insn) for node in self.nodes_in_cf_slice]))
+        if VERBOSE:
+            for node in self.nodes_in_cf_slice:
+                print(str(node))
 
 if __name__ == "__main__":
 
-    #static_graph = StaticDepGraph("sweep")
     StaticDepGraph.buildDependencies(0x409daa, "sweep", "909_ziptest_exe9")
-    #static_graph.buildControlFlowDependencies(0x409daa, "sweep", "909_ziptest_exe9")
-    #static_graph.buildControlFlowDependencies(0x409408, "scanblock", "909_ziptest_exe9")
-    #static_graph.buildDependencies(0x409daa, "sweep", "909_ziptest_exe9")

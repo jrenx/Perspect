@@ -47,7 +47,7 @@ def dynamic_backslice2_old(branch, target, reg, off, insn):
     return list(rr_result_defs[0].union(rr_result_defs[1]))
 
 #FIXME: just pass in the MemoryAccess struct?
-def rr_backslice(prog, branch, target, insn, reg, shift = 0, off = 0, off_reg = None): #, rr_result_cache = None):
+def rr_backslice(prog, branch, target, insn, reg, shift, off, off_reg, rr_result_cache): #, rr_result_cache = None):
     #TODO, the offset and shift are stored as decimals,
     # should they be passes dec or hex to RR?
     # Looks like they take hex strings
@@ -60,12 +60,6 @@ def rr_backslice(prog, branch, target, insn, reg, shift = 0, off = 0, off_reg = 
     off_reg_str = None if off_reg is None else off_reg.lower()
     key = prog + "_" + str(branch_str) + "_" + str(target_str) + "_" \
           + insn_str + "_" + reg_str + "_" + shift_str + "_" + off_str + "_" + str(off_reg_str)
-
-    rr_result_cache = {}
-    rr_result_file = os.path.join(curr_dir, 'rr_results.json')
-    if os.path.exists(rr_result_file):
-        with open(rr_result_file) as file:
-            rr_result_cache = json.load(file)
 
     if key in rr_result_cache:
         return rr_result_cache[key]
@@ -81,8 +75,8 @@ def rr_backslice(prog, branch, target, insn, reg, shift = 0, off = 0, off_reg = 
     rr_result_cache[key] = rr_result_defs
 
     #rr_result_file = os.path.join(curr_dir, 'rr_results.json')
-    with open(rr_result_file, 'w') as f:
-        json.dump(rr_result_cache, f)
+    #with open(rr_result_file, 'w') as f:
+    #    json.dump(rr_result_cache, f)
 
     return rr_result_defs
 

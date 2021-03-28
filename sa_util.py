@@ -211,14 +211,15 @@ def get_mem_writes(insn_to_func, prog):
     if DEBUG_CTYPE: print( "[main] sa returned " + str(mem_writes_per_insn))
     return mem_writes_per_insn
 
-def static_backslices(slice_starts, prog):
+def static_backslices(slice_starts, prog, sa_result_cache):
     print()
     print( "[main] taking static backslices: ")
     # https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
     # https://bugs.python.org/issue1701409
 
-    regname_to_reg = {}
+    data_points_per_reg = []
 
+    regname_to_reg = {}
     slice_starts_json = []
     for line in slice_starts:
         reg = line[0]
@@ -231,7 +232,11 @@ def static_backslices(slice_starts, prog):
         addr = str(line[1])
         func = line[2]
         is_bit_var = 0 if line[3] is False else 1
-        slice_starts_json.append({'reg_name': reg_name, 'addr': addr, 'func_name': func, 'is_bit_var': is_bit_var})
+        key = str(reg) + "_" + str(addr) + "_" + str(func) + "_" + str(is_bit_var) + "_" + str(prog)
+        if key in sa_result_cache:
+            data_points_per_reg.append(sa_result_cache[key])
+        else:
+            slice_starts_json.append({'reg_name': reg_name, 'addr': addr, 'func_name': func, 'is_bit_var': is_bit_var})
     json_str = json.dumps(slice_starts_json)
     slice_starts_str = c_char_p(str.encode(json_str))
     prog_name = c_char_p(str.encode(prog))
@@ -239,41 +244,34 @@ def static_backslices(slice_starts, prog):
     if DEBUG_CTYPE: print( "[main] slice starts: " + json_str)
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
 
-    sa_result_cache = {}
-    sa_result_file = os.path.join(curr_dir, 'sa_results.json')
-    if os.path.exists(sa_result_file):
-        with open(sa_result_file) as cache_file:
-            sa_result_cache = json.load(cache_file)
+    if DEBUG_CTYPE: print("[main] : " + "Calling C", flush=True)
+    lib.backwardSlices(slice_starts_str, prog_name)
+    if DEBUG_CTYPE: print( "[main] : Back from C")
 
-    key = json_str + "_" + prog
-    if key in sa_result_cache:
-        json_loads_per_reg = sa_result_cache[key]
-    else:
-        if DEBUG_CTYPE: print("[main] : " + "Calling C", flush=True)
-        lib.backwardSlices(slice_starts_str, prog_name)
-        if DEBUG_CTYPE: print( "[main] : Back from C")
-
-        f = open(os.path.join(curr_dir, 'backwardSlices_result'))
-        json_loads_per_reg = json.load(f)
-        f.close()
-        sa_result_cache[key] = json_loads_per_reg
-
-        # rr_result_file = os.path.join(curr_dir, 'rr_results.json')
-        with open(sa_result_file, 'w') as cache_file:
-            json.dump(sa_result_cache, cache_file)
+    f = open(os.path.join(curr_dir, 'backwardSlices_result'))
+    json_loads_per_reg = json.load(f)
+    f.close()
+    #sa_result_cache[key] = json_loads_per_reg
 
     if DEBUG_CTYPE: print("[main] : returned: " + str(json_loads_per_reg))
-
-    data_points_per_reg = []
     for json_loads in json_loads_per_reg:
         if len(json_loads) == 0:
             continue
-        reg_name = regname_to_reg[json_loads['reg_name']]
+        reg = regname_to_reg[json_loads['reg_name']]
         addr = json_loads['addr']
-        if DEBUG: print("==> For use reg: " + reg_name + " @ " + str(addr))
+        func = json_loads['func_name']
+        is_bit_var = json_loads['is_bit_var']
+        if DEBUG: print("==> For use reg: " + reg + " @ " + str(addr))
         data_points = parseLoadsOrStores(json_loads['reads'])
+        result = [reg, addr, data_points]
+        key = str(reg) + "_" + str(addr) + "_" + str(func) + "_" + str(is_bit_var) + "_" + str(prog)
+        sa_result_cache[key] = result
+        data_points_per_reg.append(result)
 
-        data_points_per_reg.append([reg_name, addr, data_points])
+    #if len(slice_starts_json) > 0:
+    #    sa_result_file = os.path.join(curr_dir, 'sa_results.json')
+    #    with open(sa_result_file, 'w') as cache_file:
+    #        json.dump(sa_result_cache, cache_file)
 
     if DEBUG_CTYPE: print( "[main] returned" + str(data_points_per_reg))
     return data_points_per_reg
