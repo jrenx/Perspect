@@ -2125,37 +2125,42 @@ extern "C" {
     if(DEBUG) cout << endl;
     BPatch_image *appImage = getImage(progName);
     vector<BPatch_basicBlock *> bbs;
-    BPatch_flowGraph *fg = getFunction(appImage, funcName)->getCFG();
-
     boost::unordered_map<BPatch_basicBlock *, BPatch_Vector<BPatch_basicBlock *>> backEdges;
-    BPatch_Vector<BPatch_basicBlockLoop*> loops;
-    fg->getLoops(loops);
-    for (int i = 0; i < loops.size(); i++) {
-      BPatch_basicBlockLoop* loop = loops[i];
-      std::vector<BPatch_edge *> edges;
-      loop->getBackEdges(edges);
-      for (auto it = edges.begin(); it != edges.end(); it++) {
-        BPatch_edge *edge = *it;
-        BPatch_basicBlock *source = edge->getSource();
-        BPatch_basicBlock *target = edge->getTarget();
-        backEdges[source].push_back(target);
+    BPatch_function *f = getFunction(appImage, funcName);
+    if (f != NULL) {
+      BPatch_flowGraph *fg = f->getCFG();
+
+      BPatch_Vector < BPatch_basicBlockLoop * > loops;
+      fg->getLoops(loops);
+      for (int i = 0; i < loops.size(); i++) {
+        BPatch_basicBlockLoop *loop = loops[i];
+        std::vector<BPatch_edge *> edges;
+        loop->getBackEdges(edges);
+        for (auto it = edges.begin(); it != edges.end(); it++) {
+          BPatch_edge *edge = *it;
+          BPatch_basicBlock *source = edge->getSource();
+          BPatch_basicBlock *target = edge->getTarget();
+          backEdges[source].push_back(target);
+        }
       }
-    }
 
-    set<BPatch_basicBlock *> blocks;
-    fg->getAllBasicBlocks(blocks);
-    for (auto blockIter = blocks.begin();
-         blockIter != blocks.end();
-         ++blockIter) {
-      BPatch_basicBlock *block = *blockIter;
+      set<BPatch_basicBlock *> blocks;
+      fg->getAllBasicBlocks(blocks);
+      for (auto blockIter = blocks.begin();
+           blockIter != blocks.end();
+           ++blockIter) {
+        BPatch_basicBlock *block = *blockIter;
 
-      if (addr >= block->getStartAddress() && addr < block->getEndAddress()) {
-        bbs.insert(bbs.begin(), block);
-      } else {
-        bbs.push_back(block);
+        if (addr >= block->getStartAddress() && addr < block->getEndAddress()) {
+          bbs.insert(bbs.begin(), block);
+        } else {
+          bbs.push_back(block);
+        }
       }
+    } else {
+      cout << "[sa][warn] Ignoring function " << funcName << " for now enable to load..." << endl;
+      //TODO consider using parseAPI later?
     }
-
     std::ofstream out("getAllBBs_result");
     cJSON *json_bbs = printBBsToJsonHelper(bbs, &backEdges);
 
@@ -2629,6 +2634,15 @@ void getCalleeToCallsites(char *progName) {
 
 int main() {
   char *progName = "909_ziptest_exe9";
+  BPatch_image *appImage = getImage(progName);
+  char *funcName = "runtime.morestack01";
+  Function *func = getFunction2(progName, funcName);
+  cout << func->name() << endl;
+  BPatch_function *f = getFunction(appImage, funcName);
+  cout << f->getName() << endl;
+
+  /*
+  char *progName = "909_ziptest_exe9";
   char *funcName = "runtime.findnull";
   Function *f = getFunction2(progName, funcName);
   std::vector<Block *> list;
@@ -2638,7 +2652,7 @@ int main() {
   boost::unordered_map<Address, long> insnToStackHeight;
   int initHeight = 0;
   getStackHeights(f, list, insnToStackHeight, initHeight);
-
+*/
   //getCalleeToCallsites(progName);
   //getMemWritesToStaticAddresses(progName);
   /*
