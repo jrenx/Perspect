@@ -155,6 +155,7 @@ class CFG:
                     if succe.id not in bb_id_to_pdom_ids:
                         if succe in bb.backedge_targets:
                             retry = True
+                            if DEBUG_SIMPLIFY: print("[Simplify]      ignoring, is a backedge ")
                         continue
                     if pdom_ids is None:
                         pdom_ids = set(bb_id_to_pdom_ids[succe.id])
@@ -172,10 +173,10 @@ class CFG:
         for bb in self.postorder_list:
             pdom_ids = bb_id_to_pdom_ids[bb.id]
             pdom_ids.remove(bb.id)
+            bb.pdoms = []
             if len(pdom_ids) == 0:
                 continue
 
-            bb.pdoms = []
             for pdom_id in pdom_ids:
                 bb.pdoms.append(self.id_to_bb[pdom_id])
 
@@ -235,6 +236,10 @@ class CFG:
                       " " + str(child_bb.lines) + \
                       " pdoms are " + str([pdom.lines for pdom in child_bb.pdoms] \
                         if child_bb.pdoms is not None else str(child_bb.pdoms)))
+                if DEBUG_SIMPLIFY: print("[Simplify]   child BB: " + str(child_bb.id) + \
+                      " " + str(child_bb.lines) + \
+                      " pdoms are " + str([pdom.id for pdom in child_bb.pdoms] \
+                        if child_bb.pdoms is not None else str(child_bb.pdoms)))
                 if child_bb is bb.immed_pdom:
                     if DEBUG_SIMPLIFY: print("[Simplify]   child: " + str(child_bb.id) + \
                           " is the immed pdom: " + str(bb.immed_pdom.id))
@@ -249,6 +254,7 @@ class CFG:
                 continue
 
             #remove_set.add(bb) not really needed
+            """
             for prede in bb.predes:
                 if bb in prede.succes:
                     prede.succes.remove(bb)
@@ -256,10 +262,11 @@ class CFG:
                     prede.succes.append(bb.immed_pdom)
                 if prede not in bb.immed_pdom.predes:
                     bb.immed_pdom.predes.append(prede)
+            """
             for child_bb in all_succes_before_immed_pdom:
-                if DEBUG_SIMPLIFY: print("[Simplify] Removing BB: " + str(child_bb.id) + " " + str(child_bb.lines))
-                if child_bb in bb.immed_pdom.predes:
-                    bb.immed_pdom.predes.remove(child_bb)
+                if DEBUG_SIMPLIFY: print("[Simplify] Removing child BB: " + str(child_bb.id) + " " + str(child_bb.lines))
+                #if child_bb in bb.immed_pdom.predes:
+                #    bb.immed_pdom.predes.remove(child_bb)
                 if child_bb.id in self.id_to_bb_in_slice:
                     del self.id_to_bb_in_slice[child_bb.id]
                 if child_bb in self.ordered_bbs_in_slice:
@@ -607,6 +614,7 @@ class StaticDepGraph:
             with open(rr_result_file) as file:
                 StaticDepGraph.rr_result_cache = json.load(file)
         """
+        #StaticDepGraph.func_to_callsites = get_func_to_callsites(prog)
         #iteration = 10
         worklist = deque()
         worklist.append([insn, func, prog, None])
@@ -648,8 +656,12 @@ class StaticDepGraph:
             graph = StaticDepGraph(func, prog)
             graph.buildControlFlowNodes(insn)
             StaticDepGraph.func_to_graph[func] = graph
+            if len(graph.cfg.ordered_bbs) == 0:
+                print("[static_dep][warn] Failed to load the cfg, ignoring the function...")
+                return set([])
             target_bbs.add(graph.cfg.ordered_bbs[0])
             graph.buildControlFlowDependencies(target_bbs)
+            #callsites = StaticDepGraph.func_to_callsites[func]
         """
         if df_node is not None:
             assert df_node.bb is None
@@ -683,6 +695,9 @@ class StaticDepGraph:
 
     #FIXME, think about if this makes sense
     def mergeDataFlowNodes(self, df_nodes):
+        if len(self.cfg.ordered_bbs) == 0:
+            print("[static_dep][warn] Failed to load the cfg, ignoring merging the datanode...")
+            return
         for node in df_nodes:
             assert node.is_df is True
             assert node.explained is False, str(node)
@@ -783,28 +798,25 @@ class StaticDepGraph:
             print("[static_dep] Looking for dataflow dependencies potentially non-local to function: " + str(func) \
                   + " for read " + str(node.mem_load) + " @ " + hex(node.insn))
 
-            if func == "sweep" and node.insn != 4234276: #TODO: eventually remove this filter
-                continue
-            """
-            if func == "scanblock" and node.insn == int('0x40956c', 16): #TODO, need to fix a bug here
-                continue
-            if func == "scanblock" and node.insn == int('0x4096d4', 16): #TODO, need to fix a bug here
-                continue
-            #if func == "scanblock" and node.insn == int('0x409379', 16): #TODO, need to fix a bug here
-            #    continue
-            if func == "scanblock" and node.insn == int('0x40957f', 16): #TODO, need to fix a bug here
-                continue
-            """
-
-            if func == "scanblock" and node.insn != int('0x409379', 16): #TODO, need to fix a bug here
-                continue
             if node.mem_load is None:
                 print("[warn] node does not have memory load?")
                 continue
+
+            """
+            if func == "sweep" and node.insn != 4234276: #TODO: eventually remove this filter
+                continue
+            if func == "scanblock" and node.insn != int('0x409379', 16):  # TODO, need to fix a bug here
+                continue
+
             if node.insn == int('0x412327', 16): #TODO, has two definitions!
                 continue
             if node.insn == int('0x412451', 16): #TODO, has two definitions!
                 continue
+            if node.insn == int('0x40b77f', 16):  # TODO, has two definitions!
+                continue
+            if node.insn == int('0x409989', 16):
+                continue
+            """
 
             branch_insn = None
             target_insn = None
@@ -815,10 +827,13 @@ class StaticDepGraph:
                 print("Farthest target is at " + str(target_insn))
                 branch_insn = closest_dep_branch_node.bb.last_insn
                 target_insn = farthest_target_node.insn
-            results = rr_backslice(prog, branch_insn, target_insn, #4234305, 0x409C41 | 4234325, 0x409C55
+            results = []
+            try:
+                results = rr_backslice(prog, branch_insn, target_insn, #4234305, 0x409C41 | 4234325, 0x409C55
                                    node.insn, node.mem_load.reg, node.mem_load.shift, node.mem_load.off,
                                    node.mem_load.off_reg) #, StaticDepGraph.rr_result_cache)
-
+            except Exception as e:
+                print(str(e))
             print("[static_dep] found " + str(len(results)) + " dataflow dependencies non-local to function")
             print(results)
             for result in results:
@@ -842,7 +857,9 @@ class StaticDepGraph:
                     else:
                         tmp_defs_in_same_func.add(prede)
                 else:
-                    assert prede.mem_store is not None or prede.reg_load is not None, prede
+                    if prede.mem_store is None and prede.reg_load is None:
+                        print('[static_dep][warn] predecessor already explained '
+                              'but no memory store or register load found?' + str(prede))
                 node.df_predes.append(prede)
                 prede.df_succes.append(node)
 
