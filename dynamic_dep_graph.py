@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from sa_util import *
 from rr_util import *
 from pin_util import *
@@ -15,6 +16,7 @@ if os.path.exists(target_dir):
     shutil.rmtree(target_dir)
 os.makedirs(target_dir)
 
+time_record = {}
 
 class DynamicNode:
     id = 0
@@ -181,7 +183,11 @@ class DynamicDependence:
         # Get static dep, then invoke pin to get execution results, and build CFG
 
         self.getSlice(insn, func, prog)
+        time_record["get_slice_start"] = time.time()
+        print("[TIME]Get Slice time: ", time.asctime(time.localtime(time_record["get_slice_start"])))
         executable_path = self.getDynamicExecutable()
+        time_record["invoke_pin"] = time.time()
+        print("[TIME]Invoke Pin time: ", time.asctime(time.localtime(time_record["invoke_pin"])))
         self.buildDynamicGraph(func, prog, insn, executable_path)
 
 
@@ -197,14 +203,18 @@ class DynamicGraph:
         self.root = None
         self.branch_nodes = []
         self.target_dir = os.path.join(curr_dir, 'dynamicGraph')
+        self.node_frequence = {}
+        self.insn_to_nodes = None
 
     def build_dynamicGraph(self, executable, insn_to_nodes, insn_of_cf_nodes, insn_of_df_nodes,
                            insn_of_local_df_nodes, insn_of_remote_df_nodes):
 
+        print("[TIME]Build Dynamic Graph Start Time: ", time.asctime(time.localtime(time.time())))
+
         # reverse the executetable, and remove insns beyond the start insn
         executable.reverse()
+        self.insn_to_nodes = insn_to_nodes
 
-        
         target_str = str(hex(self.start_insn)) + ": " + str(hex(self.start_insn)) + '\n'
         if target_str in executable:
             index = executable.index(target_str)
@@ -212,7 +222,7 @@ class DynamicGraph:
         else:
             print("There is no target instruction detected during Execution " + str(self.number))
             return
-        
+
 
         # init
         previous_node = None
@@ -240,6 +250,9 @@ class DynamicGraph:
             # the leaf
             if insn == str(hex(self.start_insn)):
                 dynamicNode = DynamicNode(self.insn_to_id[insn], insn_to_nodes[insn])
+                if insn not in self.node_frequence:
+                    self.node_frequence[insn] = 0
+                self.node_frequence[insn] = self.node_frequence[insn]+1
                 if insn_to_nodes[insn].df_predes and insn not in insn_of_df_nodes:
                     for node in insn_to_nodes[insn].df_predes:
                         node_insn = str(hex(node.insn))
@@ -273,6 +286,9 @@ class DynamicGraph:
                             del current_branch_nodes[previous_node.insn_id]
                         if curr_node_id not in visited_node:
                             dynamicNode = DynamicNode(curr_node_id, insn_to_nodes[insn])
+                            if insn not in self.node_frequence:
+                                self.node_frequence[insn] = 0
+                            self.node_frequence[insn] = self.node_frequence[insn] + 1
                             self.dynamicNodes.append(dynamicNode)
                             dynamicNode.cf_success.append(previous_node)
 
@@ -336,8 +352,38 @@ class DynamicGraph:
         else:
             self.root = dynamicNode
 
+        time_record["build_finsh"] = time.time()
+        print("[TIME]Build Dynamic Graph Finish Time: ", time.asctime(time.localtime(time_record["build_finsh"])))
         self.print_graph()
+        time_record["print_finsh"] = time.time()
+        print("[TIME]Print Dynamic Graph Time: ", time.asctime(time.localtime(time_record["print_finsh"])))
+        self.save_as_json()
+        time_record["json_save"] = time.time()
+        print("[TIME Dynamic Graph Json Save Time: ", time.asctime(time.localtime(time_record["json_save"])))
         print(self.insn_to_id)
+        self.report_result()
+
+    def report_result(self):
+
+        print("[Report]There are totally " + str(len(self.dynamicNodes)) + " nodes.")
+        print("[Report]the top 5 nodes that appeared the most number of times: ")
+        top_five_insn = sorted(self.node_frequence.items(), key=lambda d: d[1], reverse = True)[:5]
+        i = 1
+        for item in top_five_insn:
+            insn = item[0]
+            times = item[1]
+            node = self.insn_to_nodes[insn]
+            string = "  No." + str(i) + ":\n"
+            string += "     staticNode id: " + str(node.id) + "\n"
+            string += "     frequence: " + str(times) + "\n"
+            string += "     insn addr: " + insn + "\n"
+            string += "     src line: " + str(node.bb.lines) + "\n\n"
+            i = i+1
+
+            print (string)
+
+
+
 
     def mem_addr_calculate(self, reg_addr, expr):
         """
@@ -398,10 +444,125 @@ class DynamicGraph:
             with open(fname, 'a') as out:
                 out.write(str(node))
 
+    def save_as_json(self):
+
+        json_file = os.path.join(curr_dir, 'dynamic_graph_result')
+        dynamic_result = {}
+
+        for node in self.dynamicNodes:
+            node_info = {}
+            node_info["id"] = node.id
+            node_info["insn_id"] = node.insn_id
+            node_info["cf_predes"] = []
+            if node.cf_predes:
+                for n in node.cf_predes:
+                    node_info["cf_predes"].append(n.id)
+            node_info["cf_predes_insn_id"] = node.cf_predes_insn_id
+            node_info["cf_success"] = []
+            if node.cf_success:
+                for n in node.cf_success:
+                    node_info["cf_success"].append(n.id)
+            node_info["df_predes"] = []
+            if node.df_predes:
+                for n in node.df_predes:
+                    node_info["df_predes"].append(n.id)
+            node_info["df_success"] = []
+            if node.df_success:
+                for i in node.df_success:
+                    node_info["df_success"].append(n.id)
+            node_info["mem_load"] = str(node.mem_load)
+            node_info["mem_load_addr"] = node.mem_load_addr
+            node_info["mem_store"] = str(node.mem_store)
+            node_info["mem_store_addr"] = node.mem_store_addr
+
+            staticNode = {}
+
+            staticNode["id"] = node.staticNode.id
+            staticNode["insn"] = node.staticNode.insn  # FIXME, this is long type right
+            staticNode["function"] = node.staticNode.function  # FIXME, maybe rename this to func?
+            staticNode["explained"] = node.staticNode.explained
+
+            staticNode["is_cf"] = node.staticNode.is_cf
+            staticNode["bb"] = None
+
+            if node.staticNode.bb:
+                basicBlock = {}
+
+                basicBlock["id"] = node.staticNode.bb.id
+                basicBlock["start_insn"] = node.staticNode.bb.start_insn
+                basicBlock["last_insn"] = node.staticNode.bb.last_insn
+                basicBlock["lines"] = node.staticNode.bb.lines
+                basicBlock["ends_in_branch"] = node.staticNode.bb.ends_in_branch
+                basicBlock["is_entry"] = node.staticNode.bb.is_entry
+                if node.staticNode.bb.immed_dom:
+                    basicBlock["immed_dom"] = node.staticNode.bb.immed_dom.id
+                if node.staticNode.bb.immed_pdom:
+                    basicBlock["immed_pdom"] = node.staticNode.bb.immed_pdom.id
+                basicBlock["pdoms"] = []
+                if node.staticNode.bb.pdoms:
+                    for n in node.staticNode.bb.pdoms:
+                        basicBlock["pdoms"].append(n.id)
+                basicBlock["backedge_targets"] = []
+                if node.staticNode.bb.backedge_targets:
+                    for n in node.staticNode.bb.backedge_targets:
+                        basicBlock["backedge_targets"].append(n.id)
+                basicBlock["predes"] = []
+                if node.staticNode.bb.predes:
+                    for n in node.staticNode.bb.predes:
+                        basicBlock["predes"].append(n.id)
+                basicBlock["succes"] = []
+                if node.staticNode.bb.succes:
+                    for n in node.staticNode.bb.succes:
+                        basicBlock["succes"].append(n.id)
+
+                staticNode["bb"] = json.dumps(basicBlock)
+
+            staticNode["cf_predes"] = []
+            if node.staticNode.cf_predes:
+                for n in node.staticNode.cf_predes:
+                    staticNode["cf_predes"].append(n.id)
+            staticNode["cf_succes"] = []
+            if node.staticNode.cf_succes:
+                for n in node.staticNode.cf_succes:
+                    staticNode["cf_succes"].append(n.id)
+
+            staticNode["is_df"] = node.staticNode.is_df
+            staticNode["mem_load"] = str(node.staticNode.mem_load)
+            staticNode["reg_load"] = str(node.staticNode.reg_load)
+
+            staticNode["mem_store"] = str(node.staticNode.mem_store)
+            staticNode["reg_store"] = str(node.staticNode.reg_store)
+
+            staticNode["df_predes"] = []
+            if node.staticNode.df_predes:
+                for n in node.staticNode.df_predes:
+                    staticNode["df_predes"].append(n.id)
+            staticNode["df_succes"] = []
+            if node.staticNode.df_succes:
+                for n in node.staticNode.df_succes:
+                    staticNode["df_succes"].append(n.id)
+
+            node_info["staticNode"] = json.dumps(staticNode)
+
+            dynamic_result[node.id] = json.dumps(node_info)
+
+        with open(json_file, 'w') as out:
+            out.write(json.dumps(dynamic_result))
+
+
 
 if __name__ == '__main__':
     dynamic_graph = DynamicDependence()
+    time_record["start_time"] = time.time()
+    print("[TIME]Start time: ", time.asctime(time.localtime(time_record["start_time"])))
     dynamic_graph.buildDynamicDep(0x409daa, "sweep", "909_ziptest_exe9")
+
+    print("[Summary] Get Slice: ", str(time_record["get_slice_start"]-time_record["start_time"]))
+    print("[Summary] Invoke Pin: ", str(time_record["invoke_pin"] - time_record["get_slice_start"]))
+    print("[Summary] Build Dynamic Graph: ", str(time_record["build_finsh"] - time_record["invoke_pin"]))
+    print("[Summary] Print Dynamic Graph: ", str(time_record["print_finsh"] - time_record["build_finsh"]))
+    print("[Summary] Json Saved: ", str(time_record["json_save"] - time_record["print_finsh"]))
     #dynamic_graph.buildDynamicDep(0x409408, "scanblock", "909_ziptest_exe9")
+
 
 
