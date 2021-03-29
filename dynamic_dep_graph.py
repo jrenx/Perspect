@@ -357,9 +357,12 @@ class DynamicGraph:
         self.print_graph()
         time_record["print_finsh"] = time.time()
         print("[TIME]Print Dynamic Graph Time: ", time.asctime(time.localtime(time_record["print_finsh"])))
-        self.save_as_json()
-        time_record["json_save"] = time.time()
-        print("[TIME Dynamic Graph Json Save Time: ", time.asctime(time.localtime(time_record["json_save"])))
+        self.save_static_nodes_as_json(insn_to_nodes, insn_of_cf_nodes, insn_of_df_nodes,)
+        time_record["save_static_nodes_as_json"] = time.time()
+        print("[TIME] Static Nodes Json Save Time: ", time.asctime(time.localtime(time_record["save_static_nodes_as_json"])))
+        self.save_dynamic_graph_as_json()
+        time_record["save_dynamic_graph_as_json"] = time.time()
+        print("[TIME] Dynamic Graph Json Save Time: ", time.asctime(time.localtime(time_record["save_dynamic_graph_as_json"])))
         print(self.insn_to_id)
         self.report_result()
 
@@ -444,9 +447,99 @@ class DynamicGraph:
             with open(fname, 'a') as out:
                 out.write(str(node))
 
-    def save_as_json(self):
+    def save_static_nodes_as_json(self, insn_to_nodes, insn_of_cf_nodes, insn_of_df_nodes,):
 
-        json_file = os.path.join(curr_dir, 'dynamic_graph_result')
+        json_file = os.path.join(target_dir, 'static_nodes_result')
+        static_result = {}
+        
+        for insn in insn_of_cf_nodes:
+            node = insn_to_nodes[insn]
+            static_result[node.id] = self.get_static_node_json(node)
+            
+        for insn in insn_of_df_nodes:
+            node = insn_to_nodes[insn]
+            static_result[node.id] = self.get_static_node_json(node)
+
+        with open(json_file, 'w') as out:
+            #out.write(json.dumps(static_result))
+            json.dump(static_result, out, ensure_ascii=False)
+            
+        
+    def get_static_node_json(self, node):
+        
+        staticNode = {}
+
+        staticNode["id"] = node.id
+        staticNode["insn"] = node.insn  # FIXME, this is long type right
+        staticNode["function"] = node.function  # FIXME, maybe rename this to func?
+        staticNode["explained"] = node.explained
+
+        staticNode["is_cf"] = node.is_cf
+        staticNode["bb"] = None
+
+        if node.bb:
+            basicBlock = {}
+
+            basicBlock["id"] = node.bb.id
+            basicBlock["start_insn"] = node.bb.start_insn
+            basicBlock["last_insn"] = node.bb.last_insn
+            basicBlock["lines"] = node.bb.lines
+            basicBlock["ends_in_branch"] = node.bb.ends_in_branch
+            basicBlock["is_entry"] = node.bb.is_entry
+            if node.bb.immed_dom:
+                basicBlock["immed_dom"] = node.bb.immed_dom.id
+            if node.bb.immed_pdom:
+                basicBlock["immed_pdom"] = node.bb.immed_pdom.id
+            basicBlock["pdoms"] = []
+            if node.bb.pdoms:
+                for n in node.bb.pdoms:
+                    basicBlock["pdoms"].append(n.id)
+            basicBlock["backedge_targets"] = []
+            if node.bb.backedge_targets:
+                for n in node.bb.backedge_targets:
+                    basicBlock["backedge_targets"].append(n.id)
+            basicBlock["predes"] = []
+            if node.bb.predes:
+                for n in node.bb.predes:
+                    basicBlock["predes"].append(n.id)
+            basicBlock["succes"] = []
+            if node.bb.succes:
+                for n in node.bb.succes:
+                    basicBlock["succes"].append(n.id)
+
+            staticNode["bb"] = json.dumps(basicBlock)
+
+        staticNode["cf_predes"] = []
+        if node.cf_predes:
+            for n in node.cf_predes:
+                staticNode["cf_predes"].append(n.id)
+        staticNode["cf_succes"] = []
+        if node.cf_succes:
+            for n in node.cf_succes:
+                staticNode["cf_succes"].append(n.id)
+
+        staticNode["is_df"] = node.is_df
+        staticNode["mem_load"] = str(node.mem_load)
+        staticNode["reg_load"] = str(node.reg_load)
+
+        staticNode["mem_store"] = str(node.mem_store)
+        staticNode["reg_store"] = str(node.reg_store)
+
+        staticNode["df_predes"] = []
+        if node.df_predes:
+            for n in node.df_predes:
+                staticNode["df_predes"].append(n.id)
+        staticNode["df_succes"] = []
+        if node.df_succes:
+            for n in node.df_succes:
+                staticNode["df_succes"].append(n.id)
+
+        return json.dumps(staticNode)
+        
+
+    def save_dynamic_graph_as_json(self):
+
+        json_file = os.path.join(target_dir, 'dynamic_graph_result')
         dynamic_result = {}
 
         for node in self.dynamicNodes:
@@ -474,80 +567,14 @@ class DynamicGraph:
             node_info["mem_load_addr"] = node.mem_load_addr
             node_info["mem_store"] = str(node.mem_store)
             node_info["mem_store_addr"] = node.mem_store_addr
-
-            staticNode = {}
-
-            staticNode["id"] = node.staticNode.id
-            staticNode["insn"] = node.staticNode.insn  # FIXME, this is long type right
-            staticNode["function"] = node.staticNode.function  # FIXME, maybe rename this to func?
-            staticNode["explained"] = node.staticNode.explained
-
-            staticNode["is_cf"] = node.staticNode.is_cf
-            staticNode["bb"] = None
-
-            if node.staticNode.bb:
-                basicBlock = {}
-
-                basicBlock["id"] = node.staticNode.bb.id
-                basicBlock["start_insn"] = node.staticNode.bb.start_insn
-                basicBlock["last_insn"] = node.staticNode.bb.last_insn
-                basicBlock["lines"] = node.staticNode.bb.lines
-                basicBlock["ends_in_branch"] = node.staticNode.bb.ends_in_branch
-                basicBlock["is_entry"] = node.staticNode.bb.is_entry
-                if node.staticNode.bb.immed_dom:
-                    basicBlock["immed_dom"] = node.staticNode.bb.immed_dom.id
-                if node.staticNode.bb.immed_pdom:
-                    basicBlock["immed_pdom"] = node.staticNode.bb.immed_pdom.id
-                basicBlock["pdoms"] = []
-                if node.staticNode.bb.pdoms:
-                    for n in node.staticNode.bb.pdoms:
-                        basicBlock["pdoms"].append(n.id)
-                basicBlock["backedge_targets"] = []
-                if node.staticNode.bb.backedge_targets:
-                    for n in node.staticNode.bb.backedge_targets:
-                        basicBlock["backedge_targets"].append(n.id)
-                basicBlock["predes"] = []
-                if node.staticNode.bb.predes:
-                    for n in node.staticNode.bb.predes:
-                        basicBlock["predes"].append(n.id)
-                basicBlock["succes"] = []
-                if node.staticNode.bb.succes:
-                    for n in node.staticNode.bb.succes:
-                        basicBlock["succes"].append(n.id)
-
-                staticNode["bb"] = json.dumps(basicBlock)
-
-            staticNode["cf_predes"] = []
-            if node.staticNode.cf_predes:
-                for n in node.staticNode.cf_predes:
-                    staticNode["cf_predes"].append(n.id)
-            staticNode["cf_succes"] = []
-            if node.staticNode.cf_succes:
-                for n in node.staticNode.cf_succes:
-                    staticNode["cf_succes"].append(n.id)
-
-            staticNode["is_df"] = node.staticNode.is_df
-            staticNode["mem_load"] = str(node.staticNode.mem_load)
-            staticNode["reg_load"] = str(node.staticNode.reg_load)
-
-            staticNode["mem_store"] = str(node.staticNode.mem_store)
-            staticNode["reg_store"] = str(node.staticNode.reg_store)
-
-            staticNode["df_predes"] = []
-            if node.staticNode.df_predes:
-                for n in node.staticNode.df_predes:
-                    staticNode["df_predes"].append(n.id)
-            staticNode["df_succes"] = []
-            if node.staticNode.df_succes:
-                for n in node.staticNode.df_succes:
-                    staticNode["df_succes"].append(n.id)
-
-            node_info["staticNode"] = json.dumps(staticNode)
+            node_info["static_node_id"] = node.staticNode.id
 
             dynamic_result[node.id] = json.dumps(node_info)
 
         with open(json_file, 'w') as out:
-            out.write(json.dumps(dynamic_result))
+            #out.write(json.dumps(dynamic_result))
+            json.dump(dynamic_result, out, ensure_ascii=False)
+
 
 
 
@@ -561,8 +588,11 @@ if __name__ == '__main__':
     print("[Summary] Invoke Pin: ", str(time_record["invoke_pin"] - time_record["get_slice_start"]))
     print("[Summary] Build Dynamic Graph: ", str(time_record["build_finsh"] - time_record["invoke_pin"]))
     print("[Summary] Print Dynamic Graph: ", str(time_record["print_finsh"] - time_record["build_finsh"]))
-    print("[Summary] Json Saved: ", str(time_record["json_save"] - time_record["print_finsh"]))
+    print("[Summary] Static Nodes Json Saved: ",
+          str(time_record["save_static_nodes_as_json"] - time_record["print_finsh"]))
+    print("[Summary] Dynamic Graph Json Saved: ", str(time_record["save_dynamic_graph_as_json"] - time_record["save_static_nodes_as_json"]))
     #dynamic_graph.buildDynamicDep(0x409408, "scanblock", "909_ziptest_exe9")
+
 
 
 
