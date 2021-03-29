@@ -619,8 +619,8 @@ class StaticDepGraph:
             worklist = deque()
             worklist.append([insn, func, prog, None])
             while len(worklist) > 0:
-                #if iteration >= 3000:
-                #    break
+                if iteration >= 1000:
+                    break
                 iteration += 1
                 print("[static_dep] Running analysis at iteration: " + str(iteration))
                 curr_insn, curr_func, curr_prog, curr_node = worklist.popleft()
@@ -631,6 +631,14 @@ class StaticDepGraph:
                 new_nodes = StaticDepGraph.buildDependenciesInFunction(curr_insn, curr_func, curr_prog, curr_node)
                 for new_node in new_nodes:
                     worklist.append([new_node.insn, new_node.function, prog, new_node]) #FIMXE, ensure there is no duplicate work
+
+            total_count = 0
+            for func in StaticDepGraph.func_to_graph:
+                print("[static_dep] " + func + " has " + str(len(StaticDepGraph.func_to_graph[func].nodes_in_cf_slice)) + " cf nodes and " \
+                      + str(len(StaticDepGraph.func_to_graph[func].nodes_in_df_slice)) + " df nodes")
+                total_count += len(StaticDepGraph.func_to_graph[func].nodes_in_cf_slice)
+                total_count += len(StaticDepGraph.func_to_graph[func].nodes_in_df_slice)
+            print("[static_dep] Total number of nodes: " + str(total_count))
         except Exception as e:
             print("Caught exception: " + str(e))
         except KeyboardInterrupt:
@@ -696,6 +704,8 @@ class StaticDepGraph:
             if df_node is not None:
                 assert df_node.bb is None, df_node
                 defs_in_same_func.add(df_node)
+                if df_node not in graph.nodes_in_df_slice:
+                    graph.nodes_in_df_slice.append(df_node)
                 df_node = None
                 # TODO, also need to do dataflow tracing for this one!!
             graph.mergeDataFlowNodes(defs_in_same_func)
@@ -928,5 +938,4 @@ class StaticDepGraph:
                 print(str(node))
 
 if __name__ == "__main__":
-
     StaticDepGraph.buildDependencies(0x409daa, "sweep", "909_ziptest_exe9")
