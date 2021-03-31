@@ -36,6 +36,13 @@ def test_rr_slice2():
     b = datetime.datetime.now()
     print("Took: " + str(b-a))
 
+def test_sa_slices():
+    slice_starts = []
+    #slice_starts.append(['rax', 4234536, 'sweep', True]) #why is the filtered against?
+    slice_starts.append(['', int('0x409c84', 16), 'sweep', False])
+    results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+    print(results)
+
 def test_sa_slices1():
     slice_starts = []
     #slice_starts.append(['rax', 4234536, 'sweep', True]) #why is the filtered against?
@@ -46,27 +53,27 @@ def test_sa_slices1():
     slice_starts.append(['rdx', 4238284, 'runtime.setblockspecial', True])
     #slice_starts.append(['RAX', 4237997, 'runtime.unmarkspan', True])
     slice_starts.append(['rax', 4237218, 'runtime.markfreed', True])
-    results = static_backslices(slice_starts, '909_ziptest_exe9')
+    results = static_backslices(slice_starts, '909_ziptest_exe9', {})
     print(results)
 
 def test_sa_slices2():
     slice_starts = []
     slice_starts.append(['', 4234294, 'sweep', False]) #0x409C36
-    results = static_backslices(slice_starts, '909_ziptest_exe9')
+    results = static_backslices(slice_starts, '909_ziptest_exe9', {})
     print(results)
 
 def test_sa_slices3():
     slice_starts = []
     slice_starts.append(['', int('0x43c46c', 16), 'unicode.init', False])
     #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
-    results = static_backslices(slice_starts, '909_ziptest_exe9')
+    results = static_backslices(slice_starts, '909_ziptest_exe9', {})
     print(results)
 
 def test_sa_slices4():
     slice_starts = []
     slice_starts.append(['', int('0x40a9a6', 16), 'runtime.markspan', False])
     #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
-    results = static_backslices(slice_starts, '909_ziptest_exe9')
+    results = static_backslices(slice_starts, '909_ziptest_exe9', {})
     print(results)
 
 def test_get_all_bb():
@@ -79,8 +86,9 @@ def main():
     #test_rr_slice()
     #get_mem_writes_to_static_addrs('909_ziptest_exe9')
     #get_func_to_callsites('909_ziptest_exe9')
-    test_sa_slices3()
+    #test_sa_slices3()
     #test_get_all_bb()
+    test_sa_slices()
  
 if __name__ == "__main__":
     main()

@@ -42,11 +42,11 @@ class DynamicNode:
     def __str__(self):
         s = "===============================================\n"
         # s += "   Instance id : " + str(self.instance_id) + "\n"
-        s += "   Dynamic Node id: " + str(self.id) + "\n"
+        s += "   Dynamic Node id: " + str(self.id) + "__\n"
         s += "   Instruction id : " + str(self.insn_id) + "\n"
         s += "    -------------------------------------\n"
         s += "    ------------Static Node--------------\n"
-        s += str(self.staticNode) + "\n"
+        s += "      " + str(self.staticNode) + "\n"
         s += "    -------------------------------------\n"
         s += "    -------------------------------------\n"
         s += "    dynamic control flow predecessors: ["
@@ -87,10 +87,15 @@ class DynamicDependence:
         self.insn_of_remote_df_nodes = []
 
     def getDynamicExecutable(self):
-
+        count = 0
         instructions = {}
         for node in self.all_static_cf_nodes:
             instructions[hex(node.insn)] = 'pc'
+            count += 1
+            if count >= 500:
+                break
+        cf_count = len(instructions)
+        print("Total number of cf instructions to trace is " + str(cf_count))
 
         for node in self.all_static_df_nodes:
             # trace local
@@ -99,7 +104,10 @@ class DynamicDependence:
             # trace remote
             elif node.mem_store != None:
                 instructions[hex(node.insn)] = node.mem_store.reg.lower()
-
+            count += 1
+            if count >= 500:
+                break
+        print("Total number of df instructions to trace is " + str(len(instructions) - cf_count))
         # invoke PIN. get output of a sequence of insn
         trace = InsRegTrace('/home/anygroup/perf_debug_tool/909_ziptest_exe9 /home/anygroup/perf_debug_tool/test.zip',
                          pin='~/pin-3.11/pin')
@@ -116,6 +124,7 @@ class DynamicDependence:
         for graph in StaticDepGraph.func_to_graph.values():
             for node in graph.nodes_in_cf_slice:
                 self.all_static_cf_nodes.append(node)
+                i += 1
 
         for node in self.all_static_cf_nodes:
             self.insn_to_nodes[str(hex(node.insn))] = node
@@ -177,11 +186,12 @@ class DynamicDependence:
                                         self.insn_of_df_nodes, self.insn_of_local_df_nodes,
                                         self.insn_of_remote_df_nodes)
         print("[dyn_dep] total number of nodes: " + str(len(dynamicGraph.dynamicNodes)))
-        dynamicGraph.findEntryNodes()
-        dynamicGraph.findExitNodes()
-        dynamicGraph.findTargetNodes(insn)
-        dynamicGraph.buildPostorderList()
-        dynamicGraph.buildReversePostorderList()
+        #dynamicGraph.findEntryNodes()
+        #dynamicGraph.findExitNodes()
+        #dynamicGraph.findTargetNodes(insn)
+        #dynamicGraph.buildPostorderList()
+        #dynamicGraph.buildReversePostorderList()
+        return dynamicGraph
 
     def buildDynamicDep(self, insn, func, prog):
 
@@ -193,7 +203,7 @@ class DynamicDependence:
         executable_path = self.getDynamicExecutable()
         time_record["invoke_pin"] = time.time()
         print("[TIME]Invoke Pin time: ", time.asctime(time.localtime(time_record["invoke_pin"])))
-        self.buildDynamicGraph(func, prog, insn, executable_path)
+        return self.buildDynamicGraph(func, prog, insn, executable_path)
 
 class DynamicGraph:
     #TODO: restructure DynamicGraph
@@ -216,8 +226,9 @@ class DynamicGraph:
         self.target_nodes = []
 
     def reversePostorderTraversalHelper(self, node, visited):
+        print("visiting node: " + str(hex(node.staticNode.insn)))
         if node in visited:
-            #print("Node already visited, returning...")
+            print("Node already visited, returning...")
             return
         visited.add(node)
         for cf_prede in node.cf_predes:
@@ -298,7 +309,6 @@ class DynamicGraph:
             print("There is no target instruction detected during Execution " + str(self.number))
             return
 
-
         # init
         previous_node = None
         is_first = True
@@ -325,9 +335,11 @@ class DynamicGraph:
             # the leaf
             if insn == str(hex(self.start_insn)):
                 dynamicNode = DynamicNode(self.insn_to_id[insn], insn_to_nodes[insn])
+
                 if insn not in self.node_frequence:
                     self.node_frequence[insn] = 0
                 self.node_frequence[insn] = self.node_frequence[insn]+1
+
                 if insn_to_nodes[insn].df_predes and insn not in insn_of_df_nodes:
                     for node in insn_to_nodes[insn].df_predes:
                         node_insn = str(hex(node.insn))
@@ -381,7 +393,6 @@ class DynamicGraph:
                                 visited_node.append(dynamicNode.insn_id)
 
                             if insn in insn_of_df_nodes:
-
                                 if insn in insn_of_local_df_nodes:
                                     dynamicNode.mem_load_addr = self.mem_addr_calculate(reg,
                                                                                         dynamicNode.staticNode.mem_load)
@@ -479,7 +490,7 @@ class DynamicGraph:
         res = str(hex(data_point[0] * data_point[2] + data_point[3]))
         """
         reg_address = int(reg_addr, 16)
-        shift = int(str(expr.shift), 16)
+        shift = int(str(0 if expr.shift == '' else expr.shift), 16)
 
         if shift == 0:
             shift = 1
@@ -626,18 +637,18 @@ class DynamicGraph:
                 for n in node.cf_predes:
                     node_info["cf_predes"].append(n.id)
             node_info["cf_predes_insn_id"] = node.cf_predes_insn_id
-            node_info["cf_success"] = []
-            if node.cf_success:
-                for n in node.cf_success:
-                    node_info["cf_success"].append(n.id)
+            node_info["cf_succes"] = []
+            if node.cf_succes:
+                for n in node.cf_succes:
+                    node_info["cf_succes"].append(n.id)
             node_info["df_predes"] = []
             if node.df_predes:
                 for n in node.df_predes:
                     node_info["df_predes"].append(n.id)
-            node_info["df_success"] = []
-            if node.df_success:
-                for i in node.df_success:
-                    node_info["df_success"].append(n.id)
+            node_info["df_succes"] = []
+            if node.df_succes:
+                for i in node.df_succes:
+                    node_info["df_succes"].append(n.id)
             node_info["mem_load"] = str(node.mem_load)
             node_info["mem_load_addr"] = node.mem_load_addr
             node_info["mem_store"] = str(node.mem_store)

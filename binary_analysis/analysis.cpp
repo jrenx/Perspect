@@ -30,9 +30,9 @@ using namespace boost;
 /***************************************************************/
 BPatch bpatch;
 bool INFO = true;
-bool DEBUG = false;
-bool DEBUG_SLICE = false;
-bool DEBUG_BIT = false;
+bool DEBUG = true;
+bool DEBUG_SLICE = true;
+bool DEBUG_BIT = true;
 bool DEBUG_STACK = false;
 
 typedef enum {
@@ -1846,6 +1846,9 @@ int getBitMaskDigits(Instruction insn, std::vector<AbsRegion> &regions) {
     MachRegister machReg;
     long off = 0;
     getRegAndOff((*oit).getValue(), &machReg, &off);
+    // TODO: right way to do this is to recurse exhaustively to find constant definitions
+    // for now if we don't find any we just return
+    if (off == 0) digits = -1;
     while (off > 0) {
       digits += off*0x1;
       off = off >> 1;
@@ -2009,7 +2012,7 @@ void locateBitVariables(GraphPtr slice,
       }
       int bitMaskDigits = getBitMaskDigits(assign->insn(), regions);
       cout << "[bit_var] number of digits in bit mask: " << bitMaskDigits << endl;
-      if (bitMaskDigits != 1) {
+      if (bitMaskDigits != 1 && bitMaskDigits != -1) {
         cout << "[bit_var][warn] unhandled bit mask... " << endl;
         continue;
       }

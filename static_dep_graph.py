@@ -49,15 +49,15 @@ class BasicBlock:
             s += str([pdom.id for pdom in self.pdoms])
         s += " \n"
 
-        s += "      predecessors: ["
+        s += "      predecessors: "
         s += str([prede.id for prede in self.predes])
-        s += "] \n"
-        s += "      successors: ["
+        s += " \n"
+        s += "      successors: "
         s += str([succe.id for succe in self.succes])
-        s += "] \n"
-        s += "      backedge targets: ["
+        s += " \n"
+        s += "      backedge targets: "
         s += str([target.id for target in self.backedge_targets])
-        s += "] \n"
+        s += " \n"
         return s
 
 class CFG:
@@ -132,7 +132,7 @@ class CFG:
         if bb not in self.postorder_list:
             self.postorder_list.append(bb)
 
-    def simplify(self):
+    def simplify(self, final=False):
         for entry in self.entry_bbs:
             visited = set([])
             self.postorderTraversal(entry, visited)
@@ -208,6 +208,7 @@ class CFG:
                     " is immediately post dominated by: " + \
                     str(bb.immed_pdom.lines))
 
+        remove_count = 0
         ignore_set = set() # call it ignore set
         for bb in reversed(self.postorder_list):
             if DEBUG_SIMPLIFY: print("[Simplify] can BB: " + str(bb.id) + " " + str(bb.lines) + " be removed? immed pdom is " \
@@ -255,41 +256,49 @@ class CFG:
                 continue
 
             #remove_set.add(bb) not really needed
-            """
-            for prede in bb.predes:
-                if bb in prede.succes:
-                    prede.succes.remove(bb)
-                if bb.immed_pdom not in prede.succes:
-                    prede.succes.append(bb.immed_pdom)
-                if prede not in bb.immed_pdom.predes:
-                    bb.immed_pdom.predes.append(prede)
-            """
+            if final is True:
+                print("[static_dep]Updating the predecessors and successors for bb: " + str(bb.id))
+                for prede in bb.predes:
+                    if bb in prede.succes:
+                        prede.succes.remove(bb)
+                    if bb.immed_pdom not in prede.succes:
+                        prede.succes.append(bb.immed_pdom)
+                    if prede not in bb.immed_pdom.predes:
+                        bb.immed_pdom.predes.append(prede)
+
             for child_bb in all_succes_before_immed_pdom:
-                if DEBUG_SIMPLIFY: print("[Simplify] Removing child BB: " + str(child_bb.id) + " " + str(child_bb.lines))
-                #if child_bb in bb.immed_pdom.predes:
-                #    bb.immed_pdom.predes.remove(child_bb)
+                #if DEBUG_SIMPLIFY:
+                print("[Simplify] Removing child BB: " + str(child_bb.id) + " " + str(child_bb.lines))
+                remove_count += 1
+                if final is True:
+                    if child_bb in bb.immed_pdom.predes:
+                        bb.immed_pdom.predes.remove(child_bb)
                 if child_bb.id in self.id_to_bb_in_slice:
                     del self.id_to_bb_in_slice[child_bb.id]
                 if child_bb in self.ordered_bbs_in_slice:
                     self.ordered_bbs_in_slice.remove(child_bb)
                 ignore_set.add(child_bb)
+        print("[Simplify] Total number of BBs removed: " + str(remove_count))
 
-    def slice(self):
+    def slice(self, final=False):
         self.sliced = True
         # Find all the control flow predecessors of the given instruction
         # https://stackoverflow.com/questions/35206372/understanding-stacks-and-queues-in-python/35206452
         worklist = deque()
         for bb in self.target_bbs:
             worklist.append(bb)
+        visited = set([])
         while len(worklist) > 0:
             bb = worklist.popleft()
-            if bb.id in self.id_to_bb_in_slice:
+            if bb.id in visited:
                 if DEBUG_SLICE: print("Already visited: " + str(bb.id))
                 continue
+            visited.add(bb.id)
 
             if DEBUG_SLICE: print("Adding bb to slice: " + str(bb.id))
             self.id_to_bb_in_slice[bb.id] = bb
-            self.ordered_bbs_in_slice.append(bb)
+            if bb not in self.ordered_bbs_in_slice:
+                self.ordered_bbs_in_slice.append(bb)
             for prede in bb.predes:
                 if bb in prede.backedge_targets:
                     if DEBUG_SLICE: print("  Ignoring prede " + str(prede.id) + " because it is part of a backedge")
@@ -302,10 +311,11 @@ class CFG:
                 print(str(bb))
         assert len(self.id_to_bb_in_slice) == len(self.ordered_bbs_in_slice), \
             str(len(self.id_to_bb_in_slice)) + " " + str(len(self.ordered_bbs_in_slice))
-        print("[static_dep] Total number of basic blocks after slicing: " + str(len(self.ordered_bbs_in_slice)))
+        print("[static_dep] Total number of basic blocks after slicing: " + str(len(self.ordered_bbs_in_slice)) + \
+              str([bb.id for bb in self.ordered_bbs_in_slice]))
 
         # Simplify the slice
-        self.simplify()
+        self.simplify(final)
 
         if DEBUG_SLICE: print("=======================================================")
         if DEBUG_SLICE:
@@ -313,7 +323,8 @@ class CFG:
                 print(str(bb))
         assert len(self.id_to_bb_in_slice) == len(self.ordered_bbs_in_slice), \
             str(len(self.id_to_bb_in_slice)) + " " + str(len(self.ordered_bbs_in_slice))
-        print("[static_dep] Total number of basic blocks after simplifying: " + str(len(self.ordered_bbs_in_slice)))
+        print("[static_dep] Total number of basic blocks after simplifying: " + str(len(self.ordered_bbs_in_slice)) + \
+              str([bb.id for bb in self.ordered_bbs_in_slice]))
 
     def build(self, insn):
         self.built = True
@@ -377,9 +388,9 @@ class CFG:
                     backedge_target_id = int(json_backedge_target['id'])
                     backedge_targets.append(self.id_to_bb[backedge_target_id])
                 self.id_to_bb[bb_id].backedge_targets = backedge_targets
-        if DEBUG_CFG:
-            for bb in self.ordered_bbs:
-                print(str(bb))
+        #if DEBUG_CFG:
+        for bb in self.ordered_bbs:
+            print(str(bb))
         assert len(self.id_to_bb) == len(self.ordered_bbs), \
             str(len(self.id_to_bb)) + " " + str(len(self.ordered_bbs))
         print("[static_dep] number of basic blocks in the entire cfg: " + str(len(self.ordered_bbs)))
@@ -447,7 +458,7 @@ class StaticNode:
 
     def __str__(self):
         s = "===============================================\n"
-        s += "   Node id: " + str(self.id) + "\n"
+        s += "   Node id: " + str(self.id) + "__\n"
         s += " insn addr: " + str(hex(self.insn)) + "\n"
         if self.bb is not None:
             s += "      lines: " + str(self.bb.lines) + "\n"
@@ -521,8 +532,8 @@ class StaticDepGraph:
 
         self.bb_id_to_node_id = {}
 
-        self.nodes_in_cf_slice = []
-        self.nodes_in_df_slice = []
+        self.nodes_in_cf_slice = set([])
+        self.nodes_in_df_slice = set([])
 
     def make_or_get_df_node(self, insn, bb, function): #TODO: think this through again
         node = self.make_node(insn, bb, function)
@@ -598,7 +609,6 @@ class StaticDepGraph:
 
     @staticmethod
     def buildDependencies(insn, func, prog):
-
         rr_result_file = os.path.join(curr_dir, 'rr_results.json')
         rr_result_size = 0
         if os.path.exists(rr_result_file):
@@ -619,7 +629,7 @@ class StaticDepGraph:
             worklist = deque()
             worklist.append([insn, func, prog, None])
             while len(worklist) > 0:
-                if iteration >= 1000:
+                if iteration >= 1:
                     break
                 iteration += 1
                 print("[static_dep] Running analysis at iteration: " + str(iteration))
@@ -634,13 +644,24 @@ class StaticDepGraph:
 
             total_count = 0
             for func in StaticDepGraph.func_to_graph:
+                graph = StaticDepGraph.func_to_graph[func]
+                target_bbs = set([])
+                graph.buildControlFlowDependencies(target_bbs, True)
+                #for n in graph.nodes_in_cf_slice:
+                #    print(str(n))
+                #for n in graph.nodes_in_df_slice:
+                #    print(str(n))
+
+            for func in StaticDepGraph.func_to_graph:
                 print("[static_dep] " + func + " has " + str(len(StaticDepGraph.func_to_graph[func].nodes_in_cf_slice)) + " cf nodes and " \
                       + str(len(StaticDepGraph.func_to_graph[func].nodes_in_df_slice)) + " df nodes")
                 total_count += len(StaticDepGraph.func_to_graph[func].nodes_in_cf_slice)
                 total_count += len(StaticDepGraph.func_to_graph[func].nodes_in_df_slice)
-            print("[static_dep] Total number of nodes: " + str(total_count))
+            print("[static_dep] Total number of static nodes: " + str(total_count))
+
         except Exception as e:
             print("Caught exception: " + str(e))
+            raise e
         except KeyboardInterrupt:
             print('Interrupted')
         finally:
@@ -652,6 +673,8 @@ class StaticDepGraph:
                 print("Persisting sa result file")
                 with open(sa_result_file, 'w') as f:
                     json.dump(StaticDepGraph.sa_result_cache, f)
+
+
 
 
     @staticmethod
@@ -705,7 +728,7 @@ class StaticDepGraph:
                 assert df_node.bb is None, df_node
                 defs_in_same_func.add(df_node)
                 if df_node not in graph.nodes_in_df_slice:
-                    graph.nodes_in_df_slice.append(df_node)
+                    graph.nodes_in_df_slice.add(df_node)
                 df_node = None
                 # TODO, also need to do dataflow tracing for this one!!
             graph.mergeDataFlowNodes(defs_in_same_func)
@@ -748,6 +771,14 @@ class StaticDepGraph:
             bb = node.bb
             if bb.ends_in_branch is False:
                 continue
+            succe_count = 0
+            for succe in bb.succes:
+                if succe.id in self.cfg.id_to_bb_in_slice:
+                    succe_count += 1
+            print("succe_count: " + str(succe_count) + " of bb " + str(bb.lines))
+            if succe_count == 0:
+                continue
+
             insn = bb.last_insn
             #print(hex(insn))
             slice_starts.append(["", insn, func, False])
@@ -795,7 +826,7 @@ class StaticDepGraph:
                         pass
                     else:
                         print("type not supported " + str(type))
-                        raise Exception
+                        #raise Exception
                     if curr_func != func:
                         defs_in_diff_func.add(prede)
                     else:
@@ -880,7 +911,7 @@ class StaticDepGraph:
             for node in defs_in_diff_func:
                 print(str(node))
 
-        self.nodes_in_df_slice.extend(defs_in_same_func)
+        self.nodes_in_df_slice = self.nodes_in_df_slice.union(set(defs_in_same_func))
         print("[static_dep] Total number of nodes in data flow slice: " + str(len(self.nodes_in_df_slice)) + " " + \
               str([hex(node.insn) for node in self.nodes_in_df_slice]))
 
@@ -904,7 +935,7 @@ class StaticDepGraph:
                 continue
             self.bb_id_to_node_id[bb.id] = node.id
             if bb.id in self.cfg.id_to_bb_in_slice:
-                self.nodes_in_cf_slice.append(node)
+                self.nodes_in_cf_slice.add(node)
 
 
         print("[static_dep] Total initial number of nodes in control flow slice: " + str(len(self.nodes_in_cf_slice)) + " " + \
@@ -914,13 +945,17 @@ class StaticDepGraph:
                 print(str(self.id_to_node[node_id]))
 
 
-    def buildControlFlowDependencies(self, target_bbs):
+    def buildControlFlowDependencies(self, target_bbs, final=False):
         self.cfg.target_bbs = self.cfg.target_bbs.union(target_bbs)
-        self.cfg.slice()
+        self.cfg.slice(final)
+
         for bb_id in self.cfg.id_to_bb_in_slice:
             bb = self.cfg.id_to_bb[bb_id]
             node_id = self.bb_id_to_node_id[bb_id]
             node = self.id_to_node[node_id]
+            if final is True:
+                node.cf_predes = []
+                node.cf_succes = []
             for prede in bb.predes:
                 prede_node_id = self.bb_id_to_node_id[prede.id]
                 if self.id_to_node[prede_node_id] not in node.cf_predes:
@@ -930,7 +965,7 @@ class StaticDepGraph:
                 if self.id_to_node[succe_node_id] not in node.cf_succes:
                     node.cf_succes.append(self.id_to_node[succe_node_id])
             if node not in self.nodes_in_cf_slice:
-                self.nodes_in_cf_slice.append(node)
+                self.nodes_in_cf_slice.add(node)
         print("[static_dep] Total number of nodes in control flow slice: " + str(len(self.nodes_in_cf_slice)) + " " + \
               str([hex(node.insn) for node in self.nodes_in_cf_slice]))
         if VERBOSE:
