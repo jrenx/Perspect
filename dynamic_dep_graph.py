@@ -321,6 +321,7 @@ class DynamicGraph:
             if is_backedge:
                 if insn == str(hex(previous_node.staticNode.insn)):
                     is_backedge = False
+                    continue
                 else:
                     continue
 
