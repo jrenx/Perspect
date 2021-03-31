@@ -124,7 +124,7 @@ class DynamicDependence:
         for graph in StaticDepGraph.func_to_graph.values():
             for node in graph.nodes_in_cf_slice:
                 self.all_static_cf_nodes.append(node)
-                i += 1
+                #i += 1
 
         for node in self.all_static_cf_nodes:
             self.insn_to_nodes[str(hex(node.insn))] = node
