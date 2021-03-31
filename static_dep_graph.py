@@ -256,8 +256,10 @@ class CFG:
                 continue
 
             #remove_set.add(bb) not really needed
+            all_predes = []
+            all_predes.extend(bb.predes)
             if final is True:
-                print("[static_dep]Updating the predecessors and successors for bb: " + str(bb.id))
+                print("[static_dep] Updating the predecessors and successors for bb: " + str(bb.id))
                 for prede in bb.predes:
                     if bb in prede.succes:
                         prede.succes.remove(bb)
@@ -266,9 +268,12 @@ class CFG:
                     if prede not in bb.immed_pdom.predes:
                         bb.immed_pdom.predes.append(prede)
 
+            has_backedge = False
             for child_bb in all_succes_before_immed_pdom:
                 #if DEBUG_SIMPLIFY:
                 print("[Simplify] Removing child BB: " + str(child_bb.id) + " " + str(child_bb.lines))
+                if len(child_bb.backedge_targets) > 0:
+                    has_backedge = True
                 remove_count += 1
                 if final is True:
                     if child_bb in bb.immed_pdom.predes:
@@ -278,6 +283,9 @@ class CFG:
                 if child_bb in self.ordered_bbs_in_slice:
                     self.ordered_bbs_in_slice.remove(child_bb)
                 ignore_set.add(child_bb)
+            if final is True and has_backedge is True:
+                for prede in all_predes:
+                    prede.backedge_targets.append(bb.immed_pdom)
         print("[Simplify] Total number of BBs removed: " + str(remove_count))
 
     def slice(self, final=False):
@@ -661,7 +669,7 @@ class StaticDepGraph:
 
         except Exception as e:
             print("Caught exception: " + str(e))
-            raise e
+            #raise e
         except KeyboardInterrupt:
             print('Interrupted')
         finally:
