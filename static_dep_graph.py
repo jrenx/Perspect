@@ -508,9 +508,11 @@ class StaticNodeEncoder(JSONEncoder):
 class StaticNode:
     id = 0
 
-    def __init__(self, insn, bb, function):
-        self.id = StaticNode.id
-        StaticNode.id += 1
+    def __init__(self, insn, bb, function, id=None):
+        if id is not None:
+            self.id = id
+        else:
+            self.id = StaticNode.id
         self.insn = insn #FIXME, this is long type right
         self.hex_insn = hex(insn)
         self.function = function #FIXME, maybe rename this to func?
@@ -721,7 +723,7 @@ class StaticDepGraph:
             worklist = deque()
             worklist.append([insn, func, prog, None])
             while len(worklist) > 0:
-                if iteration >= 5:
+                if iteration >= 1:
                     break
                 iteration += 1
                 print("[static_dep] Running analysis at iteration: " + str(iteration))
