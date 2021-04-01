@@ -144,7 +144,7 @@ class DynamicDependence:
             elif node.mem_store != None and node.mem_store.reg != '':
                 instructions[hex(node.insn)] = node.mem_store.reg.lower()
 
-        assert instructions[hex(node.insn)] != ''
+            assert instructions[hex(node.insn)] != ''
         # invoke PIN. get output of a sequence of insn
         trace = InsRegTrace(path + prog + ' ' + path + arg,
                          pin='~/pin-3.11/pin')
@@ -741,7 +741,8 @@ if __name__ == '__main__':
     dynamic_graph = DynamicDependence()
     time_record["start_time"] = time.time()
     print("[TIME]Start time: ", time.asctime(time.localtime(time_record["start_time"])))
-    dynamic_graph.buildDynamicDep(0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
+    #dynamic_graph.buildDynamicDep(0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
+    dynamic_graph.buildDynamicDep(0x409418, "scanblock", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
 
     print("[Summary] Get Slice: ", str(time_record["get_slice_start"]-time_record["start_time"]))
     print("[Summary] Invoke Pin: ", str(time_record["invoke_pin"] - time_record["get_slice_start"]))
