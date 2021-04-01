@@ -8,7 +8,7 @@ from collections import OrderedDict
 from json import JSONEncoder
 
 DEBUG_CFG = False
-DEBUG_SIMPLIFY = False
+DEBUG_SIMPLIFY = True
 DEBUG_SLICE = False
 VERBOSE = False
 curr_dir = os.path.dirname(os.path.realpath(__file__))
@@ -212,9 +212,11 @@ class CFG:
 
         remove_count = 0
         ignore_set = set() # call it ignore set
+        updated_set = set()
         for bb in reversed(self.postorder_list):
             if DEBUG_SIMPLIFY: print("[Simplify] can BB: " + str(bb.id) + " " + str(bb.lines) + " be removed? immed pdom is " \
-                  + (str(bb.immed_pdom.id) if bb.immed_pdom is not None else str(bb.immed_pdom)))
+                  + (str(bb.immed_pdom.id) if bb.immed_pdom is not None else str(bb.immed_pdom)) + " "\
+                  + (str(bb.immed_pdom.lines) if bb.immed_pdom is not None else str(bb.immed_pdom)))
             if bb.immed_pdom is None:
                 if DEBUG_SIMPLIFY: print("[Simplify]   BB has no immed pdom")
                 continue
@@ -255,13 +257,39 @@ class CFG:
 
             if len(self.target_bbs.intersection(all_succes_before_immed_pdom)) > 0:
                 #ignore_set.union(all_succes_before_immed_pdom) #FIXME, do not assign after union why???
+                if final is True:
+                    print("[simplify] Cannot remove node because target is a child BB, but updating immed pdom: " \
+                          + str(bb.immed_pdom.lines) + " " + str(bb.immed_pdom.id))
+                    if bb.immed_pdom.id in updated_set:
+                        print("[simplify] already updated immed pdom: " \
+                              + str(bb.immed_pdom.lines) + " " + str(bb.immed_pdom.id))
+                        continue
+                    updated_set.add(bb.immed_pdom.id)
+                    has_backedge = False
+                    for child_bb in all_succes_before_immed_pdom:
+                        if child_bb in bb.immed_pdom.predes:
+                            bb.immed_pdom.predes.remove(child_bb)
+                            assert bb.immed_pdom in child_bb.succes
+                            child_bb.succes.remove(bb.immed_pdom)
+                        if len(child_bb.backedge_targets) > 0:
+                            has_backedge = True
+                    if has_backedge is True:
+                        for prede in bb.predes:
+                            prede.backedge_targets.append(bb.immed_pdom)
+                            bb.immed_pdom.backedge_sources.append(prede)
+                    if bb not in bb.immed_pdom.predes:
+                        bb.immed_pdom.predes.append(bb)
+                    #for prede in bb.predes:
+                    #    if prede not in bb.immed_pdom.predes:
+                    #        bb.immed_pdom.predes.append(prede)
+                    print("[simplify] new predecessors are: " + str([prede.lines for prede in bb.immed_pdom.predes]))
                 continue
 
             #remove_set.add(bb) not really needed
             all_predes = []
             all_predes.extend(bb.predes)
             if final is True:
-                print("[static_dep] Updating the predecessors and successors for bb: " + str(bb.id))
+                print("[simplify] Updating the predecessors and successors for bb: " + str(bb.id))
                 for prede in bb.predes:
                     if bb in prede.succes:
                         prede.succes.remove(bb)
@@ -1072,4 +1100,5 @@ class StaticDepGraph:
                 print(str(node))
 
 if __name__ == "__main__":
-    StaticDepGraph.buildDependencies(0x409daa, "sweep", "909_ziptest_exe9")
+    #StaticDepGraph.buildDependencies(0x409daa, "sweep", "909_ziptest_exe9")
+    StaticDepGraph.buildDependencies(0x409418, "scanblock", "909_ziptest_exe9")
