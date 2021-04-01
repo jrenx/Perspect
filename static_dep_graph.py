@@ -5,6 +5,7 @@ from rr_util import *
 from pin_util import *
 from collections import deque
 from collections import OrderedDict
+from json import JSONEncoder
 
 DEBUG_CFG = False
 DEBUG_SIMPLIFY = False
@@ -24,6 +25,7 @@ class BasicBlock:
         self.immed_pdom = None
         self.pdoms = None
         self.backedge_targets = []
+        self.backedge_sources = []
         self.predes = []
         self.succes = []
 
@@ -286,6 +288,7 @@ class CFG:
             if final is True and has_backedge is True:
                 for prede in all_predes:
                     prede.backedge_targets.append(bb.immed_pdom)
+                    bb.immed_pdom.backedge_sources.append(prede)
         print("[Simplify] Total number of BBs removed: " + str(remove_count))
 
     def slice(self, final=False):
@@ -404,7 +407,12 @@ class CFG:
         print("[static_dep] number of basic blocks in the entire cfg: " + str(len(self.ordered_bbs)))
 
 
-class MemoryAccess:
+class MemoryAccessEncoder(JSONEncoder):
+    def default(self, o):
+        return o.__dict__
+
+
+class MemoryAccess(JSONEncoder):
     def __init__(self, reg, shift, off, off_reg, is_bit_var):
         self.reg = reg
         self.shift = shift
@@ -412,6 +420,9 @@ class MemoryAccess:
         self.off_reg = off_reg
         self.is_bit_var = is_bit_var
 
+    #def toJSON(self):
+    #    return json.dumps(self, default=lambda o: o.__dict__,
+    #        sort_keys=True, indent=4)
     def __str__(self):
         s = " address: " + str(self.reg) + " * " \
             + str(self.shift) + " + " + str(self.off)
@@ -421,6 +432,78 @@ class MemoryAccess:
             s += " is bit var: " + str(self.is_bit_var)# + "\n"
         return s
 
+class StaticNodeEncoder(JSONEncoder):
+    def default(self, o):
+        staticNode = {}
+
+        staticNode["id"] = node.id
+        staticNode["insn"] = node.insn  # FIXME, this is long type right
+        staticNode["function"] = node.function  # FIXME, maybe rename this to func?
+        staticNode["explained"] = node.explained
+
+        staticNode["is_cf"] = node.is_cf
+        staticNode["bb"] = None
+
+        if node.bb:
+            basicBlock = {}
+
+            basicBlock["id"] = node.bb.id
+            basicBlock["start_insn"] = node.bb.start_insn
+            basicBlock["last_insn"] = node.bb.last_insn
+            basicBlock["lines"] = node.bb.lines
+            basicBlock["ends_in_branch"] = node.bb.ends_in_branch
+            basicBlock["is_entry"] = node.bb.is_entry
+            if node.bb.immed_dom:
+                basicBlock["immed_dom"] = node.bb.immed_dom.id
+            if node.bb.immed_pdom:
+                basicBlock["immed_pdom"] = node.bb.immed_pdom.id
+            basicBlock["pdoms"] = []
+            if node.bb.pdoms:
+                for n in node.bb.pdoms:
+                    basicBlock["pdoms"].append(n.id)
+            basicBlock["backedge_targets"] = []
+            if node.bb.backedge_targets:
+                for n in node.bb.backedge_targets:
+                    basicBlock["backedge_targets"].append(n.id)
+            basicBlock["predes"] = []
+            if node.bb.predes:
+                for n in node.bb.predes:
+                    basicBlock["predes"].append(n.id)
+            basicBlock["succes"] = []
+            if node.bb.succes:
+                for n in node.bb.succes:
+                    basicBlock["succes"].append(n.id)
+
+            staticNode["bb"] = json.dumps(basicBlock)
+
+        staticNode["cf_predes"] = []
+        if node.cf_predes:
+            for n in node.cf_predes:
+                staticNode["cf_predes"].append(n.id)
+        staticNode["cf_succes"] = []
+        if node.cf_succes:
+            for n in node.cf_succes:
+                staticNode["cf_succes"].append(n.id)
+
+        staticNode["is_df"] = node.is_df
+        staticNode["mem_load"] = str(node.mem_load)
+        staticNode["reg_load"] = str(node.reg_load)
+
+        staticNode["mem_store"] = str(node.mem_store)
+        staticNode["reg_store"] = str(node.reg_store)
+
+        staticNode["df_predes"] = []
+        if node.df_predes:
+            for n in node.df_predes:
+                staticNode["df_predes"].append(n.id)
+        staticNode["df_succes"] = []
+        if node.df_succes:
+            for n in node.df_succes:
+                staticNode["df_succes"].append(n.id)
+
+        return json.dumps(staticNode)
+
+        return o.__dict__
 
 class StaticNode:
     id = 0
@@ -429,6 +512,7 @@ class StaticNode:
         self.id = StaticNode.id
         StaticNode.id += 1
         self.insn = insn #FIXME, this is long type right
+        self.hex_insn = hex(insn)
         self.function = function #FIXME, maybe rename this to func?
         self.explained = False
 
@@ -617,7 +701,7 @@ class StaticDepGraph:
 
     @staticmethod
     def buildDependencies(insn, func, prog):
-        rr_result_file = os.path.join(curr_dir, 'rr_results.json')
+        rr_result_file = os.path.join(curr_dir, 'rr_results_' + prog + '.json')
         rr_result_size = 0
         if os.path.exists(rr_result_file):
             with open(rr_result_file) as file:
@@ -625,7 +709,7 @@ class StaticDepGraph:
                 rr_result_size = len(StaticDepGraph.rr_result_cache)
 
         sa_result_size = 0
-        sa_result_file = os.path.join(curr_dir, 'sa_results.json')
+        sa_result_file = os.path.join(curr_dir, 'sa_results_' + prog + '.json')
         if os.path.exists(sa_result_file):
             with open(sa_result_file) as cache_file:
                 StaticDepGraph.sa_result_cache = json.load(cache_file)
@@ -637,7 +721,7 @@ class StaticDepGraph:
             worklist = deque()
             worklist.append([insn, func, prog, None])
             while len(worklist) > 0:
-                if iteration >= 1:
+                if iteration >= 5:
                     break
                 iteration += 1
                 print("[static_dep] Running analysis at iteration: " + str(iteration))
@@ -655,10 +739,10 @@ class StaticDepGraph:
                 graph = StaticDepGraph.func_to_graph[func]
                 target_bbs = set([])
                 graph.buildControlFlowDependencies(target_bbs, True)
-                #for n in graph.nodes_in_cf_slice:
-                #    print(str(n))
-                #for n in graph.nodes_in_df_slice:
-                #    print(str(n))
+                for n in graph.nodes_in_cf_slice:
+                    print(str(n))
+                for n in graph.nodes_in_df_slice:
+                    print(str(n))
 
             for func in StaticDepGraph.func_to_graph:
                 print("[static_dep] " + func + " has " + str(len(StaticDepGraph.func_to_graph[func].nodes_in_cf_slice)) + " cf nodes and " \
@@ -666,10 +750,9 @@ class StaticDepGraph:
                 total_count += len(StaticDepGraph.func_to_graph[func].nodes_in_cf_slice)
                 total_count += len(StaticDepGraph.func_to_graph[func].nodes_in_df_slice)
             print("[static_dep] Total number of static nodes: " + str(total_count))
-
         except Exception as e:
             print("Caught exception: " + str(e))
-            #raise e
+            raise e
         except KeyboardInterrupt:
             print('Interrupted')
         finally:
@@ -820,6 +903,8 @@ class StaticDepGraph:
                 curr_func = load[8]
                 if read_same_as_write is True:
                     continue
+                assert shift != '', str(load)
+                assert off != '', str(load)
 
                 prede = self.make_or_get_df_node(prede_insn, None, curr_func) #TODO, might need to include func here too
                 if prede.explained is False:
@@ -888,8 +973,9 @@ class StaticDepGraph:
                     continue
 
                 prede_reg = load[0]
-                shift = load[1]
-                off = load[2]
+                shift = '0' if load[1] == '' else load[1]
+                off = '0' if load[2] == '' else load[2]
+
                 #print(str(prede_insn))
                 prede = self.make_or_get_df_node(prede_insn, None, curr_func)
                 if prede.explained is False:
@@ -965,10 +1051,15 @@ class StaticDepGraph:
                 node.cf_predes = []
                 node.cf_succes = []
             for prede in bb.predes:
+                #assert prede not in bb.backedge_targets, str(bb)
+                if prede in bb.backedge_sources:
+                    continue
                 prede_node_id = self.bb_id_to_node_id[prede.id]
                 if self.id_to_node[prede_node_id] not in node.cf_predes:
                     node.cf_predes.append(self.id_to_node[prede_node_id])
             for succe in bb.succes:
+                if succe in bb.backedge_targets:
+                    continue
                 succe_node_id = self.bb_id_to_node_id[succe.id]
                 if self.id_to_node[succe_node_id] not in node.cf_succes:
                     node.cf_succes.append(self.id_to_node[succe_node_id])
