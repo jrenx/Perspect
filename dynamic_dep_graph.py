@@ -132,34 +132,33 @@ class DynamicDependence:
         self.insn_of_local_df_nodes = []
         self.insn_of_remote_df_nodes = []
 
-    def getDynamicExecutable(self, prog, arg, path):
+    def getDynamicExecutable(self, prog, arg, path, repeat=False):
+        if repeat is not True:
+            instructions = {}
+            for node in self.all_static_cf_nodes:
+                instructions[hex(node.insn)] = 'pc'
 
-        instructions = {}
-        for node in self.all_static_cf_nodes:
-            instructions[hex(node.insn)] = 'pc'
-
-        for node in self.all_static_df_nodes:
-            # trace local
-            if node.mem_load != None and node.mem_load.reg != '':
-                instructions[hex(node.insn)] = node.mem_load.reg.lower()
-            # trace remote
-            elif node.mem_store != None and node.mem_store.reg != '':
-                instructions[hex(node.insn)] = node.mem_store.reg.lower()
-
-            assert instructions[hex(node.insn)] != ''
-        # invoke PIN. get output of a sequence of insn
-        trace = InsRegTrace(path + prog + ' ' + path + arg,
-                         pin='~/pin-3.11/pin')
-        trace.run_function_trace(instructions)
+            for node in self.all_static_df_nodes:
+                # trace local
+                if node.mem_load != None and node.mem_load.reg != '':
+                    instructions[hex(node.insn)] = node.mem_load.reg.lower()
+                # trace remote
+                elif node.mem_store != None and node.mem_store.reg != '':
+                    instructions[hex(node.insn)] = node.mem_store.reg.lower()
+                if hex(node.insn) in instructions:
+                    assert instructions[hex(node.insn)] != ''
+            # invoke PIN. get output of a sequence of insn
+            trace = InsRegTrace(path + prog + ' ' + path + arg,
+                             pin='~/pin-3.11/pin')
+            trace.run_function_trace(instructions)
         executable_path = os.path.join(curr_dir, 'pin', 'instruction_trace.out')
-        #executable_path = os.path.join(curr_dir, 'pin', 'result')
-
         return executable_path
 
     def getSlice(self, insn, func, prog):
 
-        # Get slice
+        # Get slice #TODO, add a cache here
         StaticDepGraph.buildDependencies(insn, func, prog)
+
         for graph in StaticDepGraph.func_to_graph.values():
             for node in graph.nodes_in_cf_slice:
                 self.all_static_cf_nodes.append(node)
