@@ -60,6 +60,9 @@ class BasicBlock:
         s += "      backedge targets: "
         s += str([target.id for target in self.backedge_targets])
         s += " \n"
+        s += "      backedge sources: "
+        s += str([source.id for source in self.backedge_sources])
+        s += " \n"
         return s
 
 class CFG:
@@ -422,11 +425,10 @@ class CFG:
 
             if 'backedge_targets' in json_bb:
                 json_backedge_targets = json_bb['backedge_targets']
-                backedge_targets = []
                 for json_backedge_target in json_backedge_targets:
                     backedge_target_id = int(json_backedge_target['id'])
-                    backedge_targets.append(self.id_to_bb[backedge_target_id])
-                self.id_to_bb[bb_id].backedge_targets = backedge_targets
+                    self.id_to_bb[bb_id].backedge_targets.append(self.id_to_bb[backedge_target_id])
+                    self.id_to_bb[backedge_target_id].backedge_sources.append(self.id_to_bb[bb_id])
         #if DEBUG_CFG:
         for bb in self.ordered_bbs:
             print(str(bb))
@@ -767,6 +769,7 @@ class StaticDepGraph:
                 graph = StaticDepGraph.func_to_graph[func]
                 target_bbs = set([])
                 graph.buildControlFlowDependencies(target_bbs, True)
+                graph.mergeDataFlowNodes(graph.nodes_in_df_slice, True)
                 for n in graph.nodes_in_cf_slice:
                     print(str(n))
                 for n in graph.nodes_in_df_slice:
@@ -856,21 +859,27 @@ class StaticDepGraph:
 
 
     #FIXME, think about if this makes sense
-    def mergeDataFlowNodes(self, df_nodes):
+    def mergeDataFlowNodes(self, df_nodes, final=False):
         if len(self.cfg.ordered_bbs) == 0:
             print("[static_dep][warn] Failed to load the cfg, ignoring merging the datanode...")
             return
+        if final is False:
+            return
         for node in df_nodes:
             assert node.is_df is True
-            assert node.explained is False, str(node)
+            if not final: assert node.explained is False, str(node)
             node.explained = True
             bb = self.cfg.getBB(node.insn)
             node.bb = bb
             for prede in bb.predes:
+                if prede in bb.backedge_sources:
+                    continue
                 prede_node_id = self.bb_id_to_node_id[prede.id]
                 if self.id_to_node[prede_node_id] not in node.cf_predes:
                     node.cf_predes.append(self.id_to_node[prede_node_id])
             for succe in bb.succes:
+                if succe in bb.backedge_targets:
+                    continue
                 succe_node_id = self.bb_id_to_node_id[succe.id]
                 if self.id_to_node[succe_node_id] not in node.cf_succes:
                     node.cf_succes.append(self.id_to_node[succe_node_id])
