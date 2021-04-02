@@ -18,6 +18,8 @@ if os.path.exists(target_dir):
 os.makedirs(target_dir)
 
 time_record = {}
+DEBUG_POST_ORDER = False
+DEBUG = False
 
 class DynamicNode(JSONEncoder):
     id = 0
@@ -222,6 +224,11 @@ class DynamicDependence:
                                         self.insn_of_df_nodes, self.insn_of_local_df_nodes,
                                         self.insn_of_remote_df_nodes)
         print("[dyn_dep] total number of nodes: " + str(len(dynamicGraph.dynamicNodes)))
+        for n in dynamicGraph.dynamicNodes:
+            for p in n.cf_predes:
+                assert p.staticNode.id != n.staticNode.id
+            for s in n.cf_succes:
+                assert s.staticNode.id != n.staticNode.id
 
         return dynamicGraph
 
@@ -245,7 +252,10 @@ class DynamicDependence:
         dynamicGraph.findTargetNodes(insn)
         dynamicGraph.buildPostorderList()
         dynamicGraph.buildReversePostorderList()
-        dynamicGraph.groupNodesByInsn()
+        time_record["graph_traversal"] = time.time()
+        print("[TIME] Graph traversal Time: ",
+              time.asctime(time.localtime(time_record["graph_traversal"])))
+        #dynamicGraph.groupNodesByInsn()
         return dynamicGraph
 
 class DynamicGraph:
@@ -264,84 +274,208 @@ class DynamicGraph:
         self.insn_to_static_node = None
         self.postorder_list = []
         self.reverse_postorder_list = []
-        self.entry_nodes = []
-        self.exit_nodes = []
-        self.target_nodes = []
+        self.entry_nodes = set()
+        self.exit_nodes = set()
+        self.target_nodes = set()
         self.insn_to_dyn_nodes = {}
 
+    """
     def groupNodesByInsn(self):
         for node in self.dynamicNodes:
             insn = node.staticNode.insn
             if insn not in self.insn_to_dyn_nodes:
                 self.insn_to_dyn_nodes[insn] = []
             self.insn_to_dyn_nodes[insn].append(node)
+    """
 
-    def reversePostorderTraversalHelper(self, node, visited):
-        if node.id in visited:
-            #print("Node already visited, returning...")
-            return
-        visited.add(node.id)
-        for cf_prede in node.cf_predes:
-            self.reversePostorderTraversalHelper(cf_prede, visited)
-        for df_prede in node.df_predes:
-            self.reversePostorderTraversalHelper(df_prede, visited)
-        #assert node not in self.reverse_postorder_list
-        self.reverse_postorder_list.append(node)
-
+    def print_node(self, prefix, n):
+        print(prefix
+              + " d_id: " + str(n.id) + " s_id: " + str(n.staticNode.id)
+              + " insn: " + n.staticNode.hex_insn + " lines: " + str(n.staticNode.bb.lines)
+              + " cf ps: " + str([pp.id for pp in n.cf_predes])
+              + " df ps: " + str([pp.id for pp in n.df_predes])
+              + " cf ss: " + str([ps.id for ps in n.cf_succes])
+              + " df ss: " + str([ps.id for ps in n.df_succes]))
+    # a node can be visited if all its predecessors are visited
     def buildReversePostorderList(self):
-        #print("Exit nodes: " + str(len(self.exit_nodes)))
-        visited = set([]) #TODO implement equals for dynamic node?
-        for node in self.exit_nodes:
-            self.reversePostorderTraversalHelper(node, visited)
+        self.reverse_postorder_list = []
+
+        prede_to_node = {}
+        node_to_pending_prede_count = {}
+        all_completed = set()
+        visited = set()
+        worklist = deque()
+        for n in self.entry_nodes:
+            worklist.append(n)
+            if DEBUG_POST_ORDER: self.print_node("Initial  ", n)
+
+        while len(worklist) > 0:
+            curr = worklist.popleft()
+            if DEBUG_POST_ORDER: self.print_node("Visiting ", curr)
+            assert curr not in visited, str(curr in self.reverse_postorder_list) + " " + str(curr in all_completed)
+            visited.add(curr)
+            pending_prede_count = 0
+            for p in curr.cf_predes:
+                if p not in all_completed:
+                    pending_prede_count += 1
+                    if p not in prede_to_node:
+                        prede_to_node[p] = []
+                    prede_to_node[p].append(curr)
+                    if DEBUG_POST_ORDER: self.print_node("Waiting for cf prede  ", p)
+            for p in curr.df_predes:
+                if p not in all_completed:
+                    pending_prede_count += 1
+                    if p not in prede_to_node:
+                        prede_to_node[p] = []
+                    prede_to_node[p].append(curr)
+                    if DEBUG_POST_ORDER: self.print_node("Waiting for df prede  ", p)
+            if pending_prede_count == 0:
+                completed = curr
+                repeat = True
+                while repeat:
+                    repeat = False
+                    #assert completed not in self.reverse_postorder_list
+                    self.reverse_postorder_list.append(completed)
+                    assert completed not in all_completed
+                    all_completed.add(completed)
+                    if DEBUG_POST_ORDER: self.print_node("Adding   ", completed)
+                    for s in completed.cf_succes:
+                        if s in node_to_pending_prede_count:
+                            continue
+                        if s in worklist:
+                            continue
+                        assert s not in all_completed
+                        worklist.append(s)
+                        if DEBUG_POST_ORDER: self.print_node("Queuing  ", s)
+                    for s in completed.df_succes:
+                        if s in node_to_pending_prede_count:
+                            continue
+                        if s in worklist:
+                            continue
+                        assert s not in all_completed
+                        if DEBUG_POST_ORDER: self.print_node("Queuing  ", s)
+                    if completed in prede_to_node:
+                        for n in prede_to_node[completed]:
+                            node_to_pending_prede_count[n] = node_to_pending_prede_count[n] - 1
+                            if DEBUG_POST_ORDER: self.print_node("Current count: " + str(node_to_pending_prede_count[n]), n)
+                        del prede_to_node[completed]
+                    for n in node_to_pending_prede_count:
+                        assert node_to_pending_prede_count[n] >= 0
+                        if node_to_pending_prede_count[n] == 0:
+                            completed = n
+                            repeat = True
+                            break
+                    if repeat is True:
+                        del node_to_pending_prede_count[completed]
+            else:
+                node_to_pending_prede_count[curr] = pending_prede_count
+
+        if DEBUG_POST_ORDER: print("Total remaining: " + str(len(node_to_pending_prede_count)))
+        if DEBUG_POST_ORDER:
+            for n in node_to_pending_prede_count:
+                self.print_node("Remaining count: " + str(node_to_pending_prede_count[n]), n)
+        #assert len(node_to_pending_prede_count) == 0, str(len(node_to_pending_prede_count))
+        #assert len(prede_to_node) == 0, str(len(prede_to_node))
         print("[dyn_dep] total number of nodes in reverse postorder_list: " + str(len(self.reverse_postorder_list)))
 
-    def postorderTraversalHelper(self, node, visited):
-        if node.id in visited:
-            #print("Node already visited, returning...")
-            return
-        visited.add(node.id)
-        for cf_succe in node.cf_succes:
-            self.postorderTraversalHelper(cf_succe, visited)
-        for df_succe in node.df_succes:
-            self.postorderTraversalHelper(df_succe, visited)
-        #assert node not in self.postorder_list
-        self.postorder_list.append(node)
-
+    # a node can be visited if all its successors are visited
     def buildPostorderList(self):
-        #print("Entry nodes: " + str(len(self.entry_nodes)))
-        visited = set([]) #TODO implement equals for dynamic node?
-        for node in self.entry_nodes:
-            self.postorderTraversalHelper(node, visited)
-        print("[dyn_dep] total number of nodes in postorder_list: " + str(len(self.postorder_list)))
-        dynamicNodeIds = set([])
-        for node in self.dynamicNodes:
-            dynamicNodeIds.add(node.id)
-        mismatch_count = 0
-        duplicate_count = 0
-        postorder_list_ids = set([])
-        for node in self.postorder_list:
-            if node.id not in postorder_list_ids:
-                postorder_list_ids.add(node.id)
+        self.postorder_list = []
+
+        succe_to_node = {}
+        node_to_pending_succe_count = {}
+        all_completed = set()
+        visited = set()
+        worklist = deque()
+        for n in self.exit_nodes:
+            worklist.append(n)
+            if DEBUG_POST_ORDER: self.print_node("Initial  ", n)
+
+        while len(worklist) > 0:
+            curr = worklist.popleft()
+            if DEBUG_POST_ORDER: self.print_node("Visiting ", curr)
+            assert curr not in visited, str(curr in self.postorder_list) + " " + str(curr in all_completed)
+            visited.add(curr)
+            pending_succe_count = 0
+            for s in curr.cf_succes:
+                if s not in all_completed:
+                    pending_succe_count += 1
+                    if s not in succe_to_node:
+                        succe_to_node[s] = []
+                    succe_to_node[s].append(curr)
+                    if DEBUG_POST_ORDER: self.print_node("Waiting for cf succe  ", s)
+            for s in curr.df_succes:
+                if s not in all_completed:
+                    pending_succe_count += 1
+                    if s not in succe_to_node:
+                        succe_to_node[s] = []
+                    succe_to_node[s].append(curr)
+                    if DEBUG_POST_ORDER: self.print_node("Waiting for df succe  ", s)
+            if pending_succe_count == 0:
+                completed = curr
+                repeat = True
+                while repeat:
+                    repeat = False
+                    #assert completed not in self.reverse_postorder_list
+                    self.postorder_list.append(completed)
+                    assert completed not in all_completed
+                    all_completed.add(completed)
+                    if DEBUG_POST_ORDER: self.print_node("Adding   ", completed)
+                    for p in completed.cf_predes:
+                        if p in node_to_pending_succe_count:
+                            continue
+                        if p in worklist:
+                            continue
+                        assert p not in all_completed
+                        worklist.append(p)
+                        if DEBUG_POST_ORDER: self.print_node("Queuing    ", p)
+                    for p in completed.df_predes:
+                        if p in node_to_pending_succe_count:
+                            continue
+                        if p in worklist:
+                            continue
+                        assert p not in all_completed
+                        worklist.append(p)
+                        if DEBUG_POST_ORDER: self.print_node("Queuing    ", p)
+                    if completed in succe_to_node:
+                        for n in succe_to_node[completed]:
+                            node_to_pending_succe_count[n] = node_to_pending_succe_count[n] - 1
+                            if DEBUG_POST_ORDER: self.print_node("Current count: " + str(node_to_pending_succe_count[n]), n)
+                        del succe_to_node[completed]
+                    for n in node_to_pending_succe_count:
+                        assert node_to_pending_succe_count[n] >= 0
+                        if node_to_pending_succe_count[n] == 0:
+                            completed = n
+                            repeat = True
+                            break
+                    if repeat is True:
+                        del node_to_pending_succe_count[completed]
             else:
-                duplicate_count += 1
-            if node.id not in dynamicNodeIds:
-                mismatch_count += 1
-        print("[dyn_dep] number of nodes in reverse postorder list that are not in dynamic nodes: " + str(mismatch_count))
-        print("[dyn_dep] number of duplicate nodes in reverse postorder list: " + str(duplicate_count))
+                node_to_pending_succe_count[curr] = pending_succe_count
+        if DEBUG_POST_ORDER:
+            print("Total remaining: " + str(len(node_to_pending_succe_count)))
+        if DEBUG_POST_ORDER:
+            for n in node_to_pending_succe_count:
+                self.print_node("Remaining count: " + str(node_to_pending_succe_count[n]), n)
+        #assert len(node_to_pending_succe_count) == 0, str(len(node_to_pending_succe_count))
+        #assert len(succe_to_node) == 0, str(len(succe_to_node))
+        print("[dyn_dep] total number of nodes in postorder_list: " + str(len(self.postorder_list)))
 
 
     def findEntryNodes(self):
-        if len(self.entry_nodes) > 0:
-            return
+        self.entry_nodes = set()
+        #if len(self.entry_nodes) > 0:
+        #    return
         for node in self.dynamicNodes:
             if len(node.cf_predes) == 0 and len(node.df_predes) == 0:
                 assert node not in self.entry_nodes
-                self.entry_nodes.append(node)
+                self.entry_nodes.add(node)
         print("[dyn_dep] total number of entry nodes: " + str(len(self.entry_nodes)))
 
     def findExitNodes(self):
-        if len(self.exit_nodes) > 0:
-            return
+        self.exit_nodes = []
+        #if len(self.exit_nodes) > 0:
+        #    return
         for node in self.dynamicNodes:
             if len(node.cf_succes) == 0 and len(node.df_succes) == 0:
                 assert node not in self.exit_nodes
@@ -349,9 +483,9 @@ class DynamicGraph:
         print("[dyn_dep] total number of exit nodes: " + str(len(self.exit_nodes)))
 
     def findTargetNodes(self, insn):
-        if len(self.target_nodes) > 0:
-            return
-
+        self.target_nodes = []
+        #if len(self.target_nodes) > 0:
+        #    return
         for node in self.exit_nodes:
             if node.staticNode.insn == insn:
                 self.target_nodes.append(node)
@@ -392,7 +526,7 @@ class DynamicGraph:
                     print(node)
                     print(s)
                 #assert node in node.df_predes, str(node) + str(s)
-            #print("Total bad count: " + str(bad_count))
+        print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
     def build_dynamicGraph(self, executable, insn_to_static_node, insn_of_cf_nodes, insn_of_df_nodes,
                            insn_of_local_df_nodes, insn_of_remote_df_nodes):
@@ -403,6 +537,7 @@ class DynamicGraph:
         executable.reverse()
         self.insn_to_static_node = insn_to_static_node
 
+        """
         target_str = str(hex(self.start_insn)) + ": " + str(hex(self.start_insn)) + '\n'
         if target_str in executable:
             index = executable.index(target_str)
@@ -410,6 +545,7 @@ class DynamicGraph:
         else:
             print("There is no target instruction detected during Execution " + str(self.number))
             return
+        """
 
         insn_id = 2
 
@@ -445,6 +581,15 @@ class DynamicGraph:
                 static_node = self.insn_to_static_node[insn]
 
             dynamicNode = DynamicNode(self.insn_to_id[insn], static_node)
+            if insn not in self.insn_to_dyn_nodes:
+                self.insn_to_dyn_nodes[insn] = []
+            self.insn_to_dyn_nodes[insn].append(dynamicNode)
+
+            if DEBUG:
+                print("[dyn_dep] created Dynamic Node id: " + str(dynamicNode.id) \
+                  + " Static Node id: " + str(dynamicNode.staticNode.id) \
+                  + " insn: " + str(dynamicNode.staticNode.hex_insn) \
+                  + " lines: " + str(dynamicNode.staticNode.bb.lines))
             self.dynamicNodes.append(dynamicNode)
             if insn not in self.node_frequence:
                 self.node_frequence[insn] = 0
@@ -456,7 +601,8 @@ class DynamicGraph:
                     assert succe.id != dynamicNode.id
                     succe.cf_predes.append(dynamicNode)
                     dynamicNode.cf_succes.append(succe)
-
+                    assert succe.staticNode.id != dynamicNode.staticNode.id
+                    assert succe.staticNode.hex_insn != dynamicNode.staticNode.hex_insn
                     # Only save the closest pred
                     # TODO, what if actually have 2 predecessors
 
@@ -476,7 +622,7 @@ class DynamicGraph:
             if insn in df_prede_insn_to_succe_node:
                 if insn in insn_of_remote_df_nodes:
                     dynamicNode.mem_store_addr = mem_store_addr
-                    assert mem_store_addr is not None
+                    assert mem_store_addr is not None, dynamicNode
                     assert mem_store_addr in addr_to_df_succe_node
                     
                     for succe in addr_to_df_succe_node[mem_store_addr]:
@@ -535,6 +681,13 @@ class DynamicGraph:
                         cf_prede_insn_to_succe_node[node_insn] = set([dynamicNode])
                     else:
                         cf_prede_insn_to_succe_node[node_insn].add(dynamicNode)
+            if DEBUG:
+                print("[dyn_dep] created Dynamic Node id: " + str(dynamicNode.id) \
+                  + " static cf predes: " + str([p.id for p in dynamicNode.staticNode.cf_predes]) \
+                  + " static cf succes: " + str([s.id for s in dynamicNode.staticNode.cf_succes]))
+                print("[dyn_dep] created Dynamic Node id: " + str(dynamicNode.id) \
+                  + " dynamic cf predes: " + str([p.staticNode.id for p in dynamicNode.cf_predes]) \
+                  + " dynamic cf succes: " + str([s.staticNode.id for s in dynamicNode.cf_succes]))
 
         time_record["build_finsh"] = time.time()
         print("[TIME]Build Dynamic Graph Finish Time: ", time.asctime(time.localtime(time_record["build_finsh"])))
@@ -741,8 +894,8 @@ if __name__ == '__main__':
     dynamic_graph = DynamicDependence()
     time_record["start_time"] = time.time()
     print("[TIME]Start time: ", time.asctime(time.localtime(time_record["start_time"])))
-    #dynamic_graph.buildDynamicDep(0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
-    dynamic_graph.buildDynamicDep(0x409418, "scanblock", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
+    dynamic_graph.buildDynamicDep(0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
+    #dynamic_graph.buildDynamicDep(0x409418, "scanblock", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
 
     print("[Summary] Get Slice: ", str(time_record["get_slice_start"]-time_record["start_time"]))
     print("[Summary] Invoke Pin: ", str(time_record["invoke_pin"] - time_record["get_slice_start"]))
@@ -751,6 +904,7 @@ if __name__ == '__main__':
     print("[Summary] Static Nodes Json Saved: ",
           str(time_record["save_static_nodes_as_json"] - time_record["print_finsh"]))
     print("[Summary] Dynamic Graph Json Saved: ", str(time_record["save_dynamic_graph_as_json"] - time_record["save_static_nodes_as_json"]))
+    print("[Summary] Graph Traversal: ", str(time_record["graph_traversal"] - time_record["save_dynamic_graph_as_json"]))
     #dynamic_graph.buildDynamicDep(0x409408, "scanblock", "909_ziptest_exe9")
 
 
