@@ -30,9 +30,9 @@ using namespace boost;
 /***************************************************************/
 BPatch bpatch;
 bool INFO = true;
-bool DEBUG = true;
-bool DEBUG_SLICE = true;
-bool DEBUG_BIT = true;
+bool DEBUG = false;
+bool DEBUG_SLICE = false;
+bool DEBUG_BIT = false;
 bool DEBUG_STACK = false;
 
 typedef enum {

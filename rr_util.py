@@ -24,7 +24,7 @@ def dynamic_backslice_old(reg, off, insn, func, prog):
                 (insn, func, prog)
     insn_str = hex(insn)
     
-    print( "[main] inputtng to RR: "  \
+    print( "[main] inputting to RR: "  \
         + str(fake_target) + " " + str(fake_branch) + " " \
         + str(insn_str) + " " + str(reg) + " " + str(off))
 
@@ -38,7 +38,7 @@ def dynamic_backslice2_old(branch, target, reg, off, insn):
     target_str = hex(target)
     branch_str = hex(branch)
 
-    print( "[main] inputtng to RR2: "  \
+    print( "[main] inputting to RR2: "  \
         + str(target_str) + " " + str(branch_str) + " " \
         + str(insn_str) + " " + str(reg) + " " + str(off))
 
@@ -64,7 +64,7 @@ def rr_backslice(prog, branch, target, insn, reg, shift, off, off_reg, rr_result
     if key in rr_result_cache:
         return rr_result_cache[key]
 
-    print("[main] Inputtng to RR: " \
+    print("[main] Inputting to RR: " \
         + " reg: " + str(reg_str) + " shift: " + str(shift_str) + " off_reg: " + str(off_reg_str) + " off: " + str(off_str)\
         + " @ " + str(insn_str) + " branch @" + str(branch_str) + " target @" + str(target_str)\
         + " program: " +str(prog), flush=True)

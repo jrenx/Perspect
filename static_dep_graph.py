@@ -8,7 +8,7 @@ from collections import OrderedDict
 from json import JSONEncoder
 
 DEBUG_CFG = False
-DEBUG_SIMPLIFY = True
+DEBUG_SIMPLIFY = False
 DEBUG_SLICE = False
 VERBOSE = False
 curr_dir = os.path.dirname(os.path.realpath(__file__))
@@ -261,10 +261,12 @@ class CFG:
             if len(self.target_bbs.intersection(all_succes_before_immed_pdom)) > 0:
                 #ignore_set.union(all_succes_before_immed_pdom) #FIXME, do not assign after union why???
                 if final is True:
-                    print("[simplify] Cannot remove node because target is a child BB, but updating immed pdom: " \
+                    if DEBUG_SIMPLIFY:
+                        print("[simplify] Cannot remove node because target is a child BB, but updating immed pdom: " \
                           + str(bb.immed_pdom.lines) + " " + str(bb.immed_pdom.id))
                     if bb.immed_pdom.id in updated_set:
-                        print("[simplify] already updated immed pdom: " \
+                        if DEBUG_SIMPLIFY:
+                            print("[simplify] already updated immed pdom: " \
                               + str(bb.immed_pdom.lines) + " " + str(bb.immed_pdom.id))
                         continue
                     updated_set.add(bb.immed_pdom.id)
@@ -285,14 +287,16 @@ class CFG:
                     #for prede in bb.predes:
                     #    if prede not in bb.immed_pdom.predes:
                     #        bb.immed_pdom.predes.append(prede)
-                    print("[simplify] new predecessors are: " + str([prede.lines for prede in bb.immed_pdom.predes]))
+                    if DEBUG_SIMPLIFY:
+                        print("[simplify] new predecessors are: " + str([prede.lines for prede in bb.immed_pdom.predes]))
                 continue
 
             #remove_set.add(bb) not really needed
             all_predes = []
             all_predes.extend(bb.predes)
             if final is True:
-                print("[simplify] Updating the predecessors and successors for bb: " + str(bb.id))
+                if DEBUG_SIMPLIFY:
+                    print("[simplify] Updating the predecessors and successors for bb: " + str(bb.id))
                 for prede in bb.predes:
                     if bb in prede.succes:
                         prede.succes.remove(bb)
@@ -303,8 +307,8 @@ class CFG:
 
             has_backedge = False
             for child_bb in all_succes_before_immed_pdom:
-                #if DEBUG_SIMPLIFY:
-                print("[Simplify] Removing child BB: " + str(child_bb.id) + " " + str(child_bb.lines))
+                if DEBUG_SIMPLIFY:
+                    print("[Simplify] Removing child BB: " + str(child_bb.id) + " " + str(child_bb.lines))
                 if len(child_bb.backedge_targets) > 0:
                     has_backedge = True
                 remove_count += 1
@@ -320,7 +324,8 @@ class CFG:
                 for prede in all_predes:
                     prede.backedge_targets.append(bb.immed_pdom)
                     bb.immed_pdom.backedge_sources.append(prede)
-        print("[Simplify] Total number of BBs removed: " + str(remove_count))
+        if DEBUG_SIMPLIFY:
+            print("[Simplify] Total number of BBs removed: " + str(remove_count))
 
     def slice(self, final=False):
         self.sliced = True
@@ -751,7 +756,7 @@ class StaticDepGraph:
             worklist = deque()
             worklist.append([insn, func, prog, None])
             while len(worklist) > 0:
-                if iteration >= 5:
+                if iteration >= 80:
                     break
                 iteration += 1
                 print("[static_dep] Running analysis at iteration: " + str(iteration))
@@ -781,12 +786,6 @@ class StaticDepGraph:
                 total_count += len(StaticDepGraph.func_to_graph[func].nodes_in_cf_slice)
                 total_count += len(StaticDepGraph.func_to_graph[func].nodes_in_df_slice)
             print("[static_dep] Total number of static nodes: " + str(total_count))
-        except Exception as e:
-            print("Caught exception: " + str(e))
-            raise e
-        except KeyboardInterrupt:
-            print('Interrupted')
-        finally:
             if rr_result_size != len(StaticDepGraph.rr_result_cache):
                 print("Persisting rr result file")
                 with open(rr_result_file, 'w') as f:
@@ -795,9 +794,20 @@ class StaticDepGraph:
                 print("Persisting sa result file")
                 with open(sa_result_file, 'w') as f:
                     json.dump(StaticDepGraph.sa_result_cache, f)
-
-
-
+        except Exception as e:
+            print("Caught exception: " + str(e))
+            raise e
+        except KeyboardInterrupt:
+            print('Interrupted')
+        finally:
+            if rr_result_size != len(StaticDepGraph.rr_result_cache):
+                print("Persisting rr result file after crash")
+                with open(rr_result_file, 'w') as f:
+                    json.dump(StaticDepGraph.rr_result_cache, f)
+            if sa_result_size != len(StaticDepGraph.sa_result_cache):
+                print("Persisting sa result file after crash")
+                with open(sa_result_file, 'w') as f:
+                    json.dump(StaticDepGraph.sa_result_cache, f)
 
     @staticmethod
     def buildDependenciesInFunction(insn, func, prog, df_node = None):
@@ -998,6 +1008,7 @@ class StaticDepGraph:
                                    node.insn, node.mem_load.reg, node.mem_load.shift, node.mem_load.off,
                                    node.mem_load.off_reg, StaticDepGraph.rr_result_cache) #, StaticDepGraph.rr_result_cache)
             except Exception as e:
+                print("Calling RR failed")
                 print(str(e))
             print("[static_dep] found " + str(len(results)) + " dataflow dependencies non-local to function")
             if VERBOSE: print(results)
@@ -1109,5 +1120,5 @@ class StaticDepGraph:
                 print(str(node))
 
 if __name__ == "__main__":
-    #StaticDepGraph.buildDependencies(0x409daa, "sweep", "909_ziptest_exe9")
-    StaticDepGraph.buildDependencies(0x409418, "scanblock", "909_ziptest_exe9")
+    StaticDepGraph.buildDependencies(0x409daa, "sweep", "909_ziptest_exe9")
+    #StaticDepGraph.buildDependencies(0x409418, "scanblock", "909_ziptest_exe9")
