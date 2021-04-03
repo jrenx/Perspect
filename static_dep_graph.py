@@ -718,6 +718,28 @@ class StaticNode:
         sn.df_succes = data['df_succes']
         return sn
 
+    @staticmethod
+    def fromJSON_finish(sn, all_id_to_node):
+        cf_predes = []
+        for id in sn.cf_predes:
+            cf_predes.append(all_id_to_node[id])
+        sn.cf_predes = cf_predes
+
+        cf_succes = []
+        for id in sn.cf_succes:
+            cf_succes.append(all_id_to_node[id])
+        sn.cf_succes = cf_succes
+
+        df_predes = []
+        for id in sn.df_predes:
+            df_predes.append(all_id_to_node[id])
+        sn.df_predes = df_predes
+
+        df_succes = []
+        for id in sn.df_succes:
+            df_succes.append(all_id_to_node[id])
+        sn.df_succes = df_succes
+
     def __eq__(self, other):
         if not isinstance(other, StaticNode):
             return NotImplemented
@@ -790,8 +812,11 @@ class StaticNode:
 
 class StaticDepGraph:
     func_to_graph = {}
+    pending_nodes = {}
     rr_result_cache = {}
     sa_result_cache = {}
+    reverse_postorder_list = []
+    postorder_list = []
 
     def __init__(self, func, prog):
         self.func = func
@@ -805,6 +830,11 @@ class StaticDepGraph:
 
         self.nodes_in_cf_slice = set([])
         self.nodes_in_df_slice = set([])
+        if func in StaticDepGraph.pending_nodes:
+            for n in StaticDepGraph.pending_nodes[func]:
+                self.id_to_node[n.id] = n
+                self.insn_to_node[n.insn] = n
+            del StaticDepGraph.pending_nodes[func]
 
     def toJSON(self):
         data = {}
@@ -828,7 +858,7 @@ class StaticDepGraph:
         return data
 
     @staticmethod
-    def fromJSON(data):
+    def fromJSON(data, all_id_to_node):
         func = data["func"]
         prog = data["prog"]
         sg = StaticDepGraph(func, prog)
@@ -836,9 +866,11 @@ class StaticDepGraph:
             sg.cfg = CFG.fromJSON(data["cfg"])
         sg.bb_id_to_node_id = data["bb_id_to_node_id"]
 
+        print("Current function: " + func)
         for n in data["id_to_node"]:
             sn = StaticNode.fromJSON(n)
             sg.id_to_node[sn.id] = sn
+            all_id_to_node[sn.id] = sn
             sg.insn_to_node[sn.insn] = sn
 
         for n in data["nodes_in_cf_slice"]:
@@ -850,27 +882,57 @@ class StaticDepGraph:
         for sn in sg.id_to_node.values():
             if sn.bb:
                 sn.bb = sg.cfg.id_to_bb[sn.bb]
-
-            cf_predes = []
-            for id in sn.cf_predes:
-                cf_predes.append(sg.id_to_node[id])
-            sn.cf_predes = cf_predes
-
-            cf_succes = []
-            for id in sn.cf_succes:
-                cf_succes.append(sg.id_to_node[id])
-            sn.cf_succes = cf_succes
-
-            df_predes = []
-            for id in sn.df_predes:
-                df_predes.append(sg.id_to_node[id])
-            sn.df_predes = df_predes
-
-            df_succes = []
-            for id in sn.df_succes:
-                df_succes.append(sg.id_to_node[id])
-            sn.df_succes = df_succes
         return sg
+
+    @staticmethod
+    def fromJSON_finish(sg, all_id_to_node):
+        for sn in sg.id_to_node.values():
+            StaticNode.fromJSON_finish(sn, all_id_to_node)
+
+    @staticmethod
+    def writeJSON(json_file):
+        out_result = []
+        out_pending = []
+        for func in StaticDepGraph.func_to_graph:
+            out_result.append(StaticDepGraph.func_to_graph[func].toJSON())
+        for func in StaticDepGraph.pending_nodes:
+            pending = {}
+            pending['func'] = func
+            pending['nodes'] = []
+            for node in StaticDepGraph.pending_nodes[func]:
+                pending['nodes'].append(node.toJSON())
+            out_pending.append(pending)
+        out = {"out_result": out_result, "out_pending": out_pending}
+        with open(json_file, 'w') as f:
+            # out.write(json.dumps(dynamic_result))
+            json.dump(out, f, indent=4, ensure_ascii=False)
+
+    @staticmethod
+    def loadJSON(json_file):
+        with open(json_file, 'r') as f:
+            in_result = json.load(f)
+        all_id_to_node = {}
+        pending_nodes = {}
+        for json_func_to_nodes in in_result["out_pending"]:
+            func = json_func_to_nodes["func"]
+            json_nodes = json_func_to_nodes["nodes"]
+            nodes = []
+            for json_node in json_nodes:
+                node = StaticNode.fromJSON(json_node)
+                nodes.append(node)
+                all_id_to_node[node.id] = node
+            pending_nodes[func] = nodes
+
+        func_to_graph = {}
+        for json_graph in in_result["out_result"]:
+            graph = StaticDepGraph.fromJSON(json_graph, all_id_to_node)
+            func_to_graph[graph.func] = graph
+        for func in func_to_graph:
+            StaticDepGraph.fromJSON_finish(func_to_graph[func], all_id_to_node)
+        for func in pending_nodes:
+            for node in pending_nodes[func]:
+                StaticNode.fromJSON_finish(node, all_id_to_node)
+        return func_to_graph, pending_nodes
 
     def make_or_get_df_node(self, insn, bb, function): #TODO: think this through again
         node = self.make_node(insn, bb, function)
@@ -892,6 +954,8 @@ class StaticDepGraph:
             if node.is_cf is True:
                 return node
         #if node.is_df is not True:
+        if node.bb is None:
+            node.bb = bb
         node.is_cf = True
         node.explained = False
         return node
@@ -900,8 +964,15 @@ class StaticDepGraph:
         if insn in self.insn_to_node:
             return self.insn_to_node[insn]
         node = StaticNode(insn, bb, function)
-        self.id_to_node[node.id] = node
-        self.insn_to_node[insn] = node
+        if function in StaticDepGraph.func_to_graph:
+            graph = StaticDepGraph.func_to_graph[function]
+            graph.id_to_node[node.id] = node
+            graph.insn_to_node[insn] = node
+            assert function not in StaticDepGraph.pending_nodes
+        else:
+            if function not in StaticDepGraph.pending_nodes:
+                StaticDepGraph.pending_nodes[function] = []
+            StaticDepGraph.pending_nodes[function].append(node)
         return node
 
     def get_closest_dep_branch(self, node): #TODO, is getting the farthest one
@@ -946,17 +1017,13 @@ class StaticDepGraph:
 
     @staticmethod
     def build_dependencies(insn, func, prog, limit=10000):
+        start = time.time()
         key = str(insn) + "_" + str(func) + "_" + str(prog) + "_" + str(limit)
         result_file = os.path.join(curr_dir, 'cache', 'static_graph_result_' + key)
         if os.path.isfile(result_file):
-            with open(result_file, 'r') as f:
-                # out.write(json.dumps(dynamic_result))
-                in_result = json.load(f)
-            assert len(StaticDepGraph.func_to_graph) == 0
-            StaticDepGraph.func_to_graph = {}
-            for json_graph in in_result:
-                graph = StaticDepGraph.fromJSON(json_graph)
-                StaticDepGraph.func_to_graph[graph.func] = graph
+            func_to_graph, pending_nodes = StaticDepGraph.loadJSON(result_file)
+            StaticDepGraph.func_to_graph = func_to_graph
+            StaticDepGraph.pending_nodes = pending_nodes
             return True
 
         rr_result_file = os.path.join(curr_dir, 'cache', 'rr_results_' + prog + '.json')
@@ -1011,7 +1078,7 @@ class StaticDepGraph:
             print("[static_dep] Total number of static nodes: " + str(total_count))
         except Exception as e:
             print("Caught exception: " + str(e))
-            #raise e
+            raise e
         except KeyboardInterrupt:
             print('Interrupted')
         finally:
@@ -1026,11 +1093,9 @@ class StaticDepGraph:
             with open(sa_result_file, 'w') as f:
                 json.dump(StaticDepGraph.sa_result_cache, f)
         print("Persisting static graph result file")
-        out_result = []
-        for graph in StaticDepGraph.func_to_graph:
-            out_result.append(StaticDepGraph.func_to_graph[graph].toJSON())
-        with open(result_file, 'w') as f:
-            json.dump(out_result, f, indent=4, ensure_ascii=False)
+        StaticDepGraph.writeJSON(result_file)
+        end = time.time()
+        print("[static_dep] static analysis took a total time of: " + str(end - start))
         return False
 
     @staticmethod
@@ -1046,8 +1111,8 @@ class StaticDepGraph:
             graph = StaticDepGraph.func_to_graph[func]
         else:
             graph = StaticDepGraph(func, prog)
-            graph.build_control_flow_nodes(insn)
             StaticDepGraph.func_to_graph[func] = graph
+            graph.build_control_flow_nodes(insn)
             if len(graph.cfg.ordered_bbs) == 0:
                 print("[static_dep][warn] Failed to load the cfg for function: "
                       + func + " ignoring the function...")
@@ -1081,7 +1146,8 @@ class StaticDepGraph:
                 graph.build_control_flow_dependencies(target_bbs)
                 new_local_defs_found = True
             if df_node is not None:
-                assert df_node.bb is None, df_node
+                if df_node.is_cf is False:
+                    assert df_node.bb is None, df_node
                 defs_in_same_func.add(df_node)
                 if df_node not in graph.nodes_in_df_slice:
                     graph.nodes_in_df_slice.add(df_node)
@@ -1131,6 +1197,7 @@ class StaticDepGraph:
                 continue
             node.explained = True
             bb = node.bb
+            assert bb is not None, str(node)
             if bb.ends_in_branch is False:
                 continue
             succe_count = 0
@@ -1343,26 +1410,23 @@ class StaticDepGraph:
             for node in self.nodes_in_cf_slice:
                 print(str(node))
 
+    """
+    def print_node(self, prefix, n): #fixme refactor this later
+        print(prefix
+              + " d_id: " + str(n.id) + " s_id: " + str(n.static_node.id)
+              + " insn: " + n.static_node.hex_insn + " lines: " + str(n.static_node.bb.lines)
+              + " cf ps: " + str([pp.id for pp in n.cf_predes])
+              + " df ps: " + str([pp.id for pp in n.df_predes])
+              + " cf ss: " + str([ps.id for ps in n.cf_succes])
+              + " df ss: " + str([ps.id for ps in n.df_succes]))
+    """
+
 if __name__ == "__main__":
-    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", 2)
+    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", 50)
     #StaticDepGraph.build_dependencies(0x409418, "scanblock", "909_ziptest_exe9")
     json_file = os.path.join(curr_dir, 'static_graph_result')
-    out_result = []
-    for graph in StaticDepGraph.func_to_graph:
-        out_result.append(StaticDepGraph.func_to_graph[graph].toJSON())
-
-    with open(json_file, 'w') as f:
-        # out.write(json.dumps(dynamic_result))
-        json.dump(out_result, f, indent=4, ensure_ascii=False)
-
-    in_result = None
-    with open(json_file, 'r') as f:
-        # out.write(json.dumps(dynamic_result))
-        in_result = json.load(f)
-    func_to_graph = {}
-    for json_graph in in_result:
-        graph = StaticDepGraph.fromJSON(json_graph)
-        func_to_graph[graph.func] = graph
+    StaticDepGraph.writeJSON(json_file)
+    func_to_graph, pending_nodes = StaticDepGraph.loadJSON(json_file)
     assert(len(func_to_graph) == len(StaticDepGraph.func_to_graph))
     for func in func_to_graph:
         assert func_to_graph[func].func == StaticDepGraph.func_to_graph[func].func
