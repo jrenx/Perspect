@@ -1,17 +1,19 @@
 import json
 import os
+import os.path
 from sa_util import *
 from rr_util import *
 from pin_util import *
 from collections import deque
 from collections import OrderedDict
-from json import JSONEncoder
 
 DEBUG_CFG = False
 DEBUG_SIMPLIFY = False
 DEBUG_SLICE = False
 VERBOSE = False
 curr_dir = os.path.dirname(os.path.realpath(__file__))
+
+
 class BasicBlock:
     def __init__(self, id, ends_in_branch, is_entry, lines):
         # Note: if we call Dyninst twice, the Basic block IDs will change
@@ -28,6 +30,64 @@ class BasicBlock:
         self.backedge_sources = []
         self.predes = []
         self.succes = []
+
+    def toJSON(self):
+        data = {}
+        data["id"] = self.id
+        data["start_insn"] = self.start_insn
+        data["last_insn"] = self.last_insn
+        data["lines"] = self.lines
+        data["ends_in_branch"] = self.ends_in_branch
+        data["is_entry"] = self.is_entry
+        if self.immed_dom:
+            data["immed_dom"] = self.immed_dom.id
+        if self.immed_pdom:
+            data["immed_pdom"] = self.immed_pdom.id
+        if self.pdoms:
+            data["pdoms"] = []
+            for n in self.pdoms:
+                data["pdoms"].append(n.id)
+
+        data["backedge_targets"] = []
+        for n in self.backedge_targets:
+            data["backedge_targets"].append(n.id)
+
+        data["backedge_sources"] = []
+        for n in self.backedge_sources:
+            data["backedge_sources"].append(n.id)
+
+        data["predes"] = []
+        for n in self.predes:
+            data["predes"].append(n.id)
+
+        data["succes"] = []
+        for n in self.succes:
+            data["succes"].append(n.id)
+        return data
+
+    @staticmethod
+    def fromJSON(data):
+        id = data['id']
+        ends_in_branch = data['ends_in_branch']
+        is_entry = data['is_entry']
+        lines = data['lines']
+        bb = BasicBlock(id, ends_in_branch, is_entry, lines)
+        bb.start_insn = data['start_insn']
+        bb.last_insn = data['last_insn']
+        bb.lines = data['lines']
+        bb.ends_in_branch = data['ends_in_branch']
+        bb.is_entry = data['is_entry']
+
+        if 'immed_dom' in data:
+            bb.immed_dom = data['immed_dom']
+        if 'immed_pdom' in data:
+            bb.immed_pdom = data['immed_pdom']
+        if 'pdoms' in data:
+            bb.pdoms = data['pdoms']
+        bb.backedge_targets = data['backedge_targets']
+        bb.predes = data['predes']
+        bb.succes = data['succes']
+        return bb
 
     def add_start_insn(self, start_insn):
         self.start_insn = start_insn
@@ -65,6 +125,7 @@ class BasicBlock:
         s += " \n"
         return s
 
+
 class CFG:
     def __init__(self, func, prog):
         self.func = func
@@ -82,6 +143,92 @@ class CFG:
 
         self.built = False
         self.sliced = False
+
+    def toJSON(self):
+        data = {}
+        data["func"] = self.func
+        data["prog"] = self.prog
+
+        data["ordered_bbs"] = []
+        for n in self.ordered_bbs:
+            data["ordered_bbs"].append(n.toJSON())
+
+        data["ordered_bbs_in_slice"] = []
+        for n in self.ordered_bbs_in_slice:
+            data["ordered_bbs_in_slice"].append(n.id)
+
+        data["target_bbs"] = []
+        for n in self.target_bbs:
+            data["target_bbs"].append(n.id)
+
+        data["entry_bbs"] = []
+        for n in self.entry_bbs:
+            data["entry_bbs"].append(n.id)
+
+        data["postorder_list"] = []
+        for n in self.postorder_list:
+            data["postorder_list"].append(n.id)
+
+        data["built"] = self.built
+        data["sliced"] = self.sliced
+        return data
+
+    @staticmethod
+    def fromJSON(data):
+        func = data["func"]
+        prog = data["prog"]
+
+        cfg = CFG(func, prog)
+
+        for n in data["ordered_bbs"]:
+            bb = BasicBlock.fromJSON(n)
+            cfg.ordered_bbs.append(bb)
+            cfg.id_to_bb[bb.id] = bb
+
+        for bb in cfg.ordered_bbs:
+            if bb.immed_dom:
+                bb.immed_dom = cfg.id_to_bb[bb.immed_dom]
+
+            if bb.immed_pdom:
+                bb.immed_pdom = cfg.id_to_bb[bb.immed_pdom]
+
+            if bb.pdoms:
+                pdoms = []
+                for id in bb.pdoms:
+                    pdoms.append(cfg.id_to_bb[id])
+                bb.pdoms = pdoms
+
+            backedge_targets = []
+            for id in bb.backedge_targets:
+                backedge_targets.append(cfg.id_to_bb[id])
+            bb.backedge_targets = backedge_targets
+
+            predes = []
+            for id in bb.predes:
+                predes.append(cfg.id_to_bb[id])
+            bb.predes = predes
+
+            succes = []
+            for id in bb.succes:
+                succes.append(cfg.id_to_bb[id])
+            bb.succes = succes
+
+        for n in data["ordered_bbs_in_slice"]:
+            cfg.id_to_bb_in_slice[n] = cfg.id_to_bb[n]
+            cfg.ordered_bbs_in_slice.append(cfg.id_to_bb[n])
+
+        for n in data["target_bbs"]:
+            cfg.target_bbs.add(cfg.id_to_bb[n])
+
+        for n in data["entry_bbs"]:
+            cfg.entry_bbs.append(cfg.id_to_bb[n])
+
+        for n in data["postorder_list"]:
+            cfg.postorder_list.append(cfg.id_to_bb[n])
+
+        cfg.built = data["built"]
+        cfg.sliced = data["sliced"]
+        return cfg
 
     '''
     def get_first_insn_of_every_block(self):
@@ -442,12 +589,7 @@ class CFG:
         print("[static_dep] number of basic blocks in the entire cfg: " + str(len(self.ordered_bbs)))
 
 
-class MemoryAccessEncoder(JSONEncoder):
-    def default(self, o):
-        return o.__dict__
-
-
-class MemoryAccess(JSONEncoder):
+class MemoryAccess:
     def __init__(self, reg, shift, off, off_reg, is_bit_var):
         self.reg = reg
         self.shift = shift
@@ -455,9 +597,13 @@ class MemoryAccess(JSONEncoder):
         self.off_reg = off_reg
         self.is_bit_var = is_bit_var
 
-    #def toJSON(self):
-    #    return json.dumps(self, default=lambda o: o.__dict__,
-    #        sort_keys=True, indent=4)
+    def toJSON(self):
+        return self.__dict__
+
+    @staticmethod
+    def fromJSON(data):
+        return MemoryAccess(data['reg'], data['shift'], data['off'], data['off_reg'], data['is_bit_var'])
+
     def __str__(self):
         s = " address: " + str(self.reg) + " * " \
             + str(self.shift) + " + " + str(self.off)
@@ -467,85 +613,16 @@ class MemoryAccess(JSONEncoder):
             s += " is bit var: " + str(self.is_bit_var)# + "\n"
         return s
 
-class StaticNodeEncoder(JSONEncoder):
-    def default(self, o):
-        staticNode = {}
-
-        staticNode["id"] = node.id
-        staticNode["insn"] = node.insn  # FIXME, this is long type right
-        staticNode["function"] = node.function  # FIXME, maybe rename this to func?
-        staticNode["explained"] = node.explained
-
-        staticNode["is_cf"] = node.is_cf
-        staticNode["bb"] = None
-
-        if node.bb:
-            basicBlock = {}
-
-            basicBlock["id"] = node.bb.id
-            basicBlock["start_insn"] = node.bb.start_insn
-            basicBlock["last_insn"] = node.bb.last_insn
-            basicBlock["lines"] = node.bb.lines
-            basicBlock["ends_in_branch"] = node.bb.ends_in_branch
-            basicBlock["is_entry"] = node.bb.is_entry
-            if node.bb.immed_dom:
-                basicBlock["immed_dom"] = node.bb.immed_dom.id
-            if node.bb.immed_pdom:
-                basicBlock["immed_pdom"] = node.bb.immed_pdom.id
-            basicBlock["pdoms"] = []
-            if node.bb.pdoms:
-                for n in node.bb.pdoms:
-                    basicBlock["pdoms"].append(n.id)
-            basicBlock["backedge_targets"] = []
-            if node.bb.backedge_targets:
-                for n in node.bb.backedge_targets:
-                    basicBlock["backedge_targets"].append(n.id)
-            basicBlock["predes"] = []
-            if node.bb.predes:
-                for n in node.bb.predes:
-                    basicBlock["predes"].append(n.id)
-            basicBlock["succes"] = []
-            if node.bb.succes:
-                for n in node.bb.succes:
-                    basicBlock["succes"].append(n.id)
-
-            staticNode["bb"] = json.dumps(basicBlock)
-
-        staticNode["cf_predes"] = []
-        if node.cf_predes:
-            for n in node.cf_predes:
-                staticNode["cf_predes"].append(n.id)
-        staticNode["cf_succes"] = []
-        if node.cf_succes:
-            for n in node.cf_succes:
-                staticNode["cf_succes"].append(n.id)
-
-        staticNode["is_df"] = node.is_df
-        staticNode["mem_load"] = str(node.mem_load)
-        staticNode["reg_load"] = str(node.reg_load)
-
-        staticNode["mem_store"] = str(node.mem_store)
-        staticNode["reg_store"] = str(node.reg_store)
-
-        staticNode["df_predes"] = []
-        if node.df_predes:
-            for n in node.df_predes:
-                staticNode["df_predes"].append(n.id)
-        staticNode["df_succes"] = []
-        if node.df_succes:
-            for n in node.df_succes:
-                staticNode["df_succes"].append(n.id)
-
-        return json.dumps(staticNode)
-
-        return o.__dict__
 
 class StaticNode:
     id = 0
 
-    def __init__(self, insn, bb, function):
-        self.id = StaticNode.id
-        StaticNode.id += 1
+    def __init__(self, insn, bb, function, id=None):
+        if id is not None:
+            self.id = id
+        else:
+            self.id = StaticNode.id #TODO, incremenet ID here?
+            StaticNode.id += 1
         self.insn = insn #FIXME, this is long type right
         self.hex_insn = hex(insn)
         self.function = function #FIXME, maybe rename this to func?
@@ -573,6 +650,73 @@ class StaticNode:
 
         self.df_predes = []
         self.df_succes = []
+
+    def toJSON(self):
+        data = {}
+
+        data["id"] = self.id
+        data["insn"] = self.insn  # FIXME, this is long type right
+        data["function"] = self.function  # FIXME, maybe rename this to func?
+        data["explained"] = self.explained
+
+        data["is_cf"] = self.is_cf
+        if self.bb:
+            data["bb"] = self.bb.id #json.dumps(node.bb, cls=BasicBlockEncoder)
+
+        data["cf_predes"] = []
+        for n in self.cf_predes:
+            data["cf_predes"].append(n.id)
+        data["cf_succes"] = []
+        for n in self.cf_succes:
+            data["cf_succes"].append(n.id)
+
+        data["is_df"] = self.is_df
+        data["mem_load"] = self.mem_load if self.mem_load is None or not isinstance(self.mem_load, MemoryAccess) else \
+                                        self.mem_load.toJSON()
+        data["reg_load"] = self.reg_load
+
+        data["mem_store"] = self.mem_store if self.mem_store is None or not isinstance(self.mem_store, MemoryAccess) else \
+                                        self.mem_store.toJSON()
+        data["reg_store"] = self.reg_store
+
+        data["df_predes"] = []
+        for n in self.df_predes:
+            data["df_predes"].append(n.id)
+        data["df_succes"] = []
+        for n in self.df_succes:
+            data["df_succes"].append(n.id)
+        return data
+
+    @staticmethod
+    def fromJSON(data):
+        id = data["id"]
+        insn = data["insn"]
+        function = data["function"]
+        bb = data["bb"] if 'bb' in data else None #TODO, assign actual BB later
+
+        sn = StaticNode(insn, bb, function, id)
+
+        sn.explained = data["explained"]
+        sn.is_cf = data["is_cf"]
+        if "bb" in data:
+            sn.bb = data["bb"]
+
+        sn.cf_predes = data['cf_predes']
+        sn.cf_succes = data['cf_succes']
+        sn.is_df = data["is_df"]
+
+        sn.mem_load = data["mem_load"]
+        if isinstance(sn.mem_load, dict):
+            sn.mem_load = MemoryAccess.fromJSON(sn.mem_load)
+        sn.reg_load = data["reg_load"]
+        sn.mem_store = data["mem_store"]
+        if isinstance(sn.mem_store, dict):
+            sn.mem_store = MemoryAccess.fromJSON(sn.mem_store)
+        sn.reg_store = data["reg_store"]
+
+        sn.df_predes = data['df_predes']
+        sn.df_succes = data['df_succes']
+        return sn
 
     def __eq__(self, other):
         if not isinstance(other, StaticNode):
@@ -662,6 +806,72 @@ class StaticDepGraph:
         self.nodes_in_cf_slice = set([])
         self.nodes_in_df_slice = set([])
 
+    def toJSON(self):
+        data = {}
+        data["func"] = self.func
+        data["prog"] = self.prog
+        data["cfg"] = self.cfg if self.cfg is None else self.cfg.toJSON()
+
+        data["id_to_node"] = []
+        for n in self.id_to_node.values():
+            data["id_to_node"].append(n.toJSON())
+
+        data["bb_id_to_node_id"] = self.bb_id_to_node_id
+
+        data["nodes_in_cf_slice"] = []
+        for n in self.nodes_in_cf_slice:
+            data["nodes_in_cf_slice"].append(n.id)
+
+        data["nodes_in_df_slice"] = []
+        for n in self.nodes_in_df_slice:
+            data["nodes_in_df_slice"].append(n.id)
+        return data
+
+    @staticmethod
+    def fromJSON(data):
+        func = data["func"]
+        prog = data["prog"]
+        sg = StaticDepGraph(func, prog)
+        if "cfg" in data:
+            sg.cfg = CFG.fromJSON(data["cfg"])
+        sg.bb_id_to_node_id = data["bb_id_to_node_id"]
+
+        for n in data["id_to_node"]:
+            sn = StaticNode.fromJSON(n)
+            sg.id_to_node[sn.id] = sn
+            sg.insn_to_node[sn.insn] = sn
+
+        for n in data["nodes_in_cf_slice"]:
+            sg.nodes_in_cf_slice.add(sg.id_to_node[n])
+
+        for n in data["nodes_in_df_slice"]:
+            sg.nodes_in_df_slice.add(sg.id_to_node[n])
+
+        for sn in sg.id_to_node.values():
+            if sn.bb:
+                sn.bb = sg.cfg.id_to_bb[sn.bb]
+
+            cf_predes = []
+            for id in sn.cf_predes:
+                cf_predes.append(sg.id_to_node[id])
+            sn.cf_predes = cf_predes
+
+            cf_succes = []
+            for id in sn.cf_succes:
+                cf_succes.append(sg.id_to_node[id])
+            sn.cf_succes = cf_succes
+
+            df_predes = []
+            for id in sn.df_predes:
+                df_predes.append(sg.id_to_node[id])
+            sn.df_predes = df_predes
+
+            df_succes = []
+            for id in sn.df_succes:
+                df_succes.append(sg.id_to_node[id])
+            sn.df_succes = df_succes
+        return sg
+
     def make_or_get_df_node(self, insn, bb, function): #TODO: think this through again
         node = self.make_node(insn, bb, function)
         if node.explained is True:
@@ -735,8 +945,21 @@ class StaticDepGraph:
         return self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
     @staticmethod
-    def buildDependencies(insn, func, prog):
-        rr_result_file = os.path.join(curr_dir, 'rr_results_' + prog + '.json')
+    def build_dependencies(insn, func, prog, limit=10000):
+        key = str(insn) + "_" + str(func) + "_" + str(prog) + "_" + str(limit)
+        result_file = os.path.join(curr_dir, 'cache', 'static_graph_result_' + key)
+        if os.path.isfile(result_file):
+            with open(result_file, 'r') as f:
+                # out.write(json.dumps(dynamic_result))
+                in_result = json.load(f)
+            assert len(StaticDepGraph.func_to_graph) == 0
+            StaticDepGraph.func_to_graph = {}
+            for json_graph in in_result:
+                graph = StaticDepGraph.fromJSON(json_graph)
+                StaticDepGraph.func_to_graph[graph.func] = graph
+            return True
+
+        rr_result_file = os.path.join(curr_dir, 'cache', 'rr_results_' + prog + '.json')
         rr_result_size = 0
         if os.path.exists(rr_result_file):
             with open(rr_result_file) as file:
@@ -744,7 +967,7 @@ class StaticDepGraph:
                 rr_result_size = len(StaticDepGraph.rr_result_cache)
 
         sa_result_size = 0
-        sa_result_file = os.path.join(curr_dir, 'sa_results_' + prog + '.json')
+        sa_result_file = os.path.join(curr_dir, 'cache', 'sa_results_' + prog + '.json')
         if os.path.exists(sa_result_file):
             with open(sa_result_file) as cache_file:
                 StaticDepGraph.sa_result_cache = json.load(cache_file)
@@ -756,7 +979,7 @@ class StaticDepGraph:
             worklist = deque()
             worklist.append([insn, func, prog, None])
             while len(worklist) > 0:
-                if iteration >= 80:
+                if iteration >= limit:
                     break
                 iteration += 1
                 print("[static_dep] Running analysis at iteration: " + str(iteration))
@@ -765,7 +988,7 @@ class StaticDepGraph:
                     print("[static_dep] Node already explained, skipping ...")
                     print ("[static_dep] " + str(curr_node))
                     continue
-                new_nodes = StaticDepGraph.buildDependenciesInFunction(curr_insn, curr_func, curr_prog, curr_node)
+                new_nodes = StaticDepGraph.build_dependencies_in_function(curr_insn, curr_func, curr_prog, curr_node)
                 for new_node in new_nodes:
                     worklist.append([new_node.insn, new_node.function, prog, new_node]) #FIMXE, ensure there is no duplicate work
 
@@ -773,8 +996,8 @@ class StaticDepGraph:
             for func in StaticDepGraph.func_to_graph:
                 graph = StaticDepGraph.func_to_graph[func]
                 target_bbs = set([])
-                graph.buildControlFlowDependencies(target_bbs, True)
-                graph.mergeDataFlowNodes(graph.nodes_in_df_slice, True)
+                graph.build_control_flow_dependencies(target_bbs, True)
+                graph.merge_data_flow_nodes(graph.nodes_in_df_slice, True)
                 for n in graph.nodes_in_cf_slice:
                     print(str(n))
                 for n in graph.nodes_in_df_slice:
@@ -786,31 +1009,32 @@ class StaticDepGraph:
                 total_count += len(StaticDepGraph.func_to_graph[func].nodes_in_cf_slice)
                 total_count += len(StaticDepGraph.func_to_graph[func].nodes_in_df_slice)
             print("[static_dep] Total number of static nodes: " + str(total_count))
-            if rr_result_size != len(StaticDepGraph.rr_result_cache):
-                print("Persisting rr result file")
-                with open(rr_result_file, 'w') as f:
-                    json.dump(StaticDepGraph.rr_result_cache, f)
-            if sa_result_size != len(StaticDepGraph.sa_result_cache):
-                print("Persisting sa result file")
-                with open(sa_result_file, 'w') as f:
-                    json.dump(StaticDepGraph.sa_result_cache, f)
         except Exception as e:
             print("Caught exception: " + str(e))
-            raise e
+            #raise e
         except KeyboardInterrupt:
             print('Interrupted')
         finally:
-            if rr_result_size != len(StaticDepGraph.rr_result_cache):
-                print("Persisting rr result file after crash")
-                with open(rr_result_file, 'w') as f:
-                    json.dump(StaticDepGraph.rr_result_cache, f)
-            if sa_result_size != len(StaticDepGraph.sa_result_cache):
-                print("Persisting sa result file after crash")
-                with open(sa_result_file, 'w') as f:
-                    json.dump(StaticDepGraph.sa_result_cache, f)
+            pass
+
+        if rr_result_size != len(StaticDepGraph.rr_result_cache):
+            print("Persisting rr result file")
+            with open(rr_result_file, 'w') as f:
+                json.dump(StaticDepGraph.rr_result_cache, f)
+        if sa_result_size != len(StaticDepGraph.sa_result_cache):
+            print("Persisting sa result file")
+            with open(sa_result_file, 'w') as f:
+                json.dump(StaticDepGraph.sa_result_cache, f)
+        print("Persisting static graph result file")
+        out_result = []
+        for graph in StaticDepGraph.func_to_graph:
+            out_result.append(StaticDepGraph.func_to_graph[graph].toJSON())
+        with open(result_file, 'w') as f:
+            json.dump(out_result, f, indent=4, ensure_ascii=False)
+        return False
 
     @staticmethod
-    def buildDependenciesInFunction(insn, func, prog, df_node = None):
+    def build_dependencies_in_function(insn, func, prog, df_node = None):
         iter = 0
         print("[static_dep] ")
         print("[static_dep] Building dependencies for function: " + str(func))
@@ -822,19 +1046,19 @@ class StaticDepGraph:
             graph = StaticDepGraph.func_to_graph[func]
         else:
             graph = StaticDepGraph(func, prog)
-            graph.buildControlFlowNodes(insn)
+            graph.build_control_flow_nodes(insn)
             StaticDepGraph.func_to_graph[func] = graph
             if len(graph.cfg.ordered_bbs) == 0:
                 print("[static_dep][warn] Failed to load the cfg for function: "
                       + func + " ignoring the function...")
                 return set([])
             target_bbs.add(graph.cfg.ordered_bbs[0])
-            graph.buildControlFlowDependencies(target_bbs)
+            graph.build_control_flow_dependencies(target_bbs)
             #callsites = StaticDepGraph.func_to_callsites[func]
         """
         if df_node is not None:
             assert df_node.bb is None
-            graph.mergeDataFlowNodes([df_node])
+            graph.merge_data_flow_nodes([df_node])
             #TODO, also need to do dataflow tracing for this one!!
         """
 
@@ -845,7 +1069,7 @@ class StaticDepGraph:
             new_local_defs_found = False
             print("[static_dep] Building dependencies for function: " + str(func) + " iteration: " + str(iter))
             iter += 1
-            defs_in_same_func, defs_in_diff_func = graph.buildDataFlowDependencies(func, prog, df_node)
+            defs_in_same_func, defs_in_diff_func = graph.build_data_flow_dependencies(func, prog, df_node)
             all_defs_in_diff_func = all_defs_in_diff_func.union(defs_in_diff_func)
             if len(graph.cfg.ordered_bbs) == 0:
                 print("[static_dep][warn] Previously failed to load the cfg for function: "
@@ -854,7 +1078,7 @@ class StaticDepGraph:
             if len(defs_in_same_func) > 0:
                 new_bbs = [graph.cfg.getBB(defn.insn) for defn in defs_in_same_func]
                 target_bbs = target_bbs.union(new_bbs)
-                graph.buildControlFlowDependencies(target_bbs)
+                graph.build_control_flow_dependencies(target_bbs)
                 new_local_defs_found = True
             if df_node is not None:
                 assert df_node.bb is None, df_node
@@ -863,13 +1087,13 @@ class StaticDepGraph:
                     graph.nodes_in_df_slice.add(df_node)
                 df_node = None
                 # TODO, also need to do dataflow tracing for this one!!
-            graph.mergeDataFlowNodes(defs_in_same_func)
+            graph.merge_data_flow_nodes(defs_in_same_func)
 
         return all_defs_in_diff_func
 
 
     #FIXME, think about if this makes sense
-    def mergeDataFlowNodes(self, df_nodes, final=False):
+    def merge_data_flow_nodes(self, df_nodes, final=False):
         if len(self.cfg.ordered_bbs) == 0:
             print("[static_dep][warn] Failed to load the cfg, ignoring merging the datanode...")
             return
@@ -894,7 +1118,7 @@ class StaticDepGraph:
                 if self.id_to_node[succe_node_id] not in node.cf_succes:
                     node.cf_succes.append(self.id_to_node[succe_node_id])
 
-    def buildDataFlowDependencies(self, func, prog, df_node = None):
+    def build_data_flow_dependencies(self, func, prog, df_node = None):
         print("[static_dep] Building dataflow dependencies local in function: " + str(func))
         defs_in_same_func = set([])
         defs_in_diff_func = set([])
@@ -1060,7 +1284,7 @@ class StaticDepGraph:
 
         return defs_in_same_func, defs_in_diff_func
 
-    def buildControlFlowNodes(self, insn):
+    def build_control_flow_nodes(self, insn):
         self.cfg = CFG(self.func, self.prog)
         # Build the control flow graph for the entire function then slice
         self.cfg.build(insn)  # FIXME: for now, order the BBs such that the one that contains insn appears first
@@ -1087,7 +1311,7 @@ class StaticDepGraph:
                 print(str(self.id_to_node[node_id]))
 
 
-    def buildControlFlowDependencies(self, target_bbs, final=False):
+    def build_control_flow_dependencies(self, target_bbs, final=False):
         self.cfg.target_bbs = self.cfg.target_bbs.union(target_bbs)
         self.cfg.slice(final)
 
@@ -1120,5 +1344,33 @@ class StaticDepGraph:
                 print(str(node))
 
 if __name__ == "__main__":
-    StaticDepGraph.buildDependencies(0x409daa, "sweep", "909_ziptest_exe9")
-    #StaticDepGraph.buildDependencies(0x409418, "scanblock", "909_ziptest_exe9")
+    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", 2)
+    #StaticDepGraph.build_dependencies(0x409418, "scanblock", "909_ziptest_exe9")
+    json_file = os.path.join(curr_dir, 'static_graph_result')
+    out_result = []
+    for graph in StaticDepGraph.func_to_graph:
+        out_result.append(StaticDepGraph.func_to_graph[graph].toJSON())
+
+    with open(json_file, 'w') as f:
+        # out.write(json.dumps(dynamic_result))
+        json.dump(out_result, f, indent=4, ensure_ascii=False)
+
+    in_result = None
+    with open(json_file, 'r') as f:
+        # out.write(json.dumps(dynamic_result))
+        in_result = json.load(f)
+    func_to_graph = {}
+    for json_graph in in_result:
+        graph = StaticDepGraph.fromJSON(json_graph)
+        func_to_graph[graph.func] = graph
+    assert(len(func_to_graph) == len(StaticDepGraph.func_to_graph))
+    for func in func_to_graph:
+        assert func_to_graph[func].func == StaticDepGraph.func_to_graph[func].func
+        assert func_to_graph[func].prog == StaticDepGraph.func_to_graph[func].prog
+        assert len(func_to_graph[func].id_to_node) == len(StaticDepGraph.func_to_graph[func].id_to_node)
+        #print(str(StaticDepGraph.func_to_graph[func].bb_id_to_node_id)) #TODO this is empty!
+        assert len(func_to_graph[func].insn_to_node) == len(StaticDepGraph.func_to_graph[func].insn_to_node),\
+            str(len(func_to_graph[func].insn_to_node)) + " " + str(len(StaticDepGraph.func_to_graph[func].insn_to_node))
+        assert len(func_to_graph[func].bb_id_to_node_id) == len(StaticDepGraph.func_to_graph[func].bb_id_to_node_id)
+        assert len(func_to_graph[func].nodes_in_cf_slice) == len(StaticDepGraph.func_to_graph[func].nodes_in_cf_slice)
+        assert len(func_to_graph[func].nodes_in_df_slice) == len(StaticDepGraph.func_to_graph[func].nodes_in_df_slice)

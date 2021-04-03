@@ -5,17 +5,18 @@ pin_dir = os.path.dirname(os.path.realpath(__file__))
 
 class InsRegTrace:
 
-    def __init__(self, program, is_32=False, pin='pin'):
+    def __init__(self, program, is_32=False, pin='pin', out='instruction_trace.out'):
         self.program = program.split()
         self.is_32 = is_32
         self.pin = pin
+        self.out = out
 
     def run_function_trace(self, ins_reg_map):
         if self.is_32:
             obj_file = os.path.join(pin_dir, 'obj-ia32', 'instruction_reg_log.so')
         else:
             obj_file = os.path.join(pin_dir, 'obj-intel64', 'instruction_reg_log.so')
-        pin_program_list = [self.pin, '-t', obj_file, '-o', os.path.join(pin_dir, 'instruction_trace.out')]
+        pin_program_list = [self.pin, '-t', obj_file, '-o', os.path.join(pin_dir, self.out)]
 
         for ins, reg in ins_reg_map.items():
             pin_program_list.extend(['-i', ins, '-r', reg])
@@ -31,7 +32,7 @@ class InsRegTrace:
         last_break = ""
         taken = []
         not_taken = []
-        with open(os.path.join(pin_dir, "instruction_trace.out")) as log:
+        with open(os.path.join(pin_dir, self.out)) as log:
             for line in log:
                 if branch in line:
                     if last_break == branch:

@@ -7,10 +7,11 @@ DEBUG = True
 
 class InsTrace:
 
-    def __init__(self, program, is_32=False, pin='pin'):
+    def __init__(self, program, is_32=False, pin='pin', out='instruction_trace.out'):
         self.program = program.split()
         self.is_32 = is_32
         self.pin = pin
+        self.out = out
 
     '''
         Invokes PIN to watch given set of instructions.
@@ -22,7 +23,7 @@ class InsTrace:
             obj_file = os.path.join(pin_dir, 'obj-ia32', 'instruction_log.so')
         else:
             obj_file = os.path.join(pin_dir, 'obj-intel64', 'instruction_log.so')
-        pin_program_list = [self.pin, '-t', obj_file, '-o', os.path.join(pin_dir, 'instruction_trace.out')]
+        pin_program_list = [self.pin, '-t', obj_file, '-o', os.path.join(pin_dir, self.out)]
         for insn in instructions:
             pin_program_list.extend(['-i', insn])
         pin_program_list.append('--')
@@ -32,7 +33,7 @@ class InsTrace:
         subprocess.call(pin_cmd, shell=True)
 
     def cleanup(self):
-        out_file = os.path.join(pin_dir, 'instruction_trace.out')
+        out_file = os.path.join(pin_dir, self.out)
         cmd = ' '.join(['rm', out_file])
         subprocess.call(cmd, shell=True)
 
@@ -41,7 +42,7 @@ class InsTrace:
         ret = 0
         pred_cnt = 0
         succ_cnt = 0
-        with open(os.path.join(pin_dir, 'instruction_trace.out')) as file:
+        with open(os.path.join(pin_dir, self.out)) as file:
             for line in file:
                 if 'start' in line or 'eof' in line:
                     continue
@@ -75,7 +76,7 @@ class InsTrace:
         last_is_succ = False
         #print("predecessor: " + hex(predecessor))
         #print("successor:   " + hex(successor))
-        with open(os.path.join(pin_dir, 'instruction_trace.out')) as file:
+        with open(os.path.join(pin_dir, self.out)) as file:
             for line in file:
                 if 'start' in line or 'eof' in line:
                     continue
