@@ -40,7 +40,7 @@ class DynamicNode(JSONEncoder):
         self.mem_load_addr = None
         self.mem_store = None
         self.mem_store_addr = None
-        self.output_set = set([])
+        self.output_set = set()
         self.input_sets = {}
 
     def __str__(self):
@@ -234,8 +234,7 @@ class DynamicDependence:
             print("[TIME]Build Dynamic Graph Finish Time: ", time.asctime(time.localtime(time_record["build_finish"])))
 
             dynamic_graph.sanity_check()
-            dynamic_graph.find_entry_nodes()
-            dynamic_graph.find_exit_nodes()
+            dynamic_graph.find_entry_and_exit_nodes()
             dynamic_graph.find_target_nodes(insn)
             dynamic_graph.build_postorder_list()
             dynamic_graph.build_reverse_postorder_list()
@@ -387,7 +386,7 @@ class DynamicGraph:
               + " df ss: " + str([ps.id for ps in n.df_succes]))
         
     # a node can be visited if all its predecessors are visited
-    def build_reverse_postorder_list(self):
+    def build_reverse_postorder_list(self): #TODO, refactor one day and combine into one function
         self.reverse_postorder_list = []
 
         prede_to_node = {}
@@ -549,24 +548,20 @@ class DynamicGraph:
         #assert len(succe_to_node) == 0, str(len(succe_to_node))
         print("[dyn_dep] total number of nodes in postorder_list: " + str(len(self.postorder_list)))
 
-    def find_entry_nodes(self):
-        self.entry_nodes = set()
-        #if len(self.entry_nodes) > 0:
-        #    return
+    def find_entry_and_exit_nodes(self):
+        #self.entry_nodes = set()
+        #self.exit_nodes = set()
+        assert len(self.entry_nodes) == 0
+        assert len(self.exit_nodes) == 0
+
         for node in self.dynamic_nodes:
             if len(node.cf_predes) == 0 and len(node.df_predes) == 0:
                 assert node not in self.entry_nodes
                 self.entry_nodes.add(node)
-        print("[dyn_dep] total number of entry nodes: " + str(len(self.entry_nodes)))
-
-    def find_exit_nodes(self):
-        self.exit_nodes = []
-        #if len(self.exit_nodes) > 0:
-        #    return
-        for node in self.dynamic_nodes:
             if len(node.cf_succes) == 0 and len(node.df_succes) == 0:
                 assert node not in self.exit_nodes
-                self.exit_nodes.append(node)
+                self.exit_nodes.add(node)
+        print("[dyn_dep] total number of entry nodes: " + str(len(self.entry_nodes)))
         print("[dyn_dep] total number of exit nodes: " + str(len(self.exit_nodes)))
 
     def find_target_nodes(self, insn):

@@ -6,6 +6,7 @@ from rr_util import *
 from pin_util import *
 from collections import deque
 from collections import OrderedDict
+import itertools
 
 DEBUG_CFG = False
 DEBUG_SIMPLIFY = False
@@ -69,7 +70,7 @@ class BasicBlock:
     def fromJSON(data):
         id = data['id']
         ends_in_branch = data['ends_in_branch']
-        is_entry = data['is_entry']
+        is_entry = True if data['is_entry'] == 1 else False
         lines = data['lines']
         bb = BasicBlock(id, ends_in_branch, is_entry, lines)
         bb.start_insn = data['start_insn']
@@ -138,7 +139,7 @@ class CFG:
         self.ordered_bbs_in_slice = [] #Includes only the Basic Blocks in the slice
 
         self.target_bbs = set()
-        self.entry_bbs = []
+        self.entry_bbs = set()
         self.postorder_list = []
 
         self.built = False
@@ -221,7 +222,7 @@ class CFG:
             cfg.target_bbs.add(cfg.id_to_bb[n])
 
         for n in data["entry_bbs"]:
-            cfg.entry_bbs.append(cfg.id_to_bb[n])
+            cfg.entry_bbs.add(cfg.id_to_bb[n])
 
         for n in data["postorder_list"]:
             cfg.postorder_list.append(cfg.id_to_bb[n])
@@ -406,6 +407,7 @@ class CFG:
                     worklist.append(succe)
 
             if len(self.target_bbs.intersection(all_succes_before_immed_pdom)) > 0:
+                #or len(self.entry_bbs.intersection(all_succes_before_immed_pdom)) > 0:
                 #ignore_set.union(all_succes_before_immed_pdom) #FIXME, do not assign after union why???
                 if final is True:
                     if DEBUG_SIMPLIFY:
@@ -431,6 +433,8 @@ class CFG:
                             bb.immed_pdom.backedge_sources.append(prede)
                     if bb not in bb.immed_pdom.predes:
                         bb.immed_pdom.predes.append(bb)
+                    if bb.immed_pdom not in bb.succes:
+                        bb.succes.append(bb.immed_pdom)
                     #for prede in bb.predes:
                     #    if prede not in bb.immed_pdom.predes:
                     #        bb.immed_pdom.predes.append(prede)
@@ -447,6 +451,8 @@ class CFG:
                 for prede in bb.predes:
                     if bb in prede.succes:
                         prede.succes.remove(bb)
+                    if prede.succes in bb.predes: #newly added
+                        bb.predes.remove(prede.succes) #newly added
                     if bb.immed_pdom not in prede.succes:
                         prede.succes.append(bb.immed_pdom)
                     if prede not in bb.immed_pdom.predes:
@@ -462,6 +468,11 @@ class CFG:
                 if final is True:
                     if child_bb in bb.immed_pdom.predes:
                         bb.immed_pdom.predes.remove(child_bb)
+                        child_bb.succes.remove(bb.immed_pdom) #newly added
+
+                    for prede in bb.predes: #newly added
+                        if child_bb in prede.succes:
+                            prede.succes.remove(child_bb)
                 if child_bb.id in self.id_to_bb_in_slice:
                     del self.id_to_bb_in_slice[child_bb.id]
                 if child_bb in self.ordered_bbs_in_slice:
@@ -543,7 +554,7 @@ class CFG:
             #if self.target_bb is None:
             #    self.target_bb = bb
             if is_entry:
-                self.entry_bbs.append(bb)
+                self.entry_bbs.add(bb)
 
             start_insn = int(json_bb['start_insn'])
             bb.add_start_insn(start_insn)
@@ -651,11 +662,25 @@ class StaticNode:
         self.df_predes = []
         self.df_succes = []
 
+        self.backedge_targets = set()
+        self.backedge_sources = set()
+
+    def print_node(self, prefix): #FIXME change the one in dynamic graph
+        print(prefix
+              + " s_id: " + str(self.id)
+              + " insn: " + self.hex_insn + " lines: " + (str(self.bb.lines) if self.bb is not None else "")
+              + " cf ps: " + str([pp.id for pp in self.cf_predes])
+              + " df ps: " + str([pp.id for pp in self.df_predes])
+              + " cf ss: " + str([ps.id for ps in self.cf_succes])
+              + " df ss: " + str([ps.id for ps in self.df_succes]))
+
     def toJSON(self):
         data = {}
 
         data["id"] = self.id
         data["insn"] = self.insn  # FIXME, this is long type right
+        data["hex_insn"] = self.hex_insn  # FIXME, this is long type right
+        data["lines"] = self.bb.lines if self.bb is not None else []  # FIXME, this is long type right
         data["function"] = self.function  # FIXME, maybe rename this to func?
         data["explained"] = self.explained
 
@@ -685,6 +710,14 @@ class StaticNode:
         data["df_succes"] = []
         for n in self.df_succes:
             data["df_succes"].append(n.id)
+
+        data["node_backedge_targets"] = list(self.backedge_targets)
+        data["node_backedge_sources"] = list(self.backedge_sources)
+        """
+        data["backedges"] = []
+        for n in self.backedges:
+            data["backedges"].append(n.id)
+        """
         return data
 
     @staticmethod
@@ -716,6 +749,9 @@ class StaticNode:
 
         sn.df_predes = data['df_predes']
         sn.df_succes = data['df_succes']
+
+        sn.backedge_targets = set(data['node_backedge_targets'])
+        sn.backedge_sources = set(data['node_backedge_sources'])
         return sn
 
     @staticmethod
@@ -739,6 +775,13 @@ class StaticNode:
         for id in sn.df_succes:
             df_succes.append(all_id_to_node[id])
         sn.df_succes = df_succes
+
+        """
+        backedges = []
+        for id in sn.backedges:
+            backedges.append(all_id_to_node[id])
+        sn.backedges = backedges
+        """
 
     def __eq__(self, other):
         if not isinstance(other, StaticNode):
@@ -813,10 +856,19 @@ class StaticNode:
 class StaticDepGraph:
     func_to_graph = {}
     pending_nodes = {}
+
     rr_result_cache = {}
     sa_result_cache = {}
+
+    func_to_callsites = None
+
+    starting_node = None
+    reverse_postorder_set = set() #temp var
     reverse_postorder_list = []
+    postorder_set = set()  # temp var
     postorder_list = []
+    entry_nodes = set()
+    exit_nodes = set()
 
     def __init__(self, func, prog):
         self.func = func
@@ -828,10 +880,10 @@ class StaticDepGraph:
 
         self.bb_id_to_node_id = {}
 
-        self.nodes_in_cf_slice = set([])
-        self.nodes_in_df_slice = set([])
+        self.nodes_in_cf_slice = set()
+        self.nodes_in_df_slice = set()
         if func in StaticDepGraph.pending_nodes:
-            for n in StaticDepGraph.pending_nodes[func]:
+            for n in StaticDepGraph.pending_nodes[func].values():
                 self.id_to_node[n.id] = n
                 self.insn_to_node[n.insn] = n
             del StaticDepGraph.pending_nodes[func]
@@ -899,10 +951,18 @@ class StaticDepGraph:
             pending = {}
             pending['func'] = func
             pending['nodes'] = []
-            for node in StaticDepGraph.pending_nodes[func]:
+            for node in StaticDepGraph.pending_nodes[func].values():
                 pending['nodes'].append(node.toJSON())
             out_pending.append(pending)
-        out = {"out_result": out_result, "out_pending": out_pending}
+        postorder_list = []
+        for n in StaticDepGraph.postorder_list:
+            postorder_list.append(n.id)
+        reverse_postorder_list = []
+        for n in StaticDepGraph.reverse_postorder_list:
+            reverse_postorder_list.append(n.id)
+        out = {"out_result": out_result, "out_pending": out_pending,
+               "graph_postorder_list": postorder_list,
+               "graph_reverse_postorder_list": reverse_postorder_list}
         with open(json_file, 'w') as f:
             # out.write(json.dumps(dynamic_result))
             json.dump(out, f, indent=4, ensure_ascii=False)
@@ -916,10 +976,10 @@ class StaticDepGraph:
         for json_func_to_nodes in in_result["out_pending"]:
             func = json_func_to_nodes["func"]
             json_nodes = json_func_to_nodes["nodes"]
-            nodes = []
+            nodes = {}
             for json_node in json_nodes:
                 node = StaticNode.fromJSON(json_node)
-                nodes.append(node)
+                nodes[node.insn] = node
                 all_id_to_node[node.id] = node
             pending_nodes[func] = nodes
 
@@ -930,12 +990,21 @@ class StaticDepGraph:
         for func in func_to_graph:
             StaticDepGraph.fromJSON_finish(func_to_graph[func], all_id_to_node)
         for func in pending_nodes:
-            for node in pending_nodes[func]:
+            for node in pending_nodes[func].values():
                 StaticNode.fromJSON_finish(node, all_id_to_node)
-        return func_to_graph, pending_nodes
 
-    def make_or_get_df_node(self, insn, bb, function): #TODO: think this through again
-        node = self.make_node(insn, bb, function)
+        postorder_list = []
+        for json_node in in_result["graph_postorder_list"]:
+            postorder_list.append(all_id_to_node[json_node])
+
+        reverse_postorder_list = []
+        for json_node in in_result["graph_reverse_postorder_list"]:
+            reverse_postorder_list.append(all_id_to_node[json_node])
+        return func_to_graph, pending_nodes, postorder_list, reverse_postorder_list
+
+    @staticmethod
+    def make_or_get_df_node(insn, bb, function): #TODO: think this through again
+        node = StaticDepGraph.make_node(insn, bb, function)
         if node.explained is True:
             if node.is_df is True:
                 #assert node.is_cf is False, str(node)
@@ -948,8 +1017,9 @@ class StaticDepGraph:
         node.explained = False
         return node
 
-    def make_or_get_cf_node(self, insn, bb, function):
-        node = self.make_node(insn, bb, function)
+    @staticmethod
+    def make_or_get_cf_node(insn, bb, function):
+        node = StaticDepGraph.make_node(insn, bb, function)
         if node.explained is True:
             if node.is_cf is True:
                 return node
@@ -960,10 +1030,20 @@ class StaticDepGraph:
         node.explained = False
         return node
 
-    def make_node(self, insn, bb, function):
-        if insn in self.insn_to_node:
-            return self.insn_to_node[insn]
+    @staticmethod
+    def make_node(insn, bb, function):
+        if function in StaticDepGraph.func_to_graph:
+            graph = StaticDepGraph.func_to_graph[function]
+            if insn in graph.insn_to_node:
+                return graph.insn_to_node[insn]
+        elif function in StaticDepGraph.pending_nodes:
+            pending = StaticDepGraph.pending_nodes[function]
+            if insn in pending:
+                return pending[insn]
+
         node = StaticNode(insn, bb, function)
+        #print("Creating node: " + str(node))
+
         if function in StaticDepGraph.func_to_graph:
             graph = StaticDepGraph.func_to_graph[function]
             graph.id_to_node[node.id] = node
@@ -971,8 +1051,9 @@ class StaticDepGraph:
             assert function not in StaticDepGraph.pending_nodes
         else:
             if function not in StaticDepGraph.pending_nodes:
-                StaticDepGraph.pending_nodes[function] = []
-            StaticDepGraph.pending_nodes[function].append(node)
+                StaticDepGraph.pending_nodes[function] = {}
+            StaticDepGraph.pending_nodes[function][node.insn] = node
+            assert function not in StaticDepGraph.func_to_graph
         return node
 
     def get_closest_dep_branch(self, node): #TODO, is getting the farthest one
@@ -1016,14 +1097,17 @@ class StaticDepGraph:
         return self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
     @staticmethod
-    def build_dependencies(insn, func, prog, limit=10000):
+    def build_dependencies(insn, func, prog, limit=10000, use_cache=True):
         start = time.time()
         key = str(insn) + "_" + str(func) + "_" + str(prog) + "_" + str(limit)
         result_file = os.path.join(curr_dir, 'cache', 'static_graph_result_' + key)
-        if os.path.isfile(result_file):
-            func_to_graph, pending_nodes = StaticDepGraph.loadJSON(result_file)
+        if use_cache and os.path.isfile(result_file):
+            func_to_graph, pending_nodes, postorder_list, reverse_postorder_list = StaticDepGraph.loadJSON(result_file)
             StaticDepGraph.func_to_graph = func_to_graph
             StaticDepGraph.pending_nodes = pending_nodes
+            StaticDepGraph.postorder_list = postorder_list
+            StaticDepGraph.reverse_postorder_list = reverse_postorder_list
+            StaticDepGraph.print_graph_info()
             return True
 
         rr_result_file = os.path.join(curr_dir, 'cache', 'rr_results_' + prog + '.json')
@@ -1041,10 +1125,13 @@ class StaticDepGraph:
                 sa_result_size = len(StaticDepGraph.sa_result_cache)
 
         try:
-            #StaticDepGraph.func_to_callsites = get_func_to_callsites(prog)
+            StaticDepGraph.func_to_callsites = get_func_to_callsites(prog)
+            #print(StaticDepGraph.func_to_callsites)
             iteration = 0
             worklist = deque()
-            worklist.append([insn, func, prog, None])
+            starting_node = StaticDepGraph.make_or_get_cf_node(insn, None, func)
+            StaticDepGraph.starting_node = starting_node
+            worklist.append([insn, func, prog, starting_node])
             while len(worklist) > 0:
                 if iteration >= limit:
                     break
@@ -1059,7 +1146,6 @@ class StaticDepGraph:
                 for new_node in new_nodes:
                     worklist.append([new_node.insn, new_node.function, prog, new_node]) #FIMXE, ensure there is no duplicate work
 
-            total_count = 0
             for func in StaticDepGraph.func_to_graph:
                 graph = StaticDepGraph.func_to_graph[func]
                 target_bbs = set([])
@@ -1070,12 +1156,12 @@ class StaticDepGraph:
                 for n in graph.nodes_in_df_slice:
                     print(str(n))
 
-            for func in StaticDepGraph.func_to_graph:
-                print("[static_dep] " + func + " has " + str(len(StaticDepGraph.func_to_graph[func].nodes_in_cf_slice)) + " cf nodes and " \
-                      + str(len(StaticDepGraph.func_to_graph[func].nodes_in_df_slice)) + " df nodes")
-                total_count += len(StaticDepGraph.func_to_graph[func].nodes_in_cf_slice)
-                total_count += len(StaticDepGraph.func_to_graph[func].nodes_in_df_slice)
-            print("[static_dep] Total number of static nodes: " + str(total_count))
+            StaticDepGraph.sanity_check()
+            StaticDepGraph.find_entry_and_exit_nodes()
+            StaticDepGraph.build_reverse_postorder_list()
+            StaticDepGraph.build_postorder_list()
+            StaticDepGraph.detect_df_backedges()
+            StaticDepGraph.print_graph_info()
         except Exception as e:
             print("Caught exception: " + str(e))
             raise e
@@ -1099,7 +1185,38 @@ class StaticDepGraph:
         return False
 
     @staticmethod
-    def build_dependencies_in_function(insn, func, prog, df_node = None):
+    def print_graph_info():
+        total_count = 0
+        for func in StaticDepGraph.func_to_graph:
+            print("[static_dep] " + func + " has " + str(
+                len(StaticDepGraph.func_to_graph[func].nodes_in_cf_slice)) + " cf nodes and " \
+                  + str(len(StaticDepGraph.func_to_graph[func].nodes_in_df_slice)) + " df nodes")
+            total_count += len(StaticDepGraph.func_to_graph[func].nodes_in_cf_slice)
+            total_count += len(StaticDepGraph.func_to_graph[func].nodes_in_df_slice)
+        print("[static_dep] Total number of static nodes: " + str(total_count))
+        print("[static_dep] total number of nodes in the postorder list: "
+              + str(len(StaticDepGraph.postorder_list)))
+        """
+        for func in StaticDepGraph.func_to_graph:
+            print("[static_dep] " + func + " has " + str(
+                len(StaticDepGraph.func_to_graph[func].nodes_in_cf_slice)) + " cf nodes")
+            for n in StaticDepGraph.func_to_graph[func].nodes_in_cf_slice:
+                if n not in StaticDepGraph.postorder_list:
+                    print(n)
+            print("[static_dep] " + func + " has " + str(
+                len(StaticDepGraph.func_to_graph[func].nodes_in_df_slice)) + " df nodes")
+            for n in StaticDepGraph.func_to_graph[func].nodes_in_df_slice:
+                if n not in StaticDepGraph.postorder_list:
+                    print(n)
+        """
+
+    @staticmethod
+    def build_dependencies_in_function(insn, func, prog, initial_node=None):
+        new_nodes = set([])
+        df_node = None
+        if initial_node is not None:
+            if initial_node.is_df is True:
+                df_node = initial_node
         iter = 0
         print("[static_dep] ")
         print("[static_dep] Building dependencies for function: " + str(func))
@@ -1116,9 +1233,17 @@ class StaticDepGraph:
             if len(graph.cfg.ordered_bbs) == 0:
                 print("[static_dep][warn] Failed to load the cfg for function: "
                       + func + " ignoring the function...")
-                return set([])
+                return new_nodes
             target_bbs.add(graph.cfg.ordered_bbs[0])
             graph.build_control_flow_dependencies(target_bbs)
+            callsites = StaticDepGraph.func_to_callsites[func]
+            #for c in callsites:
+                #new_node = StaticDepGraph.make_or_get_cf_node(c[0], None, c[1])
+                #for entry_bb in graph.cfg.entry_bbs:
+                #    n = graph.id_to_node[graph.bb_id_to_node_id[entry_bb.id]]
+                #    new_node.cf_succes.append(n)
+                #    n.cf_predes.append(new_node)
+                #new_nodes.add(new_node)
             #callsites = StaticDepGraph.func_to_callsites[func]
         """
         if df_node is not None:
@@ -1155,7 +1280,8 @@ class StaticDepGraph:
                 # TODO, also need to do dataflow tracing for this one!!
             graph.merge_data_flow_nodes(defs_in_same_func)
 
-        return all_defs_in_diff_func
+        new_nodes = all_defs_in_diff_func.union(new_nodes)
+        return new_nodes
 
 
     #FIXME, think about if this makes sense
@@ -1163,28 +1289,37 @@ class StaticDepGraph:
         if len(self.cfg.ordered_bbs) == 0:
             print("[static_dep][warn] Failed to load the cfg, ignoring merging the datanode...")
             return
-        if final is False:
-            return
+        #if final is False:
+       #     return
         for node in df_nodes:
             assert node.is_df is True
-            if not final: assert node.explained is False, str(node)
+            if not final and node.explained is True:
+                print("[static_dep][warn] Node already explained, why merge again?")
+                print(node)
             node.explained = True
+            if final is False:
+                continue
             bb = self.cfg.getBB(node.insn)
             node.bb = bb
             for prede in bb.predes:
                 if prede in bb.backedge_sources:
                     continue
                 prede_node_id = self.bb_id_to_node_id[prede.id]
-                if self.id_to_node[prede_node_id] not in node.cf_predes:
-                    node.cf_predes.append(self.id_to_node[prede_node_id])
+                prede_node = self.id_to_node[prede_node_id]
+                if prede_node not in node.cf_predes:
+                    node.cf_predes.append(prede_node)
+                if node not in prede_node.cf_succes:
+                    prede_node.cf_succes.append(node)
+            """
             for succe in bb.succes:
                 if succe in bb.backedge_targets:
                     continue
                 succe_node_id = self.bb_id_to_node_id[succe.id]
                 if self.id_to_node[succe_node_id] not in node.cf_succes:
                     node.cf_succes.append(self.id_to_node[succe_node_id])
+            """
 
-    def build_data_flow_dependencies(self, func, prog, df_node = None):
+    def build_data_flow_dependencies(self, func, prog, df_node=None):
         print("[static_dep] Building dataflow dependencies local in function: " + str(func))
         defs_in_same_func = set([])
         defs_in_diff_func = set([])
@@ -1244,29 +1379,33 @@ class StaticDepGraph:
                 assert shift != '', str(load)
                 assert off != '', str(load)
 
-                prede = self.make_or_get_df_node(prede_insn, None, curr_func) #TODO, might need to include func here too
-                if prede.explained is False:
-                    #if prede not in self.nodes_in_df_slice:
-                    #    self.nodes_in_df_slice.append(prede)
-                    if type == 'memread':
-                        prede.mem_load = MemoryAccess(prede_reg, shift, off, off_reg, is_bit_var)
-                        prede.reg_write = '' #TODO put actual register name here
-                    elif type == 'regread':
-                        prede.reg_load = prede_reg
-                    elif type == 'empty':
-                        pass
-                    else:
-                        print("type not supported " + str(type))
-                        #raise Exception
-                    if curr_func != func:
-                        defs_in_diff_func.add(prede)
-                    else:
-                        defs_in_same_func.add(prede)
-                #else:
-                    #assert prede.mem_load is not None or prede.reg_load is not None, str(prede)
-                succe.df_predes.append(prede)
-                prede.df_succes.append(succe)
-
+                if succe.insn == prede_insn:
+                    print("[static_dep][warn]Ignoring the predecessor as it is the same as the successor: ")
+                    print(prede)
+                else:
+                    prede = StaticDepGraph.make_or_get_df_node(prede_insn, None,
+                                                               curr_func)  # TODO, might need to include func here too
+                    succe.df_predes.append(prede)
+                    prede.df_succes.append(succe)
+                    if prede.explained is False:
+                        #if prede not in self.nodes_in_df_slice:
+                        #    self.nodes_in_df_slice.append(prede)
+                        if type == 'memread':
+                            prede.mem_load = MemoryAccess(prede_reg, shift, off, off_reg, is_bit_var)
+                            prede.reg_write = '' #TODO put actual register name here
+                        elif type == 'regread':
+                            prede.reg_load = prede_reg
+                        elif type == 'empty':
+                            pass
+                        else:
+                            print("type not supported " + str(type))
+                            #raise Exception
+                        if curr_func != func:
+                            defs_in_diff_func.add(prede)
+                        else:
+                            defs_in_same_func.add(prede)
+                    #else:
+                        #assert prede.mem_load is not None or prede.reg_load is not None, str(prede)
 
         print("[static_dep] Found " + str(len(defs_in_same_func)) + " dataflow nodes local in function ")
         tmp_defs_in_same_func = set([])
@@ -1328,6 +1467,7 @@ class StaticDepGraph:
                     if prede.mem_store is None and prede.reg_load is None:
                         print('[static_dep][warn] predecessor already explained '
                               'but no memory store or register load found?' + str(prede))
+                assert prede != node, prede
                 node.df_predes.append(prede)
                 prede.df_succes.append(node)
 
@@ -1360,10 +1500,10 @@ class StaticDepGraph:
         # FIXME, make the logic less awkward?
         for bb in self.cfg.ordered_bbs:
             if first:
-                node = self.make_or_get_cf_node(insn, bb, self.func)
+                node = StaticDepGraph.make_or_get_cf_node(insn, bb, self.func)
                 first = False
             else:
-                node = self.make_or_get_cf_node(bb.last_insn, bb, self.func)
+                node = StaticDepGraph.make_or_get_cf_node(bb.last_insn, bb, self.func)
             if node is None:
                 continue
             self.bb_id_to_node_id[bb.id] = node.id
@@ -1382,16 +1522,25 @@ class StaticDepGraph:
         self.cfg.target_bbs = self.cfg.target_bbs.union(target_bbs)
         self.cfg.slice(final)
 
+        if final is True:
+            for bb_id in self.cfg.id_to_bb:
+                node_id = self.bb_id_to_node_id[bb_id]
+                node = self.id_to_node[node_id]
+                node.cf_predes = []
+                node.cf_succes = []
+
         for bb_id in self.cfg.id_to_bb_in_slice:
             bb = self.cfg.id_to_bb[bb_id]
             node_id = self.bb_id_to_node_id[bb_id]
             node = self.id_to_node[node_id]
-            if final is True:
-                node.cf_predes = []
-                node.cf_succes = []
+            #if final is True:
+            #    node.cf_predes = []
+            #    node.cf_succes = []
             for prede in bb.predes:
                 #assert prede not in bb.backedge_targets, str(bb)
                 if prede in bb.backedge_sources:
+                    continue
+                if prede.id not in self.cfg.id_to_bb_in_slice:
                     continue
                 prede_node_id = self.bb_id_to_node_id[prede.id]
                 if self.id_to_node[prede_node_id] not in node.cf_predes:
@@ -1399,31 +1548,226 @@ class StaticDepGraph:
             for succe in bb.succes:
                 if succe in bb.backedge_targets:
                     continue
+                if succe.id not in self.cfg.id_to_bb_in_slice:
+                    continue
                 succe_node_id = self.bb_id_to_node_id[succe.id]
                 if self.id_to_node[succe_node_id] not in node.cf_succes:
                     node.cf_succes.append(self.id_to_node[succe_node_id])
             if node not in self.nodes_in_cf_slice:
                 self.nodes_in_cf_slice.add(node)
+
+        if final is True:
+            for node in self.id_to_node.values():
+                if len(node.cf_succes) > 0 or len(node.df_succes) > 0:
+                    continue
+                if node == StaticDepGraph.starting_node:
+                    continue
+
+                worklist = deque()
+                worklist.append(node)
+                while len(worklist) > 0:
+                    curr = worklist.popleft()
+                    print(curr)
+                    if len(curr.cf_succes) == 0 and len(curr.df_succes) == 0:
+                        if curr in self.nodes_in_cf_slice:
+                            self.nodes_in_cf_slice.remove(curr)
+                            curr.print_node("Removing node because it has no successors: ")
+                        for p in node.cf_predes:
+                            if node in p.cf_succes:
+                                p.cf_succes.remove(node)
+                                worklist.append(p)
+                        for p in node.df_predes:
+                            if node in p.df_succes:
+                                p.df_succes.remove(node)
+                                worklist.append(p)
         print("[static_dep] Total number of nodes in control flow slice: " + str(len(self.nodes_in_cf_slice)) + " " + \
               str([hex(node.insn) for node in self.nodes_in_cf_slice]))
         if VERBOSE:
             for node in self.nodes_in_cf_slice:
                 print(str(node))
 
+    @staticmethod
+    def find_entry_and_exit_nodes():
+        assert len(StaticDepGraph.entry_nodes) == 0
+        assert len(StaticDepGraph.exit_nodes) == 0
+        for f in StaticDepGraph.func_to_graph:
+            graph = StaticDepGraph.func_to_graph[f]
+            pending = StaticDepGraph.pending_nodes[f] if f in StaticDepGraph.pending_nodes else []
+            for node in itertools.chain(graph.id_to_node.values(), pending):
+                if node.explained and node not in graph.nodes_in_df_slice and node not in graph.nodes_in_cf_slice:
+                    continue
+                if len(node.cf_predes) == 0 and len(node.df_predes) == 0 and \
+                    len(node.cf_succes) == 0 and len(node.df_succes) == 0:
+                    continue
+                if len(node.cf_predes) == 0 and len(node.df_predes) == 0:
+                    assert node not in StaticDepGraph.entry_nodes
+                    assert node not in StaticDepGraph.exit_nodes
+                    StaticDepGraph.entry_nodes.add(node)
+                if len(node.cf_succes) == 0 and len(node.df_succes) == 0:
+                    assert node not in StaticDepGraph.exit_nodes
+                    assert node not in StaticDepGraph.entry_nodes, node
+                    StaticDepGraph.exit_nodes.add(node)
+
+        print("\n[static_dep] total number of entry nodes: " + str(len(StaticDepGraph.entry_nodes)))
+        print("===========================================================================")
+        for entry in StaticDepGraph.entry_nodes:
+            print(entry)
+        print("===========================================================================")
+        print("\n[static_dep] total number of exit nodes: " + str(len(StaticDepGraph.exit_nodes)))
+        print("===========================================================================")
+        for exit in StaticDepGraph.exit_nodes:
+            print(exit)
+        print("===========================================================================")
+
+        print("[static_dep] total number of entry nodes: " + str(len(StaticDepGraph.entry_nodes)))
+        print("[static_dep] total number of exit nodes: " + str(len(StaticDepGraph.exit_nodes)))
+
+    @staticmethod
+    def build_reverse_postorder_list_helper(node, visited):
+        if node in visited:
+            return
+        visited.add(node)
+        for s in node.cf_succes:
+            StaticDepGraph.build_reverse_postorder_list_helper(s, visited)
+        for s in node.df_succes:
+            StaticDepGraph.build_reverse_postorder_list_helper(s, visited)
+        StaticDepGraph.reverse_postorder_list.append(node)
+        return
+
+    # a node can be visited if all its predecessors are visited
+    @staticmethod
+    def build_reverse_postorder_list(): #TODO, save the postorder list too #FIXME: as a potential of stack overflow
+        visited = set()
+        for node in StaticDepGraph.entry_nodes:
+            StaticDepGraph.build_reverse_postorder_list_helper(node, visited)
+        print("[static_dep] total number of nodes in the reverse postorder list: "
+              + str(len(StaticDepGraph.reverse_postorder_list)))
+
+    @staticmethod
+    def build_postorder_list_helper(node, visited):
+        #node.print_node("postorder_list visiting node: ")
+        if node.explained is False:
+            return
+        if node in visited:
+            return
+        visited.add(node)
+        for s in node.cf_predes: #FIXME change to p
+            StaticDepGraph.build_postorder_list_helper(s, visited)
+        for s in node.df_predes:
+            StaticDepGraph.build_postorder_list_helper(s, visited)
+        StaticDepGraph.postorder_list.append(node)
+
     """
-    def print_node(self, prefix, n): #fixme refactor this later
-        print(prefix
-              + " d_id: " + str(n.id) + " s_id: " + str(n.static_node.id)
-              + " insn: " + n.static_node.hex_insn + " lines: " + str(n.static_node.bb.lines)
-              + " cf ps: " + str([pp.id for pp in n.cf_predes])
-              + " df ps: " + str([pp.id for pp in n.df_predes])
-              + " cf ss: " + str([ps.id for ps in n.cf_succes])
-              + " df ss: " + str([ps.id for ps in n.df_succes]))
+    # a node can be visited if all its successors are visited
+    @staticmethod
+    def build_postorder_list(): #TODO, save the postorder list too #FIXME: as a potential of stack overflow
+        visited = set()
+        for node in StaticDepGraph.exit_nodes:
+            StaticDepGraph.build_postorder_list_helper(node, visited)
+        print("[static_dep] total number of nodes in the postorder list: "
+              + str(len(StaticDepGraph.postorder_list)))
     """
 
+    @staticmethod
+    def build_postorder_list(): #TODO, save the postorder list too #FIXME: as a potential of stack overflow
+        StaticDepGraph.postorder_list = []
+        visited = set()
+        StaticDepGraph.build_postorder_list_helper(StaticDepGraph.starting_node, visited)
+        print("[static_dep] total number of nodes in the postorder list: "
+              + str(len(StaticDepGraph.postorder_list)))
+
+    @staticmethod
+    def detect_df_backedges_helper(node, visited_cf_nodes, visited_df_nodes, new_funcs):
+        if node in visited_df_nodes:
+            return
+        visited_df_nodes.add(node)
+        for cf_prede in node.cf_predes:
+            if cf_prede in visited_cf_nodes:
+                node.backedge_targets.add(cf_prede.insn)
+                cf_prede.backedge_sources.add(node.insn)
+                print("Backedge detected: " )
+                node.print_node(" source: ")
+                cf_prede.print_node(" target: ")
+            new_funcs.add(cf_prede.function)
+        for df_prede in node.df_predes:
+            StaticDepGraph.detect_df_backedges_helper(df_prede, visited_cf_nodes, visited_df_nodes, new_funcs)
+            new_funcs.add(df_prede.function)
+
+    @staticmethod
+    def detect_df_backedges(): #TODO, save the postorder list too #FIXME: as a potential of stack overflow
+        visited_cf_nodes = set()
+        visited_df_nodes = set()
+        visited_funcs = set()
+        worklist = deque()
+        worklist.append(StaticDepGraph.starting_node.function)
+        while len(worklist) > 0:
+            func = worklist.popleft()
+            visited_funcs.add(func)
+            if func not in StaticDepGraph.func_to_graph:
+                continue
+            graph = StaticDepGraph.func_to_graph[func]
+            for bb in graph.cfg.postorder_list:
+                node_id = graph.bb_id_to_node_id[bb.id]
+                node = graph.id_to_node[node_id]
+                if node in graph.nodes_in_cf_slice:
+                    visited_cf_nodes.add(node)
+                    for df_prede in node.df_predes:
+                        new_funcs = set()
+                        StaticDepGraph.detect_df_backedges_helper(df_prede, visited_cf_nodes, visited_df_nodes, new_funcs)
+                        for new_func in new_funcs.difference(visited_funcs):
+                            if new_func not in worklist:
+                                worklist.append(new_func)
+        #print("[static_dep] total number of nodes in the postorder list: "
+        #      + str(len(StaticDepGraph.postorder_list)))
+
+    @staticmethod
+    def sanity_check():
+        bad_count = 0
+        for func in StaticDepGraph.func_to_graph:
+            graph = StaticDepGraph.func_to_graph[func]
+            assert (len(graph.insn_to_node) == len(graph.id_to_node))
+            for node in itertools.chain(graph.nodes_in_cf_slice, graph.nodes_in_df_slice):
+                for p in node.cf_predes:
+                    if node not in p.cf_succes:
+                        if node.is_df is True:
+                            assert len(node.df_succes) > 0
+                            continue
+                        bad_count += 1
+                        print("************ Type 1 ******************")
+                        print("**************************************")
+                        print(node)
+                        print(p)
+                    # assert node in p.cf_succes, str(node) + str(p)
+                for p in node.df_predes:
+                    if node not in p.df_succes:
+                        bad_count += 1
+                        print("************ Type 2 ******************")
+                        print("**************************************")
+                        print(node)
+                        print(p)
+                    # assert node in p.df_succes, str(node) + str(p)
+                for s in node.cf_succes:
+                    if node not in s.cf_predes:
+                        bad_count += 1
+                        print("************ Type 3  *****************")
+                        print("**************************************")
+                        print(node)
+                        print(s)
+                    # assert node in node.cf_predes, str(node) + str(s)
+                for s in node.df_succes:
+                    if node not in s.df_predes:
+                        bad_count += 1
+                        print("************ Type 4  *****************")
+                        print("**************************************")
+                        print(node)
+                        print(s)
+                    #assert node in node.df_predes, str(node) + str(s)
+        print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
+
 if __name__ == "__main__":
-    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", 50)
+    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", limit=1, use_cache=False)
     #StaticDepGraph.build_dependencies(0x409418, "scanblock", "909_ziptest_exe9")
+    """
     json_file = os.path.join(curr_dir, 'static_graph_result')
     StaticDepGraph.writeJSON(json_file)
     func_to_graph, pending_nodes = StaticDepGraph.loadJSON(json_file)
@@ -1438,3 +1782,4 @@ if __name__ == "__main__":
         assert len(func_to_graph[func].bb_id_to_node_id) == len(StaticDepGraph.func_to_graph[func].bb_id_to_node_id)
         assert len(func_to_graph[func].nodes_in_cf_slice) == len(StaticDepGraph.func_to_graph[func].nodes_in_cf_slice)
         assert len(func_to_graph[func].nodes_in_df_slice) == len(StaticDepGraph.func_to_graph[func].nodes_in_df_slice)
+    """
