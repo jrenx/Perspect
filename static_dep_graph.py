@@ -442,6 +442,11 @@ class CFG:
                         print("[simplify] new predecessors are: " + str([prede.lines for prede in bb.immed_pdom.predes]))
                 continue
 
+            if len(self.entry_bbs.intersection(all_succes_before_immed_pdom)) > 0:
+                assert len(bb.predes) == 0
+                self.entry_bbs.remove(bb)
+                self.entry_bbs.add(bb.immed_pdom)
+
             #remove_set.add(bb) not really needed
             all_predes = []
             all_predes.extend(bb.predes)
@@ -478,6 +483,7 @@ class CFG:
                 if child_bb in self.ordered_bbs_in_slice:
                     self.ordered_bbs_in_slice.remove(child_bb)
                 ignore_set.add(child_bb)
+
             if final is True and has_backedge is True:
                 for prede in all_predes:
                     prede.backedge_targets.append(bb.immed_pdom)
@@ -880,6 +886,9 @@ class StaticDepGraph:
 
         self.nodes_in_cf_slice = set()
         self.nodes_in_df_slice = set()
+
+        self.pending_callsite_nodes = []
+
         if func in StaticDepGraph.pending_nodes:
             for n in StaticDepGraph.pending_nodes[func].values():
                 self.id_to_node[n.id] = n
@@ -1154,6 +1163,7 @@ class StaticDepGraph:
                 target_bbs = set([])
                 graph.build_control_flow_dependencies(target_bbs, True)
                 graph.merge_data_flow_nodes(graph.nodes_in_df_slice, True)
+                graph.merge_callsite_nodes()
                 for n in graph.nodes_in_cf_slice:
                     print(str(n))
                 for n in graph.nodes_in_df_slice:
@@ -1240,14 +1250,10 @@ class StaticDepGraph:
             target_bbs.add(graph.cfg.ordered_bbs[0])
             graph.build_control_flow_dependencies(target_bbs)
             callsites = StaticDepGraph.func_to_callsites[func]
-            #for c in callsites:
-                #new_node = StaticDepGraph.make_or_get_cf_node(c[0], None, c[1])
-                #for entry_bb in graph.cfg.entry_bbs:
-                #    n = graph.id_to_node[graph.bb_id_to_node_id[entry_bb.id]]
-                #    new_node.cf_succes.append(n)
-                #    n.cf_predes.append(new_node)
-                #new_nodes.add(new_node)
-            #callsites = StaticDepGraph.func_to_callsites[func]
+            for c in callsites:
+                new_node = StaticDepGraph.make_or_get_cf_node(c[0], None, c[1])
+                new_nodes.add(new_node)
+                graph.pending_callsite_nodes.add(new_node)
         """
         if df_node is not None:
             assert df_node.bb is None
@@ -1286,7 +1292,13 @@ class StaticDepGraph:
         new_nodes = all_defs_in_diff_func.union(new_nodes)
         return new_nodes
 
-
+    def merge_callsite_nodes(self):
+        for entry_bb in self.cfg.entry_bbs:
+            n = self.id_to_node[graph.bb_id_to_node_id[entry_bb.id]]
+            for callsite in self.pending_callsite_nodes:
+                callsite.cf_succes.append(n)
+                n.cf_predes.append(callsite)
+    
     #FIXME, think about if this makes sense
     def merge_data_flow_nodes(self, df_nodes, final=False):
         if len(self.cfg.ordered_bbs) == 0:
@@ -1377,8 +1389,7 @@ class StaticDepGraph:
                 is_bit_var = load[6]
                 type = load[7]
                 curr_func = load[8]
-                if read_same_as_write is True:
-                    continue
+
                 assert shift != '', str(load)
                 assert off != '', str(load)
 
@@ -1409,6 +1420,8 @@ class StaticDepGraph:
                             defs_in_same_func.add(prede)
                     #else:
                         #assert prede.mem_load is not None or prede.reg_load is not None, str(prede)
+                    if read_same_as_write is True:
+                        prede.explained = True
 
         print("[static_dep] Found " + str(len(defs_in_same_func)) + " dataflow nodes local in function ")
         tmp_defs_in_same_func = set([])
@@ -1418,7 +1431,9 @@ class StaticDepGraph:
             if VERBOSE: print(str(node))
             #assert node.is_cf is False
             assert node.is_df is True
-            assert node.explained is False
+            if node.explained is True:
+                continue
+            #assert node.explained is False
             print("[static_dep] Looking for dataflow dependencies potentially non-local to function: " + str(func) \
                   + " for read " + str(node.mem_load) + " @ " + hex(node.insn))
 
