@@ -128,8 +128,13 @@ class DynamicNode(JSONEncoder):
         return dn
 
 class DynamicDependence:
-    def __init__(self):
-        self.start_insn = None
+    def __init__(self, insn, func, prog, arg, path):
+        self.prog = prog
+        self.arg = arg
+        self.path = path
+        self.start_insn = insn
+        self.start_func = func
+        self.key = None
         self.all_static_cf_nodes = []
         self.all_static_df_nodes = []
         self.insn_of_cf_nodes = []
@@ -148,17 +153,17 @@ class DynamicDependence:
         
         instructions = {}
         for node in self.all_static_cf_nodes:
-            instructions[hex(node.insn)] = 'pc'
+            instructions[node.hex_insn] = 'pc'
 
         for node in self.all_static_df_nodes:
             # trace local
             if node.mem_load != None and node.mem_load.reg != '':
-                instructions[hex(node.insn)] = node.mem_load.reg.lower()
+                instructions[node.hex_insn] = node.mem_load.reg.lower()
             # trace remote
             elif node.mem_store != None and node.mem_store.reg != '':
-                instructions[hex(node.insn)] = node.mem_store.reg.lower()
-            if hex(node.insn) in instructions:
-                assert instructions[hex(node.insn)] != ''
+                instructions[node.hex_insn] = node.mem_store.reg.lower()
+            if node.hex_insn in instructions:
+                assert instructions[node.hex_insn] != ''
         # invoke PIN. get output of a sequence of insn
         trace = InsRegTrace(path + prog + ' ' + path + arg,
                             pin='~/pin-3.11/pin', out=trace_name)
@@ -175,8 +180,8 @@ class DynamicDependence:
                 self.all_static_cf_nodes.append(node)
 
         for node in self.all_static_cf_nodes:
-            self.insn_to_static_node[hex(node.insn)] = node
-            self.insn_of_cf_nodes.append(hex(node.insn))
+            self.insn_to_static_node[node.insn] = node
+            self.insn_of_cf_nodes.append(node.insn)
             print(node)
 
         for graph in StaticDepGraph.func_to_graph.values():
@@ -185,29 +190,19 @@ class DynamicDependence:
                 # trace local
                 if node.mem_load != None or node.mem_store != None:
                     self.all_static_df_nodes.append(node)
-                    self.insn_to_static_node[hex(node.insn)] = node
-                    self.insn_of_df_nodes.append(hex(node.insn))
+                    self.insn_to_static_node[node.insn] = node
+                    self.insn_of_df_nodes.append(node.insn)
                     if node.mem_load != None:
-                        self.insn_of_local_df_nodes.append(hex(node.insn))
+                        self.insn_of_local_df_nodes.append(node.insn)
                     elif node.mem_store != None:
-                        self.insn_of_remote_df_nodes.append(hex(node.insn))
+                        self.insn_of_remote_df_nodes.append(node.insn)
 
                 print(node)
         return used_cached_result
 
-    def build_dynamic_dependencies(self, insn, func, prog, arg, path, sa_steps=10000):
-        time_record["start_time"] = time.time()
-        print("[TIME]Start time: ", time.asctime(time.localtime(time_record["start_time"])))
-
-        # Get static dep, then invoke pin to get execution results, and build CFG
-        key = str(insn) + "_" + str(func) + "_" + str(prog) + "_" + str(sa_steps)
-
-        used_cached_result = self.build_static_dependencies(insn, func, prog, sa_steps)
-        time_record["get_slice_start"] = time.time()
-        print("[TIME]Get Slice time: ", time.asctime(time.localtime(time_record["get_slice_start"])))
-
-        result_file = os.path.join(curr_dir, 'cache', 'dynamic_graph_result_' + key)
-        if os.path.isfile(result_file) and used_cached_result:
+    def build_dyanmic_dependencies(self, insn):
+        result_file = os.path.join(curr_dir, 'cache', 'dynamic_graph_result_' + self.key + "_" + str(insn))
+        if os.path.isfile(result_file):
             with open(result_file, 'r') as f:
                 in_result = json.load(f)
                 static_id_to_node = {}
@@ -218,14 +213,14 @@ class DynamicDependence:
                 time_record["load_json"] = time.time()
                 print("[TIME]Load Slice time: ", time.asctime(time.localtime(time_record["load_json"])))
         else:
-            trace_path = self.get_dynamic_trace(prog, arg, path, key + "_")
+            trace_path = self.get_dynamic_trace(self.prog, self.arg, self.path, self.key + "_")
             time_record["invoke_pin"] = time.time()
             print("[TIME]Invoke Pin time: ", time.asctime(time.localtime(time_record["invoke_pin"])))
 
             with open(trace_path, 'r') as f:
                 insn_seq = f.readlines()
             trace = insn_seq[:-1]
-            dynamic_graph = DynamicGraph(prog, insn)
+            dynamic_graph = DynamicGraph(insn)
             dynamic_graph.build_dynamic_graph(trace, self.insn_to_static_node, self.insn_of_cf_nodes,
                                             self.insn_of_df_nodes, self.insn_of_local_df_nodes,
                                             self.insn_of_remote_df_nodes)
@@ -253,13 +248,24 @@ class DynamicDependence:
         print("[dyn_dep] total number of dynamic nodes: " + str(len(dynamic_graph.dynamic_nodes)))
         return dynamic_graph
 
+    def prepare_to_build_dynamic_dependencies(self, sa_steps=10000):
+        time_record["start_time"] = time.time()
+        print("[TIME]Start time: ", time.asctime(time.localtime(time_record["start_time"])))
+
+        # Get static dep, then invoke pin to get execution results, and build CFG
+        #FIXME: convert start instruction to hex
+        self.key = str(self.start_insn) + "_" + str(self.start_func) + "_" + str(self.prog) + "_" + str(sa_steps)
+
+        used_cached_result = self.build_static_dependencies(self.start_insn, self.start_func, self.prog, sa_steps)
+        time_record["get_slice_start"] = time.time()
+        print("[TIME]Get Slice time: ", time.asctime(time.localtime(time_record["get_slice_start"])))
+
 
 class DynamicGraph:
     # TODO: restructure DynamicGraph
-    def __init__(self, prog, insn):
-        self.prog = prog
+    def __init__(self, insn):
         self.start_insn = insn
-        self.insn_to_id = {hex(self.start_insn): 1}
+        self.insn_to_id = {self.start_insn: 1}
         self.dynamic_nodes = []
         self.target_dir = os.path.join(curr_dir, 'dynamicGraph')
         self.node_frequencies = {}
@@ -273,7 +279,6 @@ class DynamicGraph:
         
     def toJSON(self):
         data = {}
-        data["prog"] = self.prog
         data["start_insn"] = self.start_insn
         data["insn_to_id"] = self.insn_to_id
 
@@ -307,9 +312,8 @@ class DynamicGraph:
 
     @staticmethod
     def fromJSON(data, static_id_to_node):
-        prog = data["prog"]
         start_insn = data["start_insn"]
-        dg = DynamicGraph(prog, start_insn)
+        dg = DynamicGraph(start_insn)
         dg.insn_to_id = data["insn_to_id"]
 
         id_to_node = {}
@@ -320,7 +324,7 @@ class DynamicGraph:
             dn.static_node = static_id_to_node[dn.static_node]
 
         for dn in dg.dynamic_nodes:
-            insn = dn.static_node.hex_insn
+            insn = dn.static_node.insn
             if insn not in dg.insn_to_dyn_nodes:
                 dg.insn_to_dyn_nodes[insn] = []
             dg.insn_to_dyn_nodes[insn].append(dn)
@@ -351,9 +355,9 @@ class DynamicGraph:
             dg.insn_to_static_node = {}
             for func in func_to_graph:
                 for node in func_to_graph[func].nodes_in_cf_slice:
-                    dg.insn_to_static_node[hex(node.insn)] = node
+                    dg.insn_to_static_node[node.insn] = node
                 for node in func_to_graph[func].nodes_in_df_slice:
-                    dg.insn_to_static_node[hex(node.insn)] = node
+                    dg.insn_to_static_node[node.insn] = node
 
         for id in data["postorder_list"]:
             dg.postorder_list.append(id_to_node[id])
@@ -623,7 +627,7 @@ class DynamicGraph:
 
         # reverse the executetable, and remove insns beyond the start insn
         executable.reverse()
-        self.insn_to_static_node = insn_to_static_node
+        self.insn_to_static_node = dict(insn_to_static_node)
 
         """
         target_str = str(hex(self.start_insn)) + ": " + str(hex(self.start_insn)) + '\n'
@@ -647,7 +651,8 @@ class DynamicGraph:
                 break
 
             result = insn_line.split(": ", 1)
-            insn = result[0]
+            hex_insn = result[0]
+            insn = int(hex_insn, 16)
 
             # mark visited insn
             if insn not in self.insn_to_id:
@@ -655,7 +660,7 @@ class DynamicGraph:
                 insn_id += 1
 
             mem_store_addr = None
-            if insn != hex(self.start_insn):
+            if insn != self.start_insn:
                 if insn not in cf_prede_insn_to_succe_node and insn not in df_prede_insn_to_succe_node:
                     continue
 
@@ -669,6 +674,7 @@ class DynamicGraph:
                 static_node = self.insn_to_static_node[insn]
 
             dynamic_node = DynamicNode(self.insn_to_id[insn], static_node)
+
             if insn not in self.insn_to_dyn_nodes:
                 self.insn_to_dyn_nodes[insn] = []
             self.insn_to_dyn_nodes[insn].append(dynamic_node)
@@ -679,10 +685,11 @@ class DynamicGraph:
                   + " insn: " + str(dynamic_node.static_node.hex_insn) \
                   + " lines: " + str(dynamic_node.static_node.bb.lines))
             self.dynamic_nodes.append(dynamic_node)
+            """
             if insn not in self.node_frequencies:
                 self.node_frequencies[insn] = 0
             self.node_frequencies[insn] = self.node_frequencies[insn] + 1
-
+            """
             if insn in cf_prede_insn_to_succe_node:
                 to_remove = set([])
                 for succe in cf_prede_insn_to_succe_node[insn]:
@@ -690,13 +697,13 @@ class DynamicGraph:
                     succe.cf_predes.append(dynamic_node)
                     dynamic_node.cf_succes.append(succe)
                     assert succe.static_node.id != dynamic_node.static_node.id
-                    assert succe.static_node.hex_insn != dynamic_node.static_node.hex_insn
+                    assert succe.static_node.insn != dynamic_node.static_node.insn
                     # Only save the closest pred
                     # TODO, what if actually have 2 predecessors
 
                     for cf_pred in succe.static_node.cf_predes:
-                        ni = cf_pred.hex_insn
-                        assert cf_pred.hex_insn == hex(cf_pred.insn)
+                        ni = cf_pred.insn
+                        #assert cf_pred.hex_insn == hex(cf_pred.insn)
                         # if ni in cf_prede_insn_to_succe_node and succe in cf_prede_insn_to_succe_node[ni]:
                         #    cf_prede_insn_to_succe_node[ni].remove(succe)
                         to_remove.add(ni)
@@ -719,7 +726,7 @@ class DynamicGraph:
                     del addr_to_df_succe_node[mem_store_addr]
 
                 else:
-                    to_remove = set([])
+                    to_remove = set()
                     for succe in df_prede_insn_to_succe_node[insn]:
                         assert succe.id != dynamic_node.id
                         succe.df_predes.append(dynamic_node)
@@ -728,7 +735,7 @@ class DynamicGraph:
                         # Only save the closest pred
                         # TODO, what if actually have 2 predecessors
                         for df_pred in succe.static_node.df_predes:
-                            ni = df_pred.hex_insn
+                            ni = df_pred.insn
                             to_remove.add(ni)
                             # if ni in df_prede_insn_to_succe_node and succe in df_prede_insn_to_succe_node[ni]:
                             #    df_prede_insn_to_succe_node[ni].remove(succe)
@@ -739,13 +746,13 @@ class DynamicGraph:
 
             if static_node.df_predes:  # and insn not in insn_of_df_nodes:
                 for prede in static_node.df_predes:
-                    node_insn = prede.hex_insn
+                    node_insn = prede.insn
                     if node_insn not in insn_of_df_nodes and node_insn not in insn_of_cf_nodes:  # Slice is not always complete
                         continue
                     # When we encounter a dataflow predecessor later,
                     # know which successors to connect to
                     if node_insn not in df_prede_insn_to_succe_node:
-                        df_prede_insn_to_succe_node[node_insn] = set([dynamic_node])
+                        df_prede_insn_to_succe_node[node_insn] = {dynamic_node}
                     else:
                         df_prede_insn_to_succe_node[node_insn].add(dynamic_node)
 
@@ -760,13 +767,13 @@ class DynamicGraph:
 
             if static_node.cf_predes:  # and insn not in insn_of_df_nodes:
                 for prede in static_node.cf_predes:
-                    node_insn = prede.hex_insn
+                    node_insn = prede.insn
                     if node_insn not in insn_of_df_nodes and node_insn not in insn_of_cf_nodes:  # Slice is not always complete
                         continue
                         # When we encounter a control predecessor later,
                         # know which successors to connect to
                     if node_insn not in cf_prede_insn_to_succe_node:
-                        cf_prede_insn_to_succe_node[node_insn] = set([dynamic_node])
+                        cf_prede_insn_to_succe_node[node_insn] = {dynamic_node}
                     else:
                         cf_prede_insn_to_succe_node[node_insn].add(dynamic_node)
             if DEBUG:
@@ -779,6 +786,7 @@ class DynamicGraph:
         self.report_result()
 
     def report_result(self):
+        """
         print("[Report] the top 5 nodes that appeared the most number of times: ")
         top_five_insn = sorted(self.node_frequencies.items(), key=lambda d: d[1], reverse=True)[:5]
         i = 1
@@ -794,6 +802,7 @@ class DynamicGraph:
             i = i + 1
 
             print(string)
+        """
         print("[Report]There are a total of " + str(len(self.dynamic_nodes)) + " nodes.")
 
     def mem_addr_calculate(self, reg_addr, expr):
@@ -819,9 +828,9 @@ class DynamicGraph:
 
         off = int(str(expr.off), 16)
 
-        res = hex(reg_address * shift + off)
+        addr = reg_address * shift + off
 
-        return res
+        return addr
 
     def print_graph(self):
 
@@ -841,9 +850,9 @@ class DynamicGraph:
 
 if __name__ == '__main__':
     dynamic_graph = DynamicDependence()
-    dynamic_graph.build_dynamic_dependencies(0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/", 2)
-    # dynamic_graph.build_dynamic_dependencies(0x409418, "scanblock", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
-    #dynamic_graph.build_dynamic_dependencies(0x409408, "scanblock", "909_ziptest_exe9")
+    dynamic_graph.prepare_to_build_dynamic_dependencies(0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/", 2)
+    # dynamic_graph.prepare_to_build_dynamic_dependencies(0x409418, "scanblock", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
+    #dynamic_graph.prepare_to_build_dynamic_dependencies(0x409408, "scanblock", "909_ziptest_exe9")
 
     print("[Summary] Get Slice: ", str(time_record["get_slice_start"] - time_record["start_time"]))
     if "load_json" in time_record:

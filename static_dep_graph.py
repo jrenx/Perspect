@@ -863,9 +863,7 @@ class StaticDepGraph:
     func_to_callsites = None
 
     starting_node = None
-    reverse_postorder_set = set() #temp var
     reverse_postorder_list = []
-    postorder_set = set()  # temp var
     postorder_list = []
     entry_nodes = set()
     exit_nodes = set()
@@ -960,7 +958,8 @@ class StaticDepGraph:
         reverse_postorder_list = []
         for n in StaticDepGraph.reverse_postorder_list:
             reverse_postorder_list.append(n.id)
-        out = {"out_result": out_result, "out_pending": out_pending,
+        out = {"starting_node": StaticDepGraph.starting_node.id,
+               "out_result": out_result, "out_pending": out_pending,
                "graph_postorder_list": postorder_list,
                "graph_reverse_postorder_list": reverse_postorder_list}
         with open(json_file, 'w') as f:
@@ -1000,7 +999,15 @@ class StaticDepGraph:
         reverse_postorder_list = []
         for json_node in in_result["graph_reverse_postorder_list"]:
             reverse_postorder_list.append(all_id_to_node[json_node])
-        return func_to_graph, pending_nodes, postorder_list, reverse_postorder_list
+
+        starting_node = all_id_to_node[in_result["starting_node"]]
+
+        StaticDepGraph.func_to_graph = func_to_graph
+        StaticDepGraph.pending_nodes = pending_nodes
+        StaticDepGraph.postorder_list = postorder_list
+        StaticDepGraph.reverse_postorder_list = reverse_postorder_list
+        StaticDepGraph.starting_node = starting_node
+        return
 
     @staticmethod
     def make_or_get_df_node(insn, bb, function): #TODO: think this through again
@@ -1102,11 +1109,7 @@ class StaticDepGraph:
         key = str(insn) + "_" + str(func) + "_" + str(prog) + "_" + str(limit)
         result_file = os.path.join(curr_dir, 'cache', 'static_graph_result_' + key)
         if use_cache and os.path.isfile(result_file):
-            func_to_graph, pending_nodes, postorder_list, reverse_postorder_list = StaticDepGraph.loadJSON(result_file)
-            StaticDepGraph.func_to_graph = func_to_graph
-            StaticDepGraph.pending_nodes = pending_nodes
-            StaticDepGraph.postorder_list = postorder_list
-            StaticDepGraph.reverse_postorder_list = reverse_postorder_list
+            StaticDepGraph.loadJSON(result_file)
             StaticDepGraph.print_graph_info()
             return True
 
@@ -1381,7 +1384,7 @@ class StaticDepGraph:
 
                 if succe.insn == prede_insn:
                     print("[static_dep][warn]Ignoring the predecessor as it is the same as the successor: ")
-                    print(prede)
+                    print(succe)
                 else:
                     prede = StaticDepGraph.make_or_get_df_node(prede_insn, None,
                                                                curr_func)  # TODO, might need to include func here too
@@ -1765,7 +1768,7 @@ class StaticDepGraph:
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
 if __name__ == "__main__":
-    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", limit=1, use_cache=False)
+    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", limit=5000, use_cache=True)
     #StaticDepGraph.build_dependencies(0x409418, "scanblock", "909_ziptest_exe9")
     """
     json_file = os.path.join(curr_dir, 'static_graph_result')
