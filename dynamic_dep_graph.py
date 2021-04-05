@@ -40,7 +40,7 @@ class DynamicNode(JSONEncoder):
         self.mem_load_addr = None
         self.mem_store = None
         self.mem_store_addr = None
-        self.output_set = set()
+        self.output_set = set() #TODO, persist these two as well?
         self.input_sets = {}
 
     def __str__(self):
@@ -672,6 +672,9 @@ class DynamicGraph:
                         continue
             else:
                 static_node = self.insn_to_static_node[insn]
+                if insn in insn_of_remote_df_nodes: #FIXME why should this happen?
+                    reg_value = result[1].rstrip('\n')
+                    mem_store_addr = self.mem_addr_calculate(reg_value, static_node.mem_store)
 
             dynamic_node = DynamicNode(self.insn_to_id[insn], static_node)
 
@@ -717,13 +720,13 @@ class DynamicGraph:
             if insn in df_prede_insn_to_succe_node:
                 if insn in insn_of_remote_df_nodes:
                     dynamic_node.mem_store_addr = mem_store_addr
-                    assert mem_store_addr is not None, dynamic_node
-                    assert mem_store_addr in addr_to_df_succe_node
-
-                    for succe in addr_to_df_succe_node[mem_store_addr]:
-                        succe.df_predes.append(dynamic_node)
-                        dynamic_node.df_succes.append(succe)
-                    del addr_to_df_succe_node[mem_store_addr]
+                    assert mem_store_addr is not None, str(insn_line) + "\n" + str(dynamic_node)
+                    #assert mem_store_addr in addr_to_df_succe_node
+                    if mem_store_addr in addr_to_df_succe_node:
+                        for succe in addr_to_df_succe_node[mem_store_addr]:
+                            succe.df_predes.append(dynamic_node)
+                            dynamic_node.df_succes.append(succe)
+                        del addr_to_df_succe_node[mem_store_addr]
 
                 else:
                     to_remove = set()
