@@ -683,21 +683,21 @@ class DynamicGraph:
             result = insn_line.split(": ", 1)
             hex_insn = result[0]
             insn = int(hex_insn, 16)
+            reg_value = result[1].rstrip('\n')
 
             if insn in insn_to_reg_count:
-                print(insn_line)
+                #print(insn_line)
                 #print("Insn has more than one reg: " + hex(insn))
                 if prev_insn is None or prev_insn != insn:
                     pending_reg_count = insn_to_reg_count[insn]
                     pending_regs = []
                     #print(" first encountering the insn")
                 if len(pending_regs) + 1 < pending_reg_count:
-                    reg_value = result[1].rstrip('\n')
                     pending_regs.append(reg_value)
                     prev_insn = insn
                     #print(" not all regs of the insn are accounted for")
                     continue
-                print(" all regs of the insn are accounted for " + str(pending_regs))
+                #print(" all regs of the insn are accounted for " + str(pending_regs))
             else:
                 pending_regs = None
                 pending_reg_count = 0
@@ -718,6 +718,7 @@ class DynamicGraph:
 
                     mem_store_addr = self.calculate_mem_addr(reg_value, static_node.mem_store,
                                                              None if pending_regs is None else pending_regs[0])
+                    #print("[build] Store " + hex(insn) + " to " + hex(mem_store_addr))
                     if mem_store_addr not in addr_to_df_succe_node:
                         continue
             else:
@@ -778,6 +779,7 @@ class DynamicGraph:
                             succe.df_predes.append(dynamic_node)
                             dynamic_node.df_succes.append(succe)
                         del addr_to_df_succe_node[mem_store_addr]
+                        #print("[build] Store " + hex(insn) + " to " + hex(mem_store_addr) + " removing from pending nodes")
 
                 else:
                     to_remove = set()
@@ -819,6 +821,7 @@ class DynamicGraph:
                     if mem_load_addr not in addr_to_df_succe_node:
                         addr_to_df_succe_node[mem_load_addr] = []
                     addr_to_df_succe_node[mem_load_addr].append(dynamic_node)
+                    #print("[build] Load " + hex(insn) + " to " + hex(mem_load_addr) + " adding to pending nodes")
 
             if static_node.cf_predes:  # and insn not in insn_of_df_nodes:
                 for prede in static_node.cf_predes:
@@ -875,21 +878,30 @@ class DynamicGraph:
 
         res = str(hex(data_point[0] * data_point[2] + data_point[3]))
         """
-        if off_reg_value is not None:
-            print("Calculating " + reg_value + " " + off_reg_value)
-        reg_address = int(reg_value, 16)
-        shift = int(str(expr.shift), 16)  # FIXME: why is shift empty sometimes??
+        #if off_reg_value is not None:
+        #    print("Calculating " + reg_value + " " + off_reg_value)
 
+        if expr.reg is not None and expr.reg != '':
+            reg_address = int(reg_value, 16)
+        else:
+            reg_address = 0
+
+        shift = expr.shift
+        assert(not isinstance(shift, str))
         if shift == 0:
             shift = 1
 
-        off = int(str(expr.off), 16)
+        off = expr.off
+        assert(not isinstance(off, str))
 
-        if off_reg_value is None:
+        if off_reg_value is None or expr.off_reg is None or expr.off_reg == '':
             addr = reg_address * shift + off
         else:
             off_reg_address = int(off_reg_value, 16)
-            addr = reg_address * shift + off*off_reg_address
+            addr = reg_address * shift + off * off_reg_address
+        #if off_reg_value is not None:
+        #    print("[build] Calculated " + hex(addr))
+        print("Calculating " + reg_value + " " + off_reg_value + " " + str(expr) + " to " + hex(addr))
 
         return addr
 
@@ -911,7 +923,7 @@ class DynamicGraph:
 
 if __name__ == '__main__':
     dd = DynamicDependence(0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
-    dd.prepare_to_build_dynamic_dependencies(300)
+    dd.prepare_to_build_dynamic_dependencies(320)
     dg = dd.build_dyanmic_dependencies(0x409418)
     # dynamic_graph.prepare_to_build_dynamic_dependencies(0x409418, "scanblock", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
     #dynamic_graph.prepare_to_build_dynamic_dependencies(0x409408, "scanblock", "909_ziptest_exe9")
@@ -926,6 +938,7 @@ if __name__ == '__main__':
         print("[Summary] Graph Traversal: ", str(time_record["save_dynamic_graph_as_json"] - time_record["graph_traversal"]))
 
     addr_not_explained = set()
+    addr_explained = set()
     prede_found = 0
     prede_not_found = 0
     for n in dg.insn_to_dyn_nodes[4232057]:
@@ -934,7 +947,11 @@ if __name__ == '__main__':
             addr_not_explained.add(hex(n.mem_load_addr))
         else:
             prede_found += 1
+            addr_explained.add(hex(n.mem_load_addr))
     print(" Total count " + str(len(dg.insn_to_dyn_nodes[4232057])))
-    print(" Total count with prede " + str(prede_found))
-    print(" Total count with no prede " + str(prede_not_found))
-    print(addr_not_explained)
+    print(" Total count with prede " + str(prede_found) + " " + str(len(addr_explained)))
+    print(" Total count with no prede " + str(prede_not_found) + " " + str(len(addr_not_explained)))
+    for addr in addr_not_explained:
+        print("MISSING: " + addr)
+    for addr in addr_explained:
+        print("FOUND: " + addr)

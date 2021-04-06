@@ -305,7 +305,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
             off_regs.append('')
             src_regs.append('')
             loop_insn_flags.append('0')
-            results.append([['', '', static_addr], insn, func])
+            results.append([['', 0, int(static_addr, 16)], insn, func])
 
     addrs = set()
     for a in all_addrs:

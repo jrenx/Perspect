@@ -442,10 +442,12 @@ class CFG:
                         print("[simplify] new predecessors are: " + str([prede.lines for prede in bb.immed_pdom.predes]))
                 continue
 
+            """
             if len(self.entry_bbs.intersection(all_succes_before_immed_pdom)) > 0:
-                assert len(bb.predes) == 0
+                assert len(bb.predes) == 0, bb
                 self.entry_bbs.remove(bb)
                 self.entry_bbs.add(bb.immed_pdom)
+            """
 
             #remove_set.add(bb) not really needed
             all_predes = []
@@ -674,7 +676,9 @@ class StaticNode:
     def print_node(self, prefix): #FIXME change the one in dynamic graph
         print(prefix
               + " s_id: " + str(self.id)
-              + " insn: " + self.hex_insn + " lines: " + (str(self.bb.lines) if self.bb is not None else "")
+              + " insn: " + self.hex_insn
+              + " func: " + self.function
+              + " lines: " + (str(self.bb.lines) if self.bb is not None else "")
               + " cf ps: " + str([pp.id for pp in self.cf_predes])
               + " df ps: " + str([pp.id for pp in self.df_predes])
               + " cf ss: " + str([ps.id for ps in self.cf_succes])
@@ -873,6 +877,8 @@ class StaticDepGraph:
     postorder_list = []
     entry_nodes = set()
     exit_nodes = set()
+
+    pending_callsite_nodes = []
 
     def __init__(self, func, prog):
         self.func = func
@@ -1147,6 +1153,19 @@ class StaticDepGraph:
             while len(worklist) > 0:
                 if iteration >= limit:
                     break
+                finished = True
+                if 'scanblock' not in StaticDepGraph.func_to_graph:
+                    finished = False
+                else:
+                    if 4232057 not in StaticDepGraph.func_to_graph['scanblock'].insn_to_node:
+                        finished = False
+                    else:
+                        sn = StaticDepGraph.func_to_graph['scanblock'].insn_to_node[4232057]
+                        for p in sn.df_predes:
+                            if p.explained is False:
+                                finished = False
+                if finished:
+                    print("Found all predes on scanblock @ " + hex(4232057))
                 iteration += 1
                 print("[static_dep] Running analysis at iteration: " + str(iteration))
                 curr_insn, curr_func, curr_prog, curr_node = worklist.popleft()
@@ -1163,7 +1182,7 @@ class StaticDepGraph:
                 target_bbs = set([])
                 graph.build_control_flow_dependencies(target_bbs, True)
                 graph.merge_data_flow_nodes(graph.nodes_in_df_slice, True)
-                graph.merge_callsite_nodes()
+                #graph.merge_callsite_nodes()
                 for n in graph.nodes_in_cf_slice:
                     print(str(n))
                 for n in graph.nodes_in_df_slice:
@@ -1249,11 +1268,13 @@ class StaticDepGraph:
                 return new_nodes
             target_bbs.add(graph.cfg.ordered_bbs[0])
             graph.build_control_flow_dependencies(target_bbs)
+            """
             callsites = StaticDepGraph.func_to_callsites[func]
             for c in callsites:
                 new_node = StaticDepGraph.make_or_get_cf_node(c[0], None, c[1])
                 new_nodes.add(new_node)
-                graph.pending_callsite_nodes.add(new_node)
+                graph.pending_callsite_nodes.append(new_node)
+            """
         """
         if df_node is not None:
             assert df_node.bb is None
@@ -1298,7 +1319,7 @@ class StaticDepGraph:
             for callsite in self.pending_callsite_nodes:
                 callsite.cf_succes.append(n)
                 n.cf_predes.append(callsite)
-    
+
     #FIXME, think about if this makes sense
     def merge_data_flow_nodes(self, df_nodes, final=False):
         if len(self.cfg.ordered_bbs) == 0:
@@ -1469,8 +1490,19 @@ class StaticDepGraph:
                     continue
 
                 prede_reg = load[0]
-                shift = '0' if load[1] == '' else load[1]
-                off = '0' if load[2] == '' else load[2]
+                if load[1] == '':  #TODO, when get time, re-run rr, no need to check already fixed
+                    shift = 0
+                elif isinstance(load[1], str):
+                    shift = int(load[1], 16)
+                else:
+                    shift = load[1]
+
+                if load[2] == '':  #TODO, when get time, re-run rr, no need to check already fixed
+                    off = 0
+                elif isinstance(load[2], str):
+                    off = int(load[2], 16)
+                else:
+                    off = load[2]
 
                 #print(str(prede_insn))
                 prede = self.make_or_get_df_node(prede_insn, None, curr_func)
@@ -1783,7 +1815,7 @@ class StaticDepGraph:
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
 if __name__ == "__main__":
-    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", limit=5000, use_cache=True)
+    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", limit=320, use_cache=True)
     #StaticDepGraph.build_dependencies(0x409418, "scanblock", "909_ziptest_exe9")
     """
     json_file = os.path.join(curr_dir, 'static_graph_result')
