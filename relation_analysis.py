@@ -8,7 +8,7 @@ class RelationAnalysis:
         self.dd = DynamicDependence(insn, func, prog, arg, path)
 
     def analyze(self):
-        self.dd.prepare_to_build_dynamic_dependencies(1)
+        self.dd.prepare_to_build_dynamic_dependencies(300)
         insn = self.starting_insn
         func = self.starting_func
         assert StaticDepGraph.starting_node.insn == insn
@@ -24,31 +24,31 @@ class RelationAnalysis:
             static_node.print_node("[invariant_analysis] starting static node: ")
             #if iteration > 2:
             #    break
-            if static_node in visited:
+            if static_node not in visited:
+                visited.add(static_node)
+                #TODO: need to tell dynamic dependence to not do static slicing again
+                #TODO also not rewatch pin
+                a = time.time()
+                dg = self.dd.build_dyanmic_dependencies(insn)
+                assert dg is not None
+                b = time.time()
+                print("Building dynamic graph took: " + str(b - a))
+
+                a = time.time()
+                curr_wavefront = self.forward_pass(dg, static_node)
+                b = time.time()
+                print("Forward pass took: " + str(b - a))
+
+                a = time.time()
+                curr_wavefront = self.backward_pass(dg, static_node, curr_wavefront)
+                b = time.time()
+                print("Backward pass took: " + str(b - a))
+
+                wavefront = wavefront.union(curr_wavefront)
+                if len(wavefront) == 0:
+                    break
+            else:
                 print("Already visited...")
-                continue
-            visited.add(static_node)
-            #TODO: need to tell dynamic dependence to not do static slicing again
-            #TODO also not rewatch pin
-            a = time.time()
-            dg = self.dd.build_dyanmic_dependencies(insn)
-            assert dg is not None
-            b = time.time()
-            print("Building dynamic graph took: " + str(b - a))
-
-            a = time.time()
-            curr_wavefront = self.forward_pass(dg, static_node)
-            b = time.time()
-            print("Forward pass took: " + str(b - a))
-
-            a = time.time()
-            curr_wavefront = self.backward_pass(dg, static_node, curr_wavefront)
-            b = time.time()
-            print("Backward pass took: " + str(b - a))
-
-            wavefront = wavefront.union(curr_wavefront)
-            if len(wavefront) == 0:
-                break
             next = wavefront.pop()
             insn = next.insn
             func = next.function
