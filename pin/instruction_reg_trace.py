@@ -18,7 +18,9 @@ class InsRegTrace:
             obj_file = os.path.join(pin_dir, 'obj-intel64', 'instruction_reg_log.so')
         pin_program_list = [self.pin, '-t', obj_file, '-o', os.path.join(pin_dir, self.out)]
 
-        for ins, reg in ins_reg_map.items():
+        for pair in ins_reg_map:
+            ins = pair[0]
+            reg = pair[1]
             pin_program_list.extend(['-i', ins, '-r', reg])
 
         pin_program_list.append('--')

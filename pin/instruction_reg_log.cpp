@@ -16,7 +16,7 @@ using std::endl;
 std::ofstream TraceFile;
 std::vector<unsigned long> addresses;
 std::vector<string> registers;
-
+std::map<unsigned long, std::vector<string> > addr_to_regs;
 std::map<string, REG> reg_map;
 
 /* ===================================================================== */
@@ -74,6 +74,7 @@ VOID ImageLoad(IMG img, VOID *v)
             RTN_Open(rtn);
             for (INS ins = RTN_InsHead(rtn); INS_Valid(ins); ins = INS_Next(ins))
             {
+                /*
                 int index = get_ins_index(INS_Address(ins));
                 if (index != -1)
                 {
@@ -83,6 +84,15 @@ VOID ImageLoad(IMG img, VOID *v)
                     } else {
                         INS_InsertCall(ins, IPOINT_BEFORE, AFUNPTR(record_reg), IARG_INST_PTR, IARG_REG_VALUE, reg_map[reg], IARG_END);
                     }
+                }*/
+                std::vector<string> regs = addr_to_regs[(unsigned long)INS_Address(ins)];
+                for (std::vector<string>::iterator it = regs.begin(); it != regs.end(); it++) {
+                  string reg = *it;
+                  if (reg == "pc") {
+                    INS_InsertCall(ins, IPOINT_BEFORE, AFUNPTR(record_reg), IARG_INST_PTR, IARG_INST_PTR, IARG_END);
+                  } else {
+                    INS_InsertCall(ins, IPOINT_BEFORE, AFUNPTR(record_reg), IARG_INST_PTR, IARG_REG_VALUE, reg_map[reg], IARG_END);
+                  }
                 }
             }
             RTN_Close(rtn);
@@ -108,16 +118,27 @@ int main (INT32 argc, CHAR *argv[])
     //
     if (PIN_Init(argc, argv)) return 0;
 
+    std::vector<std::pair<unsigned long, string> > inputs;
     //Initialize global variables
     for (UINT32 i = 0; i < KnobInstructionArgs.NumberOfValues(); ++i) {
         unsigned long addr;
         std::istringstream iss(KnobInstructionArgs.Value(i));
         iss >> std::hex >> addr;
         addresses.push_back(addr);
+        std::pair<unsigned long, string> pair;
+        pair.first = addr;
+        inputs.push_back(pair);
     }
 
     for (UINT32 i = 0; i < KnobRegisterArgs.NumberOfValues(); ++ i) {
-        registers.push_back(KnobRegisterArgs.Value(i));
+        string reg = KnobRegisterArgs.Value(i);
+        registers.push_back(reg);
+        inputs[i].second = reg;
+    }
+
+    for (std::vector<std::pair<unsigned long, string> >::iterator it = inputs.begin(); it != inputs.end(); it++) {
+        unsigned long addr = (*it).first;
+        addr_to_regs[addr].push_back((*it).second);
     }
 
     TraceFile.open(KnobOutputFile.Value().c_str());

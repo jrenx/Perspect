@@ -82,6 +82,8 @@ class DynamicNode(JSONEncoder):
         data = {}
         data["id"] = self.id
         data["insn_id"] = self.insn_id
+        data["hex_insn"] = self.static_node.hex_insn #for debugging
+        data["func"] = self.static_node.function #for debugging
         data["static_node"] = self.static_node.id
         data["cf_predes"] = []
         for n in self.cf_predes:
@@ -99,9 +101,11 @@ class DynamicNode(JSONEncoder):
         data["mem_load"] = self.mem_load if self.mem_load is None or not isinstance(self.mem_load, MemoryAccess) else \
                                         self.mem_load.toJSON()
         data["mem_load_addr"] = self.mem_load_addr
+        data["mem_load_addr_hex"] = None if self.mem_load_addr is None else hex(self.mem_load_addr) #for debugging
         data["mem_store"] = self.mem_store if self.mem_store is None or not isinstance(self.mem_store, MemoryAccess) else \
                                         self.mem_store.toJSON()
         data["mem_store_addr"] = self.mem_store_addr
+        data["mem_store_addr_hex"] = None if self.mem_store_addr is None else hex(self.mem_store_addr) #for debugging
         return data
 
     @staticmethod
@@ -143,30 +147,53 @@ class DynamicDependence:
         self.insn_to_static_node = {}
         self.insn_of_local_df_nodes = []
         self.insn_of_remote_df_nodes = []
+        self.insn_to_reg_count = {}
 
     def get_dynamic_trace(self, prog, arg, path, trace_name=""):
         trace_name = trace_name + 'instruction_trace.out'
         trace_path = os.path.join(curr_dir, 'pin', trace_name)
-
-        if os.path.isfile(trace_path):
-            return trace_path
         
-        instructions = {}
+        instructions = []
         for node in self.all_static_cf_nodes:
-            instructions[node.hex_insn] = 'pc'
+            instructions.append([node.hex_insn, 'pc'])
 
         for node in self.all_static_df_nodes:
             # trace local
-            if node.mem_load != None and node.mem_load.reg != '':
-                instructions[node.hex_insn] = node.mem_load.reg.lower()
+            has_reg = False
+            reg_count = 0
+            if node.mem_load != None:
+                if node.mem_load.reg != None and node.mem_load.reg != '':
+                    instructions.append([node.hex_insn, node.mem_load.reg.lower()])
+                    reg_count += 1
+                    has_reg = True
+                if node.mem_load.off_reg != None and node.mem_load.off_reg != '':
+                    instructions.append([node.hex_insn, node.mem_load.off_reg.lower()])
+                    reg_count += 1
+                    has_reg = True
             # trace remote
-            elif node.mem_store != None and node.mem_store.reg != '':
-                instructions[node.hex_insn] = node.mem_store.reg.lower()
-            if node.hex_insn in instructions:
-                assert instructions[node.hex_insn] != ''
+            elif node.mem_store != None:
+                if node.mem_store.reg != None and node.mem_store.reg != '':
+                    instructions.append([node.hex_insn, node.mem_store.reg.lower()])
+                    reg_count += 1
+                    has_reg = True
+                if node.mem_store.off_reg != None and node.mem_store.off_reg != '':
+                    instructions.append([node.hex_insn, node.mem_store.off_reg.lower()])
+                    reg_count += 1
+                    has_reg = True
+            if not has_reg:
+                instructions.append([node.hex_insn, 'pc'])
+            if reg_count > 1:
+                assert has_reg
+                self.insn_to_reg_count[node.insn] = reg_count
+
+        if os.path.isfile(trace_path):
+            return trace_path
+
         # invoke PIN. get output of a sequence of insn
         trace = InsRegTrace(path + prog + ' ' + path + arg,
                             pin='~/pin-3.11/pin', out=trace_name)
+        print("[dyn_dep] Total number of instructions watched: " + str(len(instructions)))
+        print(instructions)
         trace.run_function_trace(instructions)
         return trace_path
 
@@ -182,7 +209,7 @@ class DynamicDependence:
         for node in self.all_static_cf_nodes:
             self.insn_to_static_node[node.insn] = node
             self.insn_of_cf_nodes.append(node.insn)
-            print(node)
+            #print(node)
 
         for graph in StaticDepGraph.func_to_graph.values():
             for node in graph.nodes_in_df_slice:
@@ -197,7 +224,7 @@ class DynamicDependence:
                     elif node.mem_store != None:
                         self.insn_of_remote_df_nodes.append(node.insn)
 
-                print(node)
+                #print(node)
         return used_cached_result
 
     def build_dyanmic_dependencies(self, insn):
@@ -223,7 +250,7 @@ class DynamicDependence:
             dynamic_graph = DynamicGraph(insn)
             dynamic_graph.build_dynamic_graph(trace, self.insn_to_static_node, self.insn_of_cf_nodes,
                                             self.insn_of_df_nodes, self.insn_of_local_df_nodes,
-                                            self.insn_of_remote_df_nodes)
+                                            self.insn_of_remote_df_nodes, self.insn_to_reg_count)
 
             time_record["build_finish"] = time.time()
             print("[TIME]Build Dynamic Graph Finish Time: ", time.asctime(time.localtime(time_record["build_finish"])))
@@ -621,7 +648,7 @@ class DynamicGraph:
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
     def build_dynamic_graph(self, executable, insn_to_static_node, insn_of_cf_nodes, insn_of_df_nodes,
-                           insn_of_local_df_nodes, insn_of_remote_df_nodes):
+                           insn_of_local_df_nodes, insn_of_remote_df_nodes, insn_to_reg_count):
 
         print("[TIME]Build Dynamic Graph Start Time: ", time.asctime(time.localtime(time.time())))
 
@@ -638,7 +665,7 @@ class DynamicGraph:
             print("There is no target instruction detected during Execution " + str(self.number))
             return
         """
-
+        print(insn_to_reg_count)
         insn_id = 2
 
         addr_to_df_succe_node = {}
@@ -646,6 +673,9 @@ class DynamicGraph:
         df_prede_insn_to_succe_node = {}
 
         # traverse
+        prev_insn = None
+        pending_reg_count = 0
+        pending_regs = None #TODO, actually can have at most one pending reg????
         for insn_line in executable:
             if insn_line.find("eof") != -1:
                 break
@@ -654,6 +684,25 @@ class DynamicGraph:
             hex_insn = result[0]
             insn = int(hex_insn, 16)
 
+            if insn in insn_to_reg_count:
+                print(insn_line)
+                #print("Insn has more than one reg: " + hex(insn))
+                if prev_insn is None or prev_insn != insn:
+                    pending_reg_count = insn_to_reg_count[insn]
+                    pending_regs = []
+                    #print(" first encountering the insn")
+                if len(pending_regs) + 1 < pending_reg_count:
+                    reg_value = result[1].rstrip('\n')
+                    pending_regs.append(reg_value)
+                    prev_insn = insn
+                    #print(" not all regs of the insn are accounted for")
+                    continue
+                print(" all regs of the insn are accounted for " + str(pending_regs))
+            else:
+                pending_regs = None
+                pending_reg_count = 0
+
+            prev_insn = insn
             # mark visited insn
             if insn not in self.insn_to_id:
                 self.insn_to_id[insn] = insn_id
@@ -666,15 +715,17 @@ class DynamicGraph:
 
                 static_node = self.insn_to_static_node[insn]
                 if insn in insn_of_remote_df_nodes:
-                    reg_value = result[1].rstrip('\n')
-                    mem_store_addr = self.mem_addr_calculate(reg_value, static_node.mem_store)
+
+                    mem_store_addr = self.calculate_mem_addr(reg_value, static_node.mem_store,
+                                                             None if pending_regs is None else pending_regs[0])
                     if mem_store_addr not in addr_to_df_succe_node:
                         continue
             else:
                 static_node = self.insn_to_static_node[insn]
                 if insn in insn_of_remote_df_nodes: #FIXME why should this happen?
                     reg_value = result[1].rstrip('\n')
-                    mem_store_addr = self.mem_addr_calculate(reg_value, static_node.mem_store)
+                    mem_store_addr = self.calculate_mem_addr(reg_value, static_node.mem_store,
+                                                             None if pending_regs is None else pending_regs[0])
 
             dynamic_node = DynamicNode(self.insn_to_id[insn], static_node)
 
@@ -761,7 +812,8 @@ class DynamicGraph:
 
                 if static_node.mem_load is not None:
                     reg_value = result[1].rstrip('\n')
-                    mem_load_addr = self.mem_addr_calculate(reg_value, static_node.mem_load)
+                    mem_load_addr = self.calculate_mem_addr(reg_value, static_node.mem_load,
+                                                            None if pending_regs is None else pending_regs[0])
                     dynamic_node.mem_load_addr = mem_load_addr
                     # TODO, do all addresses make sense?
                     if mem_load_addr not in addr_to_df_succe_node:
@@ -808,7 +860,7 @@ class DynamicGraph:
         """
         print("[Report]There are a total of " + str(len(self.dynamic_nodes)) + " nodes.")
 
-    def mem_addr_calculate(self, reg_addr, expr):
+    def calculate_mem_addr(self, reg_value, expr, off_reg_value=None):
         """
         dict = {}
         json_exprs = []
@@ -823,7 +875,9 @@ class DynamicGraph:
 
         res = str(hex(data_point[0] * data_point[2] + data_point[3]))
         """
-        reg_address = int(reg_addr, 16)
+        if off_reg_value is not None:
+            print("Calculating " + reg_value + " " + off_reg_value)
+        reg_address = int(reg_value, 16)
         shift = int(str(expr.shift), 16)  # FIXME: why is shift empty sometimes??
 
         if shift == 0:
@@ -831,7 +885,11 @@ class DynamicGraph:
 
         off = int(str(expr.off), 16)
 
-        addr = reg_address * shift + off
+        if off_reg_value is None:
+            addr = reg_address * shift + off
+        else:
+            off_reg_address = int(off_reg_value, 16)
+            addr = reg_address * shift + off*off_reg_address
 
         return addr
 
@@ -852,8 +910,9 @@ class DynamicGraph:
 
 
 if __name__ == '__main__':
-    dynamic_graph = DynamicDependence()
-    dynamic_graph.prepare_to_build_dynamic_dependencies(0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/", 2)
+    dd = DynamicDependence(0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
+    dd.prepare_to_build_dynamic_dependencies(300)
+    dg = dd.build_dyanmic_dependencies(0x409418)
     # dynamic_graph.prepare_to_build_dynamic_dependencies(0x409418, "scanblock", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
     #dynamic_graph.prepare_to_build_dynamic_dependencies(0x409408, "scanblock", "909_ziptest_exe9")
 
@@ -865,3 +924,17 @@ if __name__ == '__main__':
         print("[Summary] Build Dynamic Graph: ", str(time_record["build_finish"] - time_record["invoke_pin"]))
         print("[Summary] Dynamic Graph Json Saved: ", str(time_record["graph_traversal"] - time_record["build_finish"]))
         print("[Summary] Graph Traversal: ", str(time_record["save_dynamic_graph_as_json"] - time_record["graph_traversal"]))
+
+    addr_not_explained = set()
+    prede_found = 0
+    prede_not_found = 0
+    for n in dg.insn_to_dyn_nodes[4232057]:
+        if len(n.df_predes) == 0:
+            prede_not_found += 1
+            addr_not_explained.add(hex(n.mem_load_addr))
+        else:
+            prede_found += 1
+    print(" Total count " + str(len(dg.insn_to_dyn_nodes[4232057])))
+    print(" Total count with prede " + str(prede_found))
+    print(" Total count with no prede " + str(prede_not_found))
+    print(addr_not_explained)
