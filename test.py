@@ -25,7 +25,7 @@ def test_rr_slice():
     #rr_backslice('909_ziptest_exe9', 4234305, 4234325, 4234276, 'RBP', 0, 0, None)
     #rr_backslice('909_ziptest_exe9', 4232057, 'RDX', 0, 8, 'R13')
     #rr_backslice('909_ziptest_exe9', 4232061, 4232084, 4232057, 'RDX', 0, 8, 'R13')
-    #rr_backslice('909_ziptest_exe9', 4232061, 4232200, 4232057, 'RDX', 0, 8, 'R13')
+    rr_backslice('909_ziptest_exe9', 0x40937d, 0x409408, 0x409379, 'RDX', 0, 8, 'R13', {})
     # 0x40937D 0x409408 0x409379
     b = datetime.datetime.now()
     print("Took: " + str(b-a))
@@ -80,6 +80,12 @@ def test_get_all_bb():
     results = getAllBBs(int('0x416a91', 16), 'bytes.*Buffer·Read', '909_ziptest_exe9')
     print(len(results))
 
+def test_getting_static_addrs():
+    prog = '909_ziptest_exe9'
+    ret, ret1 = get_mem_writes_to_static_addrs(prog)
+    print(ret)
+    print(ret1)
+
 def main():
     #test_ins_trace()
     #test_func_trace()
@@ -88,7 +94,8 @@ def main():
     #get_func_to_callsites('909_ziptest_exe9')
     #test_sa_slices3()
     #test_get_all_bb()
-    test_sa_slices()
+    test_rr_slice()
+    #test_getting_static_addrs()
  
 if __name__ == "__main__":
     main()

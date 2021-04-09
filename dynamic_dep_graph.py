@@ -901,7 +901,7 @@ class DynamicGraph:
             addr = reg_address * shift + off * off_reg_address
         #if off_reg_value is not None:
         #    print("[build] Calculated " + hex(addr))
-        print("Calculating " + reg_value + " " + off_reg_value + " " + str(expr) + " to " + hex(addr))
+        print("Calculating " + str(reg_value) + " " + str(off_reg_value) + " " + str(expr) + " to " + hex(addr))
 
         return addr
 
@@ -941,6 +941,7 @@ if __name__ == '__main__':
     addr_explained = set()
     prede_found = 0
     prede_not_found = 0
+    connected_predes = set()
     for n in dg.insn_to_dyn_nodes[4232057]:
         if len(n.df_predes) == 0:
             prede_not_found += 1
@@ -948,10 +949,35 @@ if __name__ == '__main__':
         else:
             prede_found += 1
             addr_explained.add(hex(n.mem_load_addr))
+            for p in n.df_predes:
+                connected_predes.add(p.static_node)
     print(" Total count " + str(len(dg.insn_to_dyn_nodes[4232057])))
     print(" Total count with prede " + str(prede_found) + " " + str(len(addr_explained)))
     print(" Total count with no prede " + str(prede_not_found) + " " + str(len(addr_not_explained)))
-    for addr in addr_not_explained:
-        print("MISSING: " + addr)
     for addr in addr_explained:
         print("FOUND: " + addr)
+    for addr in addr_not_explained:
+        print("MISSING: " + addr)
+
+
+    print("==============================")
+    sn = StaticDepGraph.func_to_graph['scanblock'].insn_to_node[4232057]
+    predes = []
+    for p in sn.df_predes:
+        assert p.explained
+        assert p.mem_store is not None
+        print(p.mem_store)
+        predes.append(p.toJSON())
+        p.print_node(" all predes: ")
+    print("==============================")
+    for p in connected_predes:
+        print(p.mem_store)
+        p.print_node(" connected:  ")
+    print("==============================")
+    for p in sn.df_predes:
+        if p in connected_predes:
+            continue
+        print(p.mem_store)
+        p.print_node(" not found:  ")
+    with open(os.path.join(curr_dir, 'predes'), 'w') as f:
+        json.dump(predes, f, indent=4, ensure_ascii=False)

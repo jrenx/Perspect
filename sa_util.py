@@ -132,7 +132,7 @@ def get_func_to_callsites(prog):
         data_points[func_name] = callsites
     f.close()
 
-    if DEBUG_CTYPE: print( "[main] sa returned  " + str(data_points))
+    #if DEBUG_CTYPE: print( "[main] sa returned  " + str(data_points))
     return data_points
 
 #FIXME: call instructions insns and not addrs
@@ -150,11 +150,10 @@ def get_mem_writes_to_static_addrs(prog):
     lib.getMemWritesToStaticAddresses(prog_name)
     if DEBUG_CTYPE: print( "[main] : Back from C")
 
-    mem_writes_per_insn = []
     f = open(os.path.join(curr_dir, 'writesToStaticAddr_result'))
     json_insn_to_writes = json.load(f)
     data_points = {}
-    for json_insn_to_write in json_insn_to_writes:
+    for json_insn_to_write in json_insn_to_writes: #FIXME name better
         insn_addr = json_insn_to_write['insn_addr']
         expr = hex(int(json_insn_to_write['expr'], 16))
         func = json_insn_to_write['func']
@@ -164,8 +163,30 @@ def get_mem_writes_to_static_addrs(prog):
     f.close()
     if DEBUG_CTYPE: print("[main] sa returned " + str(len(data_points)) + " results")
     #if DEBUG_CTYPE: print( "[main] sa returned " + str(data_points))
-    return data_points
 
+    mem_writes_per_static_write = {}
+    f = open(os.path.join(curr_dir, 'nestedWritesToStaticAddr_result'))
+    json_writes_per_insn = json.load(f)
+    if DEBUG_CTYPE: print("[main] : sa returned: " + str(json_writes_per_insn))
+    for json_writes in json_writes_per_insn:
+        if len(json_writes) == 0:
+            continue
+        insn = json_writes['addr']
+        static_write_insn = json_writes['target_addr']
+        true_insn_addr = json_writes['true_addr']
+        is_loop_insn = json_writes['is_loop_insn']
+        func_name = json_writes['func_name']
+        src_reg = json_writes['src']
+        if DEBUG: print("==> For instruction: " + str(insn) + " @ " + func_name)
+        writes = parseLoadsOrStores(json_writes['writes'])
+
+        if static_write_insn not in mem_writes_per_static_write:
+            mem_writes_per_static_write[static_write_insn] = []
+        mem_writes_per_static_write[static_write_insn].append([insn, func_name, writes, true_insn_addr, src_reg, is_loop_insn])
+    f.close()
+    if DEBUG_CTYPE: print( "[main] sa returned " + str(data_points))
+    if DEBUG_CTYPE: print( "[main] sa returned " + str(mem_writes_per_static_write))
+    return data_points, mem_writes_per_static_write
 
 #FIXME: call instructions insns and not addrs
 def get_mem_writes(insn_to_func, prog):

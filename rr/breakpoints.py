@@ -20,6 +20,7 @@ class InitArgument(gdb.Function):
             gdb.execute("br {}".format(br))
         for br in breakpoints:
             gdb.execute("br {}".format(br))
+            gdb.execute("commands\nc\nend")
 
         return 1
 
@@ -45,13 +46,14 @@ class RunBreakCommands(gdb.Function):
                 outs = f.readlines()
 
             found_break_num = False
-            for line in outs:
+            for line in reversed(outs):
                 match = re.match(r'Breakpoint (\d+),', line)
                 if not match:
                     continue
                 break_num = int(match.group(0).split()[1][:-1]) - 1
                 is_go_file = line.split()[-1].split(':')[0].endswith('.go')
                 found_break_num = True
+                break
 
             if not found_break_num:
                 return 0
@@ -66,16 +68,23 @@ class RunBreakCommands(gdb.Function):
             offset = config['offsets'][break_num]
             is_loop_insn = int(config['loop_insn_flags'][break_num])
 
-            arg = '('
+            cmd1 = None
+            cmd2 = None
+            arg = ''
             if reg != '':
                 arg += '${}'.format(reg)
             if shift != '0x0':
-                arg += '<<{}'.format(shift)  # TODO test this
+                if arg != '':
+                    arg += '<<{}'.format(shift)  # TODO test this
             if off_reg != '':
-                arg += '+${}*{}'.format(off_reg, offset)
+                if arg != '':
+                    arg += '+'
+                arg += '${}*{}'.format(off_reg, offset)
             elif offset != '0x0':
-                arg += '+{}'.format(offset)
-            arg += ')'
+                if arg != '':
+                    arg += '+'
+                arg += '{}'.format(offset)
+            arg = '(' + arg + ')'
 
             if config['step'] and not inside_loop:
                 gdb.execute('si')
@@ -83,9 +92,11 @@ class RunBreakCommands(gdb.Function):
             for i in range(2):
                 try:
                     cmd = 'p/x ' + arg
+                    cmd1 = cmd
                     gdb.execute(cmd)
                     break
                 except Exception as e: #TODO is there a more specific error?
+                    cmd1 = None
                     if 'Argument to arithmetic operation not a number or boolean.' in str(e):
                         if reg != '':
                             gdb.execute('i reg ${}'.format(reg))
@@ -117,16 +128,22 @@ class RunBreakCommands(gdb.Function):
                 else: # long type does not exist for go
                     if '(' in src_reg or ',' in src_reg or '%' in src_reg:  # FIXME: use regex to test for non alphebet and non number
                         cmd = 'p/x *(' + arg + ')'
-                    else:
+                    elif src_reg != '':
                         cmd = 'p/x ${}'.format(src_reg)  # TODO: sometimes the src is not a simple reg either
+                    else:
+                        print("SPECIAL")
+                        cmd = 'x/32b ' + arg
                 for i in range(3):
                     try:
+                        cmd2 = cmd
                         gdb.execute(cmd)
                         break
                     except gdb.MemoryError as me:
+                        cmd2 = None
                         print('[debug] memory error: ' + str(me) + ' caused by cmd: ' + cmd)
                         cmd = 'p/x *(' + arg + ')'
                     except Exception as e: #TODO is there a more specific error?
+                        cmd2 = None
                         #if 'Attempt to dereference a generic pointer.' in str(e):
                         #    if '(' in src_reg or ',' in src_reg or '%' in src_reg: #FIXME: use regex to test for non alphebet and non number
                         #        print('[debug] Source register format is not accepted: ' + src_reg)
@@ -136,6 +153,18 @@ class RunBreakCommands(gdb.Function):
                         print("[debug] GDB command caused error: " + cmd)
                         raise e
             if is_loop_insn != 1:
+                if not config['deref']:
+                    if cmd1 is not None and ((config['deref'] and cmd is not None) or not config['deref']):
+                        cmds = 'commands ' + str(break_num + 1)
+                        gdb.execute(cmds + "\n \n end")
+                        if config['step']:
+                            cmds = cmds + "\nsi"
+                        cmds = cmds + "\n" + cmd1
+                        if cmd2 is not None:
+                            cmds = cmds + "\n" + cmd2
+                        cmds = cmds + "\ncontinue\nend"
+                        print(cmds)
+                        gdb.execute(cmds)
                 break
             else:
                 print("[debug] Is a loop instruction, re-running.")

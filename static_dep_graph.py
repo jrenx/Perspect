@@ -1080,10 +1080,12 @@ class StaticDepGraph:
 
     def get_closest_dep_branch(self, node): #TODO, is getting the farthest one
         # TODO, what if has no direct cf predecessor, is that possible?
+        #print("===========================")
         succes = set([])
         for succe in node.df_succes:
             if succe.bb is not None and succe.bb.ends_in_branch:
                 succes.add(succe.bb)
+                #print(succe)
         last_bb = None
         for bb in self.cfg.postorder_list:
             if bb in succes:
@@ -1205,11 +1207,11 @@ class StaticDepGraph:
         if rr_result_size != len(StaticDepGraph.rr_result_cache):
             print("Persisting rr result file")
             with open(rr_result_file, 'w') as f:
-                json.dump(StaticDepGraph.rr_result_cache, f)
+                json.dump(StaticDepGraph.rr_result_cache, f, indent=4)
         if sa_result_size != len(StaticDepGraph.sa_result_cache):
             print("Persisting sa result file")
             with open(sa_result_file, 'w') as f:
-                json.dump(StaticDepGraph.sa_result_cache, f)
+                json.dump(StaticDepGraph.sa_result_cache, f, indent=4)
         print("Persisting static graph result file")
         StaticDepGraph.writeJSON(result_file)
         end = time.time()
@@ -1420,6 +1422,7 @@ class StaticDepGraph:
                 else:
                     prede = StaticDepGraph.make_or_get_df_node(prede_insn, None,
                                                                curr_func)  # TODO, might need to include func here too
+                    #print(prede)
                     succe.df_predes.append(prede)
                     prede.df_succes.append(succe)
                     if prede.explained is False:
@@ -1457,6 +1460,7 @@ class StaticDepGraph:
             #assert node.explained is False
             print("[static_dep] Looking for dataflow dependencies potentially non-local to function: " + str(func) \
                   + " for read " + str(node.mem_load) + " @ " + hex(node.insn))
+            print(node)
 
             if node.mem_load is None:
                 print("[warn] node does not have memory load?")
@@ -1467,10 +1471,10 @@ class StaticDepGraph:
             closest_dep_branch_node = self.get_closest_dep_branch(node)
             if closest_dep_branch_node is not None:
                 farthest_target_node = self.get_farthest_target(closest_dep_branch_node)
-                print("Closest dependent branch is at " + str(branch_insn))
-                print("Farthest target is at " + str(target_insn))
                 branch_insn = closest_dep_branch_node.bb.last_insn
                 target_insn = farthest_target_node.insn
+                print("Closest dependent branch is at " + hex(branch_insn))
+                print("Farthest target is at " + hex(target_insn))
             results = []
             try:
                 results = rr_backslice(prog, branch_insn, target_insn, #4234305, 0x409C41 | 4234325, 0x409C55

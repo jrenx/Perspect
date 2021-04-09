@@ -6,7 +6,7 @@ import time
 import datetime
 
 rr_dir = os.path.dirname(os.path.realpath(__file__))
-DEBUG = False
+DEBUG = True
 def run_watchpoint(breakpoints, watchpoints):
     config = {'breakpoints': breakpoints,
               'watchpoints': watchpoints}
@@ -37,6 +37,8 @@ def parse_watchpoint(breakpoints, watchpoints):
     watchpoints_not_seen = set(watchpoints)
     with open(os.path.join(rr_dir, 'watchpoints.log'), 'r') as log:
         for line in log:
+            if "Error" in line:
+                print("[watchpoint][warn] Is this an error from GDB? " + line)
             if re.search(r'Breakpoint \d+,', line):
                 if curr_watch_num != -1:
                     raise ValueError('watchpoint with no source location')
