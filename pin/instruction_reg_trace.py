@@ -18,10 +18,17 @@ class InsRegTrace:
             obj_file = os.path.join(pin_dir, 'obj-intel64', 'instruction_reg_log.so')
         pin_program_list = [self.pin, '-t', obj_file, '-o', os.path.join(pin_dir, self.out)]
 
-        for pair in ins_reg_map:
-            ins = pair[0]
-            reg = pair[1]
-            pin_program_list.extend(['-i', ins, '-r', reg])
+        with open('instruction_reg_log_arg', 'w') as f:
+            for pair in ins_reg_map:
+                ins = pair[0]
+                reg = pair[1]
+                f.write('-i\n')
+                f.write(ins + '\n')
+                f.write('-r\n')
+                f.write(reg + '\n')
+                f.write('-c\n')
+                f.write(str(pair[2]) + '\n')
+                #pin_program_list.extend(['-i', ins, '-r', reg])
 
         pin_program_list.append('--')
         pin_program_list.extend(self.program)

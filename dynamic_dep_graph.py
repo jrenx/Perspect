@@ -148,43 +148,65 @@ class DynamicDependence:
         self.insn_of_local_df_nodes = []
         self.insn_of_remote_df_nodes = []
         self.insn_to_reg_count = {}
+        self.code_to_insn = {}
+        self.insns_with_regs = set()
 
     def get_dynamic_trace(self, prog, arg, path, trace_name=""):
         trace_name = trace_name + 'instruction_trace.out'
         trace_path = os.path.join(curr_dir, 'pin', trace_name)
         
         instructions = []
-        for node in self.all_static_cf_nodes:
-            instructions.append([node.hex_insn, 'pc'])
+        unique_insns = set()
+        i = 0
 
         for node in self.all_static_df_nodes:
+            if node.insn in unique_insns:
+                continue
+            unique_insns.add(node.insn)
+
+            i += 1
+            self.code_to_insn[i] = node.insn
+
             # trace local
             has_reg = False
             reg_count = 0
             if node.mem_load != None:
                 if node.mem_load.reg != None and node.mem_load.reg != '':
-                    instructions.append([node.hex_insn, node.mem_load.reg.lower()])
+                    instructions.append([node.hex_insn, node.mem_load.reg.lower(), i])
                     reg_count += 1
                     has_reg = True
                 if node.mem_load.off_reg != None and node.mem_load.off_reg != '':
-                    instructions.append([node.hex_insn, node.mem_load.off_reg.lower()])
+                    instructions.append([node.hex_insn, node.mem_load.off_reg.lower(), i])
                     reg_count += 1
                     has_reg = True
             # trace remote
             elif node.mem_store != None:
                 if node.mem_store.reg != None and node.mem_store.reg != '':
-                    instructions.append([node.hex_insn, node.mem_store.reg.lower()])
+                    instructions.append([node.hex_insn, node.mem_store.reg.lower(), i])
                     reg_count += 1
                     has_reg = True
                 if node.mem_store.off_reg != None and node.mem_store.off_reg != '':
-                    instructions.append([node.hex_insn, node.mem_store.off_reg.lower()])
+                    instructions.append([node.hex_insn, node.mem_store.off_reg.lower(), i])
                     reg_count += 1
                     has_reg = True
             if not has_reg:
-                instructions.append([node.hex_insn, 'pc'])
+                instructions.append([node.hex_insn, 'pc', i])
             if reg_count > 1:
                 assert has_reg
                 self.insn_to_reg_count[node.insn] = reg_count
+            if reg_count >= 1:
+                self.insns_with_regs.add(node.insn)
+
+        for node in self.all_static_cf_nodes:
+            if node.insn in unique_insns:
+                continue
+            unique_insns.add(node.insn)
+
+            i += 1
+            self.code_to_insn[i] = node.insn
+
+            instructions.append([node.hex_insn, 'pc', i])
+
 
         if os.path.isfile(trace_path):
             return trace_path
@@ -242,13 +264,17 @@ class DynamicDependence:
         else:
             trace_path = self.get_dynamic_trace(self.prog, self.arg, self.path, self.key + "_")
             time_record["invoke_pin"] = time.time()
-            print("[TIME]Invoke Pin time: ", time.asctime(time.localtime(time_record["invoke_pin"])))
+            print("[TIME]Invoke Pin time: ", time.asctime(time.localtime(time_record["invoke_pin"])), flush=True)
 
-            with open(trace_path, 'r') as f:
-                insn_seq = f.readlines()
-            trace = insn_seq[:-1]
+            a = time.time()
+            with open(trace_path, 'rb') as f:
+                byte_seq = f.read() #more than twice faster than readlines!
+
+            b = time.time()
+            print("Loading trace took: " + str(b-a), flush=True)
+
             dynamic_graph = DynamicGraph(insn)
-            dynamic_graph.build_dynamic_graph(trace, self.insn_to_static_node, self.insn_of_cf_nodes,
+            dynamic_graph.build_dynamic_graph(byte_seq, self.code_to_insn, self.insns_with_regs, self.insn_to_static_node, self.insn_of_cf_nodes,
                                             self.insn_of_df_nodes, self.insn_of_local_df_nodes,
                                             self.insn_of_remote_df_nodes, self.insn_to_reg_count)
 
@@ -647,13 +673,12 @@ class DynamicGraph:
                 #assert node in node.df_predes, str(node) + str(s)
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
-    def build_dynamic_graph(self, executable, insn_to_static_node, insn_of_cf_nodes, insn_of_df_nodes,
+    def build_dynamic_graph(self, byte_seq, code_to_insn, insns_with_regs, insn_to_static_node, insn_of_cf_nodes, insn_of_df_nodes,
                            insn_of_local_df_nodes, insn_of_remote_df_nodes, insn_to_reg_count):
 
         print("[TIME]Build Dynamic Graph Start Time: ", time.asctime(time.localtime(time.time())))
 
         # reverse the executetable, and remove insns beyond the start insn
-        executable.reverse()
         self.insn_to_static_node = dict(insn_to_static_node)
 
         """
@@ -666,6 +691,8 @@ class DynamicGraph:
             return
         """
         print(insn_to_reg_count)
+        print(insns_with_regs)
+        print(code_to_insn)
         insn_id = 2
 
         addr_to_df_succe_node = {}
@@ -676,14 +703,38 @@ class DynamicGraph:
         prev_insn = None
         pending_reg_count = 0
         pending_regs = None #TODO, actually can have at most one pending reg????
-        for insn_line in executable:
-            if insn_line.find("eof") != -1:
-                break
 
-            result = insn_line.split(": ", 1)
-            hex_insn = result[0]
-            insn = int(hex_insn, 16)
-            reg_value = result[1].rstrip('\n')
+        index = len(byte_seq)
+        while index > 0:
+            """
+            print(byte_seq[index-1])
+            print(byte_seq[index - 2])
+
+            print(byte_seq[index - 3])
+            print(byte_seq[index - 4])
+            print(byte_seq[index - 5])
+            print(byte_seq[index - 6])
+            print(byte_seq[index - 7])
+            print(byte_seq[index - 8])
+            print(byte_seq[index - 9])
+            print(byte_seq[index - 10])
+
+            print(byte_seq[index - 11])
+            """
+            print("Index " + str(index))
+            code = int.from_bytes(byte_seq[index - 2:index], byteorder='little')
+            print("Code: " + str(code))
+            insn = code_to_insn[code]
+            print("Addr " + str(insn) + " " + hex(insn))
+            index -= 2
+            if insn in insns_with_regs:
+                reg_value = int.from_bytes(byte_seq[index - 8:index], byteorder='little')
+                print("Reg " + hex(reg_value))
+                index -= 8
+            else:
+                reg_value = None
+            #assert (byte_seq[index] == 58)
+            #index -= 1
 
             if insn in insn_to_reg_count:
                 #print(insn_line)
@@ -923,7 +974,7 @@ class DynamicGraph:
 
 if __name__ == '__main__':
     dd = DynamicDependence(0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
-    dd.prepare_to_build_dynamic_dependencies(320)
+    dd.prepare_to_build_dynamic_dependencies(900)
     dg = dd.build_dyanmic_dependencies(0x409418)
     # dynamic_graph.prepare_to_build_dynamic_dependencies(0x409418, "scanblock", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
     #dynamic_graph.prepare_to_build_dynamic_dependencies(0x409408, "scanblock", "909_ziptest_exe9")

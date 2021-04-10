@@ -3,6 +3,13 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#include <sstream>
+#include <string>
+//#include <boost/iostreams/filtering_stream.hpp>
+//#include <boost/iostreams/filtering_streambuf.hpp>
+//#include <boost/iostreams/copy.hpp>
+//#include <boost/iostreams/filter/gzip.hpp>
+
 using std::hex;
 using std::cerr;
 using std::string;
@@ -14,10 +21,16 @@ using std::endl;
 /* ===================================================================== */
 
 std::ofstream TraceFile;
+//boost::iostreams::filtering_ostream out;
 std::vector<unsigned long> addresses;
 std::vector<string> registers;
 std::map<unsigned long, std::vector<string> > addr_to_regs;
 std::map<string, REG> reg_map;
+std::map<unsigned long, unsigned long> no_reg_list;
+std::map<unsigned long, u_int16_t> insn_to_code;
+char delim = ':';
+long curr_count = 0;
+long file_count = 0;
 
 /* ===================================================================== */
 /* Commandline Switches */
@@ -42,14 +55,53 @@ INT32 Usage()
 
 VOID start_log()
 {
-    TraceFile << "start" << endl;
+    //TraceFile << "start" << endl;
+    //out << "start" << endl;
+
 }
 
 /* ===================================================================== */
 
 VOID record_reg(ADDRINT pc, ADDRINT reg)
 {
-    TraceFile << pc << ": " << reg << endl;
+    //TraceFile.write((char*)&delim, sizeof(char));
+    short code = insn_to_code[pc];
+    if (no_reg_list.find(pc) == no_reg_list.end()) {
+      TraceFile.write((char*)&reg, sizeof(ADDRINT));
+      //std::cout << sizeof(u_int16_t) << endl;
+      //std::cout << sizeof(short) << endl;
+      //TraceFile.write((char*)&code, sizeof(short));
+      //curr_count += 2;
+      //TraceFile << pc << ":" << reg << "\n";
+    } /*else {
+      //TraceFile << pc << ":" << "\n";
+      TraceFile.write((char*)&code, sizeof(short));
+      //curr_count += 1;
+    }*/
+    TraceFile.write((char*)&code, sizeof(u_int16_t));
+    //out << pc << ": " << reg << endl;
+    /*
+    if (curr_count < 0) {
+      curr_count = 0;
+      TraceFile.close();
+      std::stringstream s("tar -zcvf log");
+      s << file_count;
+      file_count += 1;
+      s << ".tar.gz ";
+      s << KnobOutputFile.Value();
+      std::string cmd = s.str();
+      std::cout << "__" << cmd << "__" << endl;
+      system(cmd.c_str());
+
+      std::stringstream s1("rm ");
+      s1 << KnobOutputFile.Value();
+      std::string cmd1 = s1.str();
+      std::cout << "__" << cmd1 << "__" << endl;
+      system(cmd1.c_str());
+
+      TraceFile.open(KnobOutputFile.Value().c_str());
+      TraceFile.setf(ios::out | ios::binary);
+    }*/
 }
 
 /* ===================================================================== */
@@ -85,11 +137,13 @@ VOID ImageLoad(IMG img, VOID *v)
                         INS_InsertCall(ins, IPOINT_BEFORE, AFUNPTR(record_reg), IARG_INST_PTR, IARG_REG_VALUE, reg_map[reg], IARG_END);
                     }
                 }*/
-                std::vector<string> regs = addr_to_regs[(unsigned long)INS_Address(ins)];
+                unsigned long addr = (unsigned long)INS_Address(ins);
+                std::vector<string> regs = addr_to_regs[addr];
                 for (std::vector<string>::iterator it = regs.begin(); it != regs.end(); it++) {
                   string reg = *it;
                   if (reg == "pc") {
                     INS_InsertCall(ins, IPOINT_BEFORE, AFUNPTR(record_reg), IARG_INST_PTR, IARG_INST_PTR, IARG_END);
+                    no_reg_list[addr] = addr;
                   } else {
                     INS_InsertCall(ins, IPOINT_BEFORE, AFUNPTR(record_reg), IARG_INST_PTR, IARG_REG_VALUE, reg_map[reg], IARG_END);
                   }
@@ -104,9 +158,10 @@ VOID ImageLoad(IMG img, VOID *v)
 
 VOID Fini(INT32 code, VOID *v)
 {
-    TraceFile << "# eof" << endl;
-
+    //TraceFile << "# eof" << endl;
+    //out << "# eof" << endl;
     TraceFile.close();
+    //out.close();
 }
 
 /* ===================================================================== */
@@ -115,25 +170,77 @@ VOID Fini(INT32 code, VOID *v)
 int main (INT32 argc, CHAR *argv[])
 {
     // Initialize pin
-    //
     if (PIN_Init(argc, argv)) return 0;
+
+    std::ifstream infile("instruction_reg_log_arg"); // TODO change the file name
+    std::string line;
+    std::vector<string> addrs;
+    std::vector<string> regs;
+    std::vector<string> counts;
+    std::string addr_flag = "-i";
+    std::string reg_flag = "-r";
+    std::string count_flag = "-c";
+    bool expecting_addr = false;
+    bool expecting_reg = false;
+    bool expecting_count = false;
+    while (std::getline(infile, line))
+    {
+      if (line == addr_flag) {
+        expecting_addr = true;
+        expecting_reg = false;
+        expecting_count = false;
+        continue;
+      }
+      if (line == reg_flag) {
+        expecting_reg = true;
+        expecting_addr = false;
+        expecting_count = false;
+        continue;
+      }
+      if (line == count_flag) {
+        expecting_count = true;
+        expecting_addr = false;
+        expecting_reg = false;
+        continue;
+      }
+
+      assert(!expecting_addr || !expecting_reg || !expecting_count); //TODO better assert?
+
+      if (expecting_addr) {
+        addrs.push_back(line);
+      } else if (expecting_reg) {
+        regs.push_back(line);
+      } else if (expecting_count) {
+        counts.push_back(line);
+      }
+    }
 
     std::vector<std::pair<unsigned long, string> > inputs;
     //Initialize global variables
-    for (UINT32 i = 0; i < KnobInstructionArgs.NumberOfValues(); ++i) {
+
+    for (u_int i = 0; i < addrs.size(); ++i) {
         unsigned long addr;
-        std::istringstream iss(KnobInstructionArgs.Value(i));
+        std::istringstream iss(addrs[i]);
         iss >> std::hex >> addr;
         addresses.push_back(addr);
         std::pair<unsigned long, string> pair;
         pair.first = addr;
         inputs.push_back(pair);
+
+        int count;
+        std::istringstream iss2(counts[i]);
+        iss2 >> count;
+        u_int16_t short_count = (u_int16_t)count;
+        insn_to_code[addr] = short_count;
+
+        std::cout << "TEST insn " << addr << " " << short_count << endl;
     }
 
-    for (UINT32 i = 0; i < KnobRegisterArgs.NumberOfValues(); ++ i) {
-        string reg = KnobRegisterArgs.Value(i);
+  for (u_int i = 0; i < regs.size(); ++i) {
+        string reg = regs[i];
         registers.push_back(reg);
         inputs[i].second = reg;
+        std::cout << "TEST reg " << reg << endl;
     }
 
     for (std::vector<std::pair<unsigned long, string> >::iterator it = inputs.begin(); it != inputs.end(); it++) {
@@ -142,9 +249,12 @@ int main (INT32 argc, CHAR *argv[])
     }
 
     TraceFile.open(KnobOutputFile.Value().c_str());
+    TraceFile.setf(ios::out | ios::binary);
 
-    TraceFile << hex;
-    TraceFile.setf(ios::showbase);
+    //TraceFile << hex;
+    //TraceFile.setf(ios::showbase);
+    //out.push(boost::iostreams::gzip_compressor());
+    //out.push(TraceFile);
 
     // Initialize reg_map
     reg_map["rax"] = REG_RAX;

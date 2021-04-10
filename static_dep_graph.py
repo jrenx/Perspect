@@ -1819,7 +1819,7 @@ class StaticDepGraph:
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
 if __name__ == "__main__":
-    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", limit=320, use_cache=True)
+    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", use_cache=True)
     #StaticDepGraph.build_dependencies(0x409418, "scanblock", "909_ziptest_exe9")
     """
     json_file = os.path.join(curr_dir, 'static_graph_result')
