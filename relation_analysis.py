@@ -1,11 +1,21 @@
 from dynamic_dep_graph import *
 import time
 
+class InvariantGroup:
+    def __init__(self, starting_node):
+        self.starting_node = starting_node
+        self.conditionally_forward_invariant_nodes = set()
+        self.forward_invariant_nodes = set()
+        self.conditionally_backward_invariant_nodes = set()
+        self.backward_invariant_nodes = set()
+        self.wave_front = set()
+
 class RelationAnalysis:
     def __init__(self, insn, func, prog, arg, path):
         self.starting_insn = insn
         self.starting_func = func
         self.dd = DynamicDependence(insn, func, prog, arg, path)
+        self.invariant_groups = {} #results
 
     def analyze(self):
         self.dd.prepare_to_build_dynamic_dependencies(300)
@@ -26,6 +36,8 @@ class RelationAnalysis:
             #    break
             if static_node not in visited:
                 visited.add(static_node)
+                ig = InvariantGroup(static_node)
+                self.invariant_groups[static_node] = ig
                 #TODO: need to tell dynamic dependence to not do static slicing again
                 #TODO also not rewatch pin
                 a = time.time()
@@ -35,12 +47,13 @@ class RelationAnalysis:
                 print("Building dynamic graph took: " + str(b - a))
 
                 a = time.time()
-                curr_wavefront = self.forward_pass(dg, static_node)
+                curr_wavefront = self.forward_pass(dg, static_node, ig)
                 b = time.time()
                 print("Forward pass took: " + str(b - a))
 
                 a = time.time()
-                curr_wavefront = self.backward_pass(dg, static_node, curr_wavefront)
+                curr_wavefront = self.backward_pass(dg, static_node, curr_wavefront, ig)
+                ig.wave_front = curr_wavefront
                 b = time.time()
                 print("Backward pass took: " + str(b - a))
 
@@ -54,7 +67,7 @@ class RelationAnalysis:
             func = next.function
             static_node = StaticDepGraph.func_to_graph[func].insn_to_node[insn]
 
-    def backward_pass(self, dg, starting_node, curr_wavefront):
+    def backward_pass(self, dg, starting_node, curr_wavefront, ig):
         wavefront = set()
         for static_node in curr_wavefront:
             insn = static_node.insn
@@ -130,12 +143,14 @@ class RelationAnalysis:
                 print("[invariant_analysis] instruction: "
                       + hex_insn + " is backward invariant with the output event")
                 backward_invariant = True
+                ig.backward_invariant_nodes.add(static_node)
                 # FIXME: could be conditionally invariant too!
             if len(input_set_counts) == 2:
                 if 0 in input_set_counts:
                     print("[invariant_analysis] instruction: "
                           + hex_insn + " is conditionally backward invariant with the output event")
                     backward_invariant = True
+                    ig.conditionally_backward_invariant_nodes.add(static_node)
             if backward_invariant is True:
                 for p in static_node.cf_predes:
                     worklist.append(p)
@@ -149,7 +164,7 @@ class RelationAnalysis:
                   + " lines " + str(static_node.bb.lines))
         return wavefront
 
-    def forward_pass(self, dg, starting_node):
+    def forward_pass(self, dg, starting_node, ig):
         wavefront = set()
 
         # tests for forward invariance
@@ -158,7 +173,7 @@ class RelationAnalysis:
         for node in dg.target_nodes:
             node.output_set.add(node)
 
-        for node in dg.postorder_list:
+        for node in dg.postorder_list: #a node will be visited only if its successors have all been visited
             backedge_sources = node.static_node.backedge_sources
             for cf_succe in node.cf_succes:
                 cf_succe_insn = cf_succe.static_node.insn
@@ -214,11 +229,13 @@ class RelationAnalysis:
                       + hex_insn + " is forward invariant with the output event")
                 forward_invariant = True
                 #FIXME: could be conditionally invariant too!
+                ig.forward_invariant_nodes.add(static_node)
             if len(output_set_counts) == 2:
                 if 0 in output_set_counts:
                     print("[invariant_analysis] instruction: "
                       + hex_insn + " is conditionally forward invariant with the output event")
                     forward_invariant = True
+                    ig.conditionally_forward_invariant_nodes.add(static_node)
             if forward_invariant is True:
                 for p in static_node.cf_predes:
                     worklist.append(p)
