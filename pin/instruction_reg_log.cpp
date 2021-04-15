@@ -68,6 +68,7 @@ VOID record_reg(ADDRINT pc, ADDRINT reg)
     short code = insn_to_code[pc];
     if (no_reg_list.find(pc) == no_reg_list.end()) {
       TraceFile.write((char*)&reg, sizeof(ADDRINT));
+
       //std::cout << sizeof(u_int16_t) << endl;
       //std::cout << sizeof(short) << endl;
       //TraceFile.write((char*)&code, sizeof(short));
@@ -266,6 +267,11 @@ int main (INT32 argc, CHAR *argv[])
     reg_map["rdi"] = REG_RDI;
     reg_map["rcx"] = REG_RCX;
     reg_map["cl"] = REG_CL;
+    //https://www.eecg.utoronto.ca/~amza/www.mindsec.com/files/x86regs.html
+    //DS:ESI EDI SI
+    //ES:EDI EDI DI
+    reg_map["es"] = REG_ESI;
+    //reg_map["es"] = REG_DI;
     //reg_map["r1"] = REG_R1;
     //reg_map["r2"] = REG_R2;
     //reg_map["r3"] = REG_R3;
