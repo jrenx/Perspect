@@ -867,6 +867,7 @@ class StaticDepGraph:
     func_to_graph = {}
     pending_nodes = {}
 
+    result_file = None
     rr_result_cache = {}
     sa_result_cache = {}
 
@@ -1125,6 +1126,7 @@ class StaticDepGraph:
         start = time.time()
         key = str(insn) + "_" + str(func) + "_" + str(prog) + "_" + str(limit)
         result_file = os.path.join(curr_dir, 'cache', 'static_graph_result_' + key)
+        StaticDepGraph.result_file = result_file
         if use_cache and os.path.isfile(result_file):
             StaticDepGraph.loadJSON(result_file)
             StaticDepGraph.print_graph_info()
@@ -1508,10 +1510,17 @@ class StaticDepGraph:
                 else:
                     off = load[2]
 
+                if len(load) >=4:
+                    print("Found offset reg")
+                    if load[3] == '':
+                        off_reg = None
+                    else:
+                        off_reg = load[3]
+
                 #print(str(prede_insn))
                 prede = self.make_or_get_df_node(prede_insn, None, curr_func)
                 if prede.explained is False:
-                    prede.mem_store = MemoryAccess(prede_reg, shift, off, None, node.mem_load.is_bit_var)
+                    prede.mem_store = MemoryAccess(prede_reg, shift, off, off_reg, node.mem_load.is_bit_var)
                     prede.reg_load = ''  # TODO put actual register name here
                     if curr_func != func:
                         defs_in_diff_func.add(prede)
