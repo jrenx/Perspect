@@ -8,6 +8,8 @@ binary_analysis/analysis
 binary_analysis/graph
 binary_analysis/*result
 binary_analysis/*results
+preprocessor/*.o
+preprocessor/preprocess
 rr/*.json
 rr/*.log
 rr/__pycache__/*
@@ -19,3 +21,6 @@ __init__.py
 graph
 *result
 *results
+preprocess_data
+instruction_reg_log_arg
+binary_dump_*
