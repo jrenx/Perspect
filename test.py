@@ -25,7 +25,7 @@ def test_rr_slice():
     #rr_backslice('909_ziptest_exe9', 4234305, 4234325, 4234276, 'RBP', 0, 0, None)
     #rr_backslice('909_ziptest_exe9', 4232057, 'RDX', 0, 8, 'R13')
     #rr_backslice('909_ziptest_exe9', 4232061, 4232084, 4232057, 'RDX', 0, 8, 'R13')
-    rr_backslice('909_ziptest_exe9', 0x40937d, 0x409408, 0x409379, 'RDX', 0, 8, 'R13', {})
+    rr_backslice('909_ziptest_exe9', 0x409380, 0x409418, 0x409379, 'RDX', 0, 8, 'R13', {})
     # 0x40937D 0x409408 0x409379
     b = datetime.datetime.now()
     print("Took: " + str(b-a))
