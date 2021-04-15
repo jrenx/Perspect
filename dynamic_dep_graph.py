@@ -10,6 +10,7 @@ import shutil
 from static_dep_graph import *
 from pin.instruction_reg_trace import *
 from json import JSONEncoder
+import subprocess
 
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 target_dir = os.path.join(curr_dir, 'dynamicGraph')
@@ -251,7 +252,7 @@ class DynamicDependence:
 
     def build_dyanmic_dependencies(self, insn):
         result_file = os.path.join(curr_dir, 'cache', 'dynamic_graph_result_' + self.key + "_" + str(insn))
-        if os.path.isfile(result_file):
+        if False:#os.path.isfile(result_file):
             with open(result_file, 'r') as f:
                 in_result = json.load(f)
                 static_id_to_node = {}
@@ -265,18 +266,42 @@ class DynamicDependence:
             trace_path = self.get_dynamic_trace(self.prog, self.arg, self.path, self.key + "_")
             time_record["invoke_pin"] = time.time()
             print("[TIME]Invoke Pin time: ", time.asctime(time.localtime(time_record["invoke_pin"])), flush=True)
+            a = time.time()
+            preprocess_data = {
+                "trace_file": trace_path,
+                "static_graph_file": StaticDepGraph.result_file,
+                "start_insn": insn,
+                "code_to_insn" : self.code_to_insn,
+                "insns_with_regs" : list(self.insns_with_regs),
+                "insn_of_cf_nodes" : self.insn_of_cf_nodes,
+                "insn_of_df_nodes" : self.insn_of_df_nodes,
+                "insn_of_local_df_nodes" : self.insn_of_local_df_nodes,
+                "insn_of_remote_df_nodes" : self.insn_of_remote_df_nodes,
+                "insn_to_reg_count" : self.insn_to_reg_count
+            }
+            preprocess_data_file = os.path.join(curr_dir, 'preprocess_data')
+            with open(preprocess_data_file, 'w') as f:
+                json.dump(preprocess_data, f, indent=4, ensure_ascii=False)
+            preprocessor_file = os.path.join(curr_dir, 'preprocessor', 'preprocess')
+            rr_process = subprocess.Popen([preprocessor_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = rr_process.communicate()
+            print(stdout)
+            print(stderr)
+            b = time.time()
+            print("Preparsing trace took: " + str(b-a), flush=True)
 
             a = time.time()
-            with open(trace_path, 'rb') as f:
+            with open(trace_path + ".parsed", 'rb') as f:
                 byte_seq = f.read() #more than twice faster than readlines!
 
             b = time.time()
             print("Loading trace took: " + str(b-a), flush=True)
 
             dynamic_graph = DynamicGraph(insn)
-            dynamic_graph.build_dynamic_graph(byte_seq, self.code_to_insn, self.insns_with_regs, self.insn_to_static_node, self.insn_of_cf_nodes,
-                                            self.insn_of_df_nodes, self.insn_of_local_df_nodes,
-                                            self.insn_of_remote_df_nodes, self.insn_to_reg_count)
+            dynamic_graph.build_dynamic_graph(byte_seq, self.code_to_insn, self.insns_with_regs, self.insn_to_static_node,
+                                              set(self.insn_of_cf_nodes), set(self.insn_of_df_nodes),
+                                              set(self.insn_of_local_df_nodes), set(self.insn_of_remote_df_nodes),
+                                              self.insn_to_reg_count)
 
             time_record["build_finish"] = time.time()
             print("[TIME]Build Dynamic Graph Finish Time: ", time.asctime(time.localtime(time_record["build_finish"])))
@@ -704,33 +729,32 @@ class DynamicGraph:
         pending_reg_count = 0
         pending_regs = None #TODO, actually can have at most one pending reg????
 
-        index = len(byte_seq)
-        while index > 0:
-            """
-            print(byte_seq[index-1])
-            print(byte_seq[index - 2])
-
-            print(byte_seq[index - 3])
-            print(byte_seq[index - 4])
-            print(byte_seq[index - 5])
-            print(byte_seq[index - 6])
-            print(byte_seq[index - 7])
-            print(byte_seq[index - 8])
-            print(byte_seq[index - 9])
-            print(byte_seq[index - 10])
-
-            print(byte_seq[index - 11])
-            """
-            print("Index " + str(index))
-            code = int.from_bytes(byte_seq[index - 2:index], byteorder='little')
-            print("Code: " + str(code))
+        index = 0
+        length = len(byte_seq)
+        ii = 0
+        print("START: " + str(self.start_insn))
+        while index < length:
+            code = int.from_bytes(byte_seq[index:index + 2], byteorder='little')
+            #print("Code: " + str(code))
             insn = code_to_insn[code]
-            print("Addr " + str(insn) + " " + hex(insn))
-            index -= 2
+            #print("Addr " + str(insn) + " " + hex(insn))
+            index += 2
+
+            ok = False
+            if insn == self.start_insn:
+                ok = True
+            elif insn in cf_prede_insn_to_succe_node or insn in df_prede_insn_to_succe_node:
+                ok = True
+
+            if ok is False:
+                if insn in insns_with_regs:
+                    index += 8
+                continue
+
             if insn in insns_with_regs:
-                reg_value = int.from_bytes(byte_seq[index - 8:index], byteorder='little')
-                print("Reg " + hex(reg_value))
-                index -= 8
+                reg_value = int.from_bytes(byte_seq[index:index+8], byteorder='little')
+                #print("Reg " + hex(reg_value))
+                index += 8
             else:
                 reg_value = None
             #assert (byte_seq[index] == 58)
@@ -739,48 +763,33 @@ class DynamicGraph:
             if insn in insn_to_reg_count:
                 #print(insn_line)
                 #print("Insn has more than one reg: " + hex(insn))
-                if prev_insn is None or prev_insn != insn:
+                if pending_reg_count == 0:
                     pending_reg_count = insn_to_reg_count[insn]
                     pending_regs = []
                     #print(" first encountering the insn")
                 if len(pending_regs) + 1 < pending_reg_count:
                     pending_regs.append(reg_value)
-                    prev_insn = insn
                     #print(" not all regs of the insn are accounted for")
                     continue
                 #print(" all regs of the insn are accounted for " + str(pending_regs))
+                pending_reg_count = 0
             else:
                 pending_regs = None
-                pending_reg_count = 0
 
-            prev_insn = insn
-            # mark visited insn
+            static_node = self.insn_to_static_node[insn]
+            if insn in insn_of_remote_df_nodes:
+
+                mem_store_addr = self.calculate_mem_addr(reg_value, static_node.mem_store,
+                                                         None if pending_regs is None else pending_regs[0])
+                #print("[build] Store " + hex(insn) + " to " + hex(mem_store_addr))
+                if (insn != self.start_insn) and (mem_store_addr not in addr_to_df_succe_node):
+                    continue
+
             if insn not in self.insn_to_id:
                 self.insn_to_id[insn] = insn_id
                 insn_id += 1
 
-            mem_store_addr = None
-            if insn != self.start_insn:
-                if insn not in cf_prede_insn_to_succe_node and insn not in df_prede_insn_to_succe_node:
-                    continue
-
-                static_node = self.insn_to_static_node[insn]
-                if insn in insn_of_remote_df_nodes:
-
-                    mem_store_addr = self.calculate_mem_addr(reg_value, static_node.mem_store,
-                                                             None if pending_regs is None else pending_regs[0])
-                    #print("[build] Store " + hex(insn) + " to " + hex(mem_store_addr))
-                    if mem_store_addr not in addr_to_df_succe_node:
-                        continue
-            else:
-                static_node = self.insn_to_static_node[insn]
-                if insn in insn_of_remote_df_nodes: #FIXME why should this happen?
-                    reg_value = result[1].rstrip('\n')
-                    mem_store_addr = self.calculate_mem_addr(reg_value, static_node.mem_store,
-                                                             None if pending_regs is None else pending_regs[0])
-
             dynamic_node = DynamicNode(self.insn_to_id[insn], static_node)
-
             if insn not in self.insn_to_dyn_nodes:
                 self.insn_to_dyn_nodes[insn] = []
             self.insn_to_dyn_nodes[insn].append(dynamic_node)
@@ -864,7 +873,7 @@ class DynamicGraph:
                         df_prede_insn_to_succe_node[node_insn].add(dynamic_node)
 
                 if static_node.mem_load is not None:
-                    reg_value = result[1].rstrip('\n')
+                    #reg_value = result[1].rstrip('\n')
                     mem_load_addr = self.calculate_mem_addr(reg_value, static_node.mem_load,
                                                             None if pending_regs is None else pending_regs[0])
                     dynamic_node.mem_load_addr = mem_load_addr
@@ -933,26 +942,29 @@ class DynamicGraph:
         #    print("Calculating " + reg_value + " " + off_reg_value)
 
         if expr.reg is not None and expr.reg != '':
-            reg_address = int(reg_value, 16)
+            addr = reg_value #int(reg_value, 16)
         else:
-            reg_address = 0
+            addr = 0
 
         shift = expr.shift
         assert(not isinstance(shift, str))
-        if shift == 0:
-            shift = 1
+        if shift != 0:
+            addr = addr * shift
 
         off = expr.off
         assert(not isinstance(off, str))
 
         if off_reg_value is None or expr.off_reg is None or expr.off_reg == '':
-            addr = reg_address * shift + off
+            addr = addr + off
         else:
-            off_reg_address = int(off_reg_value, 16)
-            addr = reg_address * shift + off * off_reg_address
+            if expr.off_reg.lower() == 'es':
+                addr = addr
+            else:
+                off_reg_address = off_reg_value #int(off_reg_value, 16)
+                addr = addr + off * off_reg_address
         #if off_reg_value is not None:
         #    print("[build] Calculated " + hex(addr))
-        print("Calculating " + str(reg_value) + " " + str(off_reg_value) + " " + str(expr) + " to " + hex(addr))
+        #print("Calculating " + str(reg_value) + " " + str(off_reg_value) + " " + str(expr) + " to " + hex(addr))
 
         return addr
 

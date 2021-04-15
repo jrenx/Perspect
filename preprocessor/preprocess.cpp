@@ -7,26 +7,36 @@
 #include "cJSON.h"
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
+#include <chrono>
 using namespace std;
 using namespace boost;
 //TODO: fix all the weird casings in this file.
+
 class MemAccess {
 public:
-  string reg;
+  string reg;  //change to bool
+  bool has_reg;
   long shift;
   long offset;
-  string off_reg;
+  string off_reg;  //change to bool
+  bool has_off_reg;
   // TODO bit var too
 
-  long calc_addr(long regValue, long offRegValue) {
+  long inline calc_addr(long regValue, long offRegValue) {
     long addr = 0;
-    if (reg != "") addr = regValue;
-    if (shift != 0) addr = addr << shift;
-    if (off_reg != "") {
+    if (has_reg) addr = regValue;
+    if (shift != 0) addr = addr * shift;
+    if (has_off_reg) {
       addr += offRegValue * offset;
     } else {
       addr += offset;
     }
+    /*
+    cout << "reg: "      << reg     << " " << std::hex << regValue    << std::dec;
+    cout << " off reg: " << off_reg << " " << std::hex << offRegValue << std::dec;
+    cout << " offset: " << offset << " shift: " << shift;
+    cout << " addr: " << std::hex << addr << std::dec << "\n";
+    */
     return addr;
   }
 };
@@ -127,14 +137,27 @@ MemAccess *parseMemoryAccess(cJSON *json_memAccess) {
   cJSON *json_reg = cJSON_GetObjectItem(json_memAccess, "reg");
   char *reg = json_reg->valuestring;
   memAccess->reg = string(reg);
+  if (memAccess->reg == "") memAccess->has_reg = false;
+  else memAccess->has_reg = true;
+
   memAccess->shift = cJSON_GetObjectItem(json_memAccess, "shift")->valueint;
   memAccess->offset = cJSON_GetObjectItem(json_memAccess, "off")->valueint;
   cJSON *json_offReg = cJSON_GetObjectItem(json_memAccess, "off_reg");
+
   if (json_offReg->valuestring == NULL) {
     memAccess->off_reg = "";
   } else {
     memAccess->off_reg = string(json_offReg->valuestring);
   }
+
+  if (memAccess->off_reg == "") memAccess->has_off_reg = false;
+  else if (memAccess->off_reg == "ES") {
+    //cout << "Ignore ES" << endl;
+    memAccess->has_off_reg = false;
+    memAccess->offset = 0;
+  }
+  else memAccess->has_off_reg = true;
+
   return memAccess;
 }
 
@@ -145,10 +168,10 @@ void parseStaticNode(char *filename, int CodeCount) {
   delete[] buffer;
 
   CodeToStaticNode = new StaticNode*[CodeCount];
-  cJSON *json_statiGraphs = cJSON_GetObjectItem(data, "out_result");
-  int numGraphs = cJSON_GetArraySize(json_statiGraphs);
+  cJSON *json_staticGraphs = cJSON_GetObjectItem(data, "out_result");
+  int numGraphs = cJSON_GetArraySize(json_staticGraphs);
   for (int i = 0; i < numGraphs; i++) {
-    cJSON *json_staticGraph = cJSON_GetArrayItem(json_statiGraphs, i);
+    cJSON *json_staticGraph = cJSON_GetArrayItem(json_staticGraphs, i);
     cJSON *json_staticNodes = cJSON_GetObjectItem(json_staticGraph, "id_to_node");
     int numNodes = cJSON_GetArraySize(json_staticNodes);
     for (int j = 0; j < numNodes; j++) {
@@ -210,25 +233,25 @@ void parseStaticNode(char *filename, int CodeCount) {
     for (int j = 0; j < CodeToStaticNode[i]->cf_prede_ids.size(); j++) {
       int id = CodeToStaticNode[i]->cf_prede_ids[j];
       if (StaticNodeIdToInsn.find(id) != StaticNodeIdToInsn.end()) {
-        CodeToStaticNode[i]->cf_prede_codes.push_back(InsnToRegCount[StaticNodeIdToInsn[id]]);
+        CodeToStaticNode[i]->cf_prede_codes.push_back(InsnToCode[StaticNodeIdToInsn[id]]);
       }
     }
     for (int j = 0; j < CodeToStaticNode[i]->cf_succe_ids.size(); j++) {
       int id = CodeToStaticNode[i]->cf_succe_ids[j];
       if (StaticNodeIdToInsn.find(id) != StaticNodeIdToInsn.end()) {
-        CodeToStaticNode[i]->cf_succe_codes.push_back(InsnToRegCount[StaticNodeIdToInsn[id]]);
+        CodeToStaticNode[i]->cf_succe_codes.push_back(InsnToCode[StaticNodeIdToInsn[id]]);
       }
     }
     for (int j = 0; j < CodeToStaticNode[i]->df_prede_ids.size(); j++) {
       int id = CodeToStaticNode[i]->df_prede_ids[j];
       if (StaticNodeIdToInsn.find(id) != StaticNodeIdToInsn.end()) {
-        CodeToStaticNode[i]->df_prede_codes.push_back(InsnToRegCount[StaticNodeIdToInsn[id]]);
+        CodeToStaticNode[i]->df_prede_codes.push_back(InsnToCode[StaticNodeIdToInsn[id]]);
       }
     }
     for (int j = 0; j < CodeToStaticNode[i]->df_succe_ids.size(); j++) {
       int id = CodeToStaticNode[i]->df_succe_ids[j];
       if (StaticNodeIdToInsn.find(id) != StaticNodeIdToInsn.end()) {
-        CodeToStaticNode[i]->df_succe_codes.push_back(InsnToRegCount[StaticNodeIdToInsn[id]]);
+        CodeToStaticNode[i]->df_succe_codes.push_back(InsnToCode[StaticNodeIdToInsn[id]]);
       }
     }
   }
@@ -263,31 +286,34 @@ void initData() {
   }
 
   cJSON *json_insnOfCFNodes = cJSON_GetObjectItem(data, "insn_of_cf_nodes");
-  parseJsonList(json_insnsWithRegs, InsnOfCFNodes);
+  parseJsonList(json_insnOfCFNodes, InsnOfCFNodes);
   CodesOfCFNodes = new bool[CodeCount];
   for (int i = 0; i < CodeCount; i++) CodesOfCFNodes[i] = false;
   for (auto it = InsnOfCFNodes.begin(); it != InsnOfCFNodes.end(); it++) {
-    CodesOfCFNodes[InsnToCode[(*it)]] = true;
+    unsigned short code = InsnToCode[(*it)];
+    CodesOfCFNodes[code] = true;
   }
 
   cJSON *json_insnOfDFNodes = cJSON_GetObjectItem(data, "insn_of_df_nodes");
-  parseJsonList(json_insnsWithRegs, InsnOfDFNodes);
+  parseJsonList(json_insnOfDFNodes, InsnOfDFNodes);
   CodesOfDFNodes = new bool[CodeCount];
   for (int i = 0; i < CodeCount; i++) CodesOfDFNodes[i] = false;
   for (auto it = InsnOfDFNodes.begin(); it != InsnOfDFNodes.end(); it++) {
-    CodesOfDFNodes[InsnToCode[(*it)]] = true;
+    unsigned short code = InsnToCode[(*it)];
+    CodesOfDFNodes[code] = true;
   }
 
   cJSON *json_insnOfLocalDFNodes = cJSON_GetObjectItem(data, "insn_of_local_df_nodes");
-  parseJsonList(json_insnsWithRegs, InsnOfLocalDFNodes);
+  parseJsonList(json_insnOfLocalDFNodes, InsnOfLocalDFNodes);
   CodesOfLocalDFNodes = new bool[CodeCount];
   for (int i = 0; i < CodeCount; i++) CodesOfLocalDFNodes[i] = false;
   for (auto it = InsnOfLocalDFNodes.begin(); it != InsnOfLocalDFNodes.end(); it++) {
-    CodesOfLocalDFNodes[InsnToCode[(*it)]] = true;
+    unsigned short code = InsnToCode[(*it)];
+    CodesOfLocalDFNodes[code] = true;
   }
 
   cJSON *json_insnOfRemoteDFNodes = cJSON_GetObjectItem(data, "insn_of_remote_df_nodes");
-  parseJsonList(json_insnsWithRegs, InsnOfRemoteDFNodes);
+  parseJsonList(json_insnOfRemoteDFNodes, InsnOfRemoteDFNodes);
   CodesOfRemoteDFNodes = new bool[CodeCount];
   for (int i = 0; i < CodeCount; i++) CodesOfRemoteDFNodes[i] = false;
   for (auto it = InsnOfRemoteDFNodes.begin(); it != InsnOfRemoteDFNodes.end(); it++) {
@@ -321,57 +347,85 @@ void initData() {
 
 int main()
 {
+  std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
   initData();
-  //cout << "Reading " << length << " characters... " << endl;
+  std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
+  std::cout << "Init data took = " << std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count() << "[s]" << std::endl;
+
   long length;
   char *buffer = readFile(traceFile, length);
+  cout << "Reading " << length << " characters... " << endl;
+  std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
+  std::cout << "Reading file took = " << std::chrono::duration_cast<std::chrono::seconds>(t3 - t2).count() << "[s]" << std::endl;
+
+  string outTraceFile(traceFile);
+  outTraceFile += ".parsed";
+  ofstream os;
+  os.open(outTraceFile.c_str(), ios::out);
 
   cout << "Starting insn is: 0x" << std::hex << StartInsn << std::dec << " code is: " << StartInsnCode << endl;
   //long j = 0;
   bool found = false;
   int pendingRegCount = 0;
   std::vector<long> pendingRegValues;
-  for (long i = length - 2; i >= 0;) {
+  long offRegValue = 0;
+
+  int nodeCount = 0;
+  for (long i = length; i >= 0;) {
     unsigned short code;
     long regValue = 0;
-    std::memcpy(&code, buffer+i, sizeof(unsigned short));
     i-=2;
+    std::memcpy(&code, buffer+i, sizeof(unsigned short));
     //cout << "curr code" << code << endl;
 
     bool parse = false;
     if (code == StartInsnCode || PendingCfPredeCodes[code] || PendingDfPredeCodes[code]) {
       parse = true;
     }
-    if (CodesWithRegs[code] == true) {
-      if (parse) std::memcpy(&regValue, buffer+i, sizeof(long));
+    if (CodesWithRegs[code]) {
       i-=8;
+      if (parse) {
+        std::memcpy(&regValue, buffer + i, sizeof(long));
+        //os.write((char*)&regValue, sizeof(long));
+      }
     }
     if (!parse) continue;
+    //os.write((char*)&code, sizeof(unsigned short));
 
-    long offRegValue = 0;
     if (CodeToRegCount[code] > 0) {
       if (pendingRegCount == 0) {
-        pendingRegCount = CodeToRegCount[code];
-        pendingRegValues.clear();
-      }
-      if (pendingRegValues.size() + 1 < pendingRegCount) {
-        pendingRegValues.push_back(regValue);
+        pendingRegCount = 1;
+        offRegValue = regValue;
         continue;
-      } else {
-        pendingRegCount = 0;
-        offRegValue = pendingRegValues.back();
       }
+      pendingRegCount = 0;
+    } else {
+      offRegValue = 0;
     }
 
     StaticNode *sn = CodeToStaticNode[code];
-    if (CodesOfRemoteDFNodes[code] == true) {
+    if (CodesOfRemoteDFNodes[code]) {
       long addr = sn->mem_store->calc_addr(regValue, offRegValue);
-      if (PendingAddrs.find(addr) != PendingAddrs.end() && code == StartInsnCode) {
+      if (PendingAddrs.find(addr) == PendingAddrs.end() && code != StartInsnCode) {
         continue;
       } else {
         PendingAddrs.erase(addr);
       }
     }
+
+    if (CodeToRegCount[code] > 0) {
+      os.write((char*)&code, sizeof(unsigned short));
+      os.write((char*)&offRegValue, sizeof(long));
+    }
+
+    os.write((char*)&code, sizeof(unsigned short));
+    if (CodesWithRegs[code]) {
+      os.write((char*)&regValue, sizeof(long));
+    }
+
+    nodeCount ++;
+    //cout << "====" << nodeCount << "\n";
+    //cout << std::hex << CodeToInsn[code] << std::dec << "\n";
     // save the node
     if (PendingCfPredeCodes[code]) {
       std::vector<unsigned short> toRemove;
@@ -389,12 +443,12 @@ int main()
       }
     }
 
-    if (PendingDfPredeCodes[code] && CodesOfRemoteDFNodes[code] == false) {
+    if (PendingDfPredeCodes[code] && !CodesOfRemoteDFNodes[code]) {
       std::vector<unsigned short> toRemove;
       for(auto it = DfPredeCodeToSucceNodes[code].begin(); it != DfPredeCodeToSucceNodes[code].end(); it++) {
         StaticNode * succeNode = *it;
-        for (auto iit = succeNode->cf_prede_codes.begin();
-             iit != succeNode->cf_prede_codes.end(); iit ++) {
+        for (auto iit = succeNode->df_prede_codes.begin();
+             iit != succeNode->df_prede_codes.end(); iit ++) {
           toRemove.push_back(*iit);
         }
       }
@@ -408,7 +462,7 @@ int main()
     if (sn->df_prede_codes.size() != 0) {
       for (auto it = sn->df_prede_codes.begin(); it != sn->df_prede_codes.end(); it++) {
         unsigned short currCode = *it;
-        if (CodesOfCFNodes[currCode] == false && CodesOfDFNodes[currCode] == false) {
+        if (!CodesOfCFNodes[currCode] && !CodesOfDFNodes[currCode]) {
           continue;
         }
         DfPredeCodeToSucceNodes[currCode].push_back(sn);
@@ -422,7 +476,7 @@ int main()
     if (sn->cf_prede_codes.size() != 0) {
       for (auto it = sn->cf_prede_codes.begin(); it != sn->cf_prede_codes.end(); it++) {
         unsigned short currCode = *it;
-        if (CodesOfCFNodes[currCode] == false && CodesOfDFNodes[currCode] == false) {
+        if (!CodesOfCFNodes[currCode] && !CodesOfDFNodes[currCode]) {
           continue;
         }
         CfPredeCodeToSucceNodes[currCode].push_back(sn);
@@ -430,4 +484,9 @@ int main()
       }
     }
   }
+  os.close();
+  std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
+  std::cout << "Parsing took = " << std::chrono::duration_cast<std::chrono::seconds>(t4 - t3).count() << "[s]" << std::endl;
+
+  cout << "total nodes: " << nodeCount << endl;
 }
