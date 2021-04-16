@@ -722,7 +722,8 @@ class DynamicGraph:
 
         addr_to_df_succe_node = {}
         cf_prede_insn_to_succe_node = {}
-        df_prede_insn_to_succe_node = {}
+        local_df_prede_insn_to_succe_node = {}
+        remote_df_prede_insn_to_succe_node = {}
 
         # traverse
         prev_insn = None
@@ -743,7 +744,9 @@ class DynamicGraph:
             ok = False
             if insn == self.start_insn:
                 ok = True
-            elif insn in cf_prede_insn_to_succe_node or insn in df_prede_insn_to_succe_node:
+            elif insn in cf_prede_insn_to_succe_node \
+                    or insn in local_df_prede_insn_to_succe_node \
+                    or insn in remote_df_prede_insn_to_succe_node: #TODO, could optiimze
                 ok = True
 
             if ok is False:
@@ -777,7 +780,7 @@ class DynamicGraph:
                 pending_regs = None
 
             static_node = self.insn_to_static_node[insn]
-            if insn in insn_of_remote_df_nodes:
+            if insn in remote_df_prede_insn_to_succe_node:
 
                 mem_store_addr = self.calculate_mem_addr(reg_value, static_node.mem_store,
                                                          None if pending_regs is None else pending_regs[0])
@@ -829,50 +832,56 @@ class DynamicGraph:
                         del cf_prede_insn_to_succe_node[ni]
                 # del cf_prede_insn_to_succe_node[insn]
 
-            if insn in df_prede_insn_to_succe_node:
-                if insn in insn_of_remote_df_nodes:
-                    dynamic_node.mem_store_addr = mem_store_addr
-                    assert mem_store_addr is not None, str(insn_line) + "\n" + str(dynamic_node)
-                    #assert mem_store_addr in addr_to_df_succe_node
-                    if mem_store_addr in addr_to_df_succe_node:
-                        for succe in addr_to_df_succe_node[mem_store_addr]:
-                            succe.df_predes.append(dynamic_node)
-                            dynamic_node.df_succes.append(succe)
-                        del addr_to_df_succe_node[mem_store_addr]
-                        #print("[build] Store " + hex(insn) + " to " + hex(mem_store_addr) + " removing from pending nodes")
+            if insn in local_df_prede_insn_to_succe_node:
+                to_remove = set()
+                for succe in local_df_prede_insn_to_succe_node[insn]:
+                    assert succe.id != dynamic_node.id
+                    succe.df_predes.append(dynamic_node)
+                    dynamic_node.df_succes.append(succe)
 
-                else:
-                    to_remove = set()
-                    for succe in df_prede_insn_to_succe_node[insn]:
-                        assert succe.id != dynamic_node.id
+                    # Only save the closest pred
+                    # TODO, what if actually have 2 predecessors
+                    for df_pred in succe.static_node.df_predes:
+                        ni = df_pred.insn
+                        to_remove.add(ni)
+                        # if ni in df_prede_insn_to_succe_node and succe in df_prede_insn_to_succe_node[ni]:
+                        #    df_prede_insn_to_succe_node[ni].remove(succe)
+
+                for ni in to_remove:
+                    if ni in local_df_prede_insn_to_succe_node:
+                        del local_df_prede_insn_to_succe_node[ni]
+
+            if insn in remote_df_prede_insn_to_succe_node:
+                dynamic_node.mem_store_addr = mem_store_addr
+                assert mem_store_addr is not None, str(insn_line) + "\n" + str(dynamic_node)
+                # assert mem_store_addr in addr_to_df_succe_node
+                if mem_store_addr in addr_to_df_succe_node:
+                    for succe in addr_to_df_succe_node[mem_store_addr]:
                         succe.df_predes.append(dynamic_node)
                         dynamic_node.df_succes.append(succe)
+                    del addr_to_df_succe_node[mem_store_addr]
+                    # print("[build] Store " + hex(insn) + " to " + hex(mem_store_addr) + " removing from pending nodes")
 
-                        # Only save the closest pred
-                        # TODO, what if actually have 2 predecessors
-                        for df_pred in succe.static_node.df_predes:
-                            ni = df_pred.insn
-                            to_remove.add(ni)
-                            # if ni in df_prede_insn_to_succe_node and succe in df_prede_insn_to_succe_node[ni]:
-                            #    df_prede_insn_to_succe_node[ni].remove(succe)
-
-                    for ni in to_remove:
-                        if ni in df_prede_insn_to_succe_node:
-                            del df_prede_insn_to_succe_node[ni]
-
-            if static_node.df_predes:  # and insn not in insn_of_df_nodes:
+            loads_memory = True if static_node.mem_load is not None else False
+            if static_node.df_predes or (loads_memory and static_node.mem_load.read_same_as_write):  # and insn not in insn_of_df_nodes:
                 for prede in static_node.df_predes:
                     node_insn = prede.insn
                     if node_insn not in insn_of_df_nodes and node_insn not in insn_of_cf_nodes:  # Slice is not always complete
                         continue
                     # When we encounter a dataflow predecessor later,
                     # know which successors to connect to
-                    if node_insn not in df_prede_insn_to_succe_node:
-                        df_prede_insn_to_succe_node[node_insn] = {dynamic_node}
+                    if loads_memory is False:
+                        if node_insn not in local_df_prede_insn_to_succe_node:
+                            local_df_prede_insn_to_succe_node[node_insn] = {dynamic_node}
+                        else:
+                            local_df_prede_insn_to_succe_node[node_insn].add(dynamic_node)
                     else:
-                        df_prede_insn_to_succe_node[node_insn].add(dynamic_node)
+                        if node_insn not in remote_df_prede_insn_to_succe_node:
+                            remote_df_prede_insn_to_succe_node[node_insn] = {dynamic_node}
+                        else:
+                            remote_df_prede_insn_to_succe_node[node_insn].add(dynamic_node)
 
-                if static_node.mem_load is not None:
+                if loads_memory is True:
                     #reg_value = result[1].rstrip('\n')
                     mem_load_addr = self.calculate_mem_addr(reg_value, static_node.mem_load,
                                                             None if pending_regs is None else pending_regs[0])
@@ -986,11 +995,14 @@ class DynamicGraph:
 
 if __name__ == '__main__':
     dd = DynamicDependence(0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
+    #dd.prepare_to_build_dynamic_dependencies(900)
+    #dg = dd.build_dyanmic_dependencies(0x441029)
+
     dd.prepare_to_build_dynamic_dependencies(900)
     dg = dd.build_dyanmic_dependencies(0x409418)
     # dynamic_graph.prepare_to_build_dynamic_dependencies(0x409418, "scanblock", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
     #dynamic_graph.prepare_to_build_dynamic_dependencies(0x409408, "scanblock", "909_ziptest_exe9")
-
+    
     print("[Summary] Get Slice: ", str(time_record["get_slice_start"] - time_record["start_time"]))
     if "load_json" in time_record:
         print("[Summary] Json Load: ", str(time_record["load_json"] - time_record["get_slice_start"]))

@@ -615,13 +615,23 @@ class MemoryAccess:
         self.off = off
         self.off_reg = off_reg
         self.is_bit_var = is_bit_var
+        self.read_same_as_write = False
 
     def toJSON(self):
-        return self.__dict__
+        data = {}
+        data["reg"] = self.reg
+        data["shift"] = self.shift
+        data["off"] = self.off
+        data["off_reg"] = self.off_reg
+        data["is_bit_var"] = self.is_bit_var
+        data["read_same_as_write"] = 0 if self.read_same_as_write is False else 1
+        return data
 
     @staticmethod
     def fromJSON(data):
-        return MemoryAccess(data['reg'], data['shift'], data['off'], data['off_reg'], data['is_bit_var'])
+        ma = MemoryAccess(data['reg'], data['shift'], data['off'], data['off_reg'], data['is_bit_var'])
+        ma.read_same_as_write = False if data['read_same_as_write'] == 0 else True
+        return ma
 
     def __str__(self):
         s = " address: " + str(self.reg) + " * " \
@@ -630,6 +640,7 @@ class MemoryAccess:
             s += " * " + str(self.off_reg)
         if self.is_bit_var is not None:
             s += " is bit var: " + str(self.is_bit_var)# + "\n"
+        s += " read same as write: " + str(self.read_same_as_write)
         return s
 
 
@@ -862,6 +873,7 @@ class StaticNode:
                 return self.mem_load.is_bit_var
             else:
                 return False
+        return False
 
 class StaticDepGraph:
     func_to_graph = {}
@@ -1417,22 +1429,23 @@ class StaticDepGraph:
 
                 assert shift != '', str(load)
                 assert off != '', str(load)
-
-                if succe.insn == prede_insn:
+                #print(succe)
+                if succe.insn == prede_insn and read_same_as_write is False:
                     print("[static_dep][warn]Ignoring the predecessor as it is the same as the successor: ")
                     print(succe)
                 else:
                     prede = StaticDepGraph.make_or_get_df_node(prede_insn, None,
                                                                curr_func)  # TODO, might need to include func here too
                     #print(prede)
-                    succe.df_predes.append(prede)
-                    prede.df_succes.append(succe)
-                    if prede.explained is False:
+                    if prede.explained is False or read_same_as_write is True:
                         #if prede not in self.nodes_in_df_slice:
                         #    self.nodes_in_df_slice.append(prede)
                         if type == 'memread':
                             prede.mem_load = MemoryAccess(prede_reg, shift, off, off_reg, is_bit_var)
                             prede.reg_write = '' #TODO put actual register name here
+                            if read_same_as_write is True:
+                                succe.mem_store.read_same_as_write = True
+                                prede.mem_load.read_same_as_write = True
                         elif type == 'regread':
                             prede.reg_load = prede_reg
                         elif type == 'empty':
@@ -1440,14 +1453,18 @@ class StaticDepGraph:
                         else:
                             print("type not supported " + str(type))
                             #raise Exception
+                    if prede.explained is False:
+                        succe.df_predes.append(prede)
+                        prede.df_succes.append(succe)
+                        assert prede != succe, str(prede)
                         if curr_func != func:
                             defs_in_diff_func.add(prede)
                         else:
                             defs_in_same_func.add(prede)
+                    if read_same_as_write is True:
+                        prede.explained == True
                     #else:
                         #assert prede.mem_load is not None or prede.reg_load is not None, str(prede)
-                    if read_same_as_write is True:
-                        prede.explained = True
 
         print("[static_dep] Found " + str(len(defs_in_same_func)) + " dataflow nodes local in function ")
         tmp_defs_in_same_func = set([])
@@ -1517,7 +1534,7 @@ class StaticDepGraph:
                     else:
                         off_reg = load[3]
 
-                #print(str(prede_insn))
+                #print(hex(prede_insn))
                 prede = self.make_or_get_df_node(prede_insn, None, curr_func)
                 if prede.explained is False:
                     prede.mem_store = MemoryAccess(prede_reg, shift, off, off_reg, node.mem_load.is_bit_var)
@@ -1828,7 +1845,13 @@ class StaticDepGraph:
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
 if __name__ == "__main__":
-    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", use_cache=True)
+    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", limit=900, use_cache=True)
+    print("HERERERE")
+    for func in StaticDepGraph.func_to_graph:
+        graph = StaticDepGraph.func_to_graph[func]
+        for node in graph.id_to_node.values():
+            if node.mem_load is not None and len(node.df_predes) == 0:
+                print(node)
     #StaticDepGraph.build_dependencies(0x409418, "scanblock", "909_ziptest_exe9")
     """
     json_file = os.path.join(curr_dir, 'static_graph_result')

@@ -45,14 +45,15 @@ def test_sa_slices():
 
 def test_sa_slices1():
     slice_starts = []
-    #slice_starts.append(['rax', 4234536, 'sweep', True]) #why is the filtered against?
-    slice_starts.append(['rax', 4232216, 'scanblock', True])
-    slice_starts.append(['rax', 4234346, 'sweep', True])
-    slice_starts.append(['rdx', 4236970, 'runtime.markallocated', True])
-    slice_starts.append(['rax', 4237718, 'runtime.markspan', True])
-    slice_starts.append(['rdx', 4238284, 'runtime.setblockspecial', True])
-    #slice_starts.append(['RAX', 4237997, 'runtime.unmarkspan', True])
-    slice_starts.append(['rax', 4237218, 'runtime.markfreed', True])
+    ##slice_starts.append(['rax', 4234536, 'sweep', True]) #why is the filtered against?
+    #slice_starts.append(['rax', 0x409418, 'scanblock', True])
+    #slice_starts.append(['rax', 4234346, 'sweep', True])
+    slice_starts.append(['rdx', 0x40a6aa, 'runtime.markallocated', True])
+    #slice_starts.append(['rax', 4237718, 'runtime.markspan', True])
+    #slice_starts.append(['rdx', 4238284, 'runtime.setblockspecial', True])
+    ##slice_starts.append(['RAX', 4237997, 'runtime.unmarkspan', True])
+    #slice_starts.append(['rax', 4237218, 'runtime.markfreed', True])
+
     results = static_backslices(slice_starts, '909_ziptest_exe9', {})
     print(results)
 
@@ -94,8 +95,9 @@ def main():
     #get_func_to_callsites('909_ziptest_exe9')
     #test_sa_slices3()
     #test_get_all_bb()
-    test_rr_slice()
+    #test_rr_slice()
     #test_getting_static_addrs()
+    test_sa_slices3()
  
 if __name__ == "__main__":
     main()

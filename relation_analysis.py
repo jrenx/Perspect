@@ -162,6 +162,7 @@ class RelationAnalysis:
             insn = static_node.insn
             hex_insn = static_node.hex_insn
             input_set_counts = set()
+            input_set_count_list = []
             print("-------")
             # assert insn in dgraph.insn_to_dyn_nodes, hex(insn)
             if insn not in dgraph.insn_to_dyn_nodes:
@@ -171,8 +172,10 @@ class RelationAnalysis:
             for node in starting_dynamic_nodes:
                 if static_node.insn not in node.input_sets:
                     input_set_counts.add(0)
+                    input_set_count_list.append(0)
                 else:
                     input_set_counts.add(len(node.input_sets[static_node.insn]))
+                    input_set_count_list.append(len(node.input_sets[static_node.insn]))
             """
             print("[invariant_analysis] instruction: " + insn
                   + " df successors are: " + str([s.hex_insn for s in static_node.df_succes]))
@@ -182,13 +185,15 @@ class RelationAnalysis:
             print("[invariant_analysis] instruction: " + hex_insn
                   + " func  " + static_node.function
                   + " lines " + str(static_node.bb.lines)
-                  + " input set counts: " + str(input_set_counts) \
-                  + " total number of nodes: " + str(node_count))
-            backward_invariant = False
+                  + " input set counts: " + str(input_set_counts)
+                  + " total number of nodes: " + str(node_count)
+                  + " " + str(input_set_count_list))
 
+            backward_invariant = False
             if Invariance.is_irrelevant(input_set_counts):
                 print("[invariant_analysis] instruction: "
                       + hex_insn + " is irrelevant to the output event, ignore...")
+                continue
             elif Invariance.is_invariant(input_set_counts):
                 print("[invariant_analysis] instruction: "
                       + hex_insn + " is backward invariant with the output event")
@@ -202,6 +207,8 @@ class RelationAnalysis:
                 backward_invariant = True
                 relation = rgroup.get_or_make_relation(static_node)
                 relation.backward = Invariance(max(input_set_counts), True)
+            else:
+                print("[invariant_analysis] NO INVARIANCE DETECTED")
 
             if backward_invariant is True:
                 invariant_group.add(static_node)
@@ -216,7 +223,7 @@ class RelationAnalysis:
                     relation = rgroup.get_or_make_relation(static_node)
                     relation.backward = Proportion(input_set_counts)
                     print("[invariant_analysis] instruction: "
-                          + hex_insn + "'s backward propotion with the output event is considered")
+                          + hex_insn + "'s backward proportion with the output event is considered")
 
             for p in static_node.cf_predes:
                 worklist.append(p)
@@ -268,6 +275,7 @@ class RelationAnalysis:
             insn = static_node.insn
             hex_insn = static_node.hex_insn
             output_set_counts = set()
+            output_set_count_list = []
             print("-------")
             #assert insn in dgraph.insn_to_dyn_nodes, hex(insn)
             if insn not in dgraph.insn_to_dyn_nodes:
@@ -276,6 +284,7 @@ class RelationAnalysis:
             node_count = len(dgraph.insn_to_dyn_nodes[insn])
             for node in dgraph.insn_to_dyn_nodes[insn]:
                 output_set_counts.add(len(node.output_set))
+                output_set_count_list.append(len(node.output_set))
 
             """
             print("[invariant_analysis] instruction: " + insn
@@ -286,12 +295,15 @@ class RelationAnalysis:
             print("[invariant_analysis] instruction: " + hex_insn
                   + " func  " + static_node.function
                   + " lines " + str(static_node.bb.lines)
-                  + " output set counts: " + str(output_set_counts) \
-                  + " total number of nodes: " + str(node_count))
+                  + " output set counts: " + str(output_set_counts)
+                  + " total number of nodes: " + str(node_count)
+                  + " " + str(output_set_count_list))
+
             forward_invariant = False
             if Invariance.is_irrelevant(output_set_counts):
                 print("[invariant_analysis] instruction: "
                       + hex_insn + " is irrelevant to the output event, ignore ...")
+                continue
             elif Invariance.is_invariant(output_set_counts):
                 print("[invariant_analysis] instruction: "
                       + hex_insn + " is forward invariant with the output event")
@@ -305,8 +317,8 @@ class RelationAnalysis:
                 forward_invariant = True
                 relation = rgroup.get_or_make_relation(static_node)
                 relation.forward = Invariance(max(output_set_counts), True)
-                print("[invariant_analysis] instruction: "
-                      + hex_insn + "'s forward propotion with the output event is considered")
+            else:
+                print("[invariant_analysis] NO INVARIANCE DETECTED")
 
             if forward_invariant is True:
                 invariant_group.add(static_node)
@@ -320,6 +332,8 @@ class RelationAnalysis:
                     wavefront.add(static_node)
                     relation = rgroup.get_or_make_relation(static_node)
                     relation.forward = Proportion(output_set_counts)
+                    print("[invariant_analysis] instruction: "
+                          + hex_insn + "'s forward proportion with the output event is considered")
 
             for p in static_node.cf_predes:
                 worklist.append(p)

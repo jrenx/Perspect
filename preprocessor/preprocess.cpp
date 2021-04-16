@@ -20,6 +20,7 @@ public:
   long offset;
   string off_reg;  //change to bool
   bool has_off_reg;
+  bool read_same_as_write;
   // TODO bit var too
 
   long inline calc_addr(long regValue, long offRegValue) {
@@ -73,10 +74,10 @@ unordered_set<long> InsnOfDFNodes;
 bool * CodesOfDFNodes;
 
 unordered_set<long> InsnOfLocalDFNodes;
-bool * CodesOfLocalDFNodes;
+bool * CodesOfMemLoadNodes;
 
 unordered_set<long> InsnOfRemoteDFNodes;
-bool * CodesOfRemoteDFNodes;
+bool * CodesOfMemStoreNodes;
 
 long StartInsn;
 unsigned short StartInsnCode;
@@ -84,7 +85,9 @@ unsigned short StartInsnCode;
 std::vector<StaticNode*> *CfPredeCodeToSucceNodes;
 bool *PendingCfPredeCodes;
 std::vector<StaticNode*> *DfPredeCodeToSucceNodes;
-bool *PendingDfPredeCodes;
+bool * PendingLocalDefCodes;
+bool *PendingRemoteDefCodes;
+bool *PendingCodes;
 
 unordered_set<long> PendingAddrs;
 
@@ -157,7 +160,8 @@ MemAccess *parseMemoryAccess(cJSON *json_memAccess) {
     memAccess->offset = 0;
   }
   else memAccess->has_off_reg = true;
-
+  cJSON *json_readSameAsWrite = cJSON_GetObjectItem(json_memAccess, "read_same_as_write");
+  memAccess->read_same_as_write = json_readSameAsWrite->valueint == 1;
   return memAccess;
 }
 
@@ -229,7 +233,7 @@ void parseStaticNode(char *filename, int CodeCount) {
     }
   }
 
-  for (int i = 1; i < CodeCount + 1; i++) {
+  for (int i = 1; i < CodeCount; i++) {
     for (int j = 0; j < CodeToStaticNode[i]->cf_prede_ids.size(); j++) {
       int id = CodeToStaticNode[i]->cf_prede_ids[j];
       if (StaticNodeIdToInsn.find(id) != StaticNodeIdToInsn.end()) {
@@ -269,7 +273,7 @@ void initData() {
   cJSON *json_codeToInsn = cJSON_GetObjectItem(data, "code_to_insn");
   unordered_map<long, long> map1;
   parseJsonMap(json_codeToInsn, map1);
-  CodeCount = map1.size();
+  CodeCount = map1.size() + 1;
   CodeToInsn = new long[CodeCount];
   for (auto it = map1.begin(); it != map1.end(); it++) {
     CodeToInsn[(*it).first] = (*it).second;
@@ -305,19 +309,19 @@ void initData() {
 
   cJSON *json_insnOfLocalDFNodes = cJSON_GetObjectItem(data, "insn_of_local_df_nodes");
   parseJsonList(json_insnOfLocalDFNodes, InsnOfLocalDFNodes);
-  CodesOfLocalDFNodes = new bool[CodeCount];
-  for (int i = 0; i < CodeCount; i++) CodesOfLocalDFNodes[i] = false;
+  CodesOfMemLoadNodes = new bool[CodeCount];
+  for (int i = 0; i < CodeCount; i++) CodesOfMemLoadNodes[i] = false;
   for (auto it = InsnOfLocalDFNodes.begin(); it != InsnOfLocalDFNodes.end(); it++) {
     unsigned short code = InsnToCode[(*it)];
-    CodesOfLocalDFNodes[code] = true;
+    CodesOfMemLoadNodes[code] = true;
   }
 
   cJSON *json_insnOfRemoteDFNodes = cJSON_GetObjectItem(data, "insn_of_remote_df_nodes");
   parseJsonList(json_insnOfRemoteDFNodes, InsnOfRemoteDFNodes);
-  CodesOfRemoteDFNodes = new bool[CodeCount];
-  for (int i = 0; i < CodeCount; i++) CodesOfRemoteDFNodes[i] = false;
+  CodesOfMemStoreNodes = new bool[CodeCount];
+  for (int i = 0; i < CodeCount; i++) CodesOfMemStoreNodes[i] = false;
   for (auto it = InsnOfRemoteDFNodes.begin(); it != InsnOfRemoteDFNodes.end(); it++) {
-    CodesOfRemoteDFNodes[InsnToCode[(*it)]] = true;
+    CodesOfMemStoreNodes[InsnToCode[(*it)]] = true;
   }
 
   cJSON *json_insnToRegCount = cJSON_GetObjectItem(data, "insn_to_reg_count");
@@ -330,12 +334,21 @@ void initData() {
     CodeToRegCount[InsnToCode[(long)(*it).first]] = (int)(*it).second;
   }
 
+  PendingCodes = new bool[CodeCount];
+  for (int i = 0; i < CodeCount; i++) PendingCodes[i] = false;
+
   CfPredeCodeToSucceNodes = new std::vector<StaticNode*>[CodeCount];
+
   PendingCfPredeCodes = new bool[CodeCount];
   for (int i = 0; i < CodeCount; i++) PendingCfPredeCodes[i] = false;
+
   DfPredeCodeToSucceNodes = new std::vector<StaticNode*>[CodeCount];
-  PendingDfPredeCodes = new bool[CodeCount];
-  for (int i = 0; i < CodeCount; i++) PendingDfPredeCodes[i] = false;
+
+  PendingLocalDefCodes = new bool[CodeCount];
+  for (int i = 0; i < CodeCount; i++) PendingLocalDefCodes[i] = false;
+  PendingRemoteDefCodes = new bool[CodeCount];
+  for (int i = 0; i < CodeCount; i++) PendingRemoteDefCodes[i] = false;
+
 
   cJSON *json_traceFile = cJSON_GetObjectItem(data, "trace_file");
   traceFile = json_traceFile->valuestring;
@@ -376,10 +389,9 @@ int main()
     long regValue = 0;
     i-=2;
     std::memcpy(&code, buffer+i, sizeof(unsigned short));
-    //cout << "curr code" << code << endl;
 
     bool parse = false;
-    if (code == StartInsnCode || PendingCfPredeCodes[code] || PendingDfPredeCodes[code]) {
+    if (code == StartInsnCode || PendingCodes[code]) {
       parse = true;
     }
     if (CodesWithRegs[code]) {
@@ -388,6 +400,7 @@ int main()
         std::memcpy(&regValue, buffer + i, sizeof(long));
         //os.write((char*)&regValue, sizeof(long));
       }
+      //cout << "contains reg" << code << endl;
     }
     if (!parse) continue;
     //os.write((char*)&code, sizeof(unsigned short));
@@ -404,7 +417,7 @@ int main()
     }
 
     StaticNode *sn = CodeToStaticNode[code];
-    if (CodesOfRemoteDFNodes[code]) {
+    if (PendingRemoteDefCodes[code]) {
       long addr = sn->mem_store->calc_addr(regValue, offRegValue);
       if (PendingAddrs.find(addr) == PendingAddrs.end() && code != StartInsnCode) {
         continue;
@@ -423,6 +436,7 @@ int main()
       os.write((char*)&regValue, sizeof(long));
     }
 
+    //cout << "curr code" << code << " index: "<< i <<endl;
     nodeCount ++;
     //cout << "====" << nodeCount << "\n";
     //cout << std::hex << CodeToInsn[code] << std::dec << "\n";
@@ -440,38 +454,54 @@ int main()
         unsigned short removeCode = *it;
         CfPredeCodeToSucceNodes[removeCode].clear();
         PendingCfPredeCodes[removeCode] = false;
+        if (!PendingLocalDefCodes[removeCode]) PendingCodes[removeCode] = false;
       }
     }
 
-    if (PendingDfPredeCodes[code] && !CodesOfRemoteDFNodes[code]) {
+    if (PendingLocalDefCodes[code]) {//} && !CodesOfMemStoreNodes[code]) {
       std::vector<unsigned short> toRemove;
       for(auto it = DfPredeCodeToSucceNodes[code].begin(); it != DfPredeCodeToSucceNodes[code].end(); it++) {
         StaticNode * succeNode = *it;
+        assert (succeNode->mem_load == NULL);
         for (auto iit = succeNode->df_prede_codes.begin();
-             iit != succeNode->df_prede_codes.end(); iit ++) {
+             iit != succeNode->df_prede_codes.end(); iit++) {
           toRemove.push_back(*iit);
         }
       }
       for(auto it = toRemove.begin(); it != toRemove.end(); it++) {
         unsigned short removeCode = *it;
         DfPredeCodeToSucceNodes[removeCode].clear();
-        PendingDfPredeCodes[removeCode] = false;
+        PendingLocalDefCodes[removeCode] = false;
+        if (!PendingCfPredeCodes[removeCode]) PendingCodes[removeCode] = false;
       }
     }
 
+    bool loadsMemory = sn->mem_load != NULL;
     if (sn->df_prede_codes.size() != 0) {
       for (auto it = sn->df_prede_codes.begin(); it != sn->df_prede_codes.end(); it++) {
         unsigned short currCode = *it;
         if (!CodesOfCFNodes[currCode] && !CodesOfDFNodes[currCode]) {
           continue;
         }
-        DfPredeCodeToSucceNodes[currCode].push_back(sn);
-        PendingDfPredeCodes[currCode] = true;
+        // technically, for remote nodes, can remove when the list is empty!
+        // but need to match on address... too complicated for now
+        if (!loadsMemory) {
+          PendingLocalDefCodes[currCode] = true;
+          PendingCodes[currCode] = true;
+          DfPredeCodeToSucceNodes[currCode].push_back(sn);
+        } else {
+          PendingRemoteDefCodes[currCode] = true;
+          PendingCodes[currCode] = true;
+        }
       }
-      if (sn->mem_load != NULL) {
+      if (loadsMemory) {
         long addr = sn->mem_load->calc_addr(regValue, offRegValue);
         PendingAddrs.insert(addr);
       }
+    }
+    if (loadsMemory && sn->mem_load->read_same_as_write) {
+      long addr = sn->mem_load->calc_addr(regValue, offRegValue);
+      PendingAddrs.insert(addr);
     }
     if (sn->cf_prede_codes.size() != 0) {
       for (auto it = sn->cf_prede_codes.begin(); it != sn->cf_prede_codes.end(); it++) {
@@ -481,6 +511,7 @@ int main()
         }
         CfPredeCodeToSucceNodes[currCode].push_back(sn);
         PendingCfPredeCodes[currCode] = true;
+        PendingCodes[currCode] = true;
       }
     }
   }

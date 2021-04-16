@@ -184,8 +184,8 @@ def get_mem_writes_to_static_addrs(prog):
             mem_writes_per_static_write[static_write_insn] = []
         mem_writes_per_static_write[static_write_insn].append([insn, func_name, writes, true_insn_addr, src_reg, is_loop_insn])
     f.close()
-    if DEBUG_CTYPE: print( "[main] sa returned " + str(data_points))
-    if DEBUG_CTYPE: print( "[main] sa returned " + str(mem_writes_per_static_write))
+    #if DEBUG_CTYPE: print( "[main] sa returned " + str(data_points))
+    #if DEBUG_CTYPE: print( "[main] sa returned " + str(mem_writes_per_static_write))
     return data_points, mem_writes_per_static_write
 
 #FIXME: call instructions insns and not addrs
