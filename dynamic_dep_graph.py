@@ -252,7 +252,7 @@ class DynamicDependence:
 
     def build_dyanmic_dependencies(self, insn):
         result_file = os.path.join(curr_dir, 'cache', 'dynamic_graph_result_' + self.key + "_" + str(insn))
-        if False:#os.path.isfile(result_file):
+        if os.path.isfile(result_file):
             with open(result_file, 'r') as f:
                 in_result = json.load(f)
                 static_id_to_node = {}
