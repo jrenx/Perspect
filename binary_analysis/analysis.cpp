@@ -30,8 +30,8 @@ using namespace boost;
 /***************************************************************/
 BPatch bpatch;
 bool INFO = true;
-bool DEBUG = false;
-bool DEBUG_SLICE = false;
+bool DEBUG = true;
+bool DEBUG_SLICE = true;
 bool DEBUG_BIT = false;
 bool DEBUG_STACK = false;
 
@@ -159,6 +159,7 @@ bool writesToStack(Operand op, Instruction insn, Address addr);
 void getRegAndOff(Expression::Ptr exp, MachRegister *machReg, long *off);
 void printReachableStores(boost::unordered_map<StackStore, boost::unordered_map<Address, Function *>> &reachableStores);
 void getAllRets(Function *f, boost::unordered_set<Address> &rets);
+void getAllRets(Function *f, boost::unordered_set<std::pair<Address, Block *>> &rets);
 void getAllInvokes(Function *f, Function *callee, boost::unordered_set<Address> &rets);
 Function *getFunction(std::vector<Function *> &funcs);
 
@@ -477,6 +478,7 @@ class CustomSlicer : public Slicer::Predicates {
 public:
   char *regName = NULL;
   bool filter = false;
+  bool foundFilteredReg = false;
   Instruction insn;
   bool init = true;
   bool atEndPoint = false;
@@ -487,6 +489,12 @@ public:
     //cout << "  ";
     //cout << ap->insn().readsMemory();
     if(DEBUG_SLICE) cout << endl;
+    if (filter) {
+      if (!foundFilteredReg) {
+        if(DEBUG_SLICE) cout << "[slice] " << "Intended reg not found, ignoring assignment: " << ap->format();
+        return false;
+      }
+    }
     init = false;
     filter = false;
     if (ap->insn().readsMemory()) {
@@ -519,6 +527,8 @@ public:
 	      if(DEBUG_SLICE) cout << "[slice] " << "Filtering against " << regName <<
 	       				      " filter out: " << regStr << endl;
         return false;
+      } else {
+        foundFilteredReg = true;
       }
     }
 
@@ -578,8 +588,10 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsign
 
   Slicer s(assign, b, f, true, false);
   CustomSlicer cs;
+  bool filter = false;
   if (strcmp(regName, "") != 0) {
     cs.regName = regName;
+    filter = true;
     cs.filter = true;
   }
   cs.insn = insn;
@@ -588,6 +600,7 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsign
   //cout << slice->size() << endl;
   string filePath("/home/anygroup/perf_debug_tool/binary_analysis/graph");
   slice->printDOT(filePath);
+  if (filter && !cs.foundFilteredReg) return NULL;
   return slice;
 }
 
@@ -647,6 +660,7 @@ std::string findMatchingOpExprStr(Assignment::Ptr assign, AbsRegion region) {
   }
 }
 
+// by the time a block is visited, all its children has been visited
 void getReversePostOrderListHelper(Block *b,
                                    std::vector<Block *> &list,
                                    boost::unordered_set<Block *> &visited) {
@@ -928,6 +942,20 @@ void getAllRets(Function *f, boost::unordered_set<Address> &rets) {
       entryID id = insn.getOperation().getID();
       if (id == e_ret_near || id == e_ret_far)
         rets.insert(addr);
+    }
+  }
+}
+
+void getAllRets(Function *f, boost::unordered_set<std::pair<Address, Block *>> &rets) {
+  for (auto bit = f->blocks().begin(); bit != f->blocks().end(); ++bit) {
+    Block::Insns insns;
+    (*bit)->getInsns(insns);
+    for (auto iit = insns.begin(); iit != insns.end(); iit++) {
+      Address addr = (*iit).first;
+      Instruction insn = (*iit).second;
+      entryID id = insn.getOperation().getID();
+      if (id == e_ret_near || id == e_ret_far)
+        rets.insert(std::pair<Address, Block *>(addr, *bit));
     }
   }
 }
@@ -1475,6 +1503,90 @@ boost::unordered_set<Address> checkAndGetWritesToStaticAddrs(Function *f, Instru
   return insnToReachableStores[readAddr][readOff];
 }
 
+void handlePassByReference(AbsRegion targetReg, Address startAddr,
+                           Block *startBb, Function *startFunc,
+                           boost::unordered_map<Address, Function*> &ret) { // TODO add to declaration
+
+  std::vector<Block *> list;
+  boost::unordered_set<Block *> visited;
+  getReversePostOrderListHelper(startFunc->entry(), list, visited);
+  //std::reverse(list.begin(), list.end());
+
+  boost::unordered_set<Block *> checked;
+  AssignmentConverter ac(true, false);
+  for (auto bit = list.begin(); bit != list.end(); bit++) {
+    bool checkBB = false;
+    Block *bb = *bit;
+    if (bb == startBb) {
+      checkBB = true;
+    } else {
+      if (checked.size() == 0) continue;
+
+      Block::edgelist targets = bb->targets();
+      for (auto it = targets.begin(); it != targets.end(); it++) {
+        if ((*it)->type() == CALL || (*it)->type() == RET || (*it)->type() == CATCH)
+          continue;
+        Block* src = (*it)->src();
+        Block* trg = (*it)->trg();
+        if (checked.find(trg) != checked.end()) {
+          checkBB = true;
+          break;
+        }
+      }
+    }
+
+    if (!checkBB) continue;
+
+    Block::Insns insns;
+    bb->getInsns(insns);
+    auto it = insns.rbegin();
+    if (bb == startBb) {
+      for (; it != insns.rend(); it++) {
+        Address addr = (*it).first;
+        Instruction insn = (*it).second;
+        if (addr == startAddr) {
+          it++;
+          break;
+        }
+      }
+    }
+    bool foundDef = false;
+    for (; it != insns.rend(); it++) {
+      Address addr = (*it).first;
+      Instruction insn = (*it).second;
+      // if assignment assigns the register, stop here, return the assignment
+      vector<Assignment::Ptr> assignments;
+      ac.convert(insn, addr, startFunc, bb, assignments);
+      for (auto ait = assignments.begin(); ait != assignments.end(); ++ait) {
+        Assignment::Ptr assign = *ait;
+        if (assign->out() == targetReg) {
+          ret.insert({assign->addr(), startFunc});
+          foundDef = true;
+        }
+      }
+      if (foundDef) break;
+
+      entryID id = insn.getOperation().getID();
+      if (id == e_call || id == e_callq) {
+        Block::edgelist targets = bb->targets();
+        for (auto tit = targets.begin(); tit != targets.end(); tit++) {
+          if ((*tit)->type() != CALL)
+            continue;
+          Block *trg = (*tit)->trg();
+          std::vector<Function *> funcs;
+          trg->getFuncs(funcs);
+          Function * func = getFunction(funcs);
+          boost::unordered_set<std::pair<Address, Block *>> retInsns;
+          getAllRets(func, retInsns);
+          for (auto rit = retInsns.begin(); rit != retInsns.end(); rit++) {
+            handlePassByReference(targetReg, (*rit).first, (*rit).second, func, ret);
+          }
+        }
+      }
+    }
+    if (!foundDef) checked.insert(bb);
+  }
+}
 
 void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visited,
                           char *progName, char *funcName,
@@ -1502,7 +1614,31 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
   if (INFO) cout << endl;
 
   GraphPtr slice = buildBackwardSlice(func, bb, insn, addr, regName, atEndPoint);
-
+  if (slice == NULL) {
+    AssignmentConverter ac(true, false);
+    vector<Assignment::Ptr> assignments;
+    ac.convert(insn, addr, func, bb, assignments);
+    AbsRegion targetRegion;
+    bool targetRegionFound = false;
+    Assignment::Ptr assign = assignments[0];
+    for (auto rit = assign->inputs().begin(); rit != assign->inputs().end(); rit++) {
+      if ((*rit).format().compare(regName) == 0) {
+        targetRegion = *rit;
+        targetRegionFound = true;
+        break;
+      }
+    }
+    assert(targetRegionFound);
+    boost::unordered_map<Address, Function*> ret;
+    handlePassByReference(targetRegion, addr, bb, func, ret);
+    cout << "[sa]  found " << ret.size() << " pass by reference defs " << endl;
+    for(auto rit = ret.begin(); rit != ret.end(); rit ++) {
+      char *newFuncName = (char *)(*rit).second->name().c_str();
+      bool atEndPoint = (strcmp(newFuncName, funcName) == 0) ? false : true;
+      backwardSliceHelper(json_reads, visited, progName, newFuncName, (*rit).first, "", isKnownBitVar, atEndPoint);
+    }
+    return;
+  }
   boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariables;
   boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariablesToIgnore;
   boost::unordered_map<Assignment::Ptr, AbsRegion> bitOperands;
@@ -1550,26 +1686,32 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
 
     // TODO, technically for both below scenarios should verify with RR cuz no guarantee there's no other writes
     //       low prioirty for now.
-    MachRegister readReg; long readOff;
-    if (readsFromStack(assign->insn(), assign->addr(), &readReg, &readOff)) {
-      cout << "[sa] result of slicing is reading from stack, perform stack analysis..." << endl;
-      boost::unordered_map<Address, Function*> stackWrites = checkAndGetStackWrites(func, assign->insn(), assign->addr(), readReg, readOff, 0);
-      cout << "[sa]  found " << stackWrites.size() << " stack writes " << endl;
-      for (auto stit = stackWrites.begin(); stit != stackWrites.end(); stit++) {
-        char *newFuncName = (char *)(*stit).second->name().c_str();
-        bool atEndPoint = (strcmp(newFuncName, funcName) == 0) ? false : true;
-        backwardSliceHelper(json_reads, visited, progName, newFuncName, (*stit).first, "", isKnownBitVar, atEndPoint);
+    if (!atEndPoint) {
+      MachRegister readReg;
+      long readOff;
+      if (readsFromStack(assign->insn(), assign->addr(), &readReg, &readOff)) {
+        cout << "[sa] result of slicing is reading from stack, perform stack analysis..." << endl;
+        boost::unordered_map<Address, Function *> stackWrites = checkAndGetStackWrites(func, assign->insn(),
+                                                                                       assign->addr(), readReg, readOff,
+                                                                                       0);
+        cout << "[sa]  found " << stackWrites.size() << " stack writes " << endl;
+        for (auto stit = stackWrites.begin(); stit != stackWrites.end(); stit++) {
+          char *newFuncName = (char *) (*stit).second->name().c_str();
+          bool atEndPoint = (strcmp(newFuncName, funcName) == 0) ? false : true;
+          backwardSliceHelper(json_reads, visited, progName, newFuncName, (*stit).first, "", isKnownBitVar, atEndPoint);
+        }
+        continue;
+      } else if (readsFromStaticAddr(assign->insn(), assign->addr(),
+                                     &readOff)) { //FIXME: currently only reads from same function.
+        cout << "[sa] result of slicing is reading from static addr, looking for writes to static addrs..." << endl;
+        boost::unordered_set<Address> writesToStaticAddrs = checkAndGetWritesToStaticAddrs(
+            func, assign->insn(), assign->addr(), readOff); //TODO, make this interprocedural too?
+        cout << " [sa]  found " << writesToStaticAddrs.size() << " writes to static addresses " << endl;
+        for (auto wit = writesToStaticAddrs.begin(); wit != writesToStaticAddrs.end(); wit++) {
+          backwardSliceHelper(json_reads, visited, progName, funcName, *wit, "", isKnownBitVar);
+        }
+        continue;
       }
-      continue;
-    } else if (readsFromStaticAddr(assign->insn(), assign->addr(), &readOff)) { //FIXME: currently only reads from same function.
-      cout << "[sa] result of slicing is reading from static addr, looking for writes to static addrs..." << endl;
-      boost::unordered_set<Address> writesToStaticAddrs = checkAndGetWritesToStaticAddrs(
-          func, assign->insn(), assign->addr(), readOff); //TODO, make this interprocedural too?
-      cout << " [sa]  found " << writesToStaticAddrs.size() << " writes to static addresses " << endl;
-      for (auto wit = writesToStaticAddrs.begin(); wit != writesToStaticAddrs.end(); wit++) {
-        backwardSliceHelper(json_reads, visited, progName, funcName, *wit, "", isKnownBitVar);
-      }
-      continue;
     }
 
     if (INFO) cout << "[sa] checking result instruction: " << assign->insn().format() << endl;
@@ -1812,6 +1954,7 @@ void analyzeKnownBitVariables(GraphPtr slice,
   }
 }
 
+// TODO, is this the right name?
 void getReversePostOrderListHelper(Node::Ptr node,
                                    std::vector<Node::Ptr> *list,
                                    boost::unordered_set<Node::Ptr> &visited) {
