@@ -74,8 +74,8 @@ class DynamicNode(JSONEncoder):
             s += '[' + str(succe.id) + "," + str(succe.insn_id) + ']'
         s = s.strip(",")
         s += "] \n"
-        s += "    mem_load_addr: " + str(self.mem_load_addr) + "\n"
-        s += "    mem_store_addr: " + str(self.mem_store_addr) + "\n"
+        s += "    mem_load_addr: " + (hex(self.mem_load_addr) if self.mem_load_addr is not None else str(None)) + "\n"
+        s += "    mem_store_addr: " + (hex(self.mem_store_addr) if self.mem_store_addr is not None else str(None)) + "\n"
 
         return s
 
@@ -523,6 +523,7 @@ class DynamicGraph:
                         if s in worklist:
                             continue
                         assert s not in all_completed
+                        worklist.append(s)
                         if DEBUG_POST_ORDER: self.print_node("Queuing  ", s)
                     if completed in prede_to_node:
                         for n in prede_to_node[completed]:
@@ -544,8 +545,8 @@ class DynamicGraph:
         if DEBUG_POST_ORDER:
             for n in node_to_pending_prede_count:
                 self.print_node("Remaining count: " + str(node_to_pending_prede_count[n]), n)
-        #assert len(node_to_pending_prede_count) == 0, str(len(node_to_pending_prede_count))
-        #assert len(prede_to_node) == 0, str(len(prede_to_node))
+        assert len(node_to_pending_prede_count) == 0, str(len(node_to_pending_prede_count))
+        assert len(prede_to_node) == 0, str(len(prede_to_node))
         print("[dyn_dep] total number of nodes in reverse postorder_list: " + str(len(self.reverse_postorder_list)))
 
     # a node can be visited if all its successors are visited
@@ -626,8 +627,8 @@ class DynamicGraph:
         if DEBUG_POST_ORDER:
             for n in node_to_pending_succe_count:
                 self.print_node("Remaining count: " + str(node_to_pending_succe_count[n]), n)
-        #assert len(node_to_pending_succe_count) == 0, str(len(node_to_pending_succe_count))
-        #assert len(succe_to_node) == 0, str(len(succe_to_node))
+        assert len(node_to_pending_succe_count) == 0, str(len(node_to_pending_succe_count))
+        assert len(succe_to_node) == 0, str(len(succe_to_node))
         print("[dyn_dep] total number of nodes in postorder_list: " + str(len(self.postorder_list)))
 
     def find_entry_and_exit_nodes(self):
@@ -650,7 +651,7 @@ class DynamicGraph:
         self.target_nodes = []
         #if len(self.target_nodes) > 0:
         #    return
-        for node in self.exit_nodes:
+        for node in self.dynamic_nodes: #Dont use exit node, not every target node is an exit node
             if node.static_node.insn == insn:
                 self.target_nodes.append(node)
         print("[dyn_dep] total number of target nodes: " + str(len(self.target_nodes)))
@@ -786,7 +787,8 @@ class DynamicGraph:
                                                          None if pending_regs is None else pending_regs[0])
                 #print("[build] Store " + hex(insn) + " to " + hex(mem_store_addr))
                 if (insn != self.start_insn) and (mem_store_addr not in addr_to_df_succe_node):
-                    continue
+                    if insn not in local_df_prede_insn_to_succe_node:
+                        continue
 
             if insn not in self.insn_to_id:
                 self.insn_to_id[insn] = insn_id
@@ -851,6 +853,7 @@ class DynamicGraph:
                     if ni in local_df_prede_insn_to_succe_node:
                         del local_df_prede_insn_to_succe_node[ni]
 
+
             if insn in remote_df_prede_insn_to_succe_node:
                 dynamic_node.mem_store_addr = mem_store_addr
                 assert mem_store_addr is not None, str(insn_line) + "\n" + str(dynamic_node)
@@ -860,8 +863,6 @@ class DynamicGraph:
                         succe.df_predes.append(dynamic_node)
                         dynamic_node.df_succes.append(succe)
                     del addr_to_df_succe_node[mem_store_addr]
-                    # print("[build] Store " + hex(insn) + " to " + hex(mem_store_addr) + " removing from pending nodes")
-
             loads_memory = True if static_node.mem_load is not None else False
             if static_node.df_predes or (loads_memory and static_node.mem_load.read_same_as_write):  # and insn not in insn_of_df_nodes:
                 for prede in static_node.df_predes:
@@ -995,9 +996,10 @@ class DynamicGraph:
 
 if __name__ == '__main__':
     dd = DynamicDependence(0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
-    #dd.prepare_to_build_dynamic_dependencies(900)
-    #dg = dd.build_dyanmic_dependencies(0x441029)
-
+    dd.prepare_to_build_dynamic_dependencies(900)
+    dg = dd.build_dyanmic_dependencies(0x409418)
+    #dg.build_reverse_postorder_list()
+    """
     dd.prepare_to_build_dynamic_dependencies(900)
     dg = dd.build_dyanmic_dependencies(0x409418)
     # dynamic_graph.prepare_to_build_dynamic_dependencies(0x409418, "scanblock", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
@@ -1056,3 +1058,4 @@ if __name__ == '__main__':
         p.print_node(" not found:  ")
     with open(os.path.join(curr_dir, 'predes'), 'w') as f:
         json.dump(predes, f, indent=4, ensure_ascii=False)
+    """

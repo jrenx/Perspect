@@ -1528,7 +1528,7 @@ class StaticDepGraph:
                     off = load[2]
 
                 if len(load) >=4:
-                    print("Found offset reg")
+                    #print("Found offset reg")
                     if load[3] == '':
                         off_reg = None
                     else:

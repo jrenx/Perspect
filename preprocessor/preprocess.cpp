@@ -118,7 +118,6 @@ void parseJsonList(cJSON *json_List, unordered_set<long> &set) {
   int size = cJSON_GetArraySize(json_List);
   for (int i = 0; i < size; i++) {
     cJSON *ele = cJSON_GetArrayItem(json_List, i);
-    //cout << "HERE" << ele->valueint << endl;
     set.insert((long)ele->valueint); //TODO long?? save as string??
   }
 }
@@ -398,12 +397,10 @@ int main()
       i-=8;
       if (parse) {
         std::memcpy(&regValue, buffer + i, sizeof(long));
-        //os.write((char*)&regValue, sizeof(long));
       }
       //cout << "contains reg" << code << endl;
     }
     if (!parse) continue;
-    //os.write((char*)&code, sizeof(unsigned short));
 
     if (CodeToRegCount[code] > 0) {
       if (pendingRegCount == 0) {
@@ -420,7 +417,7 @@ int main()
     if (PendingRemoteDefCodes[code]) {
       long addr = sn->mem_store->calc_addr(regValue, offRegValue);
       if (PendingAddrs.find(addr) == PendingAddrs.end() && code != StartInsnCode) {
-        continue;
+        if (!PendingLocalDefCodes[code]) continue; // FIXME: unfortuanately, could be a local def dep too, need to make logic less messy if have more time ...
       } else {
         PendingAddrs.erase(addr);
       }
@@ -436,11 +433,13 @@ int main()
       os.write((char*)&regValue, sizeof(long));
     }
 
-    //cout << "curr code" << code << " index: "<< i <<endl;
-    nodeCount ++;
     //cout << "====" << nodeCount << "\n";
+    //cout << "curr code" << code << " index: "<< i <<endl;
     //cout << std::hex << CodeToInsn[code] << std::dec << "\n";
-    // save the node
+
+    nodeCount ++;
+
+
     if (PendingCfPredeCodes[code]) {
       std::vector<unsigned short> toRemove;
       for(auto it = CfPredeCodeToSucceNodes[code].begin(); it != CfPredeCodeToSucceNodes[code].end(); it++) {
@@ -477,7 +476,7 @@ int main()
     }
 
     bool loadsMemory = sn->mem_load != NULL;
-    if (sn->df_prede_codes.size() != 0) {
+    if (sn->df_prede_codes.size() > 0) {
       for (auto it = sn->df_prede_codes.begin(); it != sn->df_prede_codes.end(); it++) {
         unsigned short currCode = *it;
         if (!CodesOfCFNodes[currCode] && !CodesOfDFNodes[currCode]) {
@@ -503,7 +502,7 @@ int main()
       long addr = sn->mem_load->calc_addr(regValue, offRegValue);
       PendingAddrs.insert(addr);
     }
-    if (sn->cf_prede_codes.size() != 0) {
+    if (sn->cf_prede_codes.size() > 0) {
       for (auto it = sn->cf_prede_codes.begin(); it != sn->cf_prede_codes.end(); it++) {
         unsigned short currCode = *it;
         if (!CodesOfCFNodes[currCode] && !CodesOfDFNodes[currCode]) {

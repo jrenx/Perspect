@@ -125,12 +125,16 @@ class RelationAnalysis:
             #TODO: do new reverse post order traversal to start from the wavefronts!
             #FIXME: dataflow dependencies cycles already detected, so we don't need to check again rrgroupht?
             for cf_prede in node.cf_predes:
+                if cf_prede in dgraph.target_nodes:
+                    continue
                 for insn in cf_prede.input_sets:
                     if insn not in node.input_sets:
                         node.input_sets[insn] = set()
                     node.input_sets[insn].add(cf_prede)
 
             for df_prede in node.df_predes:
+                if df_prede in dgraph.target_nodes:
+                    continue
                 for insn in df_prede.input_sets:
                     if insn not in node.input_sets:
                         node.input_sets[insn] = set()
@@ -240,11 +244,12 @@ class RelationAnalysis:
 
         # tests for forward invariance
         #print("[invariant_analysis] total number of target nodes: " + str(len(dgraph.target_nodes)))
-
         for node in dgraph.target_nodes:
             node.output_set.add(node)
 
         for node in dgraph.postorder_list: #a node will be visited only if its successors have all been visited
+            if node in dgraph.target_nodes:
+                continue
             backedge_sources = node.static_node.backedge_sources
             for cf_succe in node.cf_succes:
                 cf_succe_insn = cf_succe.static_node.insn
@@ -259,7 +264,6 @@ class RelationAnalysis:
                     wavefront.add(df_succe.static_node)
                     continue
                 node.output_set = node.output_set.union(df_succe.output_set)
-
         worklist = deque()
         worklist.append(starting_node)
         visited = set() #TODO, ideally wanna propogate all the way, for now don't do that
