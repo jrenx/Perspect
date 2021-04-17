@@ -104,10 +104,11 @@ class RelationAnalysis:
                     break
             else:
                 print("Already visited...")
-            next = wavefront.pop()
-            insn = next.insn
-            func = next.function
-            static_node = StaticDepGraph.func_to_graph[func].insn_to_node[insn]
+            if len(wavefront) > 0:
+                next = wavefront.pop()
+                insn = next.insn
+                func = next.function
+                static_node = StaticDepGraph.func_to_graph[func].insn_to_node[insn]
 
     def backward_pass(self, dgraph, starting_node, rgroup):
         wavefront = set()
