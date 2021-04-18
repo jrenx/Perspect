@@ -95,6 +95,24 @@ namespace boost {
   }
 }
 
+boost::unordered_map<std::string, std::string> regMap =
+    {{"al"  ,"rax"}, {"ah"  ,"rax"}, {"ax"  ,"rax"}, {"eax","rax"},
+     {"bl"  ,"rbx"}, {"bh"  ,"rbx"}, {"bx"  ,"rbx"}, {"ebx","rbx"},
+     {"cl"  ,"rcx"}, {"ch"  ,"rcx"}, {"cx"  ,"rcx"}, {"ecx","rcx"},
+     {"dl"  ,"rdx"}, {"dh"  ,"rdx"}, {"dx"  ,"rdx"}, {"edx","rdx"},
+     {"sil" ,"rsi"}, {"si"  ,"rsi"}, {"esi" ,"rsi"},
+     {"dil" ,"rdi"}, {"di"  ,"rdi"}, {"edi" ,"rdi"},
+     {"bpl" ,"rbp"}, {"bp"  ,"rbp"}, {"ebp" ,"rbp"},
+     {"spl" ,"rsp"}, {"sp"  ,"rsp"}, {"esp" ,"rsp"},
+     {"r8b" , "r8"}, {"r8w" , "r8"}, {"r8d" , "r8"},
+     {"r9b" , "r9"}, {"r9w" , "r9"}, {"r9d" , "r9"},
+     {"r10b","r10"}, {"r10w","r10"}, {"r10d","r10"},
+     {"r11b","r11"}, {"r11w","r11"}, {"r11d","r11"},
+     {"r12b","r12"}, {"r12w","r12"}, {"r12d","r12"},
+     {"r13b","r13"}, {"r13w","r13"}, {"r13d","r13"},
+     {"r14b","r14"}, {"r14w","r14"}, {"r14d","r14"},
+     {"r15b","r15"}, {"r15w","r15"}, {"r15d","r15"}};
+
 BPatch_addressSpace *startInstrumenting(accessType_t accessType, const char *name, int pid, const char *argv[]);
 BPatch_image *getImage(const char *progName);
 
@@ -125,8 +143,8 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
                          long unsigned int addr, char *regName,
                          bool isKnownBitVar=false, bool atEndPoint=false);
 
-std::string getReadStr(Instruction insn);
-std::string inline getRegName(Function *newFunc, Address newAddr);
+std::string getReadStr(Instruction insn, bool *regFound);
+std::string inline getRegName(Function *newFunc, Address newAddr, bool *foundMemRead);
 void getReversePostOrderListHelper(Block *b,
                                    std::vector<Block *> &list,
                                    boost::unordered_set<Block *> &visited);
@@ -1601,8 +1619,8 @@ void handlePassByReference(AbsRegion targetReg, Address startAddr,
   }
 }
 
-std::string getReadStr(Instruction insn) {
-
+std::string getReadStr(Instruction insn, bool *regFound) {
+  // TODO, refactor this function!
   Expression::Ptr read;
   std::string readStr;
 
@@ -1622,6 +1640,11 @@ std::string getReadStr(Instruction insn) {
     for (auto oit = ops.begin(); oit != ops.end(); ++oit) {
       if (insn.isRead((*oit).getValue())) {
         read = (*oit).getValue();
+
+        MachRegister machReg; long off;
+        getRegAndOff(read, &machReg, &off);
+        if (machReg != InvalidReg) *regFound = true;
+
         if (INFO) cout << "[sa] current read: " << read->format() << endl;
         readCount++;
       }
@@ -1636,18 +1659,25 @@ std::string getReadStr(Instruction insn) {
   }
   return readStr;
 }
-std::string inline getRegName(Function *newFunc, Address newAddr) {
+std::string inline getRegName(Function *newFunc, Address newAddr, bool *foundMemRead) {
   Block *newBB = getBasicBlock2(newFunc, newAddr);
   Instruction newInsn = newBB->getInsn(newAddr);
-  std::string readStr = getReadStr(newInsn);
+  bool regFound = false;
+  std::string readStr = getReadStr(newInsn, &regFound);
   std::string delim = "|";
   int delimIndex = readStr.find(delim);
   std::string type = readStr.substr(0, delimIndex);
   std::string reg = "";
-  if (type == "regread") {
+  if (regFound && type == "regread") {
     reg = readStr.substr(delimIndex + 1, readStr.length());
     boost::algorithm::to_lower(reg);
+    if (regMap.find(reg) != regMap.end()) {
+      reg = regMap[reg];
+    }
     reg = "[x86_64::" + reg + "]";
+  } else if (type == "memread") {
+    cout << "[sa][warn] expect a register read here? " << endl; //TODO how to handle this??
+    *foundMemRead = true;
   }
 
   return reg;
@@ -1704,7 +1734,9 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
       //TODO, in the future just return the instructions as well...
       Address newAddr = (*rit).first;
 
-      std::string newRegStr = getRegName(newFunc, newAddr);
+      bool foundMemRead = false;
+      std::string newRegStr = getRegName(newFunc, newAddr, &foundMemRead);
+      if (foundMemRead) atEndPoint = true;
       char * newRegName = (char *)newRegStr.c_str();
       // TODO, in the future even refactor the signature of the backwardSliceHelper function ...
       backwardSliceHelper(json_reads, visited, progName, newFuncName, newAddr, newRegName, isKnownBitVar, atEndPoint);
@@ -1773,7 +1805,10 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
           char *newFuncName = (char *) newFunc->name().c_str();
           bool atEndPoint = strcmp(newFuncName, funcName) != 0;
           Address newAddr = (*stit).first;
-          std::string newRegStr = getRegName(newFunc, newAddr);
+
+          bool foundMemRead = false;
+          std::string newRegStr = getRegName(newFunc, newAddr, &foundMemRead);
+          if (foundMemRead) atEndPoint = true;
           char * newRegName = (char *)newRegStr.c_str();
           backwardSliceHelper(json_reads, visited, progName, newFuncName, newAddr, newRegName, isKnownBitVar, atEndPoint);
         }
@@ -1793,7 +1828,8 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
 
     if (INFO) cout << "[sa] checking result instruction: " << assign->insn().format() << endl;
 
-    std::string readStr = getReadStr(assign->insn());
+    bool regFound = false;
+    std::string readStr = getReadStr(assign->insn(), &regFound);
 
     if (INFO) cout << "[sa] => Instruction addr: " << std::hex << assign->addr() << std::dec << endl;
     if (INFO) cout << "[sa] => Read expr: " << readStr << endl;
