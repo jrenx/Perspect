@@ -146,7 +146,7 @@ def main():
     #test_get_all_bb()
     #test_rr_slice()
     #test_getting_static_addrs()
-    test_sa_slices10()
+    test_sa_slices9()
  
 if __name__ == "__main__":
     main()
