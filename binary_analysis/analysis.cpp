@@ -31,8 +31,8 @@ using namespace boost;
 /***************************************************************/
 BPatch bpatch;
 bool INFO = true;
-bool DEBUG = false;
-bool DEBUG_SLICE = false;
+bool DEBUG = true;
+bool DEBUG_SLICE = true;
 bool DEBUG_BIT = false;
 bool DEBUG_STACK = false;
 
@@ -1529,9 +1529,16 @@ boost::unordered_set<Address> checkAndGetWritesToStaticAddrs(Function *f, Instru
 
 void handlePassByReference(AbsRegion targetReg, Address startAddr,
                            Block *startBb, Function *startFunc,
-                           boost::unordered_map<Address, Function*> &ret) { // TODO add to declaration
+                           boost::unordered_map<Address, Function*> &ret,
+                           boost::unordered_set<Address> &visitedAddrs) { // TODO add to declaration
 
   if (DEBUG) cout << "[pass-by-ref] Checking for pass by reference def in function " << startFunc->name() << endl;
+  if (visitedAddrs.find(startAddr) != visitedAddrs.end()) {
+    if (DEBUG) cout << "[pass-by-ref] Already visited, returning " << endl;
+    return;
+  }
+  visitedAddrs.insert(startAddr);
+
   std::vector<Block *> list;
   boost::unordered_set<Block *> visited;
   getReversePostOrderListHelper(startFunc->entry(), list, visited);
@@ -1607,7 +1614,7 @@ void handlePassByReference(AbsRegion targetReg, Address startAddr,
           getAllRets(func, retInsns);
           for (auto rit = retInsns.begin(); rit != retInsns.end(); rit++) {
             int old_size = ret.size();
-            handlePassByReference(targetReg, (*rit).first, (*rit).second, func, ret);
+            handlePassByReference(targetReg, (*rit).first, (*rit).second, func, ret, visitedAddrs);
             int new_size = ret.size();
             if (new_size > old_size) foundDef = true;
             else assert(new_size == old_size);
@@ -1725,7 +1732,8 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
     }
     assert(targetRegionFound);
     boost::unordered_map<Address, Function*> ret;
-    handlePassByReference(targetRegion, addr, bb, func, ret);
+    boost::unordered_set<Address> visitedAddrs;
+      handlePassByReference(targetRegion, addr, bb, func, ret, visitedAddrs);
     cout << "[sa]  found " << ret.size() << " pass by reference defs " << endl;
     for(auto rit = ret.begin(); rit != ret.end(); rit ++) {
       Function *newFunc = (*rit).second;
