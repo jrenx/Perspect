@@ -11,6 +11,30 @@ curr_dir = os.path.dirname(os.path.realpath(__file__))
 DEBUG_CTYPE = True
 DEBUG = False
 
+# Need to do this conversion cuz dyninst's dataflow analysis
+# only uses the full register name ...
+# https://stackoverflow.com/questions/15191178/how-do-ax-ah-al-map-onto-eax
+# EAX is the full 32-bit value
+# AX is the lower 16-bits
+# AL is the lower 8 bits
+# AH is the bits 8 through 15 (zero-based)
+#https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/x64-architecture
+reg_map = dict(al='rax', ah='rax', ax='rax', eax='rax',
+               bl='rbx', bh='rbx', bx='rbx', ebx='rbx',
+               cl='rcx', ch='rcx', cx='rcx', ecx='rcx',
+               dl='rdx', dh='rdx', dx='rdx', edx='rdx',
+               sil='rsi', si='rsi', esi='rsi',
+               dil='rdi', di='rdi', edi='rdi',
+               bpl='rbp', bp='rbp', ebp='rbp',
+               spl='rsp', sp='rsp', esp='rsp',
+               r8b='r8', r8w='r8', r8d='r8',
+               r9b='r9', r9w='r9', r9d='r9',
+               r10b='r10', r10w='r10', r10d='r10',
+               r11b='r11', r11w='r11', r11d='r11',
+               r12b='r12', r12w='r12', r12d='r12',
+               r13b='r13', r13w='r13', r13d='r13',
+               r14b='r14', r14w='r14', r14d='r14',
+               r15b='r15', r15w='r15', r15d='r15')
 ################################################################
 #### C function declarations for accessing Dyninst analysis ####
 ################################################################
@@ -161,13 +185,13 @@ def get_mem_writes_to_static_addrs(prog):
             data_points[expr] = []
         data_points[expr].append([insn_addr, func])
     f.close()
-    if DEBUG_CTYPE: print("[main] sa returned " + str(len(data_points)) + " results")
+    #if DEBUG_CTYPE: print("[main] sa returned " + str(len(data_points)) + " results")
     #if DEBUG_CTYPE: print( "[main] sa returned " + str(data_points))
 
     mem_writes_per_static_write = {}
     f = open(os.path.join(curr_dir, 'nestedWritesToStaticAddr_result'))
     json_writes_per_insn = json.load(f)
-    if DEBUG_CTYPE: print("[main] : sa returned: " + str(json_writes_per_insn))
+    #if DEBUG_CTYPE: print("[main] : sa returned: " + str(json_writes_per_insn))
     for json_writes in json_writes_per_insn:
         if len(json_writes) == 0:
             continue
@@ -243,10 +267,12 @@ def static_backslices(slice_starts, prog, sa_result_cache):
     regname_to_reg = {}
     slice_starts_json = []
     for line in slice_starts:
-        reg = line[0]
+        reg = line[0].lower()
         if reg == "":
             reg_name = reg
         else:
+            if reg in reg_map:
+                reg = reg_map[reg]
             reg_name = "[x86_64::" + reg + "]"
         regname_to_reg[reg_name] = reg
 
@@ -258,37 +284,37 @@ def static_backslices(slice_starts, prog, sa_result_cache):
             data_points_per_reg.append(sa_result_cache[key])
         else:
             slice_starts_json.append({'reg_name': reg_name, 'addr': addr, 'func_name': func, 'is_bit_var': is_bit_var})
-    json_str = json.dumps(slice_starts_json)
-    slice_starts_str = c_char_p(str.encode(json_str))
-    prog_name = c_char_p(str.encode(prog))
+    if len(slice_starts_json) > 0:
+        json_str = json.dumps(slice_starts_json)
+        slice_starts_str = c_char_p(str.encode(json_str))
+        prog_name = c_char_p(str.encode(prog))
 
-    if DEBUG_CTYPE: print( "[main] slice starts: " + json_str)
-    if DEBUG_CTYPE: print( "[main] prog: " + prog)
+        if DEBUG_CTYPE: print( "[main] slice starts: " + json_str)
+        if DEBUG_CTYPE: print( "[main] prog: " + prog)
 
-    if DEBUG_CTYPE: print("[main] : " + "Calling C", flush=True)
-    lib.backwardSlices(slice_starts_str, prog_name)
-    if DEBUG_CTYPE: print( "[main] : Back from C")
+        if DEBUG_CTYPE: print("[main] : " + "Calling C", flush=True)
+        lib.backwardSlices(slice_starts_str, prog_name)
+        if DEBUG_CTYPE: print( "[main] : Back from C")
 
-    f = open(os.path.join(curr_dir, 'backwardSlices_result'))
-    json_loads_per_reg = json.load(f)
-    f.close()
-    #sa_result_cache[key] = json_loads_per_reg
+        f = open(os.path.join(curr_dir, 'backwardSlices_result'))
+        json_loads_per_reg = json.load(f)
+        f.close()
+        #sa_result_cache[key] = json_loads_per_reg
 
-    if DEBUG_CTYPE: print("[main] : returned: " + str(json_loads_per_reg))
-    for json_loads in json_loads_per_reg:
-        if len(json_loads) == 0:
-            continue
-        reg = regname_to_reg[json_loads['reg_name']]
-        addr = json_loads['addr']
-        func = json_loads['func_name']
-        is_bit_var = json_loads['is_bit_var']
-        if DEBUG: print("==> For use reg: " + reg + " @ " + str(addr))
-        data_points = parseLoadsOrStores(json_loads['reads'])
-        result = [reg, addr, data_points]
-        key = str(reg) + "_" + str(addr) + "_" + str(func) + "_" + str(is_bit_var) + "_" + str(prog)
-        sa_result_cache[key] = result
-        data_points_per_reg.append(result)
-
+        if DEBUG_CTYPE: print("[main] : returned: " + str(json_loads_per_reg))
+        for json_loads in json_loads_per_reg:
+            if len(json_loads) == 0:
+                continue
+            reg = regname_to_reg[json_loads['reg_name']]
+            addr = json_loads['addr']
+            func = json_loads['func_name']
+            is_bit_var = json_loads['is_bit_var']
+            if DEBUG: print("==> For use reg: " + reg + " @ " + str(addr))
+            data_points = parseLoadsOrStores(json_loads['reads'])
+            result = [reg, addr, data_points]
+            key = str(reg) + "_" + str(addr) + "_" + str(func) + "_" + str(is_bit_var) + "_" + str(prog)
+            sa_result_cache[key] = result
+            data_points_per_reg.append(result)
     #if len(slice_starts_json) > 0:
     #    sa_result_file = os.path.join(curr_dir, 'sa_results.json')
     #    with open(sa_result_file, 'w') as cache_file:

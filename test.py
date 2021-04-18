@@ -32,14 +32,14 @@ def test_rr_slice():
 
 def test_rr_slice2():
     a = datetime.datetime.now()
-    rr_backslice('909_ziptest_exe9', None, None, int('0x40bcbd', 16), 'RSI', 0, 0, None)
+    rr_backslice('909_ziptest_exe9', None, None, 0x40bcbd, 'RSI', 0, 0, None)
     b = datetime.datetime.now()
     print("Took: " + str(b-a))
 
 def test_sa_slices():
     slice_starts = []
     #slice_starts.append(['rax', 4234536, 'sweep', True]) #why is the filtered against?
-    slice_starts.append(['', int('0x409c84', 16), 'sweep', False])
+    slice_starts.append(['', 0x409c84, 'sweep', False])
     results = static_backslices(slice_starts, '909_ziptest_exe9', {})
     print(results)
 
@@ -65,20 +65,69 @@ def test_sa_slices2():
 
 def test_sa_slices3():
     slice_starts = []
-    slice_starts.append(['', int('0x43c46c', 16), 'unicode.init', False])
+    slice_starts.append(['', 0x43c46c, 'unicode.init', False])
+    #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
+    results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+    print(results)
+
+def test_sa_slices3_1():
+    slice_starts = []
+    slice_starts.append(['rax', 0x407bb2, 'runtime.new', False])
     #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
     results = static_backslices(slice_starts, '909_ziptest_exe9', {})
     print(results)
 
 def test_sa_slices4():
     slice_starts = []
-    slice_starts.append(['', int('0x40a9a6', 16), 'runtime.markspan', False])
+    slice_starts.append(['', 0x40a9a6, 'runtime.markspan', False])
+    #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
+    results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+    print(results)
+
+def test_sa_slices5():
+    slice_starts = []
+    slice_starts.append(['rax', 0x429b97, 'compress/flate.*decompressor·huffmanBlock', False])
+    #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
+    results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+    print(results)
+
+def test_sa_slices6():
+    slice_starts = []
+    slice_starts.append(['', 4367815, 'compress/flate.*decompressor·moreBits', False])
+    #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
+    results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+    print(results)
+
+def test_sa_slices7():
+    slice_starts = []
+    slice_starts.append(['rbx', 0x42dfd7, 'os.NewError', False])
+    #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
+    results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+    print(results)
+
+def test_sa_slices8():
+    slice_starts = []
+    slice_starts.append(['', 0x4037ac, 'hash_subtable_new', False])
+    #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
+    results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+    print(results)
+
+def test_sa_slices9():
+    slice_starts = []
+    slice_starts.append(['', 0x408f78, 'runtime.addfinalizer', False])
+    #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
+    results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+    print(results)
+
+def test_sa_slices10():
+    slice_starts = []
+    slice_starts.append(['rax', 0x40bd4d, 'setaddrbucket', False])
     #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
     results = static_backslices(slice_starts, '909_ziptest_exe9', {})
     print(results)
 
 def test_get_all_bb():
-    results = getAllBBs(int('0x416a91', 16), 'bytes.*Buffer·Read', '909_ziptest_exe9')
+    results = getAllBBs(0x416a91, 'bytes.*Buffer·Read', '909_ziptest_exe9')
     print(len(results))
 
 def test_getting_static_addrs():
@@ -97,7 +146,7 @@ def main():
     #test_get_all_bb()
     #test_rr_slice()
     #test_getting_static_addrs()
-    test_sa_slices3()
+    test_sa_slices10()
  
 if __name__ == "__main__":
     main()

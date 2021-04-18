@@ -447,7 +447,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     print("[rr] Addresses that have unknown writes: " + str(len(pending_addrs)))
     pending_addrs = pending_addrs.difference(explained_addrs)
     print("[rr] Addresses that have unknown writes: " + str(len(pending_addrs)))
-    if len(pending_addrs) < 30:
+    if len(pending_addrs) < 250:
         print("Very few addresses, watching might be faster")
         skip_breakpoints = True
         

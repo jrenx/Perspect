@@ -497,10 +497,11 @@ int main()
         long addr = sn->mem_load->calc_addr(regValue, offRegValue);
         PendingAddrs.insert(addr);
       }
-    }
-    if (loadsMemory && sn->mem_load->read_same_as_write) {
-      long addr = sn->mem_load->calc_addr(regValue, offRegValue);
-      PendingAddrs.insert(addr);
+    } else {
+      if (loadsMemory && sn->mem_load->read_same_as_write) {
+        long addr = sn->mem_load->calc_addr(regValue, offRegValue);
+        PendingAddrs.insert(addr);
+      }
     }
     if (sn->cf_prede_codes.size() > 0) {
       for (auto it = sn->cf_prede_codes.begin(); it != sn->cf_prede_codes.end(); it++) {

@@ -45,7 +45,7 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
             print("Timeout is: " + str(timeout), flush=True)
             rr_process.communicate(('source' + os.path.join(rr_dir, 'get_breakpoints')).encode(), timeout=timeout)
         else:
-            rr_process.communicate(('source' + os.path.join(rr_dir, 'get_breakpoints')).encode())#, timeout=60)
+            rr_process.communicate(('source' + os.path.join(rr_dir, 'get_breakpoints')).encode(), timeout=300)
     except subprocess.TimeoutExpired:
         rr_process.kill()
         success = False

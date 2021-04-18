@@ -30,8 +30,8 @@ using namespace boost;
 /***************************************************************/
 BPatch bpatch;
 bool INFO = true;
-bool DEBUG = true;
-bool DEBUG_SLICE = true;
+bool DEBUG = false;
+bool DEBUG_SLICE = false;
 bool DEBUG_BIT = false;
 bool DEBUG_STACK = false;
 
@@ -479,6 +479,7 @@ public:
   char *regName = NULL;
   bool filter = false;
   bool foundFilteredReg = false;
+  bool slicedMoreThanOneStep = false;
   Instruction insn;
   bool init = true;
   bool atEndPoint = false;
@@ -489,6 +490,8 @@ public:
     //cout << "  ";
     //cout << ap->insn().readsMemory();
     if(DEBUG_SLICE) cout << endl;
+
+    slicedMoreThanOneStep = true;
     if (filter) {
       if (!foundFilteredReg) {
         if(DEBUG_SLICE) cout << "[slice] " << "Intended reg not found, ignoring assignment: " << ap->format();
@@ -521,7 +524,7 @@ public:
     if (DEBUG_SLICE) cout << "[slice] should stop slicing? " << atEndPoint << endl;
     if (atEndPoint == true) return false;
     if (DEBUG_SLICE) cout << "[slice] " << "predecessor reg: " << regStr << endl;
-    if (init && insn.readsMemory()) return false;
+    if (init && insn.readsMemory()) return false; //TODO, actually could have multiple data dependencies, not just a memory read! need to handle this corner case sometimes
     if (filter) {
       if (reg.format().compare(regName) != 0) {
 	      if(DEBUG_SLICE) cout << "[slice] " << "Filtering against " << regName <<
@@ -560,9 +563,7 @@ public:
       if (DEBUG) cout << "[sa] is not a true reg: " << regStr << endl;
       return false;
     }
-
-
-    return true;
+    return true; // TODO should be redundant...
     //i --;
     //return i > 0;
     //return false;
@@ -601,6 +602,7 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsign
   string filePath("/home/anygroup/perf_debug_tool/binary_analysis/graph");
   slice->printDOT(filePath);
   if (filter && !cs.foundFilteredReg) return NULL;
+  if (!cs.slicedMoreThanOneStep) return NULL;
   return slice;
 }
 
@@ -1082,7 +1084,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
 
             for (auto rait = readAddrs.begin(); rait != readAddrs.end(); rait++) {
               Address readAddr = *rait;
-              cout << "[stack] => Checking for read address " << std::hex << readAddr << std::dec  << endl;
+              if (DEBUG_STACK) cout << "[stack] => Checking for read address " << std::hex << readAddr << std::dec  << endl;
               boost::unordered_map<Address, long> callerInsnToStackHeight;
               getStackHeights(caller, callerList, callerInsnToStackHeight, 0);
               int stackOffSet = 8 - callerInsnToStackHeight[readAddr];
@@ -1507,6 +1509,7 @@ void handlePassByReference(AbsRegion targetReg, Address startAddr,
                            Block *startBb, Function *startFunc,
                            boost::unordered_map<Address, Function*> &ret) { // TODO add to declaration
 
+  if (DEBUG) cout << "[pass-by-ref] Checking for pass by reference def in function " << startFunc->name() << endl;
   std::vector<Block *> list;
   boost::unordered_set<Block *> visited;
   getReversePostOrderListHelper(startFunc->entry(), list, visited);
@@ -1560,6 +1563,7 @@ void handlePassByReference(AbsRegion targetReg, Address startAddr,
       for (auto ait = assignments.begin(); ait != assignments.end(); ++ait) {
         Assignment::Ptr assign = *ait;
         if (assign->out() == targetReg) {
+          if (DEBUG) cout << "[pass-by-ref] Found matching def " << assign->format() << endl;
           ret.insert({assign->addr(), startFunc});
           foundDef = true;
         }
@@ -1576,10 +1580,15 @@ void handlePassByReference(AbsRegion targetReg, Address startAddr,
           std::vector<Function *> funcs;
           trg->getFuncs(funcs);
           Function * func = getFunction(funcs);
+          if (func == NULL) continue;
           boost::unordered_set<std::pair<Address, Block *>> retInsns;
           getAllRets(func, retInsns);
           for (auto rit = retInsns.begin(); rit != retInsns.end(); rit++) {
+            int old_size = ret.size();
             handlePassByReference(targetReg, (*rit).first, (*rit).second, func, ret);
+            int new_size = ret.size();
+            if (new_size > old_size) foundDef = true;
+            else assert(new_size == old_size);
           }
         }
       }
@@ -1663,6 +1672,7 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
   for(NodeIterator it = begin; it != end; ++it) {
     SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(*it);
     Assignment::Ptr assign = aNode->assign();
+    if (assign == NULL) continue;
     cout << assign->format() << " " << assign->insn().format() << " " << assign->insn().getOperation().getID() << " " << endl;
     //if (!atEndPoint && !assign->insn().readsMemory()) continue;
 
@@ -1791,6 +1801,7 @@ bool findMemoryLoadHelper(Expression::Ptr memWrite,
                           boost::unordered_set<Assignment::Ptr> &visited) {
 
   Assignment::Ptr assign = node->assign();
+  if (assign == NULL) return false;
   if (visited.find(assign) != visited.end()) {
     if(DEBUG && DEBUG_BIT) cout << "[bit_var] Node already visited, returning ..." << endl;
     return false;
@@ -1880,6 +1891,7 @@ void analyzeKnownBitVariables(GraphPtr slice,
     Node::Ptr node = *it;
     SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(node);
     Assignment::Ptr assign = aNode->assign();
+    if (assign == NULL) continue;
     entryID id = assign->insn().getOperation().getID();
 
     if (DEBUG_BIT) cout << "[bit_var] " << "CHECKING instruction for bit variable: ";
@@ -2032,6 +2044,7 @@ void locateBitVariables(GraphPtr slice,
     Node::Ptr node = *it;
     SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(node);
     Assignment::Ptr assign = aNode->assign();
+    if (assign == NULL) continue;
     entryID id = assign->insn().getOperation().getID();
 
     /*

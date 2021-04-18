@@ -1134,7 +1134,7 @@ class StaticDepGraph:
         return self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
     @staticmethod
-    def build_dependencies(insn, func, prog, limit=10000, use_cache=True):
+    def build_dependencies(insn, func, prog, limit=100000, use_cache=True):
         start = time.time()
         key = str(insn) + "_" + str(func) + "_" + str(prog) + "_" + str(limit)
         result_file = os.path.join(curr_dir, 'cache', 'static_graph_result_' + key)
@@ -1212,7 +1212,9 @@ class StaticDepGraph:
             StaticDepGraph.print_graph_info()
         except Exception as e:
             print("Caught exception: " + str(e))
-            raise e
+            #raise e
+        except AssertionError as ae:
+            print("Failed assertion: " + str(ae))
         except KeyboardInterrupt:
             print('Interrupted')
         finally:
@@ -1402,7 +1404,7 @@ class StaticDepGraph:
             addr_to_node[insn] = node
         if df_node is not None: #TODO, registers?
             regLoad = "" if df_node.reg_load is None else df_node.reg_load
-            slice_starts.append([regLoad, df_node.insn, df_node.function, df_node.contains_bit_var()])
+            slice_starts.append([regLoad.lower(), df_node.insn, df_node.function, df_node.contains_bit_var()])
             #TODO for now, just ignore those that writes to memory in SA
             assert df_node.insn not in addr_to_node
             addr_to_node[df_node.insn] = df_node
@@ -1453,16 +1455,19 @@ class StaticDepGraph:
                         else:
                             print("type not supported " + str(type))
                             #raise Exception
+
+                    if prede != succe:
+                        if prede not in succe.df_predes:
+                            succe.df_predes.append(prede)
+                        if succe not in prede.df_succes:
+                            prede.df_succes.append(succe)
                     if prede.explained is False:
-                        succe.df_predes.append(prede)
-                        prede.df_succes.append(succe)
-                        assert prede != succe, str(prede)
                         if curr_func != func:
                             defs_in_diff_func.add(prede)
                         else:
                             defs_in_same_func.add(prede)
-                    if read_same_as_write is True:
-                        prede.explained == True
+                    #if read_same_as_write is True:
+                    #    prede.explained = True
                     #else:
                         #assert prede.mem_load is not None or prede.reg_load is not None, str(prede)
 
@@ -1503,6 +1508,7 @@ class StaticDepGraph:
                 print("Calling RR failed")
                 print(str(e))
             print("[static_dep] found " + str(len(results)) + " dataflow dependencies non-local to function")
+            print(str(results))
             if VERBOSE: print(results)
             for result in results:
                 # reg_name = result[0]
@@ -1547,9 +1553,13 @@ class StaticDepGraph:
                     if prede.mem_store is None and prede.reg_load is None:
                         print('[static_dep][warn] predecessor already explained '
                               'but no memory store or register load found?' + str(prede))
-                assert prede != node, prede
-                node.df_predes.append(prede)
-                prede.df_succes.append(node)
+
+                if prede != node:
+                    node.df_predes.append(prede)
+                    prede.df_succes.append(node)
+                else:
+                    node.mem_load.read_same_as_write = True
+                    node.mem_store.read_same_as_write = True
 
         defs_in_same_func = defs_in_same_func.union(tmp_defs_in_same_func)
         print("[static_dep] Total number of new nodes in local  dataflow slice: " + str(len(defs_in_same_func)) + " " + \
@@ -1845,13 +1855,15 @@ class StaticDepGraph:
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
 if __name__ == "__main__":
-    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", limit=900, use_cache=True)
+    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", use_cache=True)
+    """
     print("HERERERE")
     for func in StaticDepGraph.func_to_graph:
         graph = StaticDepGraph.func_to_graph[func]
         for node in graph.id_to_node.values():
             if node.mem_load is not None and len(node.df_predes) == 0:
                 print(node)
+    """
     #StaticDepGraph.build_dependencies(0x409418, "scanblock", "909_ziptest_exe9")
     """
     json_file = os.path.join(curr_dir, 'static_graph_result')
