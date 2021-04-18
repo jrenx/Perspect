@@ -1451,7 +1451,7 @@ class StaticDepGraph:
                         elif type == 'regread':
                             prede.reg_load = prede_reg
                         elif type == 'empty':
-                            pass
+                            continue#pass
                         else:
                             print("type not supported " + str(type))
                             #raise Exception

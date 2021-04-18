@@ -19,6 +19,7 @@
 #include <iostream>
 #include <fstream>
 #include "cJSON.h"
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 using namespace Dyninst;
@@ -117,13 +118,15 @@ BPatch_basicBlock *getBasicBlock(BPatch_flowGraph *fg, long unsigned int addr);
 Block *getBasicBlock2(Function *f, long unsigned int addr);
 Block *getBasicBlockContainingInsnBeforeAddr(Function *f, long unsigned int addr);
 
-GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsigned int addr, char *regName,
+GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsigned int addr, char *regName, bool *madeProgress,
     bool atEndPoint = false);
 void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visited,
                          char *progName, char *funcName,
                          long unsigned int addr, char *regName,
                          bool isKnownBitVar=false, bool atEndPoint=false);
 
+std::string getReadStr(Instruction insn);
+std::string inline getRegName(Function *newFunc, Address newAddr);
 void getReversePostOrderListHelper(Block *b,
                                    std::vector<Block *> &list,
                                    boost::unordered_set<Block *> &visited);
@@ -570,7 +573,8 @@ public:
   }
 };
 
-GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsigned int addr, char *regName, bool atEndPoint) {
+GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsigned int addr, char *regName,
+    bool *madeProgress, bool atEndPoint) {
 
   // Convert the instruction to assignments
   AssignmentConverter ac(true, false);
@@ -601,8 +605,8 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsign
   //cout << slice->size() << endl;
   string filePath("/home/anygroup/perf_debug_tool/binary_analysis/graph");
   slice->printDOT(filePath);
-  if (filter && !cs.foundFilteredReg) return NULL;
-  if (!cs.slicedMoreThanOneStep) return NULL;
+  if (filter && !cs.foundFilteredReg) *madeProgress = false;
+  if (!cs.slicedMoreThanOneStep) *madeProgress = false;
   return slice;
 }
 
@@ -1597,6 +1601,57 @@ void handlePassByReference(AbsRegion targetReg, Address startAddr,
   }
 }
 
+std::string getReadStr(Instruction insn) {
+
+  Expression::Ptr read;
+  std::string readStr;
+
+  std::set<Expression::Ptr> memReads;
+  insn.getMemoryReadOperands(memReads);
+  if (memReads.size() > 0) { // prioritize reads from memory
+    assert (memReads.size() == 1);
+    Expression::Ptr read = *memReads.begin();
+    if (INFO) cout << "[sa] Memory read: " << read->format() << endl;
+    readStr.append("memread|");
+    readStr.append(read->format());
+  } else { // then check reads from register
+    int readCount = 0;
+    std::vector<Operand> ops;
+    insn.getOperands(ops);
+
+    for (auto oit = ops.begin(); oit != ops.end(); ++oit) {
+      if (insn.isRead((*oit).getValue())) {
+        read = (*oit).getValue();
+        if (INFO) cout << "[sa] current read: " << read->format() << endl;
+        readCount++;
+      }
+    }
+    if (INFO) cout << "[sa] total number of reads: " << readCount << endl;
+    if (readCount == 1) {
+      readStr.append("regread|");
+      readStr.append(read->format());
+    } else {
+      if (INFO) cout << "[sa][warn] multiple reads! " << endl;
+    }
+  }
+  return readStr;
+}
+std::string inline getRegName(Function *newFunc, Address newAddr) {
+  Block *newBB = getBasicBlock2(newFunc, newAddr);
+  Instruction newInsn = newBB->getInsn(newAddr);
+  std::string readStr = getReadStr(newInsn);
+  std::string delim = "|";
+  int delimIndex = readStr.find(delim);
+  std::string type = readStr.substr(0, delimIndex);
+  std::string reg = "";
+  if (type == "regread") {
+    reg = readStr.substr(delimIndex + 1, readStr.length());
+    boost::algorithm::to_lower(reg);
+    reg = "[x86_64::" + reg + "]";
+  }
+
+  return reg;
+}
 void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visited,
                           char *progName, char *funcName,
                           long unsigned int addr, char *regName, bool isKnownBitVar, bool atEndPoint) {
@@ -1622,8 +1677,9 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
   if (INFO) cout << "[sa] reg: " << regName << endl;
   if (INFO) cout << endl;
 
-  GraphPtr slice = buildBackwardSlice(func, bb, insn, addr, regName, atEndPoint);
-  if (slice == NULL) {
+  bool madeProgress = true;
+  GraphPtr slice = buildBackwardSlice(func, bb, insn, addr, regName, &madeProgress, atEndPoint);
+  if (strcmp(regName, "") != 0 && madeProgress == false) {
     AssignmentConverter ac(true, false);
     vector<Assignment::Ptr> assignments;
     ac.convert(insn, addr, func, bb, assignments);
@@ -1642,9 +1698,16 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
     handlePassByReference(targetRegion, addr, bb, func, ret);
     cout << "[sa]  found " << ret.size() << " pass by reference defs " << endl;
     for(auto rit = ret.begin(); rit != ret.end(); rit ++) {
-      char *newFuncName = (char *)(*rit).second->name().c_str();
-      bool atEndPoint = (strcmp(newFuncName, funcName) == 0) ? false : true;
-      backwardSliceHelper(json_reads, visited, progName, newFuncName, (*rit).first, "", isKnownBitVar, atEndPoint);
+      Function *newFunc = (*rit).second;
+      char *newFuncName = (char *)newFunc->name().c_str();
+      bool atEndPoint = strcmp(newFuncName, funcName) != 0;
+      //TODO, in the future just return the instructions as well...
+      Address newAddr = (*rit).first;
+
+      std::string newRegStr = getRegName(newFunc, newAddr);
+      char * newRegName = (char *)newRegStr.c_str();
+      // TODO, in the future even refactor the signature of the backwardSliceHelper function ...
+      backwardSliceHelper(json_reads, visited, progName, newFuncName, newAddr, newRegName, isKnownBitVar, atEndPoint);
     }
     return;
   }
@@ -1706,9 +1769,13 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
                                                                                        0);
         cout << "[sa]  found " << stackWrites.size() << " stack writes " << endl;
         for (auto stit = stackWrites.begin(); stit != stackWrites.end(); stit++) {
-          char *newFuncName = (char *) (*stit).second->name().c_str();
-          bool atEndPoint = (strcmp(newFuncName, funcName) == 0) ? false : true;
-          backwardSliceHelper(json_reads, visited, progName, newFuncName, (*stit).first, "", isKnownBitVar, atEndPoint);
+          Function *newFunc = (*stit).second;
+          char *newFuncName = (char *) newFunc->name().c_str();
+          bool atEndPoint = strcmp(newFuncName, funcName) != 0;
+          Address newAddr = (*stit).first;
+          std::string newRegStr = getRegName(newFunc, newAddr);
+          char * newRegName = (char *)newRegStr.c_str();
+          backwardSliceHelper(json_reads, visited, progName, newFuncName, newAddr, newRegName, isKnownBitVar, atEndPoint);
         }
         continue;
       } else if (readsFromStaticAddr(assign->insn(), assign->addr(),
@@ -1726,37 +1793,7 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
 
     if (INFO) cout << "[sa] checking result instruction: " << assign->insn().format() << endl;
 
-    Expression::Ptr read;
-    std::string readStr;
-
-    std::set<Expression::Ptr> memReads;
-    assign->insn().getMemoryReadOperands(memReads);
-    if (memReads.size() > 0) { // prioritize reads from memory
-      assert (memReads.size() == 1);
-      Expression::Ptr read = *memReads.begin();
-      if (INFO) cout << "[sa] Memory read: " << read->format() << endl;
-      readStr.append("memread|");
-      readStr.append(read->format());
-    } else { // then check reads from register
-      int readCount = 0;
-      std::vector<Operand> ops;
-      assign->insn().getOperands(ops);
-
-      for (auto oit = ops.begin(); oit != ops.end(); ++oit) {
-        if (assign->insn().isRead((*oit).getValue())) {
-          read = (*oit).getValue();
-          if (INFO) cout << "[sa] current read: " << read->format() << endl;
-          readCount++;
-        }
-      }
-      if (INFO) cout << "[sa] total number of reads: " << readCount << endl;
-      if (readCount == 1) {
-        readStr.append("regread|");
-        readStr.append(read->format());
-      } else {
-        if (INFO) cout << "[sa][warn] multiple reads! " << endl;
-      }
-    }
+    std::string readStr = getReadStr(assign->insn());
 
     if (INFO) cout << "[sa] => Instruction addr: " << std::hex << assign->addr() << std::dec << endl;
     if (INFO) cout << "[sa] => Read expr: " << readStr << endl;
