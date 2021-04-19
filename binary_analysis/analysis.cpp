@@ -1729,41 +1729,48 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
 
   bool madeProgress = true;
   GraphPtr slice = buildBackwardSlice(func, bb, insn, addr, regName, &madeProgress, atEndPoint);
-  if (strcmp(regName, "") != 0 && !madeProgress && !atEndPoint) {
-    AssignmentConverter ac(true, false);
-    vector<Assignment::Ptr> assignments;
-    ac.convert(insn, addr, func, bb, assignments);
-    AbsRegion targetRegion;
-    bool targetRegionFound = false;
-    Assignment::Ptr assign = assignments[0];
-    for (auto rit = assign->inputs().begin(); rit != assign->inputs().end(); rit++) {
-      if ((*rit).format().compare(regName) == 0) {
-        targetRegion = *rit;
-        targetRegionFound = true;
-        break;
-      }
-    }
-    assert(targetRegionFound);
-    boost::unordered_map<Address, Function*> ret;
-    boost::unordered_set<Address> visitedAddrs;
-      handlePassByReference(targetRegion, addr, bb, func, ret, visitedAddrs);
-    cout << "[sa]  found " << ret.size() << " pass by reference defs " << endl;
-    for(auto rit = ret.begin(); rit != ret.end(); rit ++) {
-      Function *newFunc = (*rit).second;
-      char *newFuncName = (char *)newFunc->name().c_str();
-      bool atEndPoint = strcmp(newFuncName, funcName) != 0;
-      //TODO, in the future just return the instructions as well...
-      Address newAddr = (*rit).first;
 
-      bool foundMemRead = false;
-      std::string newRegStr = getLoadRegName(newFunc, newAddr, &foundMemRead);
-      if (foundMemRead) atEndPoint = true;
-      char * newRegName = (char *)newRegStr.c_str();
-      // TODO, in the future even refactor the signature of the backwardSliceHelper function ...
-      backwardSliceHelper(json_reads, visited, progName, newFuncName, newAddr, newRegName, isKnownBitVar, atEndPoint);
+  MachRegister stackReadReg; long stackReadOff;
+  bool inputInsnReadsFromStack = readsFromStack(insn,addr, &stackReadReg, &stackReadOff);
+  cout << "[sa] input instruction reads from stack? " << inputInsnReadsFromStack << endl;
+  if (!inputInsnReadsFromStack) {
+    if (strcmp(regName, "") != 0 && !madeProgress && !atEndPoint) {
+      AssignmentConverter ac(true, false);
+      vector<Assignment::Ptr> assignments;
+      ac.convert(insn, addr, func, bb, assignments);
+      AbsRegion targetRegion;
+      bool targetRegionFound = false;
+      Assignment::Ptr assign = assignments[0];
+      for (auto rit = assign->inputs().begin(); rit != assign->inputs().end(); rit++) {
+        if ((*rit).format().compare(regName) == 0) {
+          targetRegion = *rit;
+          targetRegionFound = true;
+          break;
+        }
+      }
+      assert(targetRegionFound);
+      boost::unordered_map<Address, Function *> ret;
+      boost::unordered_set<Address> visitedAddrs;
+      handlePassByReference(targetRegion, addr, bb, func, ret, visitedAddrs);
+      cout << "[sa]  found " << ret.size() << " pass by reference defs " << endl;
+      for (auto rit = ret.begin(); rit != ret.end(); rit++) {
+        Function *newFunc = (*rit).second;
+        char *newFuncName = (char *) newFunc->name().c_str();
+        bool atEndPoint = strcmp(newFuncName, funcName) != 0;
+        //TODO, in the future just return the instructions as well...
+        Address newAddr = (*rit).first;
+
+        bool foundMemRead = false;
+        std::string newRegStr = getLoadRegName(newFunc, newAddr, &foundMemRead);
+        if (foundMemRead) atEndPoint = true;
+        char *newRegName = (char *) newRegStr.c_str();
+        // TODO, in the future even refactor the signature of the backwardSliceHelper function ...
+        backwardSliceHelper(json_reads, visited, progName, newFuncName, newAddr, newRegName, isKnownBitVar, atEndPoint);
+      }
+      return;
     }
-    return;
   }
+  
   boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariables;
   boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariablesToIgnore;
   boost::unordered_map<Assignment::Ptr, AbsRegion> bitOperands;
@@ -1777,12 +1784,13 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
       cout << "[sa][warn] Instruction has more than one memory write? " << insn.format() << endl;
     }
     assert(memWrites.size() == 1);
-    analyzeKnownBitVariables(slice, *memWrites.begin(), bitVariables, bitVariablesToIgnore, bitOperands, bitOperations);
+    analyzeKnownBitVariables(slice, *memWrites.begin(), bitVariables, bitVariablesToIgnore, bitOperands,
+                             bitOperations);
   } // TODO propogate the bit operands.
 
   // get all the leaf nodes.
   NodeIterator begin, end;
-  if (!atEndPoint) slice->entryNodes(begin, end);
+  if (!atEndPoint && !inputInsnReadsFromStack) slice->entryNodes(begin, end);
   else slice->exitNodes(begin, end);
 
   for(NodeIterator it = begin; it != end; ++it) {
@@ -1833,7 +1841,7 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
           char * newRegName = (char *)newRegStr.c_str();
           backwardSliceHelper(json_reads, visited, progName, newFuncName, newAddr, newRegName, isKnownBitVar, atEndPoint);
         }
-        continue;
+        if (stackWrites.size() > 0) continue;
       } else if (readsFromStaticAddr(assign->insn(), assign->addr(),
                                      &readOff)) { //FIXME: currently only reads from same function.
         cout << "[sa] result of slicing is reading from static addr, looking for writes to static addrs..." << endl;
