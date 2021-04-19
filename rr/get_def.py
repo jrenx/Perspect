@@ -294,6 +294,9 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     #all_addrs = set([breakpoint_trace[get_def_insn_index_for_branch(index, [read], breakpoint_trace)][1]
     #                for index in taken_indices])
     print("[rr] Total number of unique addresses read when branch outcome was positive: " + str(len(pending_addrs)))
+    if len(pending_addrs) > 10000:
+        print("[warn][rr] Too many unique addresses to investigate...")
+        return results
 
     tmp_reg_points = list(reg_points)
     tmp_regs = list(regs)
