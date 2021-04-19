@@ -31,8 +31,8 @@ using namespace boost;
 /***************************************************************/
 BPatch bpatch;
 bool INFO = true;
-bool DEBUG = true;
-bool DEBUG_SLICE = true;
+bool DEBUG = false;
+bool DEBUG_SLICE = false;
 bool DEBUG_BIT = false;
 bool DEBUG_STACK = false;
 
@@ -145,6 +145,7 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
 
 std::string getReadStr(Instruction insn, bool *regFound);
 std::string inline getRegName(Function *newFunc, Address newAddr, bool *foundMemRead);
+std::string inline getRegName(Instruction newInsn, bool *foundMemRead);
 void getReversePostOrderListHelper(Block *b,
                                    std::vector<Block *> &list,
                                    boost::unordered_set<Block *> &visited);
@@ -1669,6 +1670,9 @@ std::string getReadStr(Instruction insn, bool *regFound) {
 std::string inline getRegName(Function *newFunc, Address newAddr, bool *foundMemRead) {
   Block *newBB = getBasicBlock2(newFunc, newAddr);
   Instruction newInsn = newBB->getInsn(newAddr);
+  return getRegName(newInsn, foundMemRead);
+}
+std::string inline getRegName(Instruction newInsn, bool *foundMemRead) {
   bool regFound = false;
   std::string readStr = getReadStr(newInsn, &regFound);
   std::string delim = "|";
@@ -1686,7 +1690,6 @@ std::string inline getRegName(Function *newFunc, Address newAddr, bool *foundMem
     cout << "[sa][warn] expect a register read here? " << endl; //TODO how to handle this??
     *foundMemRead = true;
   }
-
   return reg;
 }
 void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visited,
@@ -1710,13 +1713,23 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
   Block *bb = getBasicBlock2(func, addr);
   Instruction insn = bb->getInsn(addr);
 
+  if (strcmp(regName, "[x86_64::special]") == 0) {
+    bool foundMemRead = false;
+    std::string newRegStr = getRegName(insn, &foundMemRead);
+    if (!foundMemRead) {
+      regName = (char *) newRegStr.c_str();
+    } else {
+      regName = "";
+    }
+  }
+
   if (INFO) cout << "[sa] insn: " << insn.format() << endl;
   if (INFO) cout << "[sa] reg: " << regName << endl;
   if (INFO) cout << endl;
 
   bool madeProgress = true;
   GraphPtr slice = buildBackwardSlice(func, bb, insn, addr, regName, &madeProgress, atEndPoint);
-  if (strcmp(regName, "") != 0 && madeProgress == false) {
+  if (strcmp(regName, "") != 0 && !madeProgress && !atEndPoint) {
     AssignmentConverter ac(true, false);
     vector<Assignment::Ptr> assignments;
     ac.convert(insn, addr, func, bb, assignments);
@@ -2938,7 +2951,7 @@ void backwardSlices(char *addrToRegNames, char *progName) {
 
     char *regName = json_regName->valuestring;
     char *funcName = json_funcName->valuestring;
-    bool isKnownBitVar = (json_isBitVar->valueint == 1) ? true : false;
+    bool isKnownBitVar = json_isBitVar->valueint == 1;
     if (errno != 0)
       cout << " Encountered error " << errno << " while parsing " << json_isBitVar->valuestring << endl;
 

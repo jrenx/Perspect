@@ -1403,7 +1403,13 @@ class StaticDepGraph:
             assert insn not in addr_to_node
             addr_to_node[insn] = node
         if df_node is not None: #TODO, registers?
-            regLoad = "" if df_node.reg_load is None else df_node.reg_load
+            #TODO, change this later, the RR analysis should really return the src reg being loaded
+            if df_node.mem_load is not None:
+                regLoad = ""
+            elif df_node.reg_load is not None and df_node.reg_load != "":
+                regLoad = df_node.reg_load
+            else:
+                regLoad = "SPECIAL"
             slice_starts.append([regLoad.lower(), df_node.insn, df_node.function, df_node.contains_bit_var()])
             #TODO for now, just ignore those that writes to memory in SA
             assert df_node.insn not in addr_to_node
