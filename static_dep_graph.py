@@ -1169,6 +1169,15 @@ class StaticDepGraph:
             while len(worklist) > 0:
                 if iteration >= limit:
                     break
+                if iteration % 1000 == 0 and iteration > 0:
+                    if rr_result_size != len(StaticDepGraph.rr_result_cache):
+                        print("Persisting rr result file")
+                        with open(rr_result_file, 'w') as f:
+                            json.dump(StaticDepGraph.rr_result_cache, f, indent=4)
+                    if sa_result_size != len(StaticDepGraph.sa_result_cache):
+                        print("Persisting sa result file")
+                        with open(sa_result_file, 'w') as f:
+                            json.dump(StaticDepGraph.sa_result_cache, f, indent=4)
                 finished = True
                 if 'scanblock' not in StaticDepGraph.func_to_graph:
                     finished = False
@@ -1438,44 +1447,52 @@ class StaticDepGraph:
                 assert shift != '', str(load)
                 assert off != '', str(load)
                 #print(succe)
-                if succe.insn == prede_insn and read_same_as_write is False:
-                    print("[static_dep][warn]Ignoring the predecessor as it is the same as the successor: ")
-                    print(succe)
-                else:
-                    prede = StaticDepGraph.make_or_get_df_node(prede_insn, None,
-                                                               curr_func)  # TODO, might need to include func here too
-                    #print(prede)
-                    if prede.explained is False or read_same_as_write is True:
-                        #if prede not in self.nodes_in_df_slice:
-                        #    self.nodes_in_df_slice.append(prede)
-                        if type == 'memread':
-                            prede.mem_load = MemoryAccess(prede_reg, shift, off, off_reg, is_bit_var)
-                            prede.reg_write = '' #TODO put actual register name here
-                            if read_same_as_write is True:
-                                succe.mem_store.read_same_as_write = True
-                                prede.mem_load.read_same_as_write = True
-                        elif type == 'regread':
-                            prede.reg_load = prede_reg
-                        elif type == 'empty':
-                            continue#pass
-                        else:
-                            print("type not supported " + str(type))
-                            #raise Exception
+                #if succe.insn == prede_insn and read_same_as_write is False:
+                #    print("[static_dep][warn]Ignoring the predecessor as it is the same as the successor: ")
+                #    print(succe)
+                #else:
+                prede = StaticDepGraph.make_or_get_df_node(prede_insn, None,
+                                                           curr_func)  # TODO, might need to include func here too
+                #print(prede)
+                if prede == succe and read_same_as_write is False:
+                    if succe.mem_load is None:
+                        succe.explained = False
+                    #TODO, sometimes statically slicing the same node end up returning the same node cuz its a mem read
+                    #     still keep explaining!
+                    #TODO, need better scheme for checking I guess
+                if prede.explained is False or read_same_as_write is True:
+                    if type == 'memread':
+                        if off_reg == 'DS':
+                            print("[warn] ignoring the offset register DS")
+                            off_reg = ''
+                            off = 0
+                        prede.mem_load = MemoryAccess(prede_reg, shift, off, off_reg, is_bit_var)
+                        prede.reg_write = '' #TODO put actual register name here
+                        if read_same_as_write is True:
+                            succe.mem_store.read_same_as_write = True
+                            prede.mem_load.read_same_as_write = True
+                    elif type == 'regread':
+                        prede.reg_load = prede_reg
+                    elif type == 'empty':
+                        continue#pass
+                    else:
+                        print("type not supported " + str(type))
+                        #raise Exception
 
-                    if prede != succe:
-                        if prede not in succe.df_predes:
-                            succe.df_predes.append(prede)
-                        if succe not in prede.df_succes:
-                            prede.df_succes.append(succe)
-                    if prede.explained is False:
-                        if curr_func != func:
-                            defs_in_diff_func.add(prede)
-                        else:
-                            defs_in_same_func.add(prede)
-                    #if read_same_as_write is True:
-                    #    prede.explained = True
-                    #else:
-                        #assert prede.mem_load is not None or prede.reg_load is not None, str(prede)
+                if prede != succe:
+                    if prede not in succe.df_predes:
+                        succe.df_predes.append(prede)
+                    if succe not in prede.df_succes:
+                        prede.df_succes.append(succe)
+                if prede.explained is False:
+                    if curr_func != func:
+                        defs_in_diff_func.add(prede)
+                    else:
+                        defs_in_same_func.add(prede)
+                #if read_same_as_write is True:
+                #    prede.explained = True
+                #else:
+                    #assert prede.mem_load is not None or prede.reg_load is not None, str(prede)
 
         print("[static_dep] Found " + str(len(defs_in_same_func)) + " dataflow nodes local in function ")
         tmp_defs_in_same_func = set([])
