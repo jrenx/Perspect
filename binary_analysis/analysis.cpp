@@ -144,8 +144,8 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
                          bool isKnownBitVar=false, bool atEndPoint=false);
 
 std::string getReadStr(Instruction insn, bool *regFound);
-std::string inline getRegName(Function *newFunc, Address newAddr, bool *foundMemRead);
-std::string inline getRegName(Instruction newInsn, bool *foundMemRead);
+std::string inline getLoadRegName(Function *newFunc, Address newAddr, bool *foundMemRead);
+std::string inline getLoadRegName(Instruction newInsn, bool *foundMemRead);
 void getReversePostOrderListHelper(Block *b,
                                    std::vector<Block *> &list,
                                    boost::unordered_set<Block *> &visited);
@@ -1649,9 +1649,9 @@ std::string getReadStr(Instruction insn, bool *regFound) {
       if (insn.isRead((*oit).getValue())) {
         read = (*oit).getValue();
 
-        MachRegister machReg; long off;
-        getRegAndOff(read, &machReg, &off);
-        if (machReg != InvalidReg) *regFound = true;
+        MachRegister machReg; long off=0;
+        getRegAndOff(read, &machReg, &off); //TODO, sometimes, even non mem reads can have an offset?
+        if (machReg != InvalidReg && off == 0) *regFound = true;
 
         if (INFO) cout << "[sa] current read: " << read->format() << endl;
         readCount++;
@@ -1667,12 +1667,12 @@ std::string getReadStr(Instruction insn, bool *regFound) {
   }
   return readStr;
 }
-std::string inline getRegName(Function *newFunc, Address newAddr, bool *foundMemRead) {
+std::string inline getLoadRegName(Function *newFunc, Address newAddr, bool *foundMemRead) {
   Block *newBB = getBasicBlock2(newFunc, newAddr);
   Instruction newInsn = newBB->getInsn(newAddr);
-  return getRegName(newInsn, foundMemRead);
+  return getLoadRegName(newInsn, foundMemRead);
 }
-std::string inline getRegName(Instruction newInsn, bool *foundMemRead) {
+std::string inline getLoadRegName(Instruction newInsn, bool *foundMemRead) {
   bool regFound = false;
   std::string readStr = getReadStr(newInsn, &regFound);
   std::string delim = "|";
@@ -1715,7 +1715,7 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
 
   if (strcmp(regName, "[x86_64::special]") == 0) {
     bool foundMemRead = false;
-    std::string newRegStr = getRegName(insn, &foundMemRead);
+    std::string newRegStr = getLoadRegName(insn, &foundMemRead);
     if (!foundMemRead) {
       regName = (char *) newRegStr.c_str();
     } else {
@@ -1756,7 +1756,7 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
       Address newAddr = (*rit).first;
 
       bool foundMemRead = false;
-      std::string newRegStr = getRegName(newFunc, newAddr, &foundMemRead);
+      std::string newRegStr = getLoadRegName(newFunc, newAddr, &foundMemRead);
       if (foundMemRead) atEndPoint = true;
       char * newRegName = (char *)newRegStr.c_str();
       // TODO, in the future even refactor the signature of the backwardSliceHelper function ...
@@ -1828,7 +1828,7 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
           Address newAddr = (*stit).first;
 
           bool foundMemRead = false;
-          std::string newRegStr = getRegName(newFunc, newAddr, &foundMemRead);
+          std::string newRegStr = getLoadRegName(newFunc, newAddr, &foundMemRead);
           if (foundMemRead) atEndPoint = true;
           char * newRegName = (char *)newRegStr.c_str();
           backwardSliceHelper(json_reads, visited, progName, newFuncName, newAddr, newRegName, isKnownBitVar, atEndPoint);
