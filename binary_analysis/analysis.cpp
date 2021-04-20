@@ -729,7 +729,7 @@ bool writesToStack(Operand op, Instruction insn, Address addr) { // TODO add sig
   for (auto rit = regsRead.begin(); rit != regsRead.end(); rit++) {
     RegisterAST::Ptr regAst = *rit;
     MachRegister reg = regAst->getID();
-    if (reg == x86_64::rsp || reg == x86_64::esp) {
+    if (reg == x86_64::rsp || reg == x86_64::esp) { //FIXME: RSP reg has other variants too
       if (DEBUG_STACK && DEBUG)
         cout << "[stack] Found store to stack: " << op.format(insn.getArch())
                             << " @ " << insn.format() << " @ " << addr << endl;
@@ -771,7 +771,7 @@ void printReachableStores(boost::unordered_map<StackStore, boost::unordered_map<
     boost::unordered_map<Address, Function *> s = (*mit).second;
     cout << "[stack]          stack store: " << ss.format() << " @ "  << std::hex;
     for (auto sit = s.begin(); sit != s.end(); sit++) {
-      cout << (*sit).first << " " << (*sit).second << " ";
+      cout << (*sit).first << std::dec << " " << (*sit).second->name() << " ";
     }
     cout << std::dec << endl;
   }
@@ -798,6 +798,30 @@ void getRegAndOff(Expression::Ptr exp, MachRegister *machReg, long *off) {
   exp->getChildren(children);
   for (auto vit = children.begin(); vit != children.end(); vit++) {
     getRegAndOff(*vit, machReg, off);
+  }
+}
+
+void getRegAndOff(Expression::Ptr exp, std::vector<MachRegister> &machRegs, long *off) { // TODO, add to declaration
+  RegisterAST::Ptr regAST = boost::dynamic_pointer_cast<RegisterAST>(exp);
+  if (regAST != NULL) {
+     machRegs.push_back(regAST->getID());
+    if (DEBUG_STACK && DEBUG)
+      cout << "[stack]   found register: " << regAST->getID().name() << endl; //TODO
+  } else {
+    Immediate::Ptr immedAST = boost::dynamic_pointer_cast<Immediate>(exp);
+    if (immedAST != NULL) {
+      std::stringstream ss;
+      ss << std::hex << immedAST->format();
+      ss >> (*off);
+      if (DEBUG_STACK && DEBUG)
+        cout << "[stack]   found immediate: " << *off << endl;//TODO
+    }
+  }
+
+  std::vector<Expression::Ptr> children;
+  exp->getChildren(children);
+  for (auto vit = children.begin(); vit != children.end(); vit++) {
+    getRegAndOff(*vit, machRegs, off);
   }
 }
 
@@ -1045,12 +1069,100 @@ Function *getFunction(std::vector<Function *> &funcs) {
   return *funcs.begin();
 }
 
+void get_indirect_write_to_stack(Instruction insn, Address addr, Block *b, Function *f,
+    int stackHeight, StackStore &stackRead,
+    boost::unordered_map<Address, StackStore> &indirectWrites) { //TODO add the declaration to the top
+  MachRegister machReg; long off=0;
+  std::vector<Operand> ops;
+  insn.getOperands(ops);
+  bool loadStackAddr = false;
+  for (auto oit = ops.begin(); oit != ops.end(); ++oit) {
+    if (insn.isRead((*oit).getValue())) {
+      getRegAndOff((*oit).getValue(), &machReg, &off);
+      if (machReg == x86_64::rsp || machReg == x86_64::esp) {
+        if (DEBUG_STACK)
+          cout << "[stack] Found load stack address: " << " @ " << insn.format()
+             << " @ " << std::hex << addr << std::dec << endl;
+        loadStackAddr = true;
+        break;
+      }
+    }
+  }
+  if (!loadStackAddr) return;
+  // make assignment, get the assigned register
+  AssignmentConverter ac(true, false);
+  vector<Assignment::Ptr> assignments;
+  ac.convert(insn, addr, f, b, assignments);
+  assert(assignments.size() == 1);
+  AbsRegion addrReg = assignments[0]->out();
+  if (DEBUG_STACK)
+    cout << "[stack] stack address stored to " << addrReg.format() << endl;
+  // go back in same bb to find a write to the reg
+  // make that into the new stack store
+  // if nothing found prin a warning
+  Block::Insns currInsns;
+  b->getInsns(currInsns);
+  bool foundUse = false;
+  bool currIsOffsetStore = false;
+  bool prevIsOffsetStore = false;
+  for (auto iit = currInsns.rbegin(); iit != currInsns.rend(); iit++) {
+    Address currAddr = (*iit).first;
+    if (currAddr == addr) break;
+    Instruction currInsn = (*iit).second;
+
+    ops.clear();
+    currInsn.getOperands(ops);
+    AbsRegionConverter arc(true, false);
+    for (auto oit = ops.begin(); oit != ops.end(); ++oit) {
+      if (!(*oit).writesMemory()) continue;
+      //if (DEBUG || DEBUG_SLICE) cout << "[slice] memory write op: " << (*oit).format(insn.getArch()) << endl;
+      std::set<RegisterAST::Ptr> regsRead;
+      (*oit).getReadSet(regsRead);
+      for (auto rit = regsRead.begin(); rit != regsRead.end(); ++rit) {
+        AbsRegion curr = arc.convert(*rit);
+        //if (DEBUG || DEBUG_SLICE) cout << "[slice] reg read: " << curr.format() << endl;
+        if (curr == addrReg) {
+          std::vector<MachRegister> machRegs;
+          long currOff = 0;
+          getRegAndOff((*oit).getValue(), machRegs, &currOff);
+          if (machRegs.size() == 2) {
+            for (int i = 0; i < machRegs.size(); i++) {
+              if (machRegs[i] == x86_64::ds || machRegs[i] == x86_64::es) {
+                currOff = 0;
+                currIsOffsetStore = true;
+                break;
+              }
+            }
+          }
+          if (currIsOffsetStore && !prevIsOffsetStore) {
+            prevIsOffsetStore = true;
+            currOff = 8;
+          } else if (currIsOffsetStore && prevIsOffsetStore) {
+            prevIsOffsetStore = false;
+            currIsOffsetStore = false;
+          }
+          StackStore stackStore(machReg, off + currOff, stackHeight);
+          //if (DEBUG_STACK && DEBUG)
+          //cout << "[stack] current stack store " << currInsn.format() << " @ " << std::hex << currAddr << std::dec << endl;
+          //cout << stackStore << endl;
+          //cout << stackRead << endl;
+          if (stackStore == stackRead) {
+            cout << "[stack] Found indirect store to stack address: " << " @ " << currInsn.format()
+                 << " @ " << std::hex << currAddr << std::dec << endl;
+            indirectWrites.insert({currAddr, stackStore});
+          }
+        }
+      }
+    }
+  }
+}
+
 boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function *f,
                                                             std::vector<Block *> &list,
                                                            boost::unordered_map<Address, long> &insnToStackHeight,
                                                            boost::unordered_set<Address> &readAddrs,
                                                            StackStore &stackRead, int level) {
-  if (DEBUG_STACK)
+  //if (DEBUG_STACK)
     cout << "[stack] Looking for writes in function " << f->name()
          << " at level " << level << " for " << stackRead << endl;
   boost::unordered_map<Address, boost::unordered_map<StackStore, boost::unordered_map<Address, Function *>>>
@@ -1174,6 +1286,28 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
         }
       }
 
+      if (insn.getOperation().getID() == e_lea) { //TODO, make a separate function...
+        //cout << std::hex << addr << std::dec << endl;
+        if (!insn.readsMemory()) {
+          boost::unordered_map<Address, StackStore> indirectWrites;
+          get_indirect_write_to_stack(insn, addr, b, f, insnToStackHeight[addr], stackRead, indirectWrites);
+          //cout << indirectWrites.size() << endl;
+          for (auto iwit = indirectWrites.begin(); iwit != indirectWrites.end(); iwit++) {
+            Address useAddr = (*iwit).first;
+            //cout << useAddr << endl;
+            StackStore stackStore = (*iwit).second;
+            if (insnToReachableStores.find(useAddr) == insnToReachableStores.end()) {
+              boost::unordered_map<StackStore, boost::unordered_map<Address, Function *>> reachableIndirectStores;
+              insnToReachableStores.insert({useAddr, reachableIndirectStores});
+            }
+            boost::unordered_map<Address, Function*> s;
+            s.insert({useAddr, f});
+            insnToReachableStores[useAddr].insert({stackStore, s});
+            //printReachableStores(insnToReachableStores[useAddr]);
+          }
+        }
+      }
+
       std::vector<Operand> ops;
       insn.getOperands(ops);
       for (auto oit = ops.begin(); oit != ops.end(); ++oit) {
@@ -1199,7 +1333,8 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
         }
       }
       insnToReachableStores.insert({addr, reachableStores}); // should not have duplicates
-      if (DEBUG_STACK && DEBUG) cout << "[stack] stores at " << std::hex << addr << std::dec << endl;
+      if (DEBUG_STACK && DEBUG)
+        cout << "[stack] stores at " << std::hex << addr << std::dec << endl;
       if (DEBUG_STACK && DEBUG) printReachableStores(insnToReachableStores[addr]);
     }
   }
@@ -1770,7 +1905,7 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
       return;
     }
   }
-  
+
   boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariables;
   boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariablesToIgnore;
   boost::unordered_map<Assignment::Ptr, AbsRegion> bitOperands;
