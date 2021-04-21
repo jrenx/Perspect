@@ -15,6 +15,7 @@ class InitArgument(gdb.Function):
 
         breakpoints = config['breakpoints']
         watchpoints = config['watchpoints']
+        rwatchpoints = config['rwatchpoints']
         i = 0
         for wp in watchpoints:
             try:
@@ -22,6 +23,16 @@ class InitArgument(gdb.Function):
             except Exception as e:  # TODO is there a more specific error?
                 print(str(e))
                 print("Failed to set watchpoint at " + str(wp))
+            i += 1
+            if i >= 4:
+                break
+
+        for wp in rwatchpoints:
+            try:
+                gdb.execute("rwatch -l *(long *){}".format(wp))
+            except Exception as e:  # TODO is there a more specific error?
+                print(str(e))
+                print("Failed to set rwatchpoint at " + str(wp))
             i += 1
             if i >= 4:
                 break
