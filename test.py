@@ -1,6 +1,7 @@
 from sa_util import *
 from rr_util import *
 from pin_util import *
+from get_watchpoints import *
 import datetime
 
 def test_ins_trace():
@@ -32,9 +33,25 @@ def test_rr_slice():
 
 def test_rr_slice2():
     a = datetime.datetime.now()
-    rr_backslice('909_ziptest_exe9', None, None, 0x40bcbd, 'RSI', 0, 0, None)
+    rr_backslice('909_ziptest_exe9', None, None, 0x40bcbd, 'RSI', 0, 0, None, {})
     b = datetime.datetime.now()
     print("Took: " + str(b-a))
+
+def test_rr_slice3():
+    a = datetime.datetime.now()
+    rr_backslice('909_ziptest_exe9', None, None, 0x408b05, 'RSI', 0, 0, None, {})
+    b = datetime.datetime.now()
+    print("Took: " + str(b-a))
+
+def test_get_all_bb():
+    results = getAllBBs(0x416a91, 'bytes.*Buffer·Read', '909_ziptest_exe9')
+    print(len(results))
+
+def test_getting_static_addrs():
+    prog = '909_ziptest_exe9'
+    ret, ret1 = get_mem_writes_to_static_addrs(prog)
+    print(ret)
+    print(ret1)
 
 def test_sa_slices():
     slice_starts = []
@@ -126,15 +143,86 @@ def test_sa_slices10():
     results = static_backslices(slice_starts, '909_ziptest_exe9', {})
     print(results)
 
-def test_get_all_bb():
-    results = getAllBBs(0x416a91, 'bytes.*Buffer·Read', '909_ziptest_exe9')
+def test_sa_slices11():
+    slice_starts = []
+    slice_starts.append(['', 0x41101f, 'runtime.slicearray', False])
+    #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
+    results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+    print(results)
+
+def test_sa_slices12():
+    slice_starts = []
+    slice_starts.append(['SPECIAL', 0x4037ac, "hash_subtable_new", False])
+    #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
+    results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+    print(results)
+
+def test_sa_slices13():
+    slice_starts = []
+    #slice_starts.append(['', 0x41b70b, "fmt.newCache", False])
+    #slice_starts.append(['rbx', 4346273, "fmt.init", False])
+    slice_starts.append(['rbx', 4345826, "fmt.init", False])
+    #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
+    results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+    print(results)
+
+def test_sa_slices14():
+    slice_starts = []
+    #slice_starts.append(['', 0x41b70b, "fmt.newCache", False])
+    #slice_starts.append(['rbx', 4346273, "fmt.init", False])
+    slice_starts.append(['', 4253023, "runtime.malg", False])
+    #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
+    results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+    print(results)
+
+def test_sa_slices15(): #TODO fix
+    slice_starts = []
+    #slice_starts.append(['', 0x41b70b, "fmt.newCache", False])
+    #slice_starts.append(['rbx', 4346273, "fmt.init", False])
+    slice_starts.append(['SPECIAL', 4552810, "syscall.Syscall6", False])
+    #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
+    results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+    print(results)
+
+def test_sa_slices16():
+    slice_starts = []
+    #slice_starts.append(['', 0x41b70b, "fmt.newCache", False])
+    #slice_starts.append(['rbx', 4346273, "fmt.init", False])
+    #slice_starts.append(['SPECIAL', 0x41508f, "archive/zip.readDirectoryHeader", False])
+    slice_starts.append(['', 0x415085, "archive/zip.readDirectoryHeader", False])
+    results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+    print(results)
+
+def test_sa_slices17():
+    slice_starts = []
+    #slice_starts.append(['', 0x41b70b, "fmt.newCache", False])
+    #slice_starts.append(['rbx', 4346273, "fmt.init", False])
+    #slice_starts.append(['SPECIAL', 0x41508f, "archive/zip.readDirectoryHeader", False])
+    #slice_starts.append(['SPECIAL', 0x43408a, "time.timerHeap·Push", False])
+    #slice_starts.append(['SPECIAL', 0x42594c, "io.NewSectionReader", False])
+    #slice_starts.append(['SPECIAL', 0x4251de, "fmt.init", False])
+    #slice_starts.append(['RBX', 0x42dfd7, "os.NewError", False])
+    #slice_starts.append(['SPECIAL', 0x4577b6, "syscall.init", False])
+    #slice_starts.append(['RAX', 4215462, "runtime.makemap", False])
+    #slice_starts.append(['RDX', 4215333, "runtime.makemap_c", False]) #TODO, why rsp is included?
+    #slice_starts.append(['RAX', 4214693, "runtime.makemap_c", False]) #TODO check later to verify this is re-sliced
+
+    #slice_starts.append(['SPECIAL', 0x415fb1, "archive/zip.init", False])
+    #slice_starts.append(['RBX', 4382679, "os.NewError", False])
+    #slice_starts.append(['RAX', 0x40627e, "copyin", False])
+    #slice_starts.append(['RBX', 0x4251a1, "fmt.init", False]) TODO, implement check for intractable stack writes
+    #slice_starts.append(['RDX', 0x402448, "runtime.makechan_c", False])
+    slice_starts.append(['SPECIAL', 0x40bd778, "setaddrbucket", False])
+    results = static_backslices(slice_starts, '909_ziptest_exe9', {})
     print(len(results))
 
-def test_getting_static_addrs():
-    prog = '909_ziptest_exe9'
-    ret, ret1 = get_mem_writes_to_static_addrs(prog)
-    print(ret)
-    print(ret1)
+def test_watchpoint():
+    breakpoints = []
+    watchpoints = ['0x7fdc12590d5c']
+    #run_watchpoint(breakpoints, watchpoints)
+    ret = parse_watchpoint(breakpoints, watchpoints, '*0x43017d')
+    for r in ret:
+        print(r)
 
 def main():
     #test_ins_trace()
@@ -146,7 +234,10 @@ def main():
     #test_get_all_bb()
     #test_rr_slice()
     #test_getting_static_addrs()
-    test_sa_slices9()
+    #test_sa_slices17()
+    #test_watchpoint()
+    test_rr_slice3()
+    #test_sa_slices17()
  
 if __name__ == "__main__":
     main()
