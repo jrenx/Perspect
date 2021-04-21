@@ -1488,7 +1488,16 @@ class StaticDepGraph:
                     if curr_func != func:
                         defs_in_diff_func.add(prede)
                     else:
-                        defs_in_same_func.add(prede)
+                        if prede.reg_load is not None and prede.mem_load is None and prede != succe:
+                            # TODO, should make this prettier,
+                            # but sometimes dyninst will stop slicing at reg load
+                            # possibly cuz the reg is pass by reference?
+                            # in this case, wanna slice again, in the next iterataion
+                            defs_in_diff_func.add(prede)
+                            print("Dyninst stopped at reg load? slice again")
+                            print(prede)
+                        else:
+                            defs_in_same_func.add(prede)
                 #if read_same_as_write is True:
                 #    prede.explained = True
                 #else:
