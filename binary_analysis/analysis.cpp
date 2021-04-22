@@ -49,12 +49,13 @@ namespace boost {
     long offset_;
     long stackheight_;
   public:
+    bool isSpecial; // TODO, a bit ugly
     std::size_t hash;
     std::string str;
 
     StackStore(MachRegister machReg, long offset, long stackheight) :
         machReg_(machReg), offset_(offset), stackheight_(stackheight) {
-
+      isSpecial = false;
       std::stringstream hash_ss;
       hash_ss << machReg_.name() << " + " << (offset_ + stackheight_);
       std::string hash_str = hash_ss.str();
@@ -169,7 +170,7 @@ void analyzeKnownBitVariables(GraphPtr slice,
 
 boost::unordered_map<Address, Function *> checkAndGetStackWrites(Function *f, Instruction readInsn, Address readAddr,
                                                      MachRegister readReg, long readOff, int initHeight, int level=0);
-boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function *f,
+boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(bool *resultIntractable, Function *f,
                                                            std::vector<Block *> &list,
                                                            boost::unordered_map<Address, long> &insnToStackHeight,
                                                            boost::unordered_set<Address> &readAddrs,
@@ -1053,8 +1054,10 @@ boost::unordered_map<Address, Function *> checkAndGetStackWrites(Function *f, In
   readAddrs.insert(readAddr);
 
   StackStore stackRead(readReg, readOff, insnToStackHeight[readAddr]); // TODO rename StackStore to StackAccess...
-
-  return checkAndGetStackWritesHelper(f, list, insnToStackHeight, readAddrs, stackRead, level);
+  bool resultIntractable = false;
+  boost::unordered_map<Address, Function *> ret = checkAndGetStackWritesHelper(&resultIntractable, f, list, insnToStackHeight, readAddrs, stackRead, level);
+  if (resultIntractable) ret.clear();
+  return ret;
 }
 
 Function *getFunction(std::vector<Function *> &funcs) {
@@ -1069,24 +1072,39 @@ Function *getFunction(std::vector<Function *> &funcs) {
   return *funcs.begin();
 }
 
-void get_indirect_write_to_stack(Instruction insn, Address addr, Block *b, Function *f,
+void inline get_indirect_write_to_stack(Instruction insn, Address addr, Block *b, Function *f,
     int stackHeight, StackStore &stackRead,
     boost::unordered_map<Address, StackStore> &indirectWrites) { //TODO add the declaration to the top
   MachRegister machReg; long off=0;
   std::vector<Operand> ops;
   insn.getOperands(ops);
   bool loadStackAddr = false;
+  bool stackWritesIntractable = false;
   for (auto oit = ops.begin(); oit != ops.end(); ++oit) {
-    if (insn.isRead((*oit).getValue())) {
-      getRegAndOff((*oit).getValue(), &machReg, &off);
-      if (machReg == x86_64::rsp || machReg == x86_64::esp) {
+    if (!insn.isRead((*oit).getValue())) continue;
+    std::vector<MachRegister> machRegs;
+    getRegAndOff((*oit).getValue(), machRegs, &off);
+    for (int i = 0; i < machRegs.size(); i++) {
+      if (machRegs[i] == x86_64::rsp || machRegs[i] == x86_64::esp) {
         if (DEBUG_STACK)
           cout << "[stack] Found load stack address: " << " @ " << insn.format()
-             << " @ " << std::hex << addr << std::dec << endl;
+               << " @ " << std::hex << addr << std::dec << endl;
+        machReg = machRegs[i];
         loadStackAddr = true;
         break;
       }
     }
+    if (machRegs.size() > 1) {
+      cout << "[stack] All writes to stack might be intractable! @" << std::hex << addr << std::dec << endl;
+      stackWritesIntractable = true;
+      break;
+    }
+  }
+  if (stackWritesIntractable) {
+    StackStore specialStore = stackRead;
+    specialStore.isSpecial = true;
+    indirectWrites.insert({addr, specialStore});
+    return;
   }
   if (!loadStackAddr) return;
   // make assignment, get the assigned register
@@ -1113,10 +1131,43 @@ void get_indirect_write_to_stack(Instruction insn, Address addr, Block *b, Funct
     ops.clear();
     currInsn.getOperands(ops);
     AbsRegionConverter arc(true, false);
+    //if (!insn.writesMemory()) continue;
+    bool writesMemory = false;
     for (auto oit = ops.begin(); oit != ops.end(); ++oit) {
+      if ((*oit).writesMemory()) {
+        writesMemory = true;
+        break;
+      }
+    }
+    for (auto oit = ops.begin(); oit != ops.end(); ++oit) {
+      std::set<RegisterAST::Ptr> regsRead;
+      if (writesMemory) {
+        if (!(*oit).writesMemory() && !(*oit).readsMemory()) {
+          (*oit).getReadSet(regsRead);
+          for (auto rit = regsRead.begin(); rit != regsRead.end(); ++rit) {
+            AbsRegion curr = arc.convert(*rit);
+            if (curr == addrReg) {
+              cout << "[stack] reg containing stack addr propogated to other addr ..." << endl;
+              cout << "[stack] All writes to stack might be intractable! @" << std::hex << currAddr << std::dec << endl;
+              stackWritesIntractable = true;
+              break;
+            }
+          }
+          if (stackWritesIntractable) break;
+          continue;
+        }
+      }
+      if (stackWritesIntractable) {
+        StackStore specialStore = stackRead;
+        //cout << stackRead << endl;
+        specialStore.isSpecial = true;
+        //cout << specialStore << endl;
+        indirectWrites.insert({addr, specialStore});
+        return;
+      }
       if (!(*oit).writesMemory()) continue;
       //if (DEBUG || DEBUG_SLICE) cout << "[slice] memory write op: " << (*oit).format(insn.getArch()) << endl;
-      std::set<RegisterAST::Ptr> regsRead;
+
       (*oit).getReadSet(regsRead);
       for (auto rit = regsRead.begin(); rit != regsRead.end(); ++rit) {
         AbsRegion curr = arc.convert(*rit);
@@ -1157,7 +1208,8 @@ void get_indirect_write_to_stack(Instruction insn, Address addr, Block *b, Funct
   }
 }
 
-boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function *f,
+boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(bool *resultIntractable,
+                                                            Function *f,
                                                             std::vector<Block *> &list,
                                                            boost::unordered_map<Address, long> &insnToStackHeight,
                                                            boost::unordered_set<Address> &readAddrs,
@@ -1228,7 +1280,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
               boost::unordered_set<Address> cuuReadAddrs;
               cuuReadAddrs.insert(readAddr);
               boost::unordered_map<Address, Function *> ret =
-                  checkAndGetStackWritesHelper(caller, callerList, callerInsnToStackHeight, cuuReadAddrs, stackRead,
+                  checkAndGetStackWritesHelper(resultIntractable, caller, callerList, callerInsnToStackHeight, cuuReadAddrs, stackRead,
                                                level - 1);
               allRets.insert(ret.begin(), ret.end());
 
@@ -1268,8 +1320,9 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
             boost::unordered_map<Address, long> calleeInsnToStackHeight;
             getStackHeights(callee, calleeList, calleeInsnToStackHeight, insnToStackHeight[addr] - 8);
 
+            cout << "[stack] checking invocation @ "  << std::hex << addr << std::dec << endl;
             boost::unordered_map<Address, Function *> ret =
-                checkAndGetStackWritesHelper(callee, calleeList, calleeInsnToStackHeight, readAddrs, stackRead,
+                checkAndGetStackWritesHelper(resultIntractable, callee, calleeList, calleeInsnToStackHeight, readAddrs, stackRead,
                                              level + 1);
             allRets.insert(ret.begin(), ret.end());
 
@@ -1456,12 +1509,23 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(Function 
     }
   }
   boost::unordered_map<Address, Function *> ret;
+  //bool stackWritesIntractable = false;
   for (auto rait = readAddrs.begin(); rait != readAddrs.end(); rait++) {
     Address readAddr = *rait;
     // << "[stack] current stack read addr is: " << std::hex << readAddr << std::dec << endl;
+    boost::unordered_map<StackStore, boost::unordered_map<Address, Function *>> currResults =
+        insnToReachableStores[readAddr];
+    for (auto crit = currResults.begin(); crit != currResults.end(); crit++) {
+      if ((*crit).first == stackRead) {
+        if ((*crit).first.isSpecial) {
+          *resultIntractable = true;
+        }
+      }
+    }
     boost::unordered_map<Address, Function *> &curr = insnToReachableStores[readAddr][stackRead];
     ret.insert(curr.begin(), curr.end()); // FIXME maybe assert no duplicate
   }
+  //if (stackWritesIntractable) return ret.clear();  //TODO
   return ret;
 }
 

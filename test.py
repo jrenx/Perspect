@@ -143,7 +143,7 @@ def test_sa_slices10():
     results = static_backslices(slice_starts, '909_ziptest_exe9', {})
     print(results)
 
-def test_sa_slices11():
+def test_sa_slices11(): #can encounter some indirect writes
     slice_starts = []
     slice_starts.append(['', 0x41101f, 'runtime.slicearray', False])
     #slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
@@ -210,9 +210,9 @@ def test_sa_slices17():
     #slice_starts.append(['SPECIAL', 0x415fb1, "archive/zip.init", False])
     #slice_starts.append(['RBX', 4382679, "os.NewError", False])
     #slice_starts.append(['RAX', 0x40627e, "copyin", False])
-    #slice_starts.append(['RBX', 0x4251a1, "fmt.init", False]) TODO, implement check for intractable stack writes
+    slice_starts.append(['RBX', 0x4251a1, "fmt.init", False]) #TODO, implement check for intractable stack writes
     #slice_starts.append(['RDX', 0x402448, "runtime.makechan_c", False])
-    slice_starts.append(['SPECIAL', 0x40bd778, "setaddrbucket", False])
+    #slice_starts.append(['SPECIAL', 0x40bd778, "setaddrbucket", False])
     results = static_backslices(slice_starts, '909_ziptest_exe9', {})
     print(len(results))
 
@@ -236,8 +236,8 @@ def main():
     #test_getting_static_addrs()
     #test_sa_slices17()
     #test_watchpoint()
-    test_rr_slice3()
-    #test_sa_slices17()
+    #test_rr_slice3()
+    test_sa_slices11()
  
 if __name__ == "__main__":
     main()
