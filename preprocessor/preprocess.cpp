@@ -32,18 +32,19 @@ public:
     } else {
       addr += offset;
     }
-    /*
+  /*
     cout << "reg: "      << reg     << " " << std::hex << regValue    << std::dec;
     cout << " off reg: " << off_reg << " " << std::hex << offRegValue << std::dec;
     cout << " offset: " << offset << " shift: " << shift;
     cout << " addr: " << std::hex << addr << std::dec << "\n";
-    */
+*/
     return addr;
   }
 };
 
 class StaticNode {
 public:
+  int id;
   long insn;
   std::vector<int> cf_prede_ids;
   std::vector<int> cf_succe_ids;
@@ -137,8 +138,13 @@ char *readFile(char *filename, long &length) {
 MemAccess *parseMemoryAccess(cJSON *json_memAccess) {
   MemAccess *memAccess = new MemAccess();
   cJSON *json_reg = cJSON_GetObjectItem(json_memAccess, "reg");
-  char *reg = json_reg->valuestring;
-  memAccess->reg = string(reg);
+  if (json_reg->valuestring == NULL) {
+    memAccess->reg = "";
+  } else {
+    char *reg = json_reg->valuestring;
+    memAccess->reg = string(reg);
+  }
+
   if (memAccess->reg == "") memAccess->has_reg = false;
   else memAccess->has_reg = true;
 
@@ -153,7 +159,7 @@ MemAccess *parseMemoryAccess(cJSON *json_memAccess) {
   }
 
   if (memAccess->off_reg == "") memAccess->has_off_reg = false;
-  else if (memAccess->off_reg == "ES") {
+  else if (memAccess->off_reg == "ES"){// || memAccess->off_reg == "DS") {
     //cout << "Ignore ES" << endl;
     memAccess->has_off_reg = false;
     memAccess->offset = 0;
@@ -187,6 +193,8 @@ void parseStaticNode(char *filename, int CodeCount) {
       //cout << "Parsing code: " << currCode << endl;
       CodeToStaticNode[currCode] = new StaticNode();
       CodeToStaticNode[currCode]->insn = insn;
+      CodeToStaticNode[currCode]->id = id;
+      //cout << "id " << id << endl;
 
       cJSON *json_memLoad = cJSON_GetObjectItem(json_staticNode, "mem_load");
       if (json_memLoad->child == NULL) {
@@ -379,6 +387,7 @@ int main()
   //long j = 0;
   bool found = false;
   int pendingRegCount = 0;
+  //int pendingAccessCount = 0;
   std::vector<long> pendingRegValues;
   long offRegValue = 0;
 
@@ -415,10 +424,19 @@ int main()
 
     StaticNode *sn = CodeToStaticNode[code];
     if (PendingRemoteDefCodes[code]) {
-      long addr = sn->mem_store->calc_addr(regValue, offRegValue);
+      long addr = 0;
+      if (sn->mem_store == NULL) {
+        //cout << "[warn] " << sn->id << " does not store to memory? " << endl;
+      } else {
+        //assert(sn->mem_store != NULL);
+
+        addr = sn->mem_store->calc_addr(regValue, offRegValue);
+      }
+      //long addr = sn->mem_store->calc_addr(regValue, offRegValue);
       if (PendingAddrs.find(addr) == PendingAddrs.end() && code != StartInsnCode) {
         if (!PendingLocalDefCodes[code]) continue; // FIXME: unfortuanately, could be a local def dep too, need to make logic less messy if have more time ...
       } else {
+        //cout << "  mem addr matched " << endl;
         PendingAddrs.erase(addr);
       }
     }
