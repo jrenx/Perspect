@@ -63,13 +63,22 @@ def rr_backslice(prog, branch, target, insn, reg, shift, off, off_reg, rr_result
     if key in rr_result_cache:
         return rr_result_cache[key]
 
-    print("[main] Inputting to RR: " \
-        + " reg: " + str(reg_str) + " shift: " + str(shift_str) + " off_reg: " + str(off_reg_str) + " off: " + str(off_str)\
-        + " @ " + str(insn_str) + " branch @" + str(branch_str) + " target @" + str(target_str)\
-        + " program: " +str(prog), flush=True)
+    retry_count = 1
+    while retry_count >= 0: #TODO, really, can retry if it has a remote dataflow dep!
+        print("[main] Inputting to RR: " \
+            + " reg: " + str(reg_str) + " shift: " + str(shift_str) + " off_reg: " + str(off_reg_str) + " off: " + str(off_str)\
+            + " @ " + str(insn_str) + " branch @" + str(branch_str) + " target @" + str(target_str)\
+            + " program: " +str(prog), flush=True)
 
-    rr_result_defs = get_def(prog, branch_str, target_str, insn_str, reg_str, shift_str, off_str, off_reg_str)
-    print("[main] Result from RR: " + str(len(rr_result_defs)) + " def points: " + str(rr_result_defs))
+        rr_result_defs = get_def(prog, branch_str, target_str, insn_str, reg_str, shift_str, off_str, off_reg_str)
+        print("[main] Result from RR: " + str(len(rr_result_defs)) + " def points: " + str(rr_result_defs))
+        if len(rr_result_defs) > 0:
+            break
+        retry_count -= 1
+        if branch_str is not None and target_str is not None:
+            branch_str = None
+            target_str = None
+        print("Re-trying!")
 
     rr_result_cache[key] = rr_result_defs
 
