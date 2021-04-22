@@ -161,6 +161,7 @@ class DynamicDependence:
         i = 0
 
         for node in self.all_static_df_nodes:
+            #print("DF" + node.hex_insn)
             if node.insn in unique_insns:
                 continue
             unique_insns.add(node.insn)
@@ -181,6 +182,7 @@ class DynamicDependence:
                     reg_count += 1
                     has_reg = True
             # trace remote
+            #TODO handle this!!
             elif node.mem_store != None:
                 if node.mem_store.reg != None and node.mem_store.reg != '':
                     instructions.append([node.hex_insn, node.mem_store.reg.lower(), i])
@@ -236,16 +238,16 @@ class DynamicDependence:
 
         for graph in StaticDepGraph.func_to_graph.values():
             for node in graph.nodes_in_df_slice:
-
                 # trace local
-                if node.mem_load != None or node.mem_store != None:
-                    self.all_static_df_nodes.append(node)
-                    self.insn_to_static_node[node.insn] = node
-                    self.insn_of_df_nodes.append(node.insn)
-                    if node.mem_load != None:
-                        self.insn_of_local_df_nodes.append(node.insn)
-                    elif node.mem_store != None:
-                        self.insn_of_remote_df_nodes.append(node.insn)
+                #if node.mem_load != None or node.mem_store != None:
+                #TODO could just be loading a reg
+                self.all_static_df_nodes.append(node)
+                self.insn_to_static_node[node.insn] = node
+                self.insn_of_df_nodes.append(node.insn)
+                if node.mem_load != None:
+                    self.insn_of_local_df_nodes.append(node.insn)
+                elif node.mem_store != None:
+                    self.insn_of_remote_df_nodes.append(node.insn)
 
                 #print(node)
         return used_cached_result
@@ -782,8 +784,9 @@ class DynamicGraph:
 
             static_node = self.insn_to_static_node[insn]
             if insn in remote_df_prede_insn_to_succe_node:
-
-                mem_store_addr = self.calculate_mem_addr(reg_value, static_node.mem_store,
+                mem_store_addr = 0
+                if static_node.mem_store is not None:
+                    mem_store_addr = self.calculate_mem_addr(reg_value, static_node.mem_store,
                                                          None if pending_regs is None else pending_regs[0])
                 #print("[build] Store " + hex(insn) + " to " + hex(mem_store_addr))
                 if (insn != self.start_insn) and (mem_store_addr not in addr_to_df_succe_node):
@@ -996,7 +999,7 @@ class DynamicGraph:
 
 if __name__ == '__main__':
     dd = DynamicDependence(0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
-    dd.prepare_to_build_dynamic_dependencies(900)
+    dd.prepare_to_build_dynamic_dependencies(10000)
     dg = dd.build_dyanmic_dependencies(0x409418)
     #dg.build_reverse_postorder_list()
     """
@@ -1013,24 +1016,50 @@ if __name__ == '__main__':
         print("[Summary] Build Dynamic Graph: ", str(time_record["build_finish"] - time_record["invoke_pin"]))
         print("[Summary] Dynamic Graph Json Saved: ", str(time_record["graph_traversal"] - time_record["build_finish"]))
         print("[Summary] Graph Traversal: ", str(time_record["save_dynamic_graph_as_json"] - time_record["graph_traversal"]))
-
+    """
     addr_not_explained = set()
     addr_explained = set()
     prede_found = 0
     prede_not_found = 0
     connected_predes = set()
+    connected_predes_not_connected_to_malloc = {}
+    from_malloc = 0
+    addr_from_malloc = set()
     for n in dg.insn_to_dyn_nodes[4232057]:
         if len(n.df_predes) == 0:
             prede_not_found += 1
             addr_not_explained.add(hex(n.mem_load_addr))
         else:
+            connected_to_malloc = False
             prede_found += 1
             addr_explained.add(hex(n.mem_load_addr))
             for p in n.df_predes:
                 connected_predes.add(p.static_node)
+            wl = deque()
+            wl.append(n)
+            visited = set()
+            while len(wl) > 0:
+                c = wl.popleft()
+                if c in visited:
+                    continue
+                visited.add(c)
+                if c.static_node.insn == 0x4072e5: #or c.static_node.insn ==  0x4072e5:
+                    addr_from_malloc.add(hex(n.mem_load_addr))
+                    from_malloc += 1
+                    connected_to_malloc = True
+                    break
+                for p in c.df_predes:
+                    wl.append(p)
+            if connected_to_malloc is False:
+                if p.static_node not in connected_predes_not_connected_to_malloc:
+                    connected_predes_not_connected_to_malloc[p.static_node] = 0
+                connected_predes_not_connected_to_malloc[p.static_node] =\
+                connected_predes_not_connected_to_malloc[p.static_node] + 1
+
     print(" Total count " + str(len(dg.insn_to_dyn_nodes[4232057])))
     print(" Total count with prede " + str(prede_found) + " " + str(len(addr_explained)))
     print(" Total count with no prede " + str(prede_not_found) + " " + str(len(addr_not_explained)))
+    print(" Total count connected to malloc " + str(from_malloc) + " " + str(len(addr_from_malloc)))
     for addr in addr_explained:
         print("FOUND: " + addr)
     for addr in addr_not_explained:
@@ -1039,6 +1068,7 @@ if __name__ == '__main__':
 
     print("==============================")
     sn = StaticDepGraph.func_to_graph['scanblock'].insn_to_node[4232057]
+    """
     predes = []
     for p in sn.df_predes:
         assert p.explained
@@ -1047,15 +1077,23 @@ if __name__ == '__main__':
         predes.append(p.toJSON())
         p.print_node(" all predes: ")
     print("==============================")
+    """
     for p in connected_predes:
         print(p.mem_store)
         p.print_node(" connected:  ")
+    print("==============================")
+    total_not_connected = 0
+    for p in connected_predes_not_connected_to_malloc:
+        print(p.mem_store)
+        p.print_node(" connected but not to malloc:  ")
+        print(" count: " + str(connected_predes_not_connected_to_malloc[p]))
+        total_not_connected += connected_predes_not_connected_to_malloc[p]
+    print( " TOTAL COUNT: " + str(total_not_connected))
     print("==============================")
     for p in sn.df_predes:
         if p in connected_predes:
             continue
         print(p.mem_store)
         p.print_node(" not found:  ")
-    with open(os.path.join(curr_dir, 'predes'), 'w') as f:
-        json.dump(predes, f, indent=4, ensure_ascii=False)
-    """
+    #with open(os.path.join(curr_dir, 'predes'), 'w') as f:
+    #    json.dump(predes, f, indent=4, ensure_ascii=False)
