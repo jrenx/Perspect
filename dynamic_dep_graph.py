@@ -276,7 +276,7 @@ class DynamicDependence:
             time_record["invoke_pin"] = time.time()
             print("[TIME]Invoke Pin time: ", time.asctime(time.localtime(time_record["invoke_pin"])), flush=True)
             a = time.time()
-            """
+
             preprocess_data = {
                 "trace_file": trace_path,
                 "static_graph_file": StaticDepGraph.result_file,
@@ -301,7 +301,7 @@ class DynamicDependence:
 
             b = time.time()
             print("Preparsing trace took: " + str(b-a), flush=True)
-            """
+
             a = time.time()
             with open(trace_path + ".parsed", 'rb') as f:
                 byte_seq = f.read() #more than twice faster than readlines!
