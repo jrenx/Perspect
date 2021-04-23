@@ -149,6 +149,7 @@ class DynamicDependence:
         self.insn_of_local_df_nodes = []
         self.insn_of_remote_df_nodes = []
         self.insn_to_reg_count = {}
+        self.insn_to_reg_count2 = {}
         self.code_to_insn = {}
         self.insns_with_regs = set()
 
@@ -171,32 +172,38 @@ class DynamicDependence:
 
             # trace local
             has_reg = False
-            reg_count = 0
+            load_reg_count = 0
+            store_reg_count = 0
             if node.mem_load != None:
                 if node.mem_load.reg != None and node.mem_load.reg != '':
                     instructions.append([node.hex_insn, node.mem_load.reg.lower(), i])
-                    reg_count += 1
+                    load_reg_count += 1
                     has_reg = True
                 if node.mem_load.off_reg != None and node.mem_load.off_reg != '':
                     instructions.append([node.hex_insn, node.mem_load.off_reg.lower(), i])
-                    reg_count += 1
+                    load_reg_count += 1
                     has_reg = True
             # trace remote
             #TODO handle this!!
-            elif node.mem_store != None:
+            if node.mem_store != None:
                 if node.mem_store.reg != None and node.mem_store.reg != '':
                     instructions.append([node.hex_insn, node.mem_store.reg.lower(), i])
-                    reg_count += 1
+                    store_reg_count += 1
                     has_reg = True
                 if node.mem_store.off_reg != None and node.mem_store.off_reg != '':
                     instructions.append([node.hex_insn, node.mem_store.off_reg.lower(), i])
-                    reg_count += 1
+                    store_reg_count += 1
                     has_reg = True
             if not has_reg:
                 instructions.append([node.hex_insn, 'pc', i])
-            if reg_count > 1:
+            reg_count = load_reg_count + store_reg_count
+            if reg_count >= 1: #TODO, sort out the logic better next time
                 assert has_reg
-                self.insn_to_reg_count[node.insn] = reg_count
+                if store_reg_count == 0 or load_reg_count == 0:
+                    self.insn_to_reg_count[node.insn] = reg_count
+                else:
+                    self.insn_to_reg_count[node.insn] = load_reg_count
+                    self.insn_to_reg_count2[node.insn] = store_reg_count
             if reg_count >= 1:
                 self.insns_with_regs.add(node.insn)
 
@@ -269,6 +276,7 @@ class DynamicDependence:
             time_record["invoke_pin"] = time.time()
             print("[TIME]Invoke Pin time: ", time.asctime(time.localtime(time_record["invoke_pin"])), flush=True)
             a = time.time()
+            """
             preprocess_data = {
                 "trace_file": trace_path,
                 "static_graph_file": StaticDepGraph.result_file,
@@ -279,7 +287,8 @@ class DynamicDependence:
                 "insn_of_df_nodes" : self.insn_of_df_nodes,
                 "insn_of_local_df_nodes" : self.insn_of_local_df_nodes,
                 "insn_of_remote_df_nodes" : self.insn_of_remote_df_nodes,
-                "insn_to_reg_count" : self.insn_to_reg_count
+                "insn_to_reg_count" : self.insn_to_reg_count,
+                "insn_to_reg_count2": self.insn_to_reg_count2
             }
             preprocess_data_file = os.path.join(curr_dir, 'preprocess_data')
             with open(preprocess_data_file, 'w') as f:
@@ -289,9 +298,10 @@ class DynamicDependence:
             stdout, stderr = rr_process.communicate()
             print(stdout)
             print(stderr)
+
             b = time.time()
             print("Preparsing trace took: " + str(b-a), flush=True)
-
+            """
             a = time.time()
             with open(trace_path + ".parsed", 'rb') as f:
                 byte_seq = f.read() #more than twice faster than readlines!
@@ -303,7 +313,7 @@ class DynamicDependence:
             dynamic_graph.build_dynamic_graph(byte_seq, self.code_to_insn, self.insns_with_regs, self.insn_to_static_node,
                                               set(self.insn_of_cf_nodes), set(self.insn_of_df_nodes),
                                               set(self.insn_of_local_df_nodes), set(self.insn_of_remote_df_nodes),
-                                              self.insn_to_reg_count)
+                                              self.insn_to_reg_count, self.insn_to_reg_count2)
 
             time_record["build_finish"] = time.time()
             print("[TIME]Build Dynamic Graph Finish Time: ", time.asctime(time.localtime(time_record["build_finish"])))
@@ -702,7 +712,7 @@ class DynamicGraph:
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
     def build_dynamic_graph(self, byte_seq, code_to_insn, insns_with_regs, insn_to_static_node, insn_of_cf_nodes, insn_of_df_nodes,
-                           insn_of_local_df_nodes, insn_of_remote_df_nodes, insn_to_reg_count):
+                           insn_of_local_df_nodes, insn_of_remote_df_nodes, insn_to_reg_count, insn_to_reg_count2):
 
         print("[TIME]Build Dynamic Graph Start Time: ", time.asctime(time.localtime(time.time())))
 
@@ -732,6 +742,10 @@ class DynamicGraph:
         prev_insn = None
         pending_reg_count = 0
         pending_regs = None #TODO, actually can have at most one pending reg????
+
+        hasPrevValues = False
+        prev_pending_regs = None
+        prev_reg_value = None
 
         index = 0
         length = len(byte_seq)
@@ -766,32 +780,65 @@ class DynamicGraph:
             #assert (byte_seq[index] == 58)
             #index -= 1
 
-            if insn in insn_to_reg_count:
-                #print(insn_line)
-                #print("Insn has more than one reg: " + hex(insn))
-                if pending_reg_count == 0:
-                    pending_reg_count = insn_to_reg_count[insn]
-                    pending_regs = []
-                    #print(" first encountering the insn")
-                if len(pending_regs) + 1 < pending_reg_count:
-                    pending_regs.append(reg_value)
-                    #print(" not all regs of the insn are accounted for")
-                    continue
-                #print(" all regs of the insn are accounted for " + str(pending_regs))
-                pending_reg_count = 0
-            else:
-                pending_regs = None
-
             static_node = self.insn_to_static_node[insn]
+
+            #print(" pending " + str(pending_reg_count))
+            if hasPrevValues is False and insn in insn_to_reg_count2:
+                #print(insn_line)
+                #print("has a load and a store : " + hex(insn))
+                if insn_to_reg_count2[insn] > 1:
+                    #print("has more than one reg ")
+                    if pending_reg_count == 0:
+                        pending_reg_count = insn_to_reg_count2[insn]
+                        pending_regs = []
+                        #print(" first encountering the insn")
+                    if len(pending_regs) + 1 < pending_reg_count:
+                        pending_regs.append(reg_value)
+                        #print(" not all regs of the insn are accounted for")
+                        continue
+                    pending_reg_count = 0
+                else:
+                    #print("has just one reg ")
+                    pending_regs = None
+                #print(" all regs of the insn are accounted for " + str(pending_regs))
+                hasPrevValues = True
+                prev_reg_value = reg_value
+                prev_pending_regs = None if pending_regs is None else list(pending_regs)
+                continue
+            else:
+                #print("just one load and a store : " + hex(insn))
+                if insn in insn_to_reg_count and insn_to_reg_count[insn] > 1:
+                    #print("has more than one reg ")
+                    if pending_reg_count == 0:
+                        pending_reg_count = insn_to_reg_count[insn]
+                        pending_regs = []
+                        # print(" first encountering the insn")
+                    if len(pending_regs) + 1 < pending_reg_count:
+                        pending_regs.append(reg_value)
+                        # print(" not all regs of the insn are accounted for")
+                        continue
+                    # print(" all regs of the insn are accounted for " + str(pending_regs))
+                    pending_reg_count = 0
+                else:
+                    #print("has just one reg ")
+                    pending_regs = None
+
+
             if insn in remote_df_prede_insn_to_succe_node:
                 mem_store_addr = 0
                 if static_node.mem_store is not None:
-                    mem_store_addr = self.calculate_mem_addr(reg_value, static_node.mem_store,
+                    if hasPrevValues is True:
+                        mem_store_addr = self.calculate_mem_addr(prev_reg_value, static_node.mem_store,
+                                                                 None if prev_pending_regs is None else prev_pending_regs[0])
+                    else:
+                        mem_store_addr = self.calculate_mem_addr(reg_value, static_node.mem_store,
                                                          None if pending_regs is None else pending_regs[0])
                 #print("[build] Store " + hex(insn) + " to " + hex(mem_store_addr))
                 if (insn != self.start_insn) and (mem_store_addr not in addr_to_df_succe_node):
                     if insn not in local_df_prede_insn_to_succe_node:
+                        hasPrevValues = False
                         continue
+            hasPrevValues = False
 
             if insn not in self.insn_to_id:
                 self.insn_to_id[insn] = insn_id
@@ -1043,13 +1090,14 @@ if __name__ == '__main__':
                 if c in visited:
                     continue
                 visited.add(c)
-                if c.static_node.insn == 0x4072e5: #or c.static_node.insn ==  0x4072e5:
+                #0x408038
+                if c.static_node.insn == 0x4072e5:# or c.static_node.insn == 0x408447: # or c.static_node.insn ==  0x4072e5:
                     addr_from_malloc.add(hex(n.mem_load_addr))
                     from_malloc += 1
                     connected_to_malloc = True
                     break
-                for p in c.df_predes:
-                    wl.append(p)
+                for pp in c.df_predes:
+                    wl.append(pp)
             if connected_to_malloc is False:
                 if p.static_node not in connected_predes_not_connected_to_malloc:
                     connected_predes_not_connected_to_malloc[p.static_node] = 0

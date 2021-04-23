@@ -32,12 +32,12 @@ public:
     } else {
       addr += offset;
     }
-  /*
+    /*
     cout << "reg: "      << reg     << " " << std::hex << regValue    << std::dec;
     cout << " off reg: " << off_reg << " " << std::hex << offRegValue << std::dec;
     cout << " offset: " << offset << " shift: " << shift;
     cout << " addr: " << std::hex << addr << std::dec << "\n";
-*/
+    */
     return addr;
   }
 };
@@ -64,6 +64,7 @@ unordered_map<long, unsigned short> InsnToCode;
 
 unordered_map<long, int> InsnToRegCount;
 int *CodeToRegCount;
+int *CodeToRegCount2;
 
 unordered_set<long> InsnsWithRegs;
 bool *CodesWithRegs;
@@ -196,11 +197,13 @@ void parseStaticNode(char *filename, int CodeCount) {
       CodeToStaticNode[currCode]->id = id;
       //cout << "id " << id << endl;
 
+      //int numAccess = 0;
       cJSON *json_memLoad = cJSON_GetObjectItem(json_staticNode, "mem_load");
       if (json_memLoad->child == NULL) {
         CodeToStaticNode[currCode]->mem_load = NULL;
       } else {
         CodeToStaticNode[currCode]->mem_load = parseMemoryAccess(json_memLoad);
+        //numAccess ++;
       }
 
       cJSON *json_memStore = cJSON_GetObjectItem(json_staticNode, "mem_store");
@@ -208,7 +211,9 @@ void parseStaticNode(char *filename, int CodeCount) {
         CodeToStaticNode[currCode]->mem_store = NULL;
       } else {
         CodeToStaticNode[currCode]->mem_store = parseMemoryAccess(json_memStore);
+        //numAccess ++;
       }
+      //cout << " code: " << currCode << " accesses " << numAccess <<  " reg count " << CodeToRegCount[currCode] << endl;
 
       cJSON *json_cfPredes = cJSON_GetObjectItem(json_staticNode, "cf_predes");
       int count = cJSON_GetArraySize(json_cfPredes);
@@ -341,6 +346,16 @@ void initData() {
     CodeToRegCount[InsnToCode[(long)(*it).first]] = (int)(*it).second;
   }
 
+  cJSON *json_insnToRegCount2 = cJSON_GetObjectItem(data, "insn_to_reg_count2");
+  unordered_map<long, long> map3;
+  parseJsonMap(json_insnToRegCount2, map3);
+  CodeToRegCount2 = new int[CodeCount];
+  for (int i = 0; i < CodeCount; i++) CodeToRegCount2[i] = 0;
+  for (auto it = map3.begin(); it != map3.end(); it++) {
+    //InsnToRegCount.insert({(long)(*it).first, (int)(*it).second});
+    CodeToRegCount2[InsnToCode[(long)(*it).first]] = (int)(*it).second;
+  }
+
   PendingCodes = new bool[CodeCount];
   for (int i = 0; i < CodeCount; i++) PendingCodes[i] = false;
 
@@ -387,9 +402,13 @@ int main()
   //long j = 0;
   bool found = false;
   int pendingRegCount = 0;
-  //int pendingAccessCount = 0;
   std::vector<long> pendingRegValues;
   long offRegValue = 0;
+
+  bool hasPrevValues = false;
+  int pendingAccessCount = 0;
+  long prevRegValue = 0;
+  long prevOffRegValue = 0;
 
   int nodeCount = 0;
   for (long i = length; i >= 0;) {
@@ -411,15 +430,39 @@ int main()
     }
     if (!parse) continue;
 
-    if (CodeToRegCount[code] > 0) {
-      if (pendingRegCount == 0) {
-        pendingRegCount = 1;
-        offRegValue = regValue;
-        continue;
+    /*
+    if (code == 3252) {
+      cout << "HERE" << endl;
+    }*/
+
+    int regCount2 =  CodeToRegCount2[code];
+    if (!hasPrevValues && regCount2 > 0) {
+      if (regCount2 > 1) {
+        if (pendingRegCount == 0) {
+          pendingRegCount = 1;
+          offRegValue = regValue;
+          continue;
+        }
+        pendingRegCount = 0;
+      } else {
+        offRegValue = 0;
       }
-      pendingRegCount = 0;
+      prevRegValue = regValue;
+      prevOffRegValue = offRegValue;
+      hasPrevValues = true;
+      continue;
     } else {
-      offRegValue = 0;
+      int regCount1 =  CodeToRegCount[code];
+      if (regCount1 > 1) { // large than zero only if has more than one reg!
+        if (pendingRegCount == 0) {
+          pendingRegCount = 1;
+          offRegValue = regValue;
+          continue;
+        }
+        pendingRegCount = 0;
+      } else {
+        offRegValue = 0;
+      }
     }
 
     StaticNode *sn = CodeToStaticNode[code];
@@ -427,10 +470,15 @@ int main()
       long addr = 0;
       if (sn->mem_store == NULL) {
         //cout << "[warn] " << sn->id << " does not store to memory? " << endl;
+        hasPrevValues = false;
       } else {
         //assert(sn->mem_store != NULL);
-
-        addr = sn->mem_store->calc_addr(regValue, offRegValue);
+        if (hasPrevValues) {
+          addr = sn->mem_store->calc_addr(prevRegValue, prevOffRegValue);
+          hasPrevValues = false;
+        } else {
+          addr = sn->mem_store->calc_addr(regValue, offRegValue);
+        }
       }
       //long addr = sn->mem_store->calc_addr(regValue, offRegValue);
       if (PendingAddrs.find(addr) == PendingAddrs.end() && code != StartInsnCode) {
@@ -440,8 +488,16 @@ int main()
         PendingAddrs.erase(addr);
       }
     }
+    if (regCount2 > 1) {
+      os.write((char*)&code, sizeof(unsigned short));
+      os.write((char*)&prevOffRegValue, sizeof(long));
+    }
+    if (regCount2 > 0) {
+      os.write((char*)&code, sizeof(unsigned short));
+      os.write((char*)&prevRegValue, sizeof(long));
+    }
 
-    if (CodeToRegCount[code] > 0) {
+    if (CodeToRegCount[code] > 1) {
       os.write((char*)&code, sizeof(unsigned short));
       os.write((char*)&offRegValue, sizeof(long));
     }

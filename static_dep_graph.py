@@ -1887,7 +1887,7 @@ class StaticDepGraph:
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
 if __name__ == "__main__":
-    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", use_cache=True)
+    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", limit=10000, use_cache=True)
     """
     print("HERERERE")
     for func in StaticDepGraph.func_to_graph:
