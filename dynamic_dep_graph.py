@@ -294,8 +294,8 @@ class DynamicDependence:
             with open(preprocess_data_file, 'w') as f:
                 json.dump(preprocess_data, f, indent=4, ensure_ascii=False)
             preprocessor_file = os.path.join(curr_dir, 'preprocessor', 'preprocess')
-            rr_process = subprocess.Popen([preprocessor_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            stdout, stderr = rr_process.communicate()
+            pp_process = subprocess.Popen([preprocessor_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = pp_process.communicate()
             print(stdout)
             print(stderr)
 
