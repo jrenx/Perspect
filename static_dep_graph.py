@@ -689,7 +689,7 @@ class StaticNode:
               + " s_id: " + str(self.id)
               + " insn: " + self.hex_insn
               + " func: " + self.function
-              + " lines: " + (str(self.bb.lines) if self.bb is not None else "")
+              + " lines: " + (str(self.bb.lines) if isinstance(self.bb, BasicBlock) else str(self.bb))
               + " cf ps: " + str([pp.id for pp in self.cf_predes])
               + " df ps: " + str([pp.id for pp in self.df_predes])
               + " cf ss: " + str([ps.id for ps in self.cf_succes])
@@ -944,7 +944,7 @@ class StaticDepGraph:
             sg.cfg = CFG.fromJSON(data["cfg"])
         sg.bb_id_to_node_id = data["bb_id_to_node_id"]
 
-        print("Current function: " + func)
+        #print("Current function: " + func)
         for n in data["id_to_node"]:
             sn = StaticNode.fromJSON(n)
             sg.id_to_node[sn.id] = sn
@@ -1245,6 +1245,7 @@ class StaticDepGraph:
 
     @staticmethod
     def print_graph_info():
+        return
         total_count = 0
         for func in StaticDepGraph.func_to_graph:
             print("[static_dep] " + func + " has " + str(
