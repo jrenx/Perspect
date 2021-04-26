@@ -524,14 +524,21 @@ public:
     init = false;
     filter = false;
     if (ap->insn().readsMemory()) {
-      int id = ap->insn().getOperation().getID();
-      if (id == e_cmp) {
-        cout << "Compares do not load memory right?" << endl;
-        return false;
-      }
+
       std::set<Expression::Ptr> memReads;
       ap->insn().getMemoryReadOperands(memReads);
       if(DEBUG) cout << "[sa] Memory read: " << (*memReads.begin())->format() << endl;
+
+      int id = ap->insn().getOperation().getID();
+      if (id == e_cmp) {
+        MachRegister machReg; long off=0;
+        getRegAndOff(*memReads.begin(), &machReg, &off); //TODO, sometimes, even non mem reads can have an offset?
+        if (machReg == InvalidReg) {
+          cout << "Compare with constant do not load memory right?" << endl;
+          return false;
+        }
+      }
+
       std::string readStr = (*memReads.begin())->format();
       if (std::any_of(std::begin(readStr), std::end(readStr), ::isalpha)) { // TODO, does this make sense?
 	      if (DEBUG) cout << "[sa] is a true memory read." << endl;
