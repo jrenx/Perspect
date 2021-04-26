@@ -3,6 +3,8 @@ import time
 import itertools
 import heapq
 
+DEBUG = True
+
 class Invariance:
     def __init__(self, ratio, is_conditional): #TODO, in the future, replace with actual conditions
         self.ratio = ratio
@@ -54,6 +56,7 @@ class RelationGroup:
         #TODO, what if we just include the invariant nodes at the edgraphes
         # and simplify when there is an OR? makes verification easier too
         """
+
 class RelationAnalysis:
     def __init__(self, insn, func, prog, arg, path):
         self.starting_insn = insn
@@ -68,17 +71,21 @@ class RelationAnalysis:
         assert StaticDepGraph.starting_node.insn == insn
         static_node = StaticDepGraph.func_to_graph[func].insn_to_node[insn]
         visited = set()
-        wavefront = set()
+        #wavefront = set()
+        wavefront = []
+        static_node_to_weight = {}
         iteration = 0
+        curr_weight = 100
         while True:
             iteration += 1
-            print()
-            print("=====================================================")
-            print("Relational analysis, pass number: " + str(iteration))
-            static_node.print_node("[invariant_analysis] starting static node: ")
             #if iteration > 2:
             #    break
             if static_node not in visited:
+                print()
+                print("=====================================================")
+                print("Relational analysis, pass number: " + str(iteration) + " weight:" + str(curr_weight))
+                static_node.print_node("[ra] starting static node: ")
+
                 visited.add(static_node)
                 rgroup = RelationGroup(static_node)
                 self.invariant_groups[static_node] = rgroup
@@ -93,27 +100,217 @@ class RelationAnalysis:
                 print("Building dynamic graph took: " + str(b - a))
 
                 a = time.time()
-                curr_wavefront = self.forward_pass(dgraph, static_node, rgroup)
-                wavefront = wavefront.union(curr_wavefront)
+
+                curr_wavefront = self.forward_pass(dgraph, static_node, rgroup, static_node_to_weight, curr_weight)
+                for wavelet in curr_wavefront:
+                    #print(str(wavelet))
+                    if wavelet not in static_node_to_weight:
+                        print("no weight " + str(wavelet.hex_insn))
+                    else:
+                        #print("has weight " + str(wavelet.hex_insn))
+                        weight = static_node_to_weight[wavelet] #TODO, should be the static node
+                        wavefront.append((weight, wavelet))
+                #wavefront = wavefront.union(curr_wavefront)
                 b = time.time()
                 print("Forward pass took: " + str(b - a))
                 print("=============================================")
 
                 a = time.time()
                 curr_wavefront = self.backward_pass(dgraph, static_node, rgroup)
-                wavefront = wavefront.union(curr_wavefront)
+                for wavelet in curr_wavefront:
+                    if wavelet not in static_node_to_weight:
+                        print("no weight " + str(wavelet.hex_insn))
+                    else:
+                        #print("has weight " + str(wavelet.hex_insn))
+                        weight = static_node_to_weight[wavelet] #TODO, should be the static node
+                        wavefront.append((weight, wavelet))
+                #wavefront = wavefront.union(curr_wavefront)
                 b = time.time()
                 print("Backward pass took: " + str(b - a))
                 #break #TODO remove
                 if len(wavefront) == 0:
                     break
+                #print(wavefront)
+                #sorted(wavefront)
+                wavefront = sorted(wavefront, key=lambda weight_and_node: weight_and_node[0])
+                #wavefront = wavefront[::-1]
+                #print(wavefront)
             else:
-                print("Already visited...")
+                print()
+                print(hex(insn) + "@" + func + " already visited...")
+            break #TODO
             if len(wavefront) > 0:
-                next = wavefront.pop()
-                insn = next.insn
-                func = next.function
+                #next = wavefront.pop()
+                #print(wavefront)
+                while True:
+                    curr_weight, next = wavefront.pop()
+                    insn = next.insn
+                    func = next.function
+                    if curr_weight > 5:
+                        break
+                    print()
+                    print("Ignore " + hex(insn) + "@" + func + " for low weight " + str(curr_weight))
+
+                #print(curr_weight)
+                #print(next)
+                #print(" ")
                 static_node = StaticDepGraph.func_to_graph[func].insn_to_node[insn]
+
+    def forward_pass(self, dgraph, starting_node, rgroup, static_node_to_weight, starting_weight):
+        print("Starting forward pass")
+        wavefront = set()
+        base_weight = len(dgraph.target_nodes)
+
+        # tests for forward invariance
+        #print("[ra] total number of target nodes: " + str(len(dgraph.target_nodes)))
+        for node in dgraph.target_nodes:
+            node.output_set.add(node)
+
+        for node in dgraph.postorder_list: #a node will be visited only if its successors have all been visited
+            if node in dgraph.target_nodes:
+                continue
+            node_insn = node.static_node.insn
+            #backedge_sources = node.static_node.backedge_sources
+            for cf_succe in node.cf_succes:
+                """
+                cf_succe_insn = cf_succe.static_node.insn
+                if cf_succe_insn in backedge_sources:
+                    wavefront.add(cf_succe.static_node)
+                    #print("[ra] insn: " + cf_succe.static_node.hex_insn + " added to pending list because of cycles...")
+                    continue
+                node.output_set = node.output_set.union(cf_succe.output_set)
+                """
+                for output_node in cf_succe.output_set:
+                    if node_insn not in output_node.input_sets:
+                        node.output_set.add(output_node)
+            for df_succe in node.df_succes:
+                """
+                df_succe_insn = df_succe.static_node.insn
+                if df_succe_insn in backedge_sources:
+                    wavefront.add(df_succe.static_node)
+                    #print("[ra] insn: " + df_succe.static_node.hex_insn + " added to pending list because of cycles...")
+                    continue
+                node.output_set = node.output_set.union(df_succe.output_set)
+                """
+                for output_node in df_succe.output_set:
+                    if node_insn not in output_node.input_sets:
+                        node.output_set.add(output_node)
+
+            if len(node.output_set) == 0:
+                for cf_succe in node.cf_succes:
+                    node.output_set = node.output_set.union(cf_succe.output_set)
+                for df_succe in node.df_succes:
+                    node.output_set = node.output_set.union(df_succe.output_set)
+
+            for output_node in node.output_set:
+                if node_insn not in output_node.input_sets:
+                    output_node.input_sets[node_insn] = set()
+                output_node.input_sets[node_insn].add(node)
+                """
+                if node_insn == 0x409c24:
+                    print("Adding to " + str(output_node.id))
+                    print(len(output_node.input_sets[node_insn]))
+                """
+
+        worklist = deque()
+        worklist.append(starting_node)
+        visited = set() #TODO, ideally wanna propogate all the way, for now don't do that
+        invariant_group = set()
+        while(len(worklist) > 0):
+            static_node = worklist.popleft()
+            if static_node in visited:
+                continue
+            visited.add(static_node) #TODO, optimize by using the insn?
+            if static_node.explained is False:
+                #TODO handle more carefully
+                continue
+            insn = static_node.insn
+            hex_insn = static_node.hex_insn
+            output_set_counts = set()
+            output_set_count_list = []
+            total_output = set()
+
+            #assert insn in dgraph.insn_to_dyn_nodes, hex(insn)
+            if insn not in dgraph.insn_to_dyn_nodes:
+                #print("[warn] insn not in dynamic graph???" + hex(insn))
+                continue
+            if DEBUG: print("-------")
+            node_count = len(dgraph.insn_to_dyn_nodes[insn])
+            for node in dgraph.insn_to_dyn_nodes[insn]:
+                output_set_counts.add(len(node.output_set))
+                output_set_count_list.append(len(node.output_set))
+                total_output = total_output.union(node.output_set)
+
+            weight = len(total_output)/base_weight * starting_weight
+            if static_node in static_node_to_weight:
+                if static_node_to_weight[static_node] < weight:
+                    static_node_to_weight[static_node] = weight
+            else:
+                static_node_to_weight[static_node] = weight
+            """
+            print("[ra] insn: " + insn
+                  + " df successors are: " + str([s.hex_insn for s in static_node.df_succes]))
+            print("[ra] insn: " + insn
+                  + " cf successors are: " + str([s.hex_insn for s in static_node.cf_succes]))
+            """
+            if DEBUG: print("[ra] insn: " + hex_insn
+                  + " func " + static_node.function
+                  + " lines " + (str(static_node.bb.lines) if isinstance(static_node.bb, BasicBlock) else str(static_node.bb))
+                  + " output set counts: " + str(output_set_counts)
+                  + " weight: " + str(weight)
+                  + " total number of nodes: " + str(node_count)
+                  + " " + str(output_set_count_list))
+
+            forward_invariant = False
+            if Invariance.is_irrelevant(output_set_counts):
+                if DEBUG: print("[ra] insn: "
+                      + hex_insn + " is irrelevant to the output event, ignore ...")
+                continue
+            elif Invariance.is_invariant(output_set_counts):
+                if DEBUG: print("[ra] insn: "
+                      + hex_insn + " is forward invariant with the output event")
+                forward_invariant = True
+                relation = rgroup.get_or_make_relation(static_node)
+                relation.forward = Invariance(max(output_set_counts), False)
+                relation.weight = weight
+                #FIXME: could be conditionally invariant too!
+            elif Invariance.is_conditionally_invariant(output_set_counts):
+                if DEBUG: print("[ra] insn: "
+                  + hex_insn + " is conditionally forward invariant with the output event")
+                forward_invariant = True
+                relation = rgroup.get_or_make_relation(static_node)
+                relation.forward = Invariance(max(output_set_counts), True)
+                relation.weight = weight
+            else:
+                if DEBUG: print("[ra] NO INVARIANCE DETECTED")
+
+            if forward_invariant is True:
+                invariant_group.add(static_node)
+            else:
+                is_wavefront = False
+                for s in itertools.chain(static_node.cf_succes, static_node.df_succes):
+                    if s in invariant_group:
+                        is_wavefront = True
+                        break
+                if is_wavefront:
+                    wavefront.add(static_node)
+                    relation = rgroup.get_or_make_relation(static_node)
+                    relation.forward = Proportion(output_set_counts)
+                    relation.weight = weight
+                    if DEBUG: print("[ra] insn: "
+                          + hex_insn + "'s forward proportion with the output event is considered")
+
+            for p in static_node.cf_predes:
+                worklist.append(p)
+            for p in static_node.df_predes:
+                worklist.append(p)
+        for static_node in wavefront:
+            print("[ra] pending node: " + static_node.hex_insn
+                  + " func " + static_node.function
+                  + " lines " + str(static_node.bb.lines))
+            #TODO, change: only include those that are on the edgraphe of invariant and variant?
+            #only include the original ones?
+        return wavefront
 
     def backward_pass(self, dgraph, starting_node, rgroup):
         print("Starting backward pass")
@@ -140,7 +337,7 @@ class RelationAnalysis:
                 if cf_prede.static_node.insn in backedge_targets:
                     #TODO?
                     #pending_wavefront.add(cf_prede.static_node)
-                    print("[invariant_analysis] instruction: " + cf_prede.static_node.hex_insn + " added to pending list because of cycles...")
+                    print("[ra] insn: " + cf_prede.static_node.hex_insn + " added to pending list because of cycles...")
                     continue
                 for insn in cf_prede.input_sets:
                     if insn not in node.input_sets:
@@ -155,7 +352,7 @@ class RelationAnalysis:
                 if df_prede.static_node.insn in backedge_targets:
                     # TODO?
                     #pending_wavefront.add(df_prede.static_node)
-                    print("[invariant_analysis] instruction: " + df_prede.static_node.hex_insn + " added to pending list because of cycles...")
+                    print("[ra] insn: " + df_prede.static_node.hex_insn + " added to pending list because of cycles...")
                     continue
                 #print("        aggregating")
                 for insn in df_prede.input_sets:
@@ -203,9 +400,12 @@ class RelationAnalysis:
             if insn not in dgraph.insn_to_dyn_nodes:
                 #print("[warn] insn not in dynamic graph???" + hex(insn))
                 continue
-            print("-------")
+            if DEBUG: print("-------")
             node_count = len(dgraph.insn_to_dyn_nodes[insn])
             for node in starting_dynamic_nodes:
+                if static_node.insn == 0x40a6aa:
+                    if static_node.insn not in node.input_sets:
+                        print("Not connected to alloc: " + str(node.id))
                 if static_node.insn not in node.input_sets:
                     input_set_counts.add(0)
                     input_set_count_list.append(0)
@@ -213,13 +413,13 @@ class RelationAnalysis:
                     input_set_counts.add(len(node.input_sets[static_node.insn]))
                     input_set_count_list.append(len(node.input_sets[static_node.insn]))
             """
-            print("[invariant_analysis] instruction: " + insn
+            print("[ra] insn: " + insn
                   + " df successors are: " + str([s.hex_insn for s in static_node.df_succes]))
-            print("[invariant_analysis] instruction: " + insn
+            print("[ra] insn: " + insn
                   + " cf successors are: " + str([s.hex_insn for s in static_node.cf_succes]))
             """
-            print("[invariant_analysis] instruction: " + hex_insn
-                  + " func  " + static_node.function
+            if DEBUG: print("[ra] insn: " + hex_insn
+                  + " func " + static_node.function
                   + " lines " + (str(static_node.bb.lines) if isinstance(static_node.bb, BasicBlock) else str(static_node.bb))
                   + " input set counts: " + str(input_set_counts)
                   + " total number of nodes: " + str(node_count)
@@ -227,24 +427,24 @@ class RelationAnalysis:
 
             backward_invariant = False
             if Invariance.is_irrelevant(input_set_counts):
-                print("[invariant_analysis] instruction: "
+                if DEBUG: print("[ra] insn: "
                       + hex_insn + " is irrelevant to the output event, ignore...")
                 continue
             elif Invariance.is_invariant(input_set_counts):
-                print("[invariant_analysis] instruction: "
+                if DEBUG: print("[ra] insn: "
                       + hex_insn + " is backward invariant with the output event")
                 backward_invariant = True
                 relation = rgroup.get_or_make_relation(static_node)
                 relation.backward = Invariance(max(input_set_counts), False)
                 # FIXME: could be conditionally invariant too!
             elif Invariance.is_conditionally_invariant(input_set_counts):
-                print("[invariant_analysis] instruction: "
+                if DEBUG: print("[ra] insn: "
                       + hex_insn + " is conditionally backward invariant with the output event")
                 backward_invariant = True
                 relation = rgroup.get_or_make_relation(static_node)
                 relation.backward = Invariance(max(input_set_counts), True)
             else:
-                print("[invariant_analysis] NO INVARIANCE DETECTED")
+                if DEBUG: print("[ra] NO INVARIANCE DETECTED")
 
             if backward_invariant is True:
                 invariant_group.add(static_node)
@@ -258,7 +458,7 @@ class RelationAnalysis:
                     wavefront.add(static_node)
                     relation = rgroup.get_or_make_relation(static_node)
                     relation.backward = Proportion(input_set_counts)
-                    print("[invariant_analysis] instruction: "
+                    if DEBUG: print("[ra] insn: "
                           + hex_insn + "'s backward proportion with the output event is considered")
 
             for p in static_node.cf_predes:
@@ -266,138 +466,9 @@ class RelationAnalysis:
             for p in static_node.df_predes:
                 worklist.append(p)
         for static_node in wavefront:
-            print("[invariant_analysis] pending node: " + static_node.hex_insn
-                  + " func  " + static_node.function
+            print("[ra] pending node: " + static_node.hex_insn
+                  + " func " + static_node.function
                   + " lines " + (str(static_node.bb.lines) if isinstance(static_node.bb, BasicBlock) else str(static_node.bb)))
-        return wavefront
-
-    def forward_pass(self, dgraph, starting_node, rgroup):
-        print("Starting forward pass")
-        wavefront = set()
-
-        # tests for forward invariance
-        #print("[invariant_analysis] total number of target nodes: " + str(len(dgraph.target_nodes)))
-        for node in dgraph.target_nodes:
-            node.output_set.add(node)
-
-        for node in dgraph.postorder_list: #a node will be visited only if its successors have all been visited
-            if node in dgraph.target_nodes:
-                continue
-            backedge_sources = node.static_node.backedge_sources
-            for cf_succe in node.cf_succes:
-                cf_succe_insn = cf_succe.static_node.insn
-                if cf_succe_insn in backedge_sources:
-                    wavefront.add(cf_succe.static_node)
-                    #print("[invariant_analysis] instruction: " + cf_succe.static_node.hex_insn + " added to pending list because of cycles...")
-                    continue
-                node.output_set = node.output_set.union(cf_succe.output_set)
-
-            for df_succe in node.df_succes:
-                df_succe_insn = df_succe.static_node.insn
-                if df_succe_insn in backedge_sources:
-                    wavefront.add(df_succe.static_node)
-                    #print("[invariant_analysis] instruction: " + df_succe.static_node.hex_insn + " added to pending list because of cycles...")
-                    continue
-                node.output_set = node.output_set.union(df_succe.output_set)
-            for output_node in node.output_set:
-                node_insn = node.static_node.insn
-                if node_insn not in output_node.input_sets:
-                    output_node.input_sets[node_insn] = set()
-                output_node.input_sets[node_insn].add(node)
-
-        worklist = deque()
-        worklist.append(starting_node)
-        visited = set() #TODO, ideally wanna propogate all the way, for now don't do that
-        invariant_group = set()
-        while(len(worklist) > 0):
-            static_node = worklist.popleft()
-            if static_node in visited:
-                continue
-            visited.add(static_node) #TODO, optimize by using the insn?
-            if static_node.explained is False:
-                #TODO handle more carefully
-                continue
-            insn = static_node.insn
-            hex_insn = static_node.hex_insn
-            output_set_counts = set()
-            output_set_count_list = []
-            total_output = set()
-
-            #assert insn in dgraph.insn_to_dyn_nodes, hex(insn)
-            if insn not in dgraph.insn_to_dyn_nodes:
-                #print("[warn] insn not in dynamic graph???" + hex(insn))
-                continue
-            print("-------")
-            node_count = len(dgraph.insn_to_dyn_nodes[insn])
-            for node in dgraph.insn_to_dyn_nodes[insn]:
-                output_set_counts.add(len(node.output_set))
-                output_set_count_list.append(len(node.output_set))
-                total_output = total_output.union(node.output_set)
-
-            weight = len(total_output)
-            """
-            print("[invariant_analysis] instruction: " + insn
-                  + " df successors are: " + str([s.hex_insn for s in static_node.df_succes]))
-            print("[invariant_analysis] instruction: " + insn
-                  + " cf successors are: " + str([s.hex_insn for s in static_node.cf_succes]))
-            """
-            print("[invariant_analysis] instruction: " + hex_insn
-                  + " func  " + static_node.function
-                  + " lines " + (str(static_node.bb.lines) if isinstance(static_node.bb, BasicBlock) else str(static_node.bb))
-                  + " output set counts: " + str(output_set_counts)
-                  + " weight: " + str(weight)
-                  + " total number of nodes: " + str(node_count)
-                  + " " + str(output_set_count_list))
-
-            forward_invariant = False
-            if Invariance.is_irrelevant(output_set_counts):
-                print("[invariant_analysis] instruction: "
-                      + hex_insn + " is irrelevant to the output event, ignore ...")
-                continue
-            elif Invariance.is_invariant(output_set_counts):
-                print("[invariant_analysis] instruction: "
-                      + hex_insn + " is forward invariant with the output event")
-                forward_invariant = True
-                relation = rgroup.get_or_make_relation(static_node)
-                relation.forward = Invariance(max(output_set_counts), False)
-                relation.weight = weight
-                #FIXME: could be conditionally invariant too!
-            elif Invariance.is_conditionally_invariant(output_set_counts):
-                print("[invariant_analysis] instruction: "
-                  + hex_insn + " is conditionally forward invariant with the output event")
-                forward_invariant = True
-                relation = rgroup.get_or_make_relation(static_node)
-                relation.forward = Invariance(max(output_set_counts), True)
-                relation.weight = weight
-            else:
-                print("[invariant_analysis] NO INVARIANCE DETECTED")
-
-            if forward_invariant is True:
-                invariant_group.add(static_node)
-            else:
-                is_wavefront = False
-                for s in itertools.chain(static_node.cf_succes, static_node.df_succes):
-                    if s in invariant_group:
-                        is_wavefront = True
-                        break
-                if is_wavefront:
-                    wavefront.add(static_node)
-                    relation = rgroup.get_or_make_relation(static_node)
-                    relation.forward = Proportion(output_set_counts)
-                    relation.weight = weight
-                    print("[invariant_analysis] instruction: "
-                          + hex_insn + "'s forward proportion with the output event is considered")
-
-            for p in static_node.cf_predes:
-                worklist.append(p)
-            for p in static_node.df_predes:
-                worklist.append(p)
-        for static_node in wavefront:
-            print("[invariant_analysis] pending node: " + static_node.hex_insn
-                  + " func  " + static_node.function
-                  + " lines " + str(static_node.bb.lines))
-            #TODO, change: only include those that are on the edgraphe of invariant and variant?
-            #only include the original ones?
         return wavefront
 
 if __name__ == "__main__":
