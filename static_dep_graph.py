@@ -1311,32 +1311,35 @@ class StaticDepGraph:
         """
 
         all_defs_in_diff_func = set([])
-
+        df_nodes = []
+        if df_node is not None:
+            df_nodes.append(df_node)
         new_local_defs_found = True
         while new_local_defs_found:
             new_local_defs_found = False
             print("[static_dep] Building dependencies for function: " + str(func) + " iteration: " + str(iter))
             iter += 1
-            defs_in_same_func, defs_in_diff_func = graph.build_data_flow_dependencies(func, prog, df_node)
+            defs_in_same_func, remote_defs_in_same_func, defs_in_diff_func = graph.build_data_flow_dependencies(func, prog, df_nodes)
             all_defs_in_diff_func = all_defs_in_diff_func.union(defs_in_diff_func)
             if len(graph.cfg.ordered_bbs) == 0:
                 print("[static_dep][warn] Previously failed to load the cfg for function: "
                       + func + " ignoring the function...")
                 return all_defs_in_diff_func
-            if len(defs_in_same_func) > 0:
+            if len(defs_in_same_func) > 0 or len(remote_defs_in_same_func) > 0:
                 new_bbs = [graph.cfg.getBB(defn.insn) for defn in defs_in_same_func]
                 target_bbs = target_bbs.union(new_bbs)
                 graph.build_control_flow_dependencies(target_bbs)
                 new_local_defs_found = True
-            if df_node is not None:
+            for df_node in df_nodes:
                 if df_node.is_cf is False:
                     assert df_node.bb is None, df_node
                 defs_in_same_func.add(df_node)
                 if df_node not in graph.nodes_in_df_slice:
                     graph.nodes_in_df_slice.add(df_node)
-                df_node = None
+                #df_node = None
                 # TODO, also need to do dataflow tracing for this one!!
             graph.merge_data_flow_nodes(defs_in_same_func)
+            df_nodes = list(remote_defs_in_same_func)
 
         new_nodes = all_defs_in_diff_func.union(new_nodes)
         return new_nodes
@@ -1383,7 +1386,7 @@ class StaticDepGraph:
                     node.cf_succes.append(self.id_to_node[succe_node_id])
             """
 
-    def build_data_flow_dependencies(self, func, prog, df_node=None):
+    def build_data_flow_dependencies(self, func, prog, df_nodes=[]):
         print("[static_dep] Building dataflow dependencies local in function: " + str(func))
         defs_in_same_func = set([])
         defs_in_diff_func = set([])
@@ -1412,7 +1415,7 @@ class StaticDepGraph:
             slice_starts.append(["", insn, func, False])
             assert insn not in addr_to_node
             addr_to_node[insn] = node
-        if df_node is not None: #TODO, registers?
+        for df_node in df_nodes: #TODO, registers?
             #TODO, change this later, the RR analysis should really return the src reg being loaded
             if df_node.mem_load is not None:
                 regLoad = ""
@@ -1523,6 +1526,10 @@ class StaticDepGraph:
                 print("[warn] node does not have memory load?")
                 continue
 
+            if node.mem_load.read_same_as_write is True:
+                print("Node read same as write, do no watch using RR...")
+                continue
+
             branch_insn = None
             target_insn = None
             closest_dep_branch_node = self.get_closest_dep_branch(node)
@@ -1594,7 +1601,7 @@ class StaticDepGraph:
                     node.mem_load.read_same_as_write = True
                     node.mem_store.read_same_as_write = True
 
-        defs_in_same_func = defs_in_same_func.union(tmp_defs_in_same_func)
+        #defs_in_same_func = defs_in_same_func.union(tmp_defs_in_same_func)
         print("[static_dep] Total number of new nodes in local  dataflow slice: " + str(len(defs_in_same_func)) + " " + \
               str([hex(node.insn) for node in defs_in_same_func]))
         if VERBOSE:
@@ -1612,7 +1619,7 @@ class StaticDepGraph:
               str([hex(node.insn) for node in self.nodes_in_df_slice]))
 
 
-        return defs_in_same_func, defs_in_diff_func
+        return defs_in_same_func, tmp_defs_in_same_func, defs_in_diff_func
 
     def build_control_flow_nodes(self, insn):
         self.cfg = CFG(self.func, self.prog)
