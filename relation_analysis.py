@@ -4,6 +4,7 @@ import itertools
 import heapq
 
 DEBUG = True
+Weight_Threshold = 20
 
 class Invariance:
     def __init__(self, ratio, is_conditional): #TODO, in the future, replace with actual conditions
@@ -32,7 +33,7 @@ class Relation:
         self.prede_node = prede_node
         self.forward = None
         self.backward = None
-        self.weight = -1
+        self.weight = None
 
 class RelationGroup:
     def __init__(self, starting_node):
@@ -57,6 +58,58 @@ class RelationGroup:
         # and simplify when there is an OR? makes verification easier too
         """
 
+class Weight:
+    def __init__(self, base_contrib, contrib, corr, order):
+        self.base_contrib = base_contrib
+        self.contrib = contrib
+        self.total_contrib = base_contrib * contrib / 100
+        remainder = 10
+        if self.total_contrib % 10 > 0:
+            remainder = self.total_contrib % 10
+        self.round_contrib = self.total_contrib - remainder
+        self.corr = corr
+        self.order = order
+
+    def __str__(self):
+        s  = "Contrib:{:.2f} ".format(self.contrib)
+        s += "Corr:{:.2f} ".format(self.corr*100)
+        s += "Round:{:.2f} ".format(self.round_contrib)
+        s += "Base:{:.2f} ".format(self.base_contrib)
+        s += "order:　" + str(self.order)
+        return s
+
+    def __eq__(self, other):
+        return (self.round_contrib == other.round_contrib
+                and self.corr == other.corr
+                and self.order == other.order)
+
+    def __gt__(self, other):
+        if self.round_contrib > other.round_contrib:
+            return True
+        if self.round_contrib < other.round_contrib:
+            return False
+        if self.corr > other.corr:
+            return True
+        if self.corr < other.corr:
+            return False
+        if self.order > other.order:
+            return True
+        return False
+
+    def __lt__(self, other):
+        if self.round_contrib < other.round_contrib:
+            return True
+        if self.round_contrib > other.round_contrib:
+            return False
+        if self.corr < other.corr:
+            return True
+        if self.corr > other.corr:
+            return False
+        if self.order < other.order:
+            return True
+        return False
+
+
 class RelationAnalysis:
     def __init__(self, insn, func, prog, arg, path):
         self.starting_insn = insn
@@ -66,16 +119,24 @@ class RelationAnalysis:
 
     def analyze(self):
         self.dd.prepare_to_build_dynamic_dependencies(10000)
+        #TODO, do below in the static graph logic
+        StaticDepGraph.build_postorder_list()
+        StaticDepGraph.build_postorder_ranks()
+        #print(len(StaticDepGraph.postorder_list))
+        #print(len(StaticDepGraph.postorder_ranks))
+        #insn = 0x409418#self.starting_insn
+        #func = "scanblock"#self.starting_func
         insn = self.starting_insn
         func = self.starting_func
-        assert StaticDepGraph.starting_node.insn == insn
+        #assert StaticDepGraph.starting_node.insn == insn
         static_node = StaticDepGraph.func_to_graph[func].insn_to_node[insn]
-        visited = set()
+        visited = set() #TODO, think if it makes sense...
         #wavefront = set()
         wavefront = []
+        unique_wavefront = set()
         static_node_to_weight = {}
         iteration = 0
-        curr_weight = 100
+        curr_weight = None
         while True:
             iteration += 1
             #if iteration > 2:
@@ -83,7 +144,8 @@ class RelationAnalysis:
             if static_node not in visited:
                 print()
                 print("=====================================================")
-                print("Relational analysis, pass number: " + str(iteration) + " weight:" + str(curr_weight))
+                print("Relational analysis, pass number: " + str(iteration) + " weight:" +
+                      str(100 if curr_weight is None else curr_weight.total_contrib))
                 static_node.print_node("[ra] starting static node: ")
 
                 visited.add(static_node)
@@ -101,9 +163,14 @@ class RelationAnalysis:
 
                 a = time.time()
 
-                curr_wavefront = self.forward_pass(dgraph, static_node, rgroup, static_node_to_weight, curr_weight)
+                curr_wavefront = self.forward_pass(dgraph, static_node, rgroup,
+                                                   static_node_to_weight,
+                                                   100 if curr_weight is None else curr_weight.total_contrib)
                 for wavelet in curr_wavefront:
                     #print(str(wavelet))
+                    if wavelet in unique_wavefront:
+                        continue
+                    unique_wavefront.add(wavelet)
                     if wavelet not in static_node_to_weight:
                         print("no weight " + str(wavelet.hex_insn))
                     else:
@@ -118,6 +185,9 @@ class RelationAnalysis:
                 a = time.time()
                 curr_wavefront = self.backward_pass(dgraph, static_node, rgroup)
                 for wavelet in curr_wavefront:
+                    if wavelet in unique_wavefront:
+                        continue
+                    unique_wavefront.add(wavelet)
                     if wavelet not in static_node_to_weight:
                         print("no weight " + str(wavelet.hex_insn))
                     else:
@@ -138,6 +208,16 @@ class RelationAnalysis:
             else:
                 print()
                 print(hex(insn) + "@" + func + " already visited...")
+            for weight, static_node in wavefront:
+                if weight.contrib < Weight_Threshold:  # TODO, modify this, and make it compound
+                    continue
+                print("[ra] "
+                      #+ " weight " + str("{:.2f}".format(weight.contrib)) + " " + str("{:.2f}".format(weight.corr))
+                      + str(weight)
+                      + " pending node: " + static_node.hex_insn
+                      + "@" + static_node.function
+                      + " lines " + (str(static_node.bb.lines) if isinstance(static_node.bb, BasicBlock) else str(static_node.bb)))
+
             break #TODO
             if len(wavefront) > 0:
                 #next = wavefront.pop()
@@ -146,10 +226,10 @@ class RelationAnalysis:
                     curr_weight, next = wavefront.pop()
                     insn = next.insn
                     func = next.function
-                    if curr_weight > 5:
+                    if curr_weight.contrib > Weight_Threshold: #TODO, modify this, and make it compound
                         break
                     print()
-                    print("Ignore " + hex(insn) + "@" + func + " for low weight " + str(curr_weight))
+                    print("Ignore " + hex(insn) + "@" + func + " for low weight " + str(curr_weight.contrib))
 
                 #print(curr_weight)
                 #print(next)
@@ -170,47 +250,29 @@ class RelationAnalysis:
             if node in dgraph.target_nodes:
                 continue
             node_insn = node.static_node.insn
-            #backedge_sources = node.static_node.backedge_sources
+
+            backedge_sources = node.static_node.backedge_sources
             for cf_succe in node.cf_succes:
-                """
                 cf_succe_insn = cf_succe.static_node.insn
                 if cf_succe_insn in backedge_sources:
                     wavefront.add(cf_succe.static_node)
                     #print("[ra] insn: " + cf_succe.static_node.hex_insn + " added to pending list because of cycles...")
                     continue
                 node.output_set = node.output_set.union(cf_succe.output_set)
-                """
-                for output_node in cf_succe.output_set:
-                    if node_insn not in output_node.input_sets:
-                        node.output_set.add(output_node)
+
             for df_succe in node.df_succes:
-                """
                 df_succe_insn = df_succe.static_node.insn
                 if df_succe_insn in backedge_sources:
                     wavefront.add(df_succe.static_node)
                     #print("[ra] insn: " + df_succe.static_node.hex_insn + " added to pending list because of cycles...")
                     continue
                 node.output_set = node.output_set.union(df_succe.output_set)
-                """
-                for output_node in df_succe.output_set:
-                    if node_insn not in output_node.input_sets:
-                        node.output_set.add(output_node)
 
-            if len(node.output_set) == 0:
-                for cf_succe in node.cf_succes:
-                    node.output_set = node.output_set.union(cf_succe.output_set)
-                for df_succe in node.df_succes:
-                    node.output_set = node.output_set.union(df_succe.output_set)
 
             for output_node in node.output_set:
                 if node_insn not in output_node.input_sets:
                     output_node.input_sets[node_insn] = set()
                 output_node.input_sets[node_insn].add(node)
-                """
-                if node_insn == 0x409c24:
-                    print("Adding to " + str(output_node.id))
-                    print(len(output_node.input_sets[node_insn]))
-                """
 
         worklist = deque()
         worklist.append(starting_node)
@@ -241,12 +303,26 @@ class RelationAnalysis:
                 output_set_count_list.append(len(node.output_set))
                 total_output = total_output.union(node.output_set)
 
-            weight = len(total_output)/base_weight * starting_weight
+            contribution = len(total_output)/base_weight * 100
+            ratio = node_count/len(total_output)
+            if ratio < 1:
+                specificity = ratio
+            else:
+                specificity = 1/ratio
+            #specificity = 1/(abs(node_count - len(total_output))/len(total_output) + 1) #* 100
+            #TODO, ultimate goal is to measure the similarity in relative frequency...
+            # the other thing can add is in backward analysis to get the std-dev
+            order_rank = StaticDepGraph.postorder_ranks[static_node]
+            weight = Weight(starting_weight, contribution, specificity, order_rank)
+            #simple_weight = specificity * contribution
+            """
             if static_node in static_node_to_weight:
                 if static_node_to_weight[static_node] < weight:
                     static_node_to_weight[static_node] = weight
             else:
                 static_node_to_weight[static_node] = weight
+            """
+            static_node_to_weight[static_node] = weight
             """
             print("[ra] insn: " + insn
                   + " df successors are: " + str([s.hex_insn for s in static_node.df_succes]))
@@ -254,11 +330,13 @@ class RelationAnalysis:
                   + " cf successors are: " + str([s.hex_insn for s in static_node.cf_succes]))
             """
             if DEBUG: print("[ra] insn: " + hex_insn
-                  + " func " + static_node.function
+                  + "@" + static_node.function
                   + " lines " + (str(static_node.bb.lines) if isinstance(static_node.bb, BasicBlock) else str(static_node.bb))
-                  + " output set counts: " + str(output_set_counts)
-                  + " weight: " + str(weight)
+                  #+ " weight: " + "{:.2f}".format(simple_weight)
+                  + " contrib: " + "{:.2f}".format(contribution)
+                  + " corr: " + "{:.2f}".format(specificity)
                   + " total number of nodes: " + str(node_count)
+                  + " output set counts: " + str(output_set_counts)
                   + " " + str(output_set_count_list))
 
             forward_invariant = False
@@ -287,11 +365,15 @@ class RelationAnalysis:
             if forward_invariant is True:
                 invariant_group.add(static_node)
             else:
+                #It really only makes sense to consider every ratio there is ...
+                is_wavefront = True
+                """
                 is_wavefront = False
                 for s in itertools.chain(static_node.cf_succes, static_node.df_succes):
                     if s in invariant_group:
                         is_wavefront = True
                         break
+                """
                 if is_wavefront:
                     wavefront.add(static_node)
                     relation = rgroup.get_or_make_relation(static_node)
@@ -306,7 +388,7 @@ class RelationAnalysis:
                 worklist.append(p)
         for static_node in wavefront:
             print("[ra] pending node: " + static_node.hex_insn
-                  + " func " + static_node.function
+                  + "@" + static_node.function
                   + " lines " + str(static_node.bb.lines))
             #TODO, change: only include those that are on the edgraphe of invariant and variant?
             #only include the original ones?
@@ -419,10 +501,10 @@ class RelationAnalysis:
                   + " cf successors are: " + str([s.hex_insn for s in static_node.cf_succes]))
             """
             if DEBUG: print("[ra] insn: " + hex_insn
-                  + " func " + static_node.function
+                  + "@" + static_node.function
                   + " lines " + (str(static_node.bb.lines) if isinstance(static_node.bb, BasicBlock) else str(static_node.bb))
-                  + " input set counts: " + str(input_set_counts)
                   + " total number of nodes: " + str(node_count)
+                  + " input set counts: " + str(input_set_counts)
                   + " " + str(input_set_count_list))
 
             backward_invariant = False
@@ -449,11 +531,15 @@ class RelationAnalysis:
             if backward_invariant is True:
                 invariant_group.add(static_node)
             else:
+                #It really only makes sense to consider every ratio there is ...
+                is_wavefront = True
+                """
                 is_wavefront = False
                 for s in itertools.chain(static_node.cf_succes, static_node.df_succes):
                     if s in invariant_group:
                         is_wavefront = True
                         break
+                """
                 if is_wavefront:
                     wavefront.add(static_node)
                     relation = rgroup.get_or_make_relation(static_node)
@@ -465,10 +551,12 @@ class RelationAnalysis:
                 worklist.append(p)
             for p in static_node.df_predes:
                 worklist.append(p)
+        """
         for static_node in wavefront:
             print("[ra] pending node: " + static_node.hex_insn
-                  + " func " + static_node.function
+                  + "@" + static_node.function
                   + " lines " + (str(static_node.bb.lines) if isinstance(static_node.bb, BasicBlock) else str(static_node.bb)))
+        """
         return wavefront
 
 if __name__ == "__main__":
