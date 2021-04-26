@@ -524,6 +524,11 @@ public:
     init = false;
     filter = false;
     if (ap->insn().readsMemory()) {
+      int id = ap->insn().getOperation().getID();
+      if (id == e_cmp) {
+        cout << "Compares do not load memory right?" << endl;
+        return false;
+      }
       std::set<Expression::Ptr> memReads;
       ap->insn().getMemoryReadOperands(memReads);
       if(DEBUG) cout << "[sa] Memory read: " << (*memReads.begin())->format() << endl;
@@ -578,8 +583,8 @@ public:
         }
       }
     }
-
-    if (std::any_of(std::begin(regStr), std::end(regStr), ::isalpha)){
+    if (regStr.rfind("[x86", 0) == 0) {
+      //if (std::any_of(std::begin(regStr), std::end(regStr), ::isalpha)){
       if (DEBUG) cout << "[sa] is a true reg: " << regStr << endl;
       return true;
     } else {
