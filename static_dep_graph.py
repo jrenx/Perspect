@@ -1573,7 +1573,9 @@ class StaticDepGraph:
             except Exception as e:
                 print("Calling RR failed")
                 print(str(e))
+                continue
             print("[static_dep] found " + str(len(results)) + " dataflow dependencies non-local to function")
+            node.explained = True
             print(str(results))
             if VERBOSE: print(results)
             for result in results:
