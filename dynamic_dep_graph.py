@@ -42,6 +42,7 @@ class DynamicNode(JSONEncoder):
         self.mem_store = None
         self.mem_store_addr = None
         self.output_set = set() #TODO, persist these two as well?
+        self.output_set1 = set()
         self.input_sets = {}
 
     def __str__(self):
@@ -51,9 +52,11 @@ class DynamicNode(JSONEncoder):
         s += "   Instruction id : " + str(self.insn_id) + "\n"
         s += "    -------------------------------------\n"
         s += "    ------------Static Node--------------\n"
-        s += str(self.static_node) + "\n"
-        s += "    -------------------------------------\n"
-        s += "    -------------------------------------\n"
+        s += "      " + self.static_node.hex_insn + "\n"
+        s += "      " + self.static_node.function + "\n"
+        #s += str(self.static_node) + "\n"
+        #s += "    -------------------------------------\n"
+        #s += "    -------------------------------------\n"
         s += "    dynamic control flow predecessors: ["
         for prede in self.cf_predes:
             s += '[' + str(prede.id) + "," + str(prede.insn_id) + ']'
@@ -1043,6 +1046,16 @@ class DynamicGraph:
             with open(fname, 'a') as out:
                 out.write(str(node))
 
+def print_path(curr_node, end_id):
+    for p in curr_node.df_predes:#itertools.chain(curr_node.cf_predes, curr_node.df_predes):
+        if p.id == end_id:
+            print(p)
+            return True
+        found = print_path(p, end_id)
+        if found:
+            print(p)
+            return found
+    return False
 
 if __name__ == '__main__':
     dd = DynamicDependence(0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
@@ -1077,6 +1090,7 @@ if __name__ == '__main__':
             prede_not_found += 1
             addr_not_explained.add(hex(n.mem_load_addr))
         else:
+            malloc_nodes = set()
             connected_to_malloc = False
             prede_found += 1
             addr_explained.add(hex(n.mem_load_addr))
@@ -1093,11 +1107,23 @@ if __name__ == '__main__':
                 #0x408038
                 if c.static_node.insn == 0x4072e5:# or c.static_node.insn == 0x408447: # or c.static_node.insn ==  0x4072e5:
                     addr_from_malloc.add(hex(n.mem_load_addr))
-                    from_malloc += 1
+                    if len(malloc_nodes) == 0:
+                        from_malloc += 1
+                    malloc_nodes.add(c.id)
                     connected_to_malloc = True
-                    break
+                    #break TODO
                 for pp in c.df_predes:
                     wl.append(pp)
+            """
+            if len(malloc_nodes) > 1:
+                print(str(n.id) + " is connected to more than one malloc " + str(len(malloc_nodes)))
+                for malloc_node in malloc_nodes:
+                    print("*************************************************")
+                    print("ID " + str(malloc_node))
+                    print_path(n, malloc_node)
+                    print(n)
+                    print("*************************************************")
+            """
             if connected_to_malloc is False:
                 if p.static_node not in connected_predes_not_connected_to_malloc:
                     connected_predes_not_connected_to_malloc[p.static_node] = 0
