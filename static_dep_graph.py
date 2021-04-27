@@ -887,7 +887,10 @@ class StaticDepGraph:
 
     starting_node = None
     reverse_postorder_list = []
+    # successor always after predecessor
     postorder_list = []
+    postorder_ranks = {}
+
     entry_nodes = set()
     exit_nodes = set()
 
@@ -1805,6 +1808,14 @@ class StaticDepGraph:
         StaticDepGraph.build_postorder_list_helper(StaticDepGraph.starting_node, visited)
         print("[static_dep] total number of nodes in the postorder list: "
               + str(len(StaticDepGraph.postorder_list)))
+
+    @staticmethod
+    def build_postorder_ranks():
+        StaticDepGraph.postorder_ranks = {}
+        index = 0
+        for node in StaticDepGraph.postorder_list:
+            StaticDepGraph.postorder_ranks[node] = index
+            index += 1
 
     @staticmethod
     def detect_df_backedges_helper(node, visited_cf_nodes, visited_df_nodes, new_funcs):
