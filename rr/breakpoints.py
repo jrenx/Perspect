@@ -19,6 +19,8 @@ class InitArgument(gdb.Function):
         for br in reg_points:
             gdb.execute("br {}".format(br))
         for br in breakpoints:
+            if br in reg_points:
+                continue
             gdb.execute("br {}".format(br))
             gdb.execute("commands\nc\nend")
 
@@ -86,7 +88,7 @@ class RunBreakCommands(gdb.Function):
                 arg += '{}'.format(offset)
             arg = '(' + arg + ')'
 
-            if config['step'] and not inside_loop:
+            if config['step'] and not inside_loop and break_num != 0:#first reg point is always a read
                 gdb.execute('si')
 
             for i in range(2):
@@ -129,6 +131,8 @@ class RunBreakCommands(gdb.Function):
                     if '(' in src_reg or ',' in src_reg or '%' in src_reg:  # FIXME: use regex to test for non alphebet and non number
                         cmd = 'p/x *(' + arg + ')'
                     elif src_reg != '':
+                        if break_num == 0:
+                            gdb.execute('si')
                         cmd = 'p/x ${}'.format(src_reg)  # TODO: sometimes the src is not a simple reg either
                     else:
                         print("SPECIAL")

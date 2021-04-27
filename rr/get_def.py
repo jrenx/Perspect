@@ -28,7 +28,7 @@ def filter_branch(branch_point, target_point, trace):
             taken_indices.append(i + 1)
             continue
 
-        if point == branch_point and value is None:
+        if point == branch_point:# and value is None:
             if i + 1 < len(trace) and trace[i + 1][0] == target_point:
                 #assert trace[i + 1][1] is None, str(trace[i]) + str(trace[i + 1])
                 taken_indices.append(i)
