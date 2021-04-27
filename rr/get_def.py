@@ -464,7 +464,8 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
 
                 partial_breakpoint_trace = [breakpoint_trace[i] for i in known_writes_indices]
                 current_explained_addrs = set([breakpoint[1] for breakpoint in partial_breakpoint_trace])
-                explained_addrs = explained_addrs.intersection(current_explained_addrs)
+                print("[rr] Newly explained addresses: " + str(len(current_explained_addrs)))
+                explained_addrs = explained_addrs.union(current_explained_addrs)
                 pending_addrs = pending_addrs.difference(explained_addrs)
                 print("[rr] Addresses that might have undergone unknown writes: " + str(len(pending_addrs)))
 
