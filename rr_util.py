@@ -63,7 +63,7 @@ def rr_backslice(prog, branch, target, insn, reg, shift, off, off_reg, rr_result
     if key in rr_result_cache:
         return rr_result_cache[key]
 
-    retry_count = 1
+    retry_count = 0
     while retry_count >= 0: #TODO, really, can retry if it has a remote dataflow dep!
         print("[main] Inputting to RR: " \
             + " reg: " + str(reg_str) + " shift: " + str(shift_str) + " off_reg: " + str(off_reg_str) + " off: " + str(off_str)\
