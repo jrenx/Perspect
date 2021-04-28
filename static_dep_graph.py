@@ -13,7 +13,7 @@ DEBUG_SIMPLIFY = False
 DEBUG_SLICE = False
 VERBOSE = False
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-
+TRACKS_DIRECT_CALLER = False
 
 class BasicBlock:
     def __init__(self, id, ends_in_branch, is_entry, lines):
@@ -24,6 +24,7 @@ class BasicBlock:
         self.lines = lines
         self.ends_in_branch = ends_in_branch
         self.is_entry = is_entry
+        self.is_new_entry = False
         self.immed_dom = None
         self.immed_pdom = None
         self.pdoms = None
@@ -40,6 +41,7 @@ class BasicBlock:
         data["lines"] = self.lines
         data["ends_in_branch"] = self.ends_in_branch
         data["is_entry"] = self.is_entry
+        data["is_new_entry"] = self.is_new_entry
         if self.immed_dom:
             data["immed_dom"] = self.immed_dom.id
         if self.immed_pdom:
@@ -78,6 +80,7 @@ class BasicBlock:
         bb.lines = data['lines']
         bb.ends_in_branch = data['ends_in_branch']
         bb.is_entry = data['is_entry']
+        bb.is_new_entry = data['is_new_entry']
 
         if 'immed_dom' in data:
             bb.immed_dom = data['immed_dom']
@@ -382,7 +385,7 @@ class CFG:
             all_succes_before_immed_pdom = set()
             worklist = deque()
             worklist.append(bb)
-            visited = set([])
+            visited = set()
             while len(worklist) > 0:
                 child_bb = worklist.popleft()
                 if child_bb in visited:
@@ -442,12 +445,21 @@ class CFG:
                         print("[simplify] new predecessors are: " + str([prede.lines for prede in bb.immed_pdom.predes]))
                 continue
 
-            """
-            if len(self.entry_bbs.intersection(all_succes_before_immed_pdom)) > 0:
-                assert len(bb.predes) == 0, bb
-                self.entry_bbs.remove(bb)
-                self.entry_bbs.add(bb.immed_pdom)
-            """
+            if TRACKS_DIRECT_CALLER:
+                if len(self.entry_bbs.intersection(all_succes_before_immed_pdom)) > 0:
+                    """
+                    if len(bb.predes) != 0:
+                        for eb in self.entry_bbs:
+                            print("Entry: " + str(eb.id))
+                        print("BB: " + str(bb.id))
+                        print("Immed dom: " + str(bb.immed_pdom.id))
+                        assert False
+                    """
+                    assert bb.is_entry or bb.is_new_entry
+                    self.entry_bbs.remove(bb)
+                    self.entry_bbs.add(bb.immed_pdom)
+                    print("Replacing entry BB " + str(bb.id) + " with " + str(bb.immed_pdom.id))
+                    bb.immed_pdom.is_new_entry = True
 
             #remove_set.add(bb) not really needed
             all_predes = []
@@ -1194,10 +1206,10 @@ class StaticDepGraph:
 
             for func in StaticDepGraph.func_to_graph:
                 graph = StaticDepGraph.func_to_graph[func]
-                target_bbs = set([])
+                target_bbs = set()
                 graph.build_control_flow_dependencies(target_bbs, True)
                 graph.merge_data_flow_nodes(graph.nodes_in_df_slice, True)
-                #graph.merge_callsite_nodes()
+                if TRACKS_DIRECT_CALLER: graph.merge_callsite_nodes()
                 for n in graph.nodes_in_cf_slice:
                     print(str(n))
                 for n in graph.nodes_in_df_slice:
@@ -1262,7 +1274,7 @@ class StaticDepGraph:
 
     @staticmethod
     def build_dependencies_in_function(insn, func, prog, initial_node=None):
-        new_nodes = set([])
+        new_nodes = set()
         df_node = None
         if initial_node is not None:
             if initial_node.is_df is True:
@@ -1286,13 +1298,14 @@ class StaticDepGraph:
                 return new_nodes
             target_bbs.add(graph.cfg.ordered_bbs[0])
             graph.build_control_flow_dependencies(target_bbs)
-            """
-            callsites = StaticDepGraph.func_to_callsites[func]
-            for c in callsites:
-                new_node = StaticDepGraph.make_or_get_cf_node(c[0], None, c[1])
-                new_nodes.add(new_node)
-                graph.pending_callsite_nodes.append(new_node)
-            """
+
+            if TRACKS_DIRECT_CALLER:
+                callsites = StaticDepGraph.func_to_callsites[func]
+                for c in callsites:
+                    new_node = StaticDepGraph.make_or_get_cf_node(c[0], None, c[1])
+                    new_nodes.add(new_node)
+                    graph.pending_callsite_nodes.append(new_node)
+
         """
         if df_node is not None:
             assert df_node.bb is None
@@ -1336,10 +1349,12 @@ class StaticDepGraph:
 
     def merge_callsite_nodes(self):
         for entry_bb in self.cfg.entry_bbs:
-            n = self.id_to_node[graph.bb_id_to_node_id[entry_bb.id]]
+            n = self.id_to_node[self.bb_id_to_node_id[entry_bb.id]]
             for callsite in self.pending_callsite_nodes:
-                callsite.cf_succes.append(n)
-                n.cf_predes.append(callsite)
+                if n not in callsite.cf_succes:
+                    callsite.cf_succes.append(n)
+                if callsite not in n.cf_predes:
+                    n.cf_predes.append(callsite)
 
     #FIXME, think about if this makes sense
     def merge_data_flow_nodes(self, df_nodes, final=False):
@@ -1893,7 +1908,7 @@ class StaticDepGraph:
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
 if __name__ == "__main__":
-    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", limit=10000, use_cache=True)
+    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", limit=10, use_cache=True)
     """
     print("HERERERE")
     for func in StaticDepGraph.func_to_graph:
