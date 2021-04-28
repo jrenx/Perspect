@@ -1149,7 +1149,7 @@ class StaticDepGraph:
         return self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
     @staticmethod
-    def build_dependencies(insn, func, prog, limit=100000, use_cache=True):
+    def build_dependencies(insn, func, prog, limit=100000, use_cache=True, additional_insn_to_funcs=[]):
         start = time.time()
         key = str(insn) + "_" + str(func) + "_" + str(prog) + "_" + str(limit)
         result_file = os.path.join(curr_dir, 'cache', 'static_graph_result_' + key)
@@ -1181,6 +1181,11 @@ class StaticDepGraph:
             starting_node = StaticDepGraph.make_or_get_cf_node(insn, None, func)
             StaticDepGraph.starting_node = starting_node
             worklist.append([insn, func, prog, starting_node])
+            for line in additional_insn_to_funcs:
+                curr_insn = line[0]
+                curr_func = line[1]
+                node = StaticDepGraph.make_or_get_cf_node(curr_insn, None, curr_func)
+                worklist.append([curr_insn, curr_func, prog, node])
             while len(worklist) > 0:
                 if iteration >= limit:
                     break
@@ -1194,8 +1199,9 @@ class StaticDepGraph:
                         with open(sa_result_file, 'w') as f:
                             json.dump(StaticDepGraph.sa_result_cache, f, indent=4)
                 iteration += 1
-                print("[static_dep] Running analysis at iteration: " + str(iteration))
                 curr_insn, curr_func, curr_prog, curr_node = worklist.popleft()
+                print("[static_dep] Running analysis at iteration: "
+                      + str(iteration) + " insn: " + hex(curr_insn) + " func: " + curr_func)
                 if curr_node is not None and curr_node.explained:
                     print("[static_dep] Node already explained, skipping ...")
                     print ("[static_dep] " + str(curr_node))
@@ -1908,7 +1914,18 @@ class StaticDepGraph:
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
 if __name__ == "__main__":
-    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9", limit=10, use_cache=True)
+    additional_insn_to_funcs = []
+    starting_event_file = os.path.join(curr_dir, 'starting_events')
+    if os.path.exists(starting_event_file):
+        with open(starting_event_file, 'r') as f:
+            lines = f.readlines()
+            for l in lines:
+                segs = l.strip().split()
+                additional_insn_to_funcs.append([int(segs[0], 16), segs[1]])
+            print(additional_insn_to_funcs)
+
+    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9",
+                                      limit=10, use_cache=True, additional_insn_to_funcs=additional_insn_to_funcs)
     """
     print("HERERERE")
     for func in StaticDepGraph.func_to_graph:
