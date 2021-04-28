@@ -1181,19 +1181,6 @@ class StaticDepGraph:
                         print("Persisting sa result file")
                         with open(sa_result_file, 'w') as f:
                             json.dump(StaticDepGraph.sa_result_cache, f, indent=4)
-                finished = True
-                if 'scanblock' not in StaticDepGraph.func_to_graph:
-                    finished = False
-                else:
-                    if 4232057 not in StaticDepGraph.func_to_graph['scanblock'].insn_to_node:
-                        finished = False
-                    else:
-                        sn = StaticDepGraph.func_to_graph['scanblock'].insn_to_node[4232057]
-                        for p in sn.df_predes:
-                            if p.explained is False:
-                                finished = False
-                if finished:
-                    print("Found all predes on scanblock @ " + hex(4232057))
                 iteration += 1
                 print("[static_dep] Running analysis at iteration: " + str(iteration))
                 curr_insn, curr_func, curr_prog, curr_node = worklist.popleft()
