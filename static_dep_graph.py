@@ -1306,11 +1306,12 @@ class StaticDepGraph:
             graph.build_control_flow_dependencies(target_bbs)
 
             if TRACKS_DIRECT_CALLER:
-                callsites = StaticDepGraph.func_to_callsites[func]
-                for c in callsites:
-                    new_node = StaticDepGraph.make_or_get_cf_node(c[0], None, c[1])
-                    new_nodes.add(new_node)
-                    graph.pending_callsite_nodes.append(new_node)
+                if func in StaticDepGraph.func_to_callsites:
+                    callsites = StaticDepGraph.func_to_callsites[func]
+                    for c in callsites:
+                        new_node = StaticDepGraph.make_or_get_cf_node(c[0], None, c[1])
+                        new_nodes.add(new_node)
+                        graph.pending_callsite_nodes.append(new_node)
 
         """
         if df_node is not None:
