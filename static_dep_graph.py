@@ -1119,6 +1119,8 @@ class StaticDepGraph:
             if bb in succes:
                 last_bb = bb
                 #break
+        if last_bb is None:
+            return None
         return last_bb if last_bb is None else self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
     def get_farthest_target(self, node):
