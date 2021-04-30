@@ -1551,10 +1551,13 @@ class StaticDepGraph:
             closest_dep_branch_node = self.get_closest_dep_branch(node)
             if closest_dep_branch_node is not None:
                 farthest_target_node = self.get_farthest_target(closest_dep_branch_node)
-                branch_insn = closest_dep_branch_node.bb.last_insn
-                target_insn = farthest_target_node.insn
-                print("Closest dependent branch is at " + hex(branch_insn))
-                print("Farthest target is at " + hex(target_insn))
+                if farthest_target_node is not None:
+                    branch_insn = closest_dep_branch_node.bb.last_insn
+                    target_insn = farthest_target_node.insn
+                    print("Closest dependent branch is at " + hex(branch_insn))
+                    print("Farthest target is at " + hex(target_insn))
+                else:
+                    print("[warn] closest dep branch is found but not the farthest target node?")
             results = []
             try:
                 results = rr_backslice(prog, branch_insn, target_insn, #4234305, 0x409C41 | 4234325, 0x409C55
