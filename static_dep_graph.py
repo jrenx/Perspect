@@ -1146,6 +1146,8 @@ class StaticDepGraph:
             if bb in reachable_targets:
                 last_bb = bb
                 break
+        if last_bb is None:
+            return None
         return self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
     @staticmethod
