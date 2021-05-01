@@ -1193,7 +1193,7 @@ class StaticDepGraph:
             while len(worklist) > 0:
                 if iteration >= limit:
                     break
-                if iteration % 1000 == 0 and iteration > 0:
+                if iteration % 10 == 0 and iteration > 0:
                     if rr_result_size != len(StaticDepGraph.rr_result_cache):
                         print("Persisting rr result file")
                         with open(rr_result_file, 'w') as f:
