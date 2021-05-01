@@ -1933,7 +1933,7 @@ if __name__ == "__main__":
             print(additional_insn_to_funcs)
 
     StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9",
-                                      limit=100000, use_cache=True, additional_insn_to_funcs=additional_insn_to_funcs)
+                                      limit=100000, use_cache=False, additional_insn_to_funcs=additional_insn_to_funcs)
     """
     print("HERERERE")
     for func in StaticDepGraph.func_to_graph:
