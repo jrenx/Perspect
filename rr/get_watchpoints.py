@@ -17,7 +17,7 @@ def run_watchpoint(breakpoints, watchpoints):
     a = datetime.datetime.now()
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     try:
-        rr_process.communicate(('source' + os.path.join(rr_dir, 'get_watchpoints')).encode(), timeout=300)
+        rr_process.communicate(('source' + os.path.join(rr_dir, 'get_watchpoints')).encode(), timeout=60)
     except subprocess.TimeoutExpired:
         rr_process.kill()
         success = False
