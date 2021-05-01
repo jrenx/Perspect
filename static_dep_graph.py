@@ -313,6 +313,8 @@ class CFG:
                         if succe in bb.backedge_targets:
                             retry = True
                             if DEBUG_SIMPLIFY: print("[Simplify]      ignoring, is a backedge ")
+                        else:
+                            pdom_ids = set()
                         continue
                     if pdom_ids is None:
                         pdom_ids = set(bb_id_to_pdom_ids[succe.id])
