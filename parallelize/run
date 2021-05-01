@@ -1,0 +1,49 @@
+cd eval_909_32bit-0
+python3 run-rr.py 0 16 &> out &
+cd ..
+cd eval_909_32bit-1
+python3 run-rr.py 1 16 &> out &
+cd ..
+cd eval_909_32bit-2
+python3 run-rr.py 2 16 &> out &
+cd ..
+cd eval_909_32bit-3
+python3 run-rr.py 3 16 &> out &
+cd ..
+cd eval_909_32bit-4
+python3 run-rr.py 4 16 &> out &
+cd ..
+cd eval_909_32bit-5
+python3 run-rr.py 5 16 &> out &
+cd ..
+cd eval_909_32bit-6
+python3 run-rr.py 6 16 &> out &
+cd ..
+cd eval_909_32bit-7
+python3 run-rr.py 7 16 &> out &
+cd ..
+cd eval_909_32bit-8
+python3 run-rr.py 8 16 &> out &
+cd ..
+cd eval_909_32bit-9
+python3 run-rr.py 9 16 &> out &
+cd ..
+cd eval_909_32bit-10
+python3 run-rr.py 10 16 &> out &
+cd ..
+cd eval_909_32bit-11
+python3 run-rr.py 11 16 &> out &
+cd ..
+cd eval_909_32bit-12
+python3 run-rr.py 12 16 &> out &
+cd ..
+cd eval_909_32bit-13
+python3 run-rr.py 13 16 &> out &
+cd ..
+cd eval_909_32bit-14
+python3 run-rr.py 14 16 &> out &
+cd ..
+cd eval_909_32bit-15
+python3 run-rr.py 15 16 &> out &
+cd ..
+wait
