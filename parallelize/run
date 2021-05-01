@@ -1,49 +1,50 @@
-cd eval_909_32bit-0
+#!/bin/bash
+cd $1"_0"
 python3 run-rr.py 0 16 &> out &
 cd ..
-cd eval_909_32bit-1
+cd $1"_1"
 python3 run-rr.py 1 16 &> out &
 cd ..
-cd eval_909_32bit-2
+cd $1"_2"
 python3 run-rr.py 2 16 &> out &
 cd ..
-cd eval_909_32bit-3
+cd $1"_3"
 python3 run-rr.py 3 16 &> out &
 cd ..
-cd eval_909_32bit-4
+cd $1"_4"
 python3 run-rr.py 4 16 &> out &
 cd ..
-cd eval_909_32bit-5
+cd $1"_5"
 python3 run-rr.py 5 16 &> out &
 cd ..
-cd eval_909_32bit-6
+cd $1"_6"
 python3 run-rr.py 6 16 &> out &
 cd ..
-cd eval_909_32bit-7
+cd $1"_7"
 python3 run-rr.py 7 16 &> out &
 cd ..
-cd eval_909_32bit-8
+cd $1"_8"
 python3 run-rr.py 8 16 &> out &
 cd ..
-cd eval_909_32bit-9
+cd $1"_9"
 python3 run-rr.py 9 16 &> out &
 cd ..
-cd eval_909_32bit-10
+cd $1"_10"
 python3 run-rr.py 10 16 &> out &
 cd ..
-cd eval_909_32bit-11
+cd $1"_11"
 python3 run-rr.py 11 16 &> out &
 cd ..
-cd eval_909_32bit-12
+cd $1"_12"
 python3 run-rr.py 12 16 &> out &
 cd ..
-cd eval_909_32bit-13
+cd $1"_13"
 python3 run-rr.py 13 16 &> out &
 cd ..
-cd eval_909_32bit-14
+cd $1"_14"
 python3 run-rr.py 14 16 &> out &
 cd ..
-cd eval_909_32bit-15
+cd $1"_15"
 python3 run-rr.py 15 16 &> out &
 cd ..
 wait

@@ -7,14 +7,17 @@ def remove_prefix(text, prefix):
         return text[text.startswith(prefix) and len(prefix):]
 
 def run():
+    folder = int(sys.argv[1])
+    src = int(sys.argv[2])
+    prog = int(sys.argv[3])
     rr_result_cache = {}
     rr_result_file = os.path.join(curr_dir, 'rr_results.json')
     for i in range(0,16):
-        with open("/home/anygroup/eval_909_32bit_rr_runs/eval_909_32bit-" + str(i)+ "/cache/rr_results_" + str(i) + ".json", "r") as f:
+        with open(os.path.join(curr_dir, folder + "_" + str(i), "cache", "rr_results_" + str(i) + ".json"), "r") as f:
             rr_result_cache.update(json.load(f))
             print(i)
             print(len(rr_result_cache))
-    with open("/home/anygroup/eval_909_32bit/cache/rr_results_909_ziptest_exe9_32.json", "r") as f:
+    with open(os.path.join(src, "cache", r"r_results_909_" + prog + ".json"), "r") as f:
         rr_result_cache.update(json.load(f))
         print(len(rr_result_cache))
    
