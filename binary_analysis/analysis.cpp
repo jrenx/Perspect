@@ -128,7 +128,8 @@ BPatch_basicBlock *getImmediateDominator(BPatch_image *appImage, const char *fun
 Block *getImmediateDominator2(Function *f, long unsigned int addr);
 
 BPatch_function *getFunction(BPatch_image *appImage, const char *funcName);
-Function *getFunction2(const char *binaryPath, const char *funcName);
+//Function *getFunction2(const char *binaryPath, const char *funcName);
+Function *getFunction2(SymtabCodeSource *stcs, CodeObject *co, const char *funcName);
 
 Instruction getIfCondition(BPatch_basicBlock *block);
 Instruction getIfCondition2(Block *b);
@@ -139,7 +140,7 @@ Block *getBasicBlockContainingInsnBeforeAddr(Function *f, long unsigned int addr
 
 GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsigned int addr, char *regName, bool *madeProgress,
     bool atEndPoint = false);
-void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visited,
+void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co, cJSON *json_reads, boost::unordered_set<Address> &visited,
                          char *progName, char *funcName,
                          long unsigned int addr, char *regName,
                          bool isKnownBitVar=false, bool atEndPoint=false);
@@ -382,24 +383,11 @@ BPatch_function *getFunction(BPatch_image *appImage, const char *funcName){
 }
 
 //TODO, in the future, get a batch get function
-Function *getFunction2(const char *binaryPath, const char *funcName) {
-  SymtabAPI::Symtab *symTab;
-  string binaryPathStr(binaryPath);
+Function *getFunction2(SymtabCodeSource *stcs, CodeObject *co, const char *funcName) {
   string funcNameStr(funcName);
-  bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
-  if (isParsable == false) {
-    fprintf(stderr, "File cannot be parsed: %s.\n", binaryPath);
-    return NULL;
-  }
-
-  SymtabCodeSource *stcs = new SymtabCodeSource((char *)binaryPath);
-  CodeObject *co = new CodeObject(stcs);
-
-  co->parse();
-
   const CodeObject::funclist &all = co->funcs();
   if (all.size() == 0) {
-    fprintf(stderr, "No function in file %s.\n", binaryPath);
+    fprintf(stderr, "No function in file.\n");
     return NULL;
   }
 
@@ -1903,7 +1891,8 @@ std::string inline getLoadRegName(Instruction newInsn, bool *foundMemRead) {
   }
   return reg;
 }
-void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visited,
+void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
+    cJSON *json_reads, boost::unordered_set<Address> &visited,
                           char *progName, char *funcName,
                           long unsigned int addr, char *regName, bool isKnownBitVar, bool atEndPoint) {
 
@@ -1920,7 +1909,7 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
   }
   visited.insert(addr);
 
-  Function *func = getFunction2(progName, funcName);
+  Function *func = getFunction2(stcs, co, funcName);
   Block *bb = getBasicBlock2(func, addr);
   Instruction insn = bb->getInsn(addr);
 
@@ -1976,7 +1965,7 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
         if (foundMemRead) atEndPoint = true;
         char *newRegName = (char *) newRegStr.c_str();
         // TODO, in the future even refactor the signature of the backwardSliceHelper function ...
-        backwardSliceHelper(json_reads, visited, progName, newFuncName, newAddr, newRegName, isKnownBitVar, atEndPoint);
+        backwardSliceHelper(stcs, co, json_reads, visited, progName, newFuncName, newAddr, newRegName, isKnownBitVar, atEndPoint);
       }
       return;
     }
@@ -2050,7 +2039,7 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
           std::string newRegStr = getLoadRegName(newFunc, newAddr, &foundMemRead);
           if (foundMemRead) atEndPoint = true;
           char * newRegName = (char *)newRegStr.c_str();
-          backwardSliceHelper(json_reads, visited, progName, newFuncName, newAddr, newRegName, isKnownBitVar, atEndPoint);
+          backwardSliceHelper(stcs, co, json_reads, visited, progName, newFuncName, newAddr, newRegName, isKnownBitVar, atEndPoint);
         }
         if (stackWrites.size() > 0) continue;
       } else if (readsFromStaticAddr(assign->insn(), assign->addr(),
@@ -2060,7 +2049,7 @@ void backwardSliceHelper(cJSON *json_reads, boost::unordered_set<Address> &visit
             func, assign->insn(), assign->addr(), readOff); //TODO, make this interprocedural too?
         cout << " [sa]  found " << writesToStaticAddrs.size() << " writes to static addresses " << endl;
         for (auto wit = writesToStaticAddrs.begin(); wit != writesToStaticAddrs.end(); wit++) {
-          backwardSliceHelper(json_reads, visited, progName, funcName, *wit, "", isKnownBitVar);
+          backwardSliceHelper(stcs, co, json_reads, visited, progName, funcName, *wit, "", isKnownBitVar);
         }
         continue;
       }
@@ -2594,10 +2583,24 @@ long unsigned int getImmedDom(char *progName, char *funcName, long unsigned int 
   if(DEBUG) cout << "[sa] func: " << funcName << endl;
   if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr <<  std::dec << endl;
   if(DEBUG) cout << endl;
-  Function *func = getFunction2(progName, funcName);
+
+  SymtabAPI::Symtab *symTab;
+  string binaryPathStr(progName);
+  //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
+  //if (isParsable == false) {
+  //  fprintf(stderr, "File cannot be parsed: %s.\n", binaryPath);
+  //  return NULL;
+  //}
+  SymtabCodeSource *stcs = new SymtabCodeSource((char *)progName);
+  CodeObject *co = new CodeObject(stcs);
+  co->parse();
+
+  Function *func = getFunction2(stcs, co, funcName);
   Block *immedDom = getImmediateDominator2(func, addr);
   //Instruction ifCond = getIfConditionAddr2(immedDom);
   if(DEBUG) cout << "[sa] immed dom: " << immedDom->last() << endl;
+  delete stcs;
+  delete co;
   return immedDom->last();
 
 }
@@ -2690,10 +2693,26 @@ long unsigned int getFirstInstrInBB(char *progName, char *funcName, long unsigne
   if(DEBUG) cout << "[sa] func: " << funcName << endl;
   if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << std::dec << endl;
   if(DEBUG) cout << endl;
-  Function *func = getFunction2(progName, funcName);
+
+  SymtabAPI::Symtab *symTab;
+  string binaryPathStr(progName);
+  //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
+  //if (isParsable == false) {
+  //  fprintf(stderr, "File cannot be parsed: %s.\n", binaryPath);
+  //  return NULL;
+  //}
+  SymtabCodeSource *stcs = new SymtabCodeSource((char *)progName);
+  CodeObject *co = new CodeObject(stcs);
+  co->parse();
+
+  Function *func = getFunction2(stcs, co, funcName);
   Block *bb = getBasicBlock2(func, addr);
   //Instruction ifCond = getIfConditionAddr2(immedDom);
   if(DEBUG) cout << "[sa] first instr: " << bb->start() << endl;
+
+  delete stcs;
+  delete co;
+
   return bb->start();
 
 }
@@ -2705,10 +2724,26 @@ long unsigned int getLastInstrInBB(char *progName, char *funcName, long unsigned
   if(DEBUG) cout << "[sa] func: " << funcName << endl;
   if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << std::dec << endl;
   if(DEBUG) cout << endl;
-  Function *func = getFunction2(progName, funcName);
+
+  SymtabAPI::Symtab *symTab;
+  string binaryPathStr(progName);
+  //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
+  //if (isParsable == false) {
+  //  fprintf(stderr, "File cannot be parsed: %s.\n", binaryPath);
+  //  return NULL;
+  //}
+  SymtabCodeSource *stcs = new SymtabCodeSource((char *)progName);
+  CodeObject *co = new CodeObject(stcs);
+  co->parse();
+
+  Function *func = getFunction2(stcs, co, funcName);
   Block *bb = getBasicBlock2(func, addr);
   //Instruction ifCond = getIfConditionAddr2(immedDom);
   if(DEBUG) cout << "[sa] last instr: " << bb->last() << endl;
+
+  delete stcs;
+  delete co;
+
   return bb->last();
 }
 
@@ -2719,7 +2754,19 @@ long unsigned int getInstrAfter(char *progName, char *funcName, long unsigned in
   if(DEBUG) cout << "[sa] func: " << funcName << endl;
   if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << std::dec << endl;
   if(DEBUG) cout << endl;
-  Function *func = getFunction2(progName, funcName);
+
+  SymtabAPI::Symtab *symTab;
+  string binaryPathStr(progName);
+  //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
+  //if (isParsable == false) {
+  //  fprintf(stderr, "File cannot be parsed: %s.\n", binaryPath);
+  //  return NULL;
+  //}
+  SymtabCodeSource *stcs = new SymtabCodeSource((char *)progName);
+  CodeObject *co = new CodeObject(stcs);
+  co->parse();
+
+  Function *func = getFunction2(stcs, co, funcName);
   Block *bb = getBasicBlock2(func, addr);
   Block::Insns insns;
   bb->getInsns(insns);
@@ -2738,6 +2785,8 @@ long unsigned int getInstrAfter(char *progName, char *funcName, long unsigned in
     nextInsn = bb->end();
   //Instruction ifCond = getIfConditionAddr2(immedDom);
   if(DEBUG) cout << "[sa] instr after: " << nextInsn << endl;
+  delete stcs;
+  delete co;
   return nextInsn;
 }
 
@@ -2748,10 +2797,24 @@ void getImmedPred(char *progName, char *funcName, long unsigned int addr){
   if(DEBUG) cout << "[sa] func: " << funcName << endl;
   if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << std::dec << endl;
   if(DEBUG) cout << endl;
-  Function *func = getFunction2(progName, funcName);
+
+  SymtabAPI::Symtab *symTab;
+  string binaryPathStr(progName);
+  //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
+  //if (isParsable == false) {
+  //  fprintf(stderr, "File cannot be parsed: %s.\n", binaryPath);
+  //  return NULL;
+  //}
+  SymtabCodeSource *stcs = new SymtabCodeSource((char *)progName);
+  CodeObject *co = new CodeObject(stcs);
+  co->parse();
+
+  Function *func = getFunction2(stcs, co, funcName);
   Block *immedDom = getImmediateDominator2(func, addr);
   Instruction ifCond = getIfCondition2(immedDom);
   //TODO
+  delete stcs;
+  delete co;
 }
 
 void getCalleeToCallsites(char *progName) {
@@ -2759,16 +2822,14 @@ void getCalleeToCallsites(char *progName) {
   if (DEBUG) cout << "[sa] prog: " << progName << endl;
 
   SymtabAPI::Symtab *symTab;
-  string binaryPathStr(progName);
-  bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
-  if (isParsable == false) {
-    fprintf(stderr, "File cannot be parsed: %s.\n", progName);
-    return;
-  }
-
+  //string binaryPathStr(progName);
+  //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
+  //if (isParsable == false) {
+  //  fprintf(stderr, "File cannot be parsed: %s.\n", progName);
+  //  return;
+  //}
   SymtabCodeSource *sts = new SymtabCodeSource((char *)progName);
   CodeObject *co = new CodeObject(sts);
-
   co->parse();
   const CodeObject::funclist &all = co->funcs();
   if (all.size() == 0) {
@@ -2830,6 +2891,8 @@ void getCalleeToCallsites(char *progName) {
 
   if(DEBUG) cout << "[sa] all results saved to \"functionToCallSites_result\"";
   if(DEBUG) cout << endl;
+  delete sts;
+  delete co;
 }
 
 void getMemWrites(char *addrToFuncNames, char *progName) {
@@ -2837,6 +2900,17 @@ void getMemWrites(char *addrToFuncNames, char *progName) {
   if (DEBUG) cout << "[sa] Getting memory writes for instructions: " << endl;
   if (DEBUG) cout << "[sa] addr to func: " << addrToFuncNames << endl;
   if (DEBUG) cout << "[sa] prog: " << progName << endl;
+
+  SymtabAPI::Symtab *symTab;
+  string binaryPathStr(progName);
+  //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
+  //if (isParsable == false) {
+  //  fprintf(stderr, "File cannot be parsed: %s.\n", binaryPath);
+  //  return NULL;
+  //}
+  SymtabCodeSource *stcs = new SymtabCodeSource((char *)progName);
+  CodeObject *co = new CodeObject(stcs);
+  co->parse();
 
   cJSON *json_insns = cJSON_CreateArray();
 
@@ -2864,7 +2938,7 @@ void getMemWrites(char *addrToFuncNames, char *progName) {
     if (INFO) cout << endl << "[sa] addr: 0x" << std::hex << addr << std::dec << endl;
     if (INFO) cout << "[sa] func: " << funcName << endl;
 
-    Function *func = getFunction2(progName, funcName);
+    Function *func = getFunction2(stcs, co, funcName);
     Block *bb = getBasicBlock2(func, addr);
     Instruction insn = bb->getInsn(addr);
     long unsigned int trueAddr = 0;
@@ -2930,6 +3004,8 @@ void getMemWrites(char *addrToFuncNames, char *progName) {
 
   if(DEBUG) cout << "[sa] all results saved to \"writesPerInsn_result\"";
   if(DEBUG) cout << endl;
+  delete stcs;
+  delete co;
 }
 
 //TODO: make it less hacky!
@@ -3030,13 +3106,13 @@ void getMemWritesToStaticAddresses(char *progName) {
   if (DEBUG) cout << "[sa] ================================" << endl;
   if (DEBUG) cout << "[sa] prog: " << progName << endl;
 
-  SymtabAPI::Symtab *symTab;
   string binaryPathStr(progName);
-  bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
-  if (isParsable == false) {
-    fprintf(stderr, "File cannot be parsed: %s.\n", progName);
-    return;
-  }
+  //SymtabAPI::Symtab *symTab;
+  //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
+  //if (isParsable == false) {
+  //  fprintf(stderr, "File cannot be parsed: %s.\n", progName);
+  //  return;
+  //}
 
   SymtabCodeSource *sts = new SymtabCodeSource((char *)progName);
   CodeObject *co = new CodeObject(sts);
@@ -3117,6 +3193,8 @@ void getMemWritesToStaticAddresses(char *progName) {
   if(DEBUG) cout << endl;
 
   getNestedMemWritesToStaticAddresses(staticWriteInsns, progName);
+  delete sts;
+  delete co;
 }
 
 void getRegsWritten(char *progName, char *funcName, long unsigned int addr) {
@@ -3127,7 +3205,18 @@ void getRegsWritten(char *progName, char *funcName, long unsigned int addr) {
   if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << std::dec << endl;
   if(DEBUG) cout << endl;
 
-  Function *func = getFunction2(progName, funcName);
+  SymtabAPI::Symtab *symTab;
+  string binaryPathStr(progName);
+  //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
+  //if (isParsable == false) {
+  //  fprintf(stderr, "File cannot be parsed: %s.\n", binaryPath);
+  //  return NULL;
+  //}
+  SymtabCodeSource *stcs = new SymtabCodeSource((char *)progName);
+  CodeObject *co = new CodeObject(stcs);
+  co->parse();
+
+  Function *func = getFunction2(stcs, co, funcName);
   Block *bb = getBasicBlock2(func, addr);
   Instruction insn = bb->getInsn(addr);
 
@@ -3142,6 +3231,8 @@ void getRegsWritten(char *progName, char *funcName, long unsigned int addr) {
     out << (*it)->getID().name();
   }
   out.close();
+  delete stcs;
+  delete co;
 }
 
 void backwardSlices(char *addrToRegNames, char *progName) {
@@ -3149,6 +3240,17 @@ void backwardSlices(char *addrToRegNames, char *progName) {
   if (INFO) cout << "[sa] Making multiple backward slices: " << endl;
   if (INFO) cout << "[sa] addr to reg: " << addrToRegNames << endl; // FIXME: maybe change to insn to reg, addr is instruction addr
   if (INFO) cout << "[sa] prog: " << progName << endl;
+
+  SymtabAPI::Symtab *symTab;
+  string binaryPathStr(progName);
+  //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
+  //if (isParsable == false) {
+  //  fprintf(stderr, "File cannot be parsed: %s.\n", binaryPath);
+  //  return NULL;
+  //}
+  SymtabCodeSource *stcs = new SymtabCodeSource((char *)progName);
+  CodeObject *co = new CodeObject(stcs);
+  co->parse();
 
   cJSON *json_slices = cJSON_CreateArray();
 
@@ -3186,7 +3288,7 @@ void backwardSlices(char *addrToRegNames, char *progName) {
 
     cJSON *json_reads = cJSON_CreateArray();
     boost::unordered_set<Address> visited;
-    backwardSliceHelper(json_reads, visited, progName, funcName, addr, regName, isKnownBitVar);
+    backwardSliceHelper(stcs, co, json_reads, visited, progName, funcName, addr, regName, isKnownBitVar);
     cJSON_AddItemToObject(json_slice, "reads", json_reads);
     cJSON_AddItemToArray(json_slices, json_slice);
     if (DEBUG) cout << endl;
@@ -3199,13 +3301,27 @@ void backwardSlices(char *addrToRegNames, char *progName) {
 
   if(DEBUG) cout << "[sa] all results saved to \"backwardSlices_result\"";
   if(DEBUG) cout << endl;
+  delete stcs;
+  delete co;
 }
 
 void backwardSlice(char *progName, char *funcName, long unsigned int addr, char *regName) {
 
+  SymtabAPI::Symtab *symTab;
+  string binaryPathStr(progName);
+  //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
+  //if (isParsable == false) {
+  //  fprintf(stderr, "File cannot be parsed: %s.\n", binaryPath);
+  //  return NULL;
+  //}
+  SymtabCodeSource *stcs = new SymtabCodeSource((char *)progName);
+  CodeObject *co = new CodeObject(stcs);
+  co->parse();
+
   cJSON *json_reads = cJSON_CreateArray();
   boost::unordered_set<Address> visited;
-  backwardSliceHelper(json_reads, visited, progName, funcName, addr, regName);
+
+  backwardSliceHelper(stcs, co, json_reads, visited, progName, funcName, addr, regName);
 
   char *rendered = cJSON_Print(json_reads);
   cJSON_Delete(json_reads);
@@ -3215,6 +3331,9 @@ void backwardSlice(char *progName, char *funcName, long unsigned int addr, char 
 
   if(DEBUG) cout << "[sa] all results saved to \"backwardSlice_result\"";
   if(DEBUG) cout << endl;
+
+  delete stcs;
+  delete co;
 }
 
 }
