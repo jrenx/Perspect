@@ -2584,8 +2584,8 @@ long unsigned int getImmedDom(char *progName, char *funcName, long unsigned int 
   if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr <<  std::dec << endl;
   if(DEBUG) cout << endl;
 
-  SymtabAPI::Symtab *symTab;
-  string binaryPathStr(progName);
+  //SymtabAPI::Symtab *symTab;
+  //string binaryPathStr(progName);
   //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
   //if (isParsable == false) {
   //  fprintf(stderr, "File cannot be parsed: %s.\n", binaryPath);
@@ -2599,9 +2599,10 @@ long unsigned int getImmedDom(char *progName, char *funcName, long unsigned int 
   Block *immedDom = getImmediateDominator2(func, addr);
   //Instruction ifCond = getIfConditionAddr2(immedDom);
   if(DEBUG) cout << "[sa] immed dom: " << immedDom->last() << endl;
-  delete stcs;
+  Address last = immedDom->last();
   delete co;
-  return immedDom->last();
+  delete stcs;
+  return last;
 
 }
 
@@ -2694,8 +2695,8 @@ long unsigned int getFirstInstrInBB(char *progName, char *funcName, long unsigne
   if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << std::dec << endl;
   if(DEBUG) cout << endl;
 
-  SymtabAPI::Symtab *symTab;
-  string binaryPathStr(progName);
+  //SymtabAPI::Symtab *symTab;
+  //string binaryPathStr(progName);
   //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
   //if (isParsable == false) {
   //  fprintf(stderr, "File cannot be parsed: %s.\n", binaryPath);
@@ -2710,10 +2711,10 @@ long unsigned int getFirstInstrInBB(char *progName, char *funcName, long unsigne
   //Instruction ifCond = getIfConditionAddr2(immedDom);
   if(DEBUG) cout << "[sa] first instr: " << bb->start() << endl;
 
-  delete stcs;
+  Address start = bb->start();
   delete co;
-
-  return bb->start();
+  delete stcs;
+  return start;
 
 }
 
@@ -2725,8 +2726,8 @@ long unsigned int getLastInstrInBB(char *progName, char *funcName, long unsigned
   if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << std::dec << endl;
   if(DEBUG) cout << endl;
 
-  SymtabAPI::Symtab *symTab;
-  string binaryPathStr(progName);
+  //SymtabAPI::Symtab *symTab;
+  //string binaryPathStr(progName);
   //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
   //if (isParsable == false) {
   //  fprintf(stderr, "File cannot be parsed: %s.\n", binaryPath);
@@ -2741,10 +2742,10 @@ long unsigned int getLastInstrInBB(char *progName, char *funcName, long unsigned
   //Instruction ifCond = getIfConditionAddr2(immedDom);
   if(DEBUG) cout << "[sa] last instr: " << bb->last() << endl;
 
-  delete stcs;
+  Address last = bb->last();
   delete co;
-
-  return bb->last();
+  delete stcs;
+  return last;
 }
 
 long unsigned int getInstrAfter(char *progName, char *funcName, long unsigned int addr){
@@ -2755,8 +2756,8 @@ long unsigned int getInstrAfter(char *progName, char *funcName, long unsigned in
   if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << std::dec << endl;
   if(DEBUG) cout << endl;
 
-  SymtabAPI::Symtab *symTab;
-  string binaryPathStr(progName);
+  //SymtabAPI::Symtab *symTab;
+  //string binaryPathStr(progName);
   //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
   //if (isParsable == false) {
   //  fprintf(stderr, "File cannot be parsed: %s.\n", binaryPath);
@@ -2785,8 +2786,8 @@ long unsigned int getInstrAfter(char *progName, char *funcName, long unsigned in
     nextInsn = bb->end();
   //Instruction ifCond = getIfConditionAddr2(immedDom);
   if(DEBUG) cout << "[sa] instr after: " << nextInsn << endl;
-  delete stcs;
   delete co;
+  delete stcs;
   return nextInsn;
 }
 
@@ -2798,8 +2799,8 @@ void getImmedPred(char *progName, char *funcName, long unsigned int addr){
   if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << std::dec << endl;
   if(DEBUG) cout << endl;
 
-  SymtabAPI::Symtab *symTab;
-  string binaryPathStr(progName);
+  //SymtabAPI::Symtab *symTab;
+  //string binaryPathStr(progName);
   //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
   //if (isParsable == false) {
   //  fprintf(stderr, "File cannot be parsed: %s.\n", binaryPath);
@@ -2813,15 +2814,15 @@ void getImmedPred(char *progName, char *funcName, long unsigned int addr){
   Block *immedDom = getImmediateDominator2(func, addr);
   Instruction ifCond = getIfCondition2(immedDom);
   //TODO
-  delete stcs;
   delete co;
+  delete stcs;
 }
 
 void getCalleeToCallsites(char *progName) {
   if (DEBUG) cout << "[sa] ================================" << endl;
   if (DEBUG) cout << "[sa] prog: " << progName << endl;
 
-  SymtabAPI::Symtab *symTab;
+  //SymtabAPI::Symtab *symTab;
   //string binaryPathStr(progName);
   //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
   //if (isParsable == false) {
@@ -2891,8 +2892,8 @@ void getCalleeToCallsites(char *progName) {
 
   if(DEBUG) cout << "[sa] all results saved to \"functionToCallSites_result\"";
   if(DEBUG) cout << endl;
-  delete sts;
   delete co;
+  delete sts;
 }
 
 void getMemWrites(char *addrToFuncNames, char *progName) {
@@ -2901,8 +2902,8 @@ void getMemWrites(char *addrToFuncNames, char *progName) {
   if (DEBUG) cout << "[sa] addr to func: " << addrToFuncNames << endl;
   if (DEBUG) cout << "[sa] prog: " << progName << endl;
 
-  SymtabAPI::Symtab *symTab;
-  string binaryPathStr(progName);
+  //SymtabAPI::Symtab *symTab;
+  //string binaryPathStr(progName);
   //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
   //if (isParsable == false) {
   //  fprintf(stderr, "File cannot be parsed: %s.\n", binaryPath);
@@ -3004,8 +3005,8 @@ void getMemWrites(char *addrToFuncNames, char *progName) {
 
   if(DEBUG) cout << "[sa] all results saved to \"writesPerInsn_result\"";
   if(DEBUG) cout << endl;
-  delete stcs;
   delete co;
+  delete stcs;
 }
 
 //TODO: make it less hacky!
@@ -3106,7 +3107,7 @@ void getMemWritesToStaticAddresses(char *progName) {
   if (DEBUG) cout << "[sa] ================================" << endl;
   if (DEBUG) cout << "[sa] prog: " << progName << endl;
 
-  string binaryPathStr(progName);
+  //string binaryPathStr(progName);
   //SymtabAPI::Symtab *symTab;
   //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
   //if (isParsable == false) {
@@ -3193,8 +3194,8 @@ void getMemWritesToStaticAddresses(char *progName) {
   if(DEBUG) cout << endl;
 
   getNestedMemWritesToStaticAddresses(staticWriteInsns, progName);
-  delete sts;
   delete co;
+  delete sts;
 }
 
 void getRegsWritten(char *progName, char *funcName, long unsigned int addr) {
@@ -3205,8 +3206,8 @@ void getRegsWritten(char *progName, char *funcName, long unsigned int addr) {
   if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << std::dec << endl;
   if(DEBUG) cout << endl;
 
-  SymtabAPI::Symtab *symTab;
-  string binaryPathStr(progName);
+  //SymtabAPI::Symtab *symTab;
+  //string binaryPathStr(progName);
   //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
   //if (isParsable == false) {
   //  fprintf(stderr, "File cannot be parsed: %s.\n", binaryPath);
@@ -3231,8 +3232,8 @@ void getRegsWritten(char *progName, char *funcName, long unsigned int addr) {
     out << (*it)->getID().name();
   }
   out.close();
-  delete stcs;
   delete co;
+  delete stcs;
 }
 
 void backwardSlices(char *addrToRegNames, char *progName) {
@@ -3241,8 +3242,8 @@ void backwardSlices(char *addrToRegNames, char *progName) {
   if (INFO) cout << "[sa] addr to reg: " << addrToRegNames << endl; // FIXME: maybe change to insn to reg, addr is instruction addr
   if (INFO) cout << "[sa] prog: " << progName << endl;
 
-  SymtabAPI::Symtab *symTab;
-  string binaryPathStr(progName);
+  //SymtabAPI::Symtab *symTab;
+  //string binaryPathStr(progName);
   //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
   //if (isParsable == false) {
   //  fprintf(stderr, "File cannot be parsed: %s.\n", binaryPath);
@@ -3301,14 +3302,14 @@ void backwardSlices(char *addrToRegNames, char *progName) {
 
   if(DEBUG) cout << "[sa] all results saved to \"backwardSlices_result\"";
   if(DEBUG) cout << endl;
-  delete stcs;
   delete co;
+  delete stcs;
 }
 
 void backwardSlice(char *progName, char *funcName, long unsigned int addr, char *regName) {
 
-  SymtabAPI::Symtab *symTab;
-  string binaryPathStr(progName);
+  //SymtabAPI::Symtab *symTab;
+  //string binaryPathStr(progName);
   //bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
   //if (isParsable == false) {
   //  fprintf(stderr, "File cannot be parsed: %s.\n", binaryPath);
@@ -3332,8 +3333,8 @@ void backwardSlice(char *progName, char *funcName, long unsigned int addr, char 
   if(DEBUG) cout << "[sa] all results saved to \"backwardSlice_result\"";
   if(DEBUG) cout << endl;
 
-  delete stcs;
   delete co;
+  delete stcs;
 }
 
 }
