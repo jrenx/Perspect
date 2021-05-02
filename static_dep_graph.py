@@ -13,7 +13,7 @@ DEBUG_SIMPLIFY = False
 DEBUG_SLICE = False
 VERBOSE = False
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-TRACKS_DIRECT_CALLER = False
+TRACKS_DIRECT_CALLER = True
 
 class BasicBlock:
     def __init__(self, id, ends_in_branch, is_entry, lines):
