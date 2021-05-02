@@ -35,6 +35,7 @@ bool DEBUG = false;
 bool DEBUG_SLICE = false;
 bool DEBUG_BIT = false;
 bool DEBUG_STACK = false;
+boost::unordered_map<Address, boost::unordered_map<Address, Function *>> *stackCache;
 
 typedef enum {
   create,
@@ -1042,6 +1043,9 @@ boost::unordered_map<Address, Function *> checkAndGetStackWrites(Function *f, In
                                         MachRegister readReg, long readOff, int initHeight, int level) {
   cout << "[stack] Checking function: " << f->name() << " for "
        << readReg.name() << " + " << readOff << " @ " << readInsn.format() << endl;
+  if (stackCache->find(readAddr) != stackCache->end()) {
+    return (*stackCache)[readAddr];
+  }
   std::vector<Block *> list;
   boost::unordered_set<Block *> visited;
   getReversePostOrderListHelper(f->entry(), list, visited);
@@ -1057,6 +1061,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWrites(Function *f, In
   bool resultIntractable = false;
   boost::unordered_map<Address, Function *> ret = checkAndGetStackWritesHelper(&resultIntractable, f, list, insnToStackHeight, readAddrs, stackRead, level);
   if (resultIntractable) ret.clear();
+  stackCache->insert({readAddr, ret});
   return ret;
 }
 
@@ -3252,6 +3257,8 @@ void backwardSlices(char *addrToRegNames, char *progName) {
   SymtabCodeSource *stcs = new SymtabCodeSource((char *)progName);
   CodeObject *co = new CodeObject(stcs);
   co->parse();
+  boost::unordered_map<Address, boost::unordered_map<Address, Function *>> cache;
+  stackCache = &cache;
 
   cJSON *json_slices = cJSON_CreateArray();
 
@@ -3318,6 +3325,9 @@ void backwardSlice(char *progName, char *funcName, long unsigned int addr, char 
   SymtabCodeSource *stcs = new SymtabCodeSource((char *)progName);
   CodeObject *co = new CodeObject(stcs);
   co->parse();
+  boost::unordered_map<Address, boost::unordered_map<Address, Function *>> cache;
+  stackCache = &cache;
+
 
   cJSON *json_reads = cJSON_CreateArray();
   boost::unordered_set<Address> visited;
