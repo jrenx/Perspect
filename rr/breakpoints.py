@@ -153,18 +153,18 @@ class RunBreakCommands(gdb.Function):
                         print("[debug] GDB command caused error: " + cmd)
                         raise e
             if is_loop_insn != 1:
-                if not config['deref']:
-                    if cmd1 is not None and ((config['deref'] and cmd is not None) or not config['deref']):
-                        cmds = 'commands ' + str(break_num + 1)
-                        gdb.execute(cmds + "\n \n end")
-                        if config['step']:
-                            cmds = cmds + "\nsi"
-                        cmds = cmds + "\n" + cmd1
-                        if cmd2 is not None:
-                            cmds = cmds + "\n" + cmd2
-                        cmds = cmds + "\ncontinue\nend"
-                        print(cmds)
-                        gdb.execute(cmds)
+                #if not config['deref']:
+                #    if cmd1 is not None and ((config['deref'] and cmd is not None) or not config['deref']):
+                #        cmds = 'commands ' + str(break_num + 1)
+                #        gdb.execute(cmds + "\n \n end")
+                #        if config['step']:
+                #            cmds = cmds + "\nsi"
+                #        cmds = cmds + "\n" + cmd1
+                #        if cmd2 is not None:
+                #            cmds = cmds + "\n" + cmd2
+                #        cmds = cmds + "\ncontinue\nend"
+                #        print(cmds)
+                #        gdb.execute(cmds)
                 break
             else:
                 print("[debug] Is a loop instruction, re-running.")

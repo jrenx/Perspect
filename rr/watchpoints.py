@@ -16,26 +16,40 @@ class InitArgument(gdb.Function):
         breakpoints = config['breakpoints']
         watchpoints = config['watchpoints']
         rwatchpoints = config['rwatchpoints']
+        #print(watchpoints)
+        #print(rwatchpoints)
         i = 0
         for wp in watchpoints:
-            try:
-                gdb.execute("watch -l *(long *){}".format(wp))
-            except Exception as e:  # TODO is there a more specific error?
-                print(str(e))
-                print("Failed to set watchpoint at " + str(wp))
-            i += 1
-            if i >= 4:
-                break
+            print("watch " + str(wp))
+            for i in range(2):
+                if i >= 4:
+                    break
+                cmd = "watch *{}".format(wp)
+                try:
+                    print(cmd)
+                    gdb.execute(cmd)
+                    i += 1
+                    break
+                except Exception as e:  # TODO is there a more specific error?
+                    print(str(e))
+                    print("Failed to set watchpoint at " + str(wp))
+                    cmd = "watch -l *(long *){}".format(wp)
 
         for wp in rwatchpoints:
-            try:
-                gdb.execute("rwatch -l *(long *){}".format(wp))
-            except Exception as e:  # TODO is there a more specific error?
-                print(str(e))
-                print("Failed to set rwatchpoint at " + str(wp))
-            i += 1
-            if i >= 4:
-                break
+            print("rwatch " + str(wp))
+            for i in range(2):
+                if i >= 4:
+                    break
+                cmd = "rwatch *{}".format(wp)
+                try:
+                    print(cmd)
+                    gdb.execute(cmd)
+                    i += 1
+                    break
+                except Exception as e:  # TODO is there a more specific error?
+                    print(str(e))
+                    print("Failed to set rwatchpoint at " + str(wp))
+                    cmd = "rwatch -l *(long *){}".format(wp)
 
         for br in breakpoints:
             gdb.execute("br {}".format(br))

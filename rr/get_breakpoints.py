@@ -72,7 +72,7 @@ def parse_breakpoint(breakpoints, reg_points, deref):
         for i, line in enumerate(log):
             if "Error" in line:
                 print("[breakpoint][warn] Is this an error from GDB? " + line)
-            if re.search(r'Breakpoint \d+,', line):
+            if re.search(r'^Breakpoint \d+,', line):
                 br_num = int(line.split()[1].strip(',')) - 1
                 if br_num >= len(reg_points):
                     assert (br_num - len(reg_points)) < len(breakpoints), \
@@ -81,10 +81,11 @@ def parse_breakpoint(breakpoints, reg_points, deref):
                     if curr_br_num != -1:
                         rp = reg_points[curr_br_num]
                         if int(bp.strip('*'), 16) - int(rp.strip('*'), 16) <= 8:
-                            #print('[tmp][warn] reg point ' + rp + ' is immediately followed by breakpoint ' + bp)
+                            print('[warn] reg point ' + rp + ' is immediately followed by breakpoint ' + bp)
                             pending_point = (bp, None, None)
                         else:
-                            raise ValueError('reg point with no addr value at file index: ' + str(i) + ' ' + line)
+                            print('[warn] reg point with no addr value at file index: ' + str(i) + ' ' + line)
+                            #raise ValueError('reg point with no addr value at file index: ' + str(i) + ' ' + line)
                     else:
                         result.append((bp, None, None))
                         addr = None

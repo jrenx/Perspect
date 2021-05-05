@@ -1,13 +1,12 @@
 source rr/breakpoints.py
 
 set pagination off
-
-p $init_argument()
-
 set logging file rr/breakpoints.log
 set logging overwrite on
 set logging redirect on
 set logging on
+
+p $init_argument()
 
 while 1 == 1
     p $update_file()
