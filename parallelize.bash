@@ -21,10 +21,10 @@ do
   echo "source: "$src
   cd $src
   echo $PWD
-  python3 static_dep_graph.py >> out
+  #python3 static_dep_graph.py >> out
   mv rr_inputs $dst
   cd $dst
-  ./run $folder
+  ./run $folder $1
   python3 combine.py $folder $src $1
   python3 rename.py $i $folder
   cp $dst"rr_results.json" $src"/cache/rr_results_"$1".json" #the program name

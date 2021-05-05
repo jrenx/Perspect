@@ -10,7 +10,7 @@ def run():
     count = int(sys.argv[2])
     rr_result_cache = {}
     rr_result_file = os.path.join(curr_dir, 'cache', 'rr_results_' + str(num) +'.json')
-    prog = "909_ziptest_exe9_32"
+    prog = sys.argv[3]
     with open("../rr_inputs", "r") as f:
         lines = f.readlines()
         incre = int(len(lines)/count)
