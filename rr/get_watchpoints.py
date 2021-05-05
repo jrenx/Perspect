@@ -39,24 +39,31 @@ def parse_watchpoint(breakpoints, watchpoints, read_pc_str):
     watchpoint_count = len(watchpoints)
     curr_watch_num = -1
     watchpoints_not_seen = set(watchpoints)
+    seen_count = 0
     with open(os.path.join(rr_dir, 'watchpoints.log'), 'r') as log:
-        for line in log:
+        for i, line in enumerate(log):
             #if "Error" in line and "os.Error" not in line:
                 #print("[watchpoint][warn] Is this an error from GDB? " + line)
-            if re.search(r'Breakpoint \d+,', line):
+            if re.search(r'^Breakpoint \d+,', line):
                 if curr_watch_num != -1:
-                    raise ValueError('watchpoint with no source location')
+                    print('[warn] watchpoint with no source location @ ' + str(i))
+                    #raise ValueError('watchpoint with no source location')
                 br_num = int(line.split()[1].strip(',')) - 1
                 #print("[tmp] branch number: " + str(br_num) + " number of watch points " + str(len(watchpoints)))
                 result.append((breakpoints[br_num - len(watchpoints)], None, None))
                 curr_watch_num = -1
-            elif re.search(r'Hardware watchpoint \d+:', line):
+            elif re.search(r'^Hardware watchpoint \d+:', line):
+                seen_count += 1
                 if curr_watch_num != -1:
-                    raise ValueError('watchpoint with no source location')
+                    print('[warn] watchpoint with no source location @ ' + str(i))
+                    #raise ValueError('watchpoint with no source location')
                 curr_watch_num = int(line.split()[2].strip(':')) - 1
-            elif re.search(r'Hardware read watchpoint \d+:', line):
+            elif re.search(r'^Hardware read watchpoint \d+:', line):
+                seen_count += 1
                 if curr_watch_num != -1:
-                    raise ValueError('watchpoint with no source location')
+                    print('[warn] watchpoint with no source location @ ' + str(i))
+                    #raise ValueError('watchpoint with no source location')
+                print(line.split())
                 curr_watch_num = int(line.split()[3].strip(':')) - 1
             elif curr_watch_num != -1 and line.startswith('pc') and len(line.split()) == 4:
                 segs = line.split()
@@ -83,6 +90,7 @@ def parse_watchpoint(breakpoints, watchpoints, read_pc_str):
                             #print("Adding result")
                             del last_write[write_watch_num]
                 curr_watch_num = -1
+    print('[rr][warn] total number of watcpoints: ' + str(seen_count))
     print('[rr][warn] watchpoints not seen: ' + str(watchpoints_not_seen))
     if DEBUG:
         timestamp = str(time.time())
@@ -95,8 +103,9 @@ if __name__ == '__main__':
     #breakpoints = ['*0x409c84']
     breakpoints = []
     #watchpoints = ['0xf83fffbe68', '0xf83fffefd8']
-    watchpoints = ['0x7fdc12590d28']
-    run_watchpoint(breakpoints, watchpoints)
-    trace = parse_watchpoint(breakpoints, watchpoints)
+    #watchpoints = ['0x7fdc12590d28']
+    watchpoints = ['0x479ef8']
+    #run_watchpoint(breakpoints, watchpoints)
+    trace = parse_watchpoint(breakpoints, watchpoints, "*0x420e59")
     #print(trace[:10])
     #print(trace[90:100])
