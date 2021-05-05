@@ -1849,7 +1849,7 @@ std::string getReadStr(Instruction insn, bool *regFound) {
   std::set<Expression::Ptr> memReads;
   insn.getMemoryReadOperands(memReads);
   if (memReads.size() > 0) { // prioritize reads from memory
-    assert (memReads.size() == 1);
+    //assert (memReads.size() == 1);
     Expression::Ptr read = *memReads.begin();
     if (INFO) cout << "[sa] Memory read: " << read->format() << endl;
     readStr.append("memread|");
