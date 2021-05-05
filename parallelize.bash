@@ -16,7 +16,7 @@ cd $dst
 echo $PWD
 ./cp_script $folder
 for (( i=1; i<=1000; i++ ))
-do
+do  
   echo "Running at iteration "$i
   echo "source: "$src
   cd $src
