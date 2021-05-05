@@ -21,7 +21,7 @@ do
   echo "source: "$src
   cd $src
   echo $PWD
-  #python3 static_dep_graph.py >> out
+  python3 static_dep_graph.py >> out
   mv rr_inputs $dst
   cd $dst
   ./run $folder $1
