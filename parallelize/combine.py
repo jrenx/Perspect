@@ -18,9 +18,10 @@ def run():
             print(i)
             print(len(rr_result_cache))
     rr_src_result_file = os.path.join(src, "cache", "rr_results_" + prog + ".json")
-    with open(rr_src_result_file, "r") as f:
-        rr_result_cache.update(json.load(f))
-        print(len(rr_result_cache))
+    if os.path.exists(rr_src_result_file):
+        with open(rr_src_result_file, "r") as f:
+            rr_result_cache.update(json.load(f))
+            print(len(rr_result_cache))
    
     print("Persisting rr result file")
     with open(rr_result_file, 'w') as f:
