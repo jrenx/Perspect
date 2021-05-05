@@ -5,13 +5,13 @@ dst=$HOME"/"$folder"_rr_runs/"
 echo "source: "$src
 echo "destination: "$dst
 mkdir $dst
+cp $src"/parallelize/rr_util.py.record_rr_inputs" $src"/rr_util.py"
 cp -r $PWD $dst
 cp $src"/parallelize/combine.py" $dst
 cp $src"/parallelize/cp_script" $dst
 cp $src"/parallelize/rename.py" $dst
 cp $src"/parallelize/run" $dst
 cp $src"/parallelize/run-rr.py" $dst$folder
-cp $src"/parallelize/rr_util.py.record_rr_inputs" $src"/rr_util.py"
 cd $dst
 echo $PWD
 ./cp_script $folder
