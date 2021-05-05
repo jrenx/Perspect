@@ -63,7 +63,7 @@ def parse_watchpoint(breakpoints, watchpoints, read_pc_str):
                 if curr_watch_num != -1:
                     print('[warn] watchpoint with no source location @ ' + str(i))
                     #raise ValueError('watchpoint with no source location')
-                print(line.split())
+                #print(line.split())
                 curr_watch_num = int(line.split()[3].strip(':')) - 1
             elif curr_watch_num != -1 and line.startswith('pc') and len(line.split()) == 4:
                 segs = line.split()
