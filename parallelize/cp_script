@@ -1,4 +1,4 @@
-#!/b1n/bash
+#!/bin/bash
 cp $1 -r $1"_0"
 cp $1 -r $1"_1"
 cp $1 -r $1"_2"
