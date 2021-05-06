@@ -287,7 +287,7 @@ class DynamicDependence:
                 "trace_file": trace_path,
                 "static_graph_file": StaticDepGraph.result_file,
                 "start_insn": insn,
-                "start_insns" : self.start_insns,
+                "start_insns" : list(self.start_insns),
                 "code_to_insn" : self.code_to_insn,
                 "insns_with_regs" : list(self.insns_with_regs),
                 "insn_of_cf_nodes" : self.insn_of_cf_nodes,
