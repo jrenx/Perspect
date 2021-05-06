@@ -316,7 +316,7 @@ class DynamicDependence:
             b = time.time()
             print("Loading trace took: " + str(b-a), flush=True)
 
-            dynamic_graph = DynamicGraph(insn)
+            dynamic_graph = DynamicGraph(insn, self.start_insns)
             dynamic_graph.build_dynamic_graph(byte_seq, self.code_to_insn, self.insns_with_regs, self.insn_to_static_node,
                                               set(self.insn_of_cf_nodes), set(self.insn_of_df_nodes),
                                               set(self.insn_of_local_df_nodes), set(self.insn_of_remote_df_nodes),
@@ -360,8 +360,9 @@ class DynamicDependence:
 
 class DynamicGraph:
     # TODO: restructure DynamicGraph
-    def __init__(self, insn):
+    def __init__(self, insn, extra_insns=set()):
         self.start_insn = insn
+        self.start_insns = extra_insns
         self.insn_to_id = {self.start_insn: 1}
         self.dynamic_nodes = []
         self.target_dir = os.path.join(curr_dir, 'dynamicGraph')
