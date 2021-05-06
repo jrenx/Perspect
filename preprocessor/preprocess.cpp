@@ -300,8 +300,10 @@ void initData() {
   if (json_startInsns != NULL) {
     parseJsonList(json_startInsns, StartInsns);
     CodeOfStartInsns = new bool[CodeCount];
+    for (int i = 0; i < CodeCount; i++) CodeOfStartInsns[i] = false;
     for (auto it = StartInsns.begin(); it != StartInsns.end(); it++) {
       CodeOfStartInsns[InsnToCode[(*it)]] = true;
+      cout << InsnToCode[(*it)] << " is start code " << endl;
     }
   }
 
