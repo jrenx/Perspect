@@ -1156,6 +1156,11 @@ class StaticDepGraph:
 
     @staticmethod
     def build_dependencies(insn, func, prog, limit=100000, use_cache=True, additional_insn_to_funcs=[]):
+        targets = set()
+        targets.add(insn)
+        for [i, f] in additional_insn_to_funcs: #FIXME later redundancy
+            targets.add(i)
+
         start = time.time()
         key = str(insn) + "_" + str(func) + "_" + str(prog) + "_" + str(limit)
         result_file = os.path.join(curr_dir, 'cache', 'static_graph_result_' + key)
@@ -1219,7 +1224,7 @@ class StaticDepGraph:
             for func in StaticDepGraph.func_to_graph:
                 graph = StaticDepGraph.func_to_graph[func]
                 target_bbs = set()
-                graph.build_control_flow_dependencies(target_bbs, True)
+                graph.build_control_flow_dependencies(target_bbs, final=True, targets=targets)
                 graph.merge_data_flow_nodes(graph.nodes_in_df_slice, True)
                 if TRACKS_DIRECT_CALLER: graph.merge_callsite_nodes()
                 for n in graph.nodes_in_cf_slice:
@@ -1669,7 +1674,7 @@ class StaticDepGraph:
                 print(str(self.id_to_node[node_id]))
 
 
-    def build_control_flow_dependencies(self, target_bbs, final=False):
+    def build_control_flow_dependencies(self, target_bbs, final=False, targets=[]):
         self.cfg.target_bbs = self.cfg.target_bbs.union(target_bbs)
         self.cfg.slice(final)
 
@@ -1720,6 +1725,8 @@ class StaticDepGraph:
                     curr = worklist.popleft()
                     print(curr)
                     if len(curr.cf_succes) == 0 and len(curr.df_succes) == 0:
+                        if curr.insn in targets:
+                            continue
                         if curr in self.nodes_in_cf_slice:
                             self.nodes_in_cf_slice.remove(curr)
                             curr.print_node("Removing node because it has no successors: ")
