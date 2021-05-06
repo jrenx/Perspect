@@ -1158,8 +1158,8 @@ class StaticDepGraph:
     def build_dependencies(insn, func, prog, limit=100000, use_cache=True, additional_insn_to_funcs=[]):
         targets = set()
         targets.add(insn)
-        for [i, f] in additional_insn_to_funcs: #FIXME later redundancy
-            targets.add(i)
+        for i in additional_insn_to_funcs: #FIXME later redundancy
+            targets.add(i[0])
 
         start = time.time()
         key = str(insn) + "_" + str(func) + "_" + str(prog) + "_" + str(limit)
