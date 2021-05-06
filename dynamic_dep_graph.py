@@ -767,7 +767,7 @@ class DynamicGraph:
             index += 2
 
             ok = False
-            if insn == self.start_insn:
+            if insn == self.start_insn or insn in self.start_insns:
                 ok = True
             elif insn in cf_prede_insn_to_succe_node \
                     or insn in local_df_prede_insn_to_succe_node \
