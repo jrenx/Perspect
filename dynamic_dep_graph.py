@@ -136,7 +136,7 @@ class DynamicNode(JSONEncoder):
         return dn
 
 class DynamicDependence:
-    def __init__(self, insn, func, prog, arg, path):
+    def __init__(self, insn, func, prog, arg, path, starting_events=[]):
         self.prog = prog
         self.arg = arg
         self.path = path
@@ -155,6 +155,9 @@ class DynamicDependence:
         self.insn_to_reg_count2 = {}
         self.code_to_insn = {}
         self.insns_with_regs = set()
+        self.start_insns = set()
+        for p in starting_events:
+            self.start_insns.add(p[0])
 
     def get_dynamic_trace(self, prog, arg, path, trace_name=""):
         trace_name = trace_name + 'instruction_trace.out'
@@ -284,6 +287,7 @@ class DynamicDependence:
                 "trace_file": trace_path,
                 "static_graph_file": StaticDepGraph.result_file,
                 "start_insn": insn,
+                "start_insns" : self.start_insns,
                 "code_to_insn" : self.code_to_insn,
                 "insns_with_regs" : list(self.insns_with_regs),
                 "insn_of_cf_nodes" : self.insn_of_cf_nodes,
@@ -1058,6 +1062,16 @@ def print_path(curr_node, end_id):
     return False
 
 if __name__ == '__main__':
+    additional_insn_to_funcs = []
+    starting_event_file = os.path.join(curr_dir, 'starting_events')
+    if os.path.exists(starting_event_file):
+        with open(starting_event_file, 'r') as f:
+            lines = f.readlines()
+            for l in lines:
+                segs = l.strip().split()
+                additional_insn_to_funcs.append([int(segs[0], 16), segs[1]])
+            print(additional_insn_to_funcs)
+
     dd = DynamicDependence(0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
     dd.prepare_to_build_dynamic_dependencies(10000)
     dg = dd.build_dyanmic_dependencies(0x409418)

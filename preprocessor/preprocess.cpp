@@ -66,6 +66,9 @@ unordered_map<long, int> InsnToRegCount;
 int *CodeToRegCount;
 int *CodeToRegCount2;
 
+unordered_set<long> StartInsns;
+bool *CodeOfStartInsns;
+
 unordered_set<long> InsnsWithRegs;
 bool *CodesWithRegs;
 
@@ -293,6 +296,15 @@ void initData() {
   }
   StartInsnCode = InsnToCode[StartInsn];
 
+  cJSON *json_startInsns = cJSON_GetObjectItem(data, "start_insns");
+  if (json_startInsns != NULL) {
+    parseJsonList(json_startInsns, StartInsns);
+    CodeOfStartInsns = new bool[CodeCount];
+    for (auto it = StartInsns.begin(); it != StartInsns.end(); it++) {
+      CodeOfStartInsns[InsnToCode[(*it)]] = true;
+    }
+  }
+
   cJSON *json_insnsWithRegs = cJSON_GetObjectItem(data, "insns_with_regs");
   parseJsonList(json_insnsWithRegs, InsnsWithRegs);
   CodesWithRegs = new bool[CodeCount];
@@ -418,7 +430,7 @@ int main()
     std::memcpy(&code, buffer+i, sizeof(unsigned short));
 
     bool parse = false;
-    if (code == StartInsnCode || PendingCodes[code]) {
+    if (code == StartInsnCode || CodeOfStartInsns[code] || PendingCodes[code]) {
       parse = true;
     }
     if (CodesWithRegs[code]) {
