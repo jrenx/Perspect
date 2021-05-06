@@ -30,7 +30,7 @@ def run():
             try:
                 rr_backslice2(prog, a1, a2, a3, a4, a5, a6, a7, rr_result_cache)
             except Exception as e:
-                print("FAILED at " + str(i) + " " + line)
+                print("FAILED at " + str(i) + " " + line + " " + str(e))
                 continue
     
     print("Persisting rr result file")
