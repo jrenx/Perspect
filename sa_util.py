@@ -74,7 +74,6 @@ def parseLoadsOrStores(json_exprs):
         shift = "0"
         off = "0"
         off_reg = None
-        extra_off = "0"
 
         #if DEBUG: print("Parsing expression: " + expr)
         expr = expr.strip()
@@ -113,8 +112,7 @@ def parseLoadsOrStores(json_exprs):
 
             if reg is not None:
                 off_reg = ssegs[ri].strip()
-                if off != "0":
-                    extra_off = off
+                assert off == "0", str(expr)
                 off = ssegs[ni].strip()
             else:
                 reg = ssegs[ri].strip()
@@ -126,7 +124,7 @@ def parseLoadsOrStores(json_exprs):
         if DEBUG: print("Parsing result reg: " + expr_reg + \
                         " shift " + str(shift) + " off " + str(off) + " insn addr: " + str(insn_addr))
         #TODO, in the future use a map instead of a list...
-        data_points.append([insn_addr, reg, shift, off, off_reg, read_same_as_write, is_bit_var, type, func, extra_off])
+        data_points.append([insn_addr, reg, shift, off, off_reg, read_same_as_write, is_bit_var, type, func])
     return data_points
 
 #FIXME: call instructions insns and not addrs

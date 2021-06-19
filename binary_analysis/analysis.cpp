@@ -891,9 +891,7 @@ void getStackHeights(Function *f, std::vector<Block *> &list,
               cout << "[stack]     predecessor height @ " << std::hex << src->last() << std::dec
                    << " is " << insnToStackHeight[src->last()] << endl;
             }
-            //assert(!hasAnAnalyzedPrede || insnToStackHeight[src->last()] == prevHeight);
-            if (!(!hasAnAnalyzedPrede || insnToStackHeight[src->last()] == prevHeight))
-		    throw 1;
+            assert(!hasAnAnalyzedPrede || insnToStackHeight[src->last()] == prevHeight);
             prevHeight = insnToStackHeight[src->last()];
             hasAnAnalyzedPrede = true;
           }
@@ -1053,22 +1051,17 @@ boost::unordered_map<Address, Function *> checkAndGetStackWrites(Function *f, In
   getReversePostOrderListHelper(f->entry(), list, visited);
   std::reverse(list.begin(), list.end());
 
-  boost::unordered_map<Address, Function *> ret;
-  try {
-    boost::unordered_map<Address, long> insnToStackHeight;
-    getStackHeights(f, list, insnToStackHeight, initHeight);
+  boost::unordered_map<Address, long> insnToStackHeight;
+  getStackHeights(f, list, insnToStackHeight, initHeight);
 
-    boost::unordered_set<Address> readAddrs;
-    readAddrs.insert(readAddr);
+  boost::unordered_set<Address> readAddrs;
+  readAddrs.insert(readAddr);
 
-    StackStore stackRead(readReg, readOff, insnToStackHeight[readAddr]); // TODO rename StackStore to StackAccess...
-    bool resultIntractable = false;
-    boost::unordered_map<Address, Function *> ret = checkAndGetStackWritesHelper(&resultIntractable, f, list, insnToStackHeight, readAddrs, stackRead, level);
-    if (resultIntractable) ret.clear();
-    stackCache->insert({readAddr, ret});
-  } catch (int ex) {
-    cout << "An exception occurred. Exception Nr. " << ex << '\n';
-  }
+  StackStore stackRead(readReg, readOff, insnToStackHeight[readAddr]); // TODO rename StackStore to StackAccess...
+  bool resultIntractable = false;
+  boost::unordered_map<Address, Function *> ret = checkAndGetStackWritesHelper(&resultIntractable, f, list, insnToStackHeight, readAddrs, stackRead, level);
+  if (resultIntractable) ret.clear();
+  stackCache->insert({readAddr, ret});
   return ret;
 }
 
@@ -1080,10 +1073,7 @@ Function *getFunction(std::vector<Function *> &funcs) {
   } else if (funcs.size() == 0) {
     return NULL;
   }
-  //assert(funcs.size() == 1);
-  if (funcs.size() != 1) {
-    cout << "[sa][warn] has multiple options, just pick one!" << endl;
-  }
+  assert(funcs.size() == 1);
   return *funcs.begin();
 }
 
@@ -1963,28 +1953,24 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
           break;
         }
       }
-      //assert(targetRegionFound);
-      if (!targetRegionFound) {
-        cout << "[sa][warn] target region not found" << endl;
-      } else {
-        boost::unordered_map<Address, Function *> ret;
-        boost::unordered_set<Address> visitedAddrs;
-        handlePassByReference(targetRegion, addr, bb, func, ret, visitedAddrs);
-        cout << "[sa]  found " << ret.size() << " pass by reference defs " << endl;
-        for (auto rit = ret.begin(); rit != ret.end(); rit++) {
-          Function *newFunc = (*rit).second;
-          char *newFuncName = (char *) newFunc->name().c_str();
-          bool atEndPoint = strcmp(newFuncName, funcName) != 0;
-          //TODO, in the future just return the instructions as well...
-          Address newAddr = (*rit).first;
+      assert(targetRegionFound);
+      boost::unordered_map<Address, Function *> ret;
+      boost::unordered_set<Address> visitedAddrs;
+      handlePassByReference(targetRegion, addr, bb, func, ret, visitedAddrs);
+      cout << "[sa]  found " << ret.size() << " pass by reference defs " << endl;
+      for (auto rit = ret.begin(); rit != ret.end(); rit++) {
+        Function *newFunc = (*rit).second;
+        char *newFuncName = (char *) newFunc->name().c_str();
+        bool atEndPoint = strcmp(newFuncName, funcName) != 0;
+        //TODO, in the future just return the instructions as well...
+        Address newAddr = (*rit).first;
 
-          bool foundMemRead = false;
-          std::string newRegStr = getLoadRegName(newFunc, newAddr, &foundMemRead);
-          if (foundMemRead) atEndPoint = true;
-          char *newRegName = (char *) newRegStr.c_str();
-          // TODO, in the future even refactor the signature of the backwardSliceHelper function ...
-          backwardSliceHelper(stcs, co, json_reads, visited, progName, newFuncName, newAddr, newRegName, isKnownBitVar, atEndPoint);
-        }
+        bool foundMemRead = false;
+        std::string newRegStr = getLoadRegName(newFunc, newAddr, &foundMemRead);
+        if (foundMemRead) atEndPoint = true;
+        char *newRegName = (char *) newRegStr.c_str();
+        // TODO, in the future even refactor the signature of the backwardSliceHelper function ...
+        backwardSliceHelper(stcs, co, json_reads, visited, progName, newFuncName, newAddr, newRegName, isKnownBitVar, atEndPoint);
       }
       return;
     }
