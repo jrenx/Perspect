@@ -1,6 +1,8 @@
 #define USE_BPATCH
 #include "util.hpp"
 #include "dataflow_analysis.hpp"
+#include "stack_analysis.cpp"
+#include "bitvar_analysis.cpp"
 #include "static_df_analysis.hpp"
 #include <stdio.h>
 #include <iostream>
@@ -70,6 +72,31 @@ long unsigned int getImmedDom(char *progName, char *funcName, long unsigned int 
 
 }
 
+#ifdef USE_BPATCH
+
+void getAllPredes(char *progName, char *funcName, long unsigned int addr){
+  if(DEBUG) cout << "[sa] ================================" << endl;
+  if(DEBUG) cout << "[sa] Getting all control flow predecessors: " << endl;
+  if(DEBUG) cout << "[sa] prog: " << progName << endl;
+  if(DEBUG) cout << "[sa] func: " << funcName << endl;
+  if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr  <<  std::dec << endl;
+  if(DEBUG) cout << endl;
+  BPatch_image *appImage = getImage(progName);
+  vector<BPatch_basicBlock *> predes;
+  getAllControlFlowPredecessors(predes, appImage, funcName, addr);
+
+  std::ofstream out("getAllPredes_result");
+  cJSON *json_bbs = printBBsToJsonHelper(predes);
+
+  char *rendered = cJSON_Print(json_bbs);
+  cJSON_Delete(json_bbs);
+  out << rendered;
+  out.close();
+  if(DEBUG) cout << "[sa] all results saved to \"getAllPredes_result\"";
+  if(DEBUG) cout << endl;
+  return;
+}
+
 
 void getAllBBs(char *progName, char *funcName, long unsigned int addr){
   if(DEBUG) cout << "[sa] ================================" << endl;
@@ -128,19 +155,57 @@ void getAllBBs(char *progName, char *funcName, long unsigned int addr){
   return;
 }
 
-void getAllPredes(char *progName, char *funcName, long unsigned int addr){
+#else
+
+void getAllBBs(char *progName, char *funcName, long unsigned int addr){
   if(DEBUG) cout << "[sa] ================================" << endl;
   if(DEBUG) cout << "[sa] Getting all control flow predecessors: " << endl;
   if(DEBUG) cout << "[sa] prog: " << progName << endl;
   if(DEBUG) cout << "[sa] func: " << funcName << endl;
-  if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr  <<  std::dec << endl;
+  if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr <<  std::dec << endl;
   if(DEBUG) cout << endl;
-  BPatch_image *appImage = getImage(progName);
-  vector<BPatch_basicBlock *> predes;
-  getAllControlFlowPredecessors(predes, appImage, funcName, addr);
 
-  std::ofstream out("getAllPredes_result");
-  cJSON *json_bbs = printBBsToJsonHelper(predes);
+  SymtabAPI::Symtab *symTab;
+  string binaryPathStr(progName);
+  bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
+  if (isParsable == false) {
+    fprintf(stderr, "File cannot be parsed.\n");
+    return;
+  }
+  SymtabCodeSource *stcs = new SymtabCodeSource((char *)progName);
+  CodeObject *co = new CodeObject(stcs);
+  co->parse();
+
+  Function *f = getFunction2(stcs, co, funcName);
+
+  vector<Block *> bbs;
+  boost::unordered_map<Block *, vector<Block *>> backEdges;
+
+  for (auto bit = f->blocks().begin(); bit != f->blocks().end(); ++bit) {
+    Block *block = *bit;
+    if (addr >= block->start() && addr < block->end()) {
+      bbs.insert(bbs.begin(), block);
+    } else {
+      bbs.push_back(block);
+    }
+  }
+
+  vector<Loop *> loops;
+  f->getLoops(loops);
+  for (int i = 0; i < loops.size(); i++) {
+    Loop *loop = loops[i];
+    std::vector<ParseAPI::Edge*> edges;
+    loop->getBackEdges(edges);
+    for (auto it = edges.begin(); it != edges.end(); it++) {
+      ParseAPI::Edge *edge = *it;
+      Block *source = edge->src();
+      Block *target = edge->trg();
+      backEdges[source].push_back(target);
+    }
+  }
+
+  std::ofstream out("getAllBBs_result");
+  cJSON *json_bbs = printBBsToJsonHelper(bbs, backEdges, f, symTab);
 
   char *rendered = cJSON_Print(json_bbs);
   cJSON_Delete(json_bbs);
@@ -148,8 +213,12 @@ void getAllPredes(char *progName, char *funcName, long unsigned int addr){
   out.close();
   if(DEBUG) cout << "[sa] all results saved to \"getAllPredes_result\"";
   if(DEBUG) cout << endl;
+  delete co;
+  delete stcs;
   return;
 }
+
+#endif
 
 long unsigned int getFirstInstrInBB(char *progName, char *funcName, long unsigned int addr){
   if(DEBUG) cout << "[sa] ================================" << endl;
@@ -811,88 +880,4 @@ void backwardSlice(char *progName, char *funcName, long unsigned int addr, char 
 int main() {
   char *progName = "909_ziptest_exe9";
   getMemWritesToStaticAddresses(progName);
-
-  /*
-char *progName = "909_ziptest_exe9";
-BPatch_image *appImage = getImage(progName);
-char *funcName = "runtime.morestack01";
-Function *func = getFunction2(progName, funcName);
-cout << func->name() << endl;
-BPatch_function *f = getFunction(appImage, funcName);
-cout << f->getName() << endl;
-
-char *progName = "909_ziptest_exe9";
-char *funcName = "runtime.findnull";
-Function *f = getFunction2(progName, funcName);
-std::vector<Block *> list;
-boost::unordered_set<Block *> visited;
-getReversePostOrderListHelper(f->entry(), list, visited);
-std::reverse(list.begin(), list.end());
-boost::unordered_map<Address, long> insnToStackHeight;
-int initHeight = 0;
-getStackHeights(f, list, insnToStackHeight, initHeight);
-*/
-  //getCalleeToCallsites(progName);
-  //getMemWritesToStaticAddresses(progName);
-  /*
-  // Set up information about the program to be instrumented 
-  char *progName = "909_ziptest_exe9";
-  //const char *funcName = "scanblock";
-  //char *funcName = "sweep";
-  char *funcName = "runtime.memmove";
-  //backwardSlices("[{\"reg_name\": \"\", \"addr\": \"4234200\"}, {\"reg_name\": \"\", \"addr\": \"4234203\"}]",
-  //    progName, funcName);
-  // /home/anygroup/go-repro/909-go/src/pkg/runtime/mgc0.c:467
-  //long unsigned int addr = 0x409daa;
-  long unsigned int addr = 0x408aff;
-  //long unsigned int addr = 0x408b02;
-  Function *func = getFunction2(progName, funcName);
-  Block *bb = getBasicBlock2(func, addr);
-  Instruction insn = bb->getInsn(addr);
-  cout << insn.getOperation().format() << endl;
-  //cout << insn.getOperation().getID() << endl;
-  //cout << (insn.getOperation().getID()  == 329) << endl;
-  cout << (insn.getOperation().getPrefixID() == prefix_rep) << endl;
-  cout << (insn.getOperation().getPrefixID() == prefix_repnz) << endl;
-  //getAllBBs(progName, funcName, addr);
-  */
-
-  //BPatch_image *appImage = getImage(progName);
-  //printAddrToLineMappings(appImage, funcName);
-  //BPatch_basicBlock *immedDom = getImmediateDominator(appImage, funcName, 0x40940c);
-  //Instruction ifCond = getIfCondition(immedDom);
-  /***************************************************************/
-  //char *regName = "";
-  //
-  //boost::unordered_set<BPatch_basicBlock *> predes;
-  //getAllControlFlowPredecessors(predes, appImage, funcName, addr);
-  //
-  //getAllPredes(progName, funcName, addr);
-  //backwardSlice(progName, funcName, 0x409c55, regName);
-  //getRegsWritten(progName, funcName, 0x409c55);
-  //Function *func = getFunction2(progName, funcName);
-  //Block *immedDom = getImmediateDominator2(func, 0x40940c);
-  //Instruction ifCond = getIfCondition2(immedDom);
-  //GraphPtr slice = buildBackwardSlice(func, immedDom, ifCond, NULL);
-
-  /*
-  boost::unordered_set<Assignment::Ptr> bitVariables;
-  locateBitVariables(slice, bitVariables);
-
-  // get all the leaf nodes.
-  NodeIterator begin, end;
-  slice->entryNodes(begin, end);
-  //slice->allNodes(begin, end);
-  for(NodeIterator it = begin; it != end; ++it) {
-    SliceNode::Ptr aNode = boost::static_pointer_cast<SliceNode>(*it);
-    Assignment::Ptr assign = aNode->assign();
-    //cout << assign->format() << " " << assign->insn().format() << " " << assign->insn().getOperation().getID() << " " << endl;
-    if (assign->insn().readsMemory()) {
-      cout << assign->format() << " ";
-      cout << assign->insn().format() << " ";
-      cout << (bitVariables.find(assign) != bitVariables.end())  << " ";
-      cout << endl;
-    }
-  }
-  */
 }

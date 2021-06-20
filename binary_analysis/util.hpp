@@ -1,3 +1,4 @@
+#define USE_BPATCH
 #ifndef UTIL_HPP
 #define UTIL_HPP
 
@@ -45,6 +46,7 @@ bool DEBUG_SLICE = false;
 bool DEBUG_BIT = false;
 bool DEBUG_STACK = false;
 
+#ifdef USE_BPATCH
 typedef enum {
   create,
   attach,
@@ -63,16 +65,14 @@ void getAllControlFlowPredecessors(vector<BPatch_basicBlock *> &predecessors,
                                    BPatch_image *appImage, const char *funcName, long unsigned int addr);
 
 BPatch_basicBlock *getImmediateDominator(BPatch_image *appImage, const char *funcName, long unsigned int addr);
-Block *getImmediateDominator2(Function *f, long unsigned int addr);
-
 BPatch_function *getFunction(BPatch_image *appImage, const char *funcName);
-//Function *getFunction2(const char *binaryPath, const char *funcName);
-Function *getFunction2(SymtabCodeSource *stcs, CodeObject *co, const char *funcName);
-
 Instruction getIfCondition(BPatch_basicBlock *block);
-Instruction getIfCondition2(Block *b);
-
 BPatch_basicBlock *getBasicBlock(BPatch_flowGraph *fg, long unsigned int addr);
+#endif
+
+Block *getImmediateDominator2(Function *f, long unsigned int addr);
+Function *getFunction2(SymtabCodeSource *stcs, CodeObject *co, const char *funcName);
+Instruction getIfCondition2(Block *b);
 Block *getBasicBlock2(Function *f, long unsigned int addr);
 Block *getBasicBlockContainingInsnBeforeAddr(Function *f, long unsigned int addr);
 
@@ -84,7 +84,12 @@ void getRegAndOff(Expression::Ptr exp, MachRegister *machReg, long *off);
 void getRegAndOff(Expression::Ptr exp, std::vector<MachRegister> &machRegs, long *off);
 
 cJSON * printBBIdsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs);
+#ifdef USE_BPATCH
 cJSON *printBBsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs,
                             boost::unordered_map<BPatch_basicBlock *, vector<BPatch_basicBlock *>> *backEdges = NULL);
-
+#else
+cJSON *printBBsToJsonHelper(vector<Block *> &bbs,
+                             boost::unordered_map<Block *, vector<Block *>> &backEdges,
+                              Function *f, SymtabAPI::Symtab *symTab)
+#endif
 #endif
