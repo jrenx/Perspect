@@ -4,9 +4,9 @@ folder=${PWD##*/}
 dst=$HOME"/"$folder"_rr_runs/"
 echo "source: "$src
 echo "destination: "$dst
-mkdir $dst
+mkdir -p $dst
 cp $src"/parallelize/rr_util.py.record_rr_inputs" $src"/rr_util.py"
-cp -r $PWD $dst
+rsync -a --exclude=".*" $src $dst
 cp $src"/parallelize/combine.py" $dst
 cp $src"/parallelize/cp_script" $dst
 cp $src"/parallelize/rename.py" $dst
