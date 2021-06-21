@@ -100,7 +100,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWrites(Function *f, In
   StackStore stackRead(readReg, readOff, insnToStackHeight[readAddr]); // TODO rename StackStore to StackAccess...
   bool resultIntractable = false;
   boost::unordered_map<Address, Function *> ret = checkAndGetStackWritesHelper(&resultIntractable, f, list, insnToStackHeight, readAddrs, stackRead, level);
-  if (resultIntractable) ret.clear();
+  //if (resultIntractable) ret.clear();
   stackCache->insert({readAddr, ret});
   return ret;
 }

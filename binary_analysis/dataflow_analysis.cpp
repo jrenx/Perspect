@@ -162,7 +162,7 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
     cout << assign->format() << " " << assign->insn().format() << " " << assign->insn().getOperation().getID() << " " << endl;
     //if (!atEndPoint && !assign->insn().readsMemory()) continue;
 
-    if(DEBUG) cout << endl;
+    if(INFO) cout << endl;
     if(INFO) cout << "[sa] In result slice: " << endl;
     if(INFO) cout << "[sa]" << assign->format() << " ";
     if(INFO) cout << "insn: " << assign->insn().format() << " ";

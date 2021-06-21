@@ -65,7 +65,7 @@ class TestSA(unittest.TestCase):
         print(ret1)
 
 class TestStaticSlicing(unittest.TestCase):
-    def test_sa_slices0(self):
+    def test_basic(self):
         slice_starts = []
         slice_starts.append(['', 0x409c84, 'sweep', False])
         # the bits variable @ test for bit special mgc0.c:472
@@ -84,7 +84,7 @@ class TestStaticSlicing(unittest.TestCase):
         # first boolean: read_same_as_write | second boolean: is_bit_var
         self.assertEqual(results[0][2][0], [0x409c24, 'RBP', 0, 0, None, False, True, 'memread', 'sweep'])
 
-    def test_sa_slices1(self):
+    def test_bit_var(self):
         slice_starts = []
         slice_starts.append(['rax', 0x409d28, 'sweep', True]) # mark unallocated
         slice_starts.append(['rax', 0x409c6a, 'sweep', True]) # unmark
@@ -140,12 +140,15 @@ class TestStaticSlicing(unittest.TestCase):
         self.assertEqual(len(results[7][2]), 1)
         self.assertEqual(results[7][2][0], [0x40aba3, 'RBP', 0, 0, None, True, True, 'memread', 'runtime.setblockspecial'])
 
-    def test_sa_slices3(self):
+    def test_stack_and_pass_by_reference(self):
         slice_starts = []
         slice_starts.append(['', 0x43c46c, 'unicode.init', False])
-        # slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
+        self.assertEqual(results[0][0], '')
+        self.assertEqual(results[0][1], 0x43c46c)
+        self.assertEqual(len(results[0][2]), 1)
+        self.assertEqual(results[0][2][0], [0x407bb2, 'RAX', 0, 0, None, False, False, 'regread', 'runtime.new'])
 
     def test_sa_slices3_1(self):
         slice_starts = []
