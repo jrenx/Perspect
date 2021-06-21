@@ -537,4 +537,32 @@ cJSON *printBBsToJsonHelper(vector<Block *> &bbs,
   return json_bbs;
 }
 
+// TODO, is this the right name?
+void getReversePostOrderListHelper(Node::Ptr node,
+                                   std::vector<Node::Ptr> *list,
+                                   boost::unordered_set<Node::Ptr> &visited) {
+  if (visited.find(node) != visited.end()) {
+    return;
+  }
+  visited.insert(node);
+  NodeIterator iBegin, iEnd;
+  node->ins(iBegin, iEnd);
+  // Checking through successors.
+  for (NodeIterator it = iBegin; it != iEnd; ++it) {
+    SliceNode::Ptr iNode = boost::static_pointer_cast<SliceNode>(*it);
+    getReversePostOrderListHelper(iNode, list, visited);
+  }
+  list->push_back(node);
+}
+
+void getReversePostOrderList(GraphPtr slice,
+                             std::vector<Node::Ptr> *list) {
+  boost::unordered_set<Node::Ptr> visited;
+  NodeIterator begin, end;
+  slice->exitNodes(begin, end);//Exit nods are the root nodes.
+  for (NodeIterator it = begin; it != end; ++it) {
+    getReversePostOrderListHelper(*it, list, visited);
+  }
+}
+
 #endif

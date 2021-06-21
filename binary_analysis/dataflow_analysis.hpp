@@ -157,8 +157,6 @@ void handlePassByReference(AbsRegion targetReg, Address startAddr,
                            boost::unordered_map<Address, Function*> &ret,
                            boost::unordered_set<Address> &visitedAddrs);
 
-void getReversePostOrderListHelper(Node::Ptr node, std::vector<Node::Ptr> *list, boost::unordered_set<Node::Ptr> &visited);
-void getReversePostOrderList(GraphPtr slice, std::vector<Node::Ptr> *list);
 std::string findMatchingOpExprStr(Assignment::Ptr assign, AbsRegion region);
 
 std::string getReadStr(Instruction insn, bool *regFound);

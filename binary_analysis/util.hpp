@@ -90,4 +90,8 @@ cJSON *printBBsToJsonHelper(vector<Block *> &bbs,
                              boost::unordered_map<Block *, vector<Block *>> &backEdges,
                               Function *f, SymtabAPI::Symtab *symTab)
 #endif
+
+void getReversePostOrderListHelper(Node::Ptr node, std::vector<Node::Ptr> *list, boost::unordered_set<Node::Ptr> &visited);
+void getReversePostOrderList(GraphPtr slice, std::vector<Node::Ptr> *list);
+
 #endif
