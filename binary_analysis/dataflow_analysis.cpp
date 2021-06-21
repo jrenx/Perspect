@@ -86,45 +86,49 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
 
   bool madeProgress = true;
   GraphPtr slice = buildBackwardSlice(func, bb, insn, addr, regName, &madeProgress, atEndPoint);
-
-  MachRegister stackReadReg; long stackReadOff;
-  bool inputInsnReadsFromStack = readsFromStack(insn,addr, &stackReadReg, &stackReadOff);
-  cout << "[sa] input instruction reads from stack? " << inputInsnReadsFromStack << endl;
-  if (!inputInsnReadsFromStack) {
-    if (strcmp(regName, "") != 0 && !madeProgress && !atEndPoint) {
-      AssignmentConverter ac(true, false);
-      vector<Assignment::Ptr> assignments;
-      ac.convert(insn, addr, func, bb, assignments);
-      AbsRegion targetRegion;
-      bool targetRegionFound = false;
-      Assignment::Ptr assign = assignments[0];
-      for (auto rit = assign->inputs().begin(); rit != assign->inputs().end(); rit++) {
-        if ((*rit).format().compare(regName) == 0) {
-          targetRegion = *rit;
-          targetRegionFound = true;
-          break;
+  bool inputInsnReadsFromStack = false;
+  if (!isKnownBitVar) {
+    MachRegister stackReadReg;
+    long stackReadOff;
+    inputInsnReadsFromStack = readsFromStack(insn, addr, &stackReadReg, &stackReadOff);
+    cout << "[sa] input instruction reads from stack? " << inputInsnReadsFromStack << endl;
+    if (!inputInsnReadsFromStack) {
+      if (strcmp(regName, "") != 0 && !madeProgress && !atEndPoint) {
+        AssignmentConverter ac(true, false);
+        vector <Assignment::Ptr> assignments;
+        ac.convert(insn, addr, func, bb, assignments);
+        AbsRegion targetRegion;
+        bool targetRegionFound = false;
+        Assignment::Ptr assign = assignments[0];
+        for (auto rit = assign->inputs().begin(); rit != assign->inputs().end(); rit++) {
+          if ((*rit).format().compare(regName) == 0) {
+            targetRegion = *rit;
+            targetRegionFound = true;
+            break;
+          }
         }
-      }
-      assert(targetRegionFound);
-      boost::unordered_map<Address, Function *> ret;
-      boost::unordered_set<Address> visitedAddrs;
-      handlePassByReference(targetRegion, addr, bb, func, ret, visitedAddrs);
-      cout << "[sa]  found " << ret.size() << " pass by reference defs " << endl;
-      for (auto rit = ret.begin(); rit != ret.end(); rit++) {
-        Function *newFunc = (*rit).second;
-        char *newFuncName = (char *) newFunc->name().c_str();
-        bool atEndPoint = strcmp(newFuncName, funcName) != 0;
-        //TODO, in the future just return the instructions as well...
-        Address newAddr = (*rit).first;
+        assert(targetRegionFound);
+        boost::unordered_map < Address, Function * > ret;
+        boost::unordered_set <Address> visitedAddrs;
+        handlePassByReference(targetRegion, addr, bb, func, ret, visitedAddrs);
+        cout << "[sa]  found " << ret.size() << " pass by reference defs " << endl;
+        for (auto rit = ret.begin(); rit != ret.end(); rit++) {
+          Function *newFunc = (*rit).second;
+          char *newFuncName = (char *) newFunc->name().c_str();
+          bool atEndPoint = strcmp(newFuncName, funcName) != 0;
+          //TODO, in the future just return the instructions as well...
+          Address newAddr = (*rit).first;
 
-        bool foundMemRead = false;
-        std::string newRegStr = getLoadRegName(newFunc, newAddr, &foundMemRead);
-        if (foundMemRead) atEndPoint = true;
-        char *newRegName = (char *) newRegStr.c_str();
-        // TODO, in the future even refactor the signature of the backwardSliceHelper function ...
-        backwardSliceHelper(stcs, co, json_reads, visited, progName, newFuncName, newAddr, newRegName, isKnownBitVar, atEndPoint);
+          bool foundMemRead = false;
+          std::string newRegStr = getLoadRegName(newFunc, newAddr, &foundMemRead);
+          if (foundMemRead) atEndPoint = true;
+          char *newRegName = (char *) newRegStr.c_str();
+          // TODO, in the future even refactor the signature of the backwardSliceHelper function ...
+          backwardSliceHelper(stcs, co, json_reads, visited, progName, newFuncName, newAddr, newRegName, isKnownBitVar,
+                              atEndPoint);
+        }
+        return;
       }
-      return;
     }
   }
 
@@ -137,8 +141,9 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
   } else {
     std::set<Expression::Ptr> memWrites;
     insn.getMemoryWriteOperands(memWrites);
-    if (memWrites.size() > 1) {
-      cout << "[sa][warn] Instruction has more than one memory write? " << insn.format() << endl;
+    if (memWrites.size() != 1) {
+      cout << "[sa][warn] Instruction does not have exactly one memory write? " << insn.format()
+              << " number of writes " << memWrites.size() << endl;
     }
     assert(memWrites.size() == 1);
     analyzeKnownBitVariables(slice, *memWrites.begin(), bitVariables, bitVariablesToIgnore, bitOperands,
@@ -215,9 +220,12 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
 
     if (INFO) cout << "[sa] checking result instruction: " << assign->insn().format() << endl;
 
-    bool regFound = false;
-    std::string readStr = getReadStr(assign->insn(), &regFound);
-
+    bool memReadFound = false, regFound = false;
+    std::string readStr = getReadStr(assign->insn(), &memReadFound, &regFound);
+    if (!memReadFound && !regFound) {
+      if (INFO) cout << "[sa] result is a constant load, ignore" << endl;
+      continue;
+    }
     if (INFO) cout << "[sa] => Instruction addr: " << std::hex << assign->addr() << std::dec << endl;
     if (INFO) cout << "[sa] => Read expr: " << readStr << endl;
     if (INFO) cout << "[sa] => Read same as write: " << (isKnownBitVar ? 1 : 0) << endl; // TODO maybe fix this
@@ -475,7 +483,7 @@ std::string findMatchingOpExprStr(Assignment::Ptr assign, AbsRegion region) {
   }
 }
 
-std::string getReadStr(Instruction insn, bool *regFound) {
+std::string getReadStr(Instruction insn, bool *memReadFound, bool *regFound) {
   // TODO, refactor this function!
   Expression::Ptr read;
   std::string readStr;
@@ -483,12 +491,14 @@ std::string getReadStr(Instruction insn, bool *regFound) {
   std::set<Expression::Ptr> memReads;
   insn.getMemoryReadOperands(memReads);
   if (memReads.size() > 0) { // prioritize reads from memory
+    *memReadFound = true;
     assert (memReads.size() == 1);
     Expression::Ptr read = *memReads.begin();
     if (INFO) cout << "[sa] Memory read: " << read->format() << endl;
     readStr.append("memread|");
     readStr.append(read->format());
   } else { // then check reads from register
+    *memReadFound = false;
     int readCount = 0;
     std::vector<Operand> ops;
     insn.getOperands(ops);
@@ -522,8 +532,8 @@ std::string inline getLoadRegName(Function *newFunc, Address newAddr, bool *foun
   return getLoadRegName(newInsn, foundMemRead);
 }
 std::string inline getLoadRegName(Instruction newInsn, bool *foundMemRead) {
-  bool regFound = false;
-  std::string readStr = getReadStr(newInsn, &regFound);
+  bool memReadFound = false, regFound = false;
+  std::string readStr = getReadStr(newInsn, &memReadFound, &regFound);
   std::string delim = "|";
   int delimIndex = readStr.find(delim);
   std::string type = readStr.substr(0, delimIndex);
