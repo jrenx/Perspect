@@ -2,6 +2,7 @@
 #define DATAFLOW_ANALYSIS_HPP
 
 #include "util.hpp"
+#include "bitvar_analysis.hpp"
 
 #include <stdio.h>
 #include <iostream>

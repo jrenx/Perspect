@@ -1,7 +1,12 @@
 #ifndef STATIC_DF_ANALYSIS_HPP
 #define STATIC_DF_ANALYSIS_HPP
 
+#include <vector>
 #include <boost/unordered_set.hpp>
+#include <boost/unordered_map.hpp>
+#include <boost/heap/priority_queue.hpp>
+#include <boost/algorithm/string.hpp>
+
 #include "Instruction.h"
 #include "InstructionDecoder.h"
 #include "CodeObject.h"

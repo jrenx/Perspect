@@ -1,4 +1,5 @@
 #include "stack_analysis.hpp"
+#include "bitvar_analysis.hpp"
 
 #include <stdio.h>
 #include <iostream>
@@ -7,6 +8,7 @@
 #include <vector>
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/heap/priority_queue.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include "Instruction.h"
@@ -15,6 +17,13 @@
 #include "CFG.h"
 #include "Graph.h"
 #include "slicing.h"
+
+using namespace std;
+using namespace boost;
+using namespace Dyninst;
+using namespace InstructionAPI;
+using namespace ParseAPI;
+using namespace DataflowAPI;
 
 namespace boost {
   class StackStore {

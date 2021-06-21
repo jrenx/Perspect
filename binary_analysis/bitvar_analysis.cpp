@@ -1,4 +1,6 @@
 #include "bitvar_analysis.hpp"
+#include "util.hpp"
+
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
@@ -6,6 +8,7 @@
 #include <vector>
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/heap/priority_queue.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include "Instruction.h"
@@ -15,13 +18,19 @@
 #include "Graph.h"
 #include "slicing.h"
 
+using namespace std;
+using namespace boost;
+using namespace Dyninst;
+using namespace InstructionAPI;
+using namespace ParseAPI;
+using namespace DataflowAPI;
+
 void analyzeKnownBitVariables(GraphPtr slice,
                               Expression::Ptr memWrite,
                               boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
                               boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
                               boost::unordered_map<Assignment::Ptr, AbsRegion> &bitOperands,
-                              boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations
-) {
+                              boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations) {
 
   // TODO: to implement this properly:
   /*
@@ -131,8 +140,7 @@ void locateBitVariables(GraphPtr slice,
                         boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
                         boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
                         boost::unordered_map<Assignment::Ptr, AbsRegion> &bitOperands,
-                        boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations
-) {
+                        boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations) {
 
   // Enqueue all the root nodes of the dataflow graph.
   // Need to do reverse post order.

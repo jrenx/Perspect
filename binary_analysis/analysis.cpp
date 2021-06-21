@@ -3,6 +3,7 @@
 #include "stack_analysis.hpp"
 #include "bitvar_analysis.hpp"
 #include "static_df_analysis.hpp"
+
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
@@ -38,6 +39,7 @@ using namespace Dyninst;
 using namespace InstructionAPI;
 using namespace ParseAPI;
 using namespace DataflowAPI;
+
 boost::unordered_map<Address, boost::unordered_map<Address, Function *>> *stackCache;
 
 extern "C" {

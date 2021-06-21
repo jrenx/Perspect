@@ -10,8 +10,8 @@ CC=gcc
 #	$(CXX) analysis.o cJSON.o -L$(DYNINST_LIB) -ldyninstAPI -lboost_system -ltbbmalloc_proxy -linstructionAPI -lparseAPI -lsymtabAPI -lcommon -lstdc++ -lm\
 #	       	-o analysis -std=c++11
 
-analysis: analysis.o util.o dataflow_analysis.o static_df_analysis.o stack_analysis.o cJSON.o
-	$(CXX) analysis.o util.o dataflow_analysis.o static_df_analysis.o stack_analysis.o cJSON.o -L$(DYNINST_LIB) -ldyninstAPI -lboost_system -ltbbmalloc_proxy -linstructionAPI -lparseAPI -lsymtabAPI -lcommon -lstdc++ -lm\
+analysis: analysis.o util.o dataflow_analysis.o static_df_analysis.o stack_analysis.o bitvar_analysis.o cJSON.o
+	$(CXX) analysis.o util.o dataflow_analysis.o static_df_analysis.o stack_analysis.o bitvar_analysis.o cJSON.o -L$(DYNINST_LIB) -ldyninstAPI -lboost_system -ltbbmalloc_proxy -linstructionAPI -lparseAPI -lsymtabAPI -lcommon -lstdc++ -lm\
 	      -shared -Wl,-soname,static_analysis.so -o static_analysis.so -std=c++11
 
 analysis.o: analysis.cpp
@@ -28,6 +28,9 @@ static_df_analysis.o: static_df_analysis.cpp
 
 stack_analysis.o: stack_analysis.cpp
 	$(CXX) -g -c -fPIC $(CFLAGS) -I$(DYNINST_INCLUDE) stack_analysis.cpp -std=c++11
+
+bitvar_analysis.o: bitvar_analysis.cpp
+	$(CXX) -g -c -fPIC $(CFLAGS) -I$(DYNINST_INCLUDE) bitvar_analysis.cpp -std=c++11
 
 cJSON.o: cJSON.c
 	$(CC) -g -c -fPIC $(CFLAGS) cJSON.c #-std=c++11
