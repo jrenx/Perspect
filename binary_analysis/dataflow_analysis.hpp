@@ -1,3 +1,6 @@
+#ifndef DATAFLOW_ANALYSIS_HPP
+#define DATAFLOW_ANALYSIS_HPP
+
 #include "util.hpp"
 
 #include <stdio.h>
@@ -26,23 +29,11 @@ using namespace InstructionAPI;
 using namespace ParseAPI;
 using namespace DataflowAPI;
 
-boost::unordered_map<std::string, std::string> regMap =
-    {{"al"  ,"rax"}, {"ah"  ,"rax"}, {"ax"  ,"rax"}, {"eax","rax"},
-     {"bl"  ,"rbx"}, {"bh"  ,"rbx"}, {"bx"  ,"rbx"}, {"ebx","rbx"},
-     {"cl"  ,"rcx"}, {"ch"  ,"rcx"}, {"cx"  ,"rcx"}, {"ecx","rcx"},
-     {"dl"  ,"rdx"}, {"dh"  ,"rdx"}, {"dx"  ,"rdx"}, {"edx","rdx"},
-     {"sil" ,"rsi"}, {"si"  ,"rsi"}, {"esi" ,"rsi"},
-     {"dil" ,"rdi"}, {"di"  ,"rdi"}, {"edi" ,"rdi"},
-     {"bpl" ,"rbp"}, {"bp"  ,"rbp"}, {"ebp" ,"rbp"},
-     {"spl" ,"rsp"}, {"sp"  ,"rsp"}, {"esp" ,"rsp"},
-     {"r8b" , "r8"}, {"r8w" , "r8"}, {"r8d" , "r8"},
-     {"r9b" , "r9"}, {"r9w" , "r9"}, {"r9d" , "r9"},
-     {"r10b","r10"}, {"r10w","r10"}, {"r10d","r10"},
-     {"r11b","r11"}, {"r11w","r11"}, {"r11d","r11"},
-     {"r12b","r12"}, {"r12w","r12"}, {"r12d","r12"},
-     {"r13b","r13"}, {"r13w","r13"}, {"r13d","r13"},
-     {"r14b","r14"}, {"r14w","r14"}, {"r14d","r14"},
-     {"r15b","r15"}, {"r15w","r15"}, {"r15d","r15"}};
+extern bool INFO;
+extern bool DEBUG;
+extern bool DEBUG_SLICE;
+extern bool DEBUG_BIT;
+extern bool DEBUG_STACK;
 
 class CustomSlicer : public Slicer::Predicates {
 public:
@@ -172,3 +163,5 @@ std::string findMatchingOpExprStr(Assignment::Ptr assign, AbsRegion region);
 std::string getReadStr(Instruction insn, bool *regFound);
 std::string inline getLoadRegName(Function *newFunc, Address newAddr, bool *foundMemRead);
 std::string inline getLoadRegName(Instruction newInsn, bool *foundMemRead);
+
+#endif

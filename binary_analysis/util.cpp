@@ -1,5 +1,4 @@
 #include "util.hpp"
-#define USE_BPATCH
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
@@ -36,6 +35,14 @@ using namespace InstructionAPI;
 using namespace ParseAPI;
 using namespace DataflowAPI;
 
+bool INFO = true;
+bool DEBUG = false;
+bool DEBUG_SLICE = false;
+bool DEBUG_BIT = false;
+bool DEBUG_STACK = false;
+
+#ifdef USE_BPATCH
+BPatch bpatch;
 // Attach, create, or open a file for rewriting
 BPatch_addressSpace *startInstrumenting(accessType_t accessType, const char *name, int pid, const char *argv[]) {
   BPatch_addressSpace *handle = NULL;
@@ -176,23 +183,6 @@ BPatch_basicBlock *getImmediateDominator(BPatch_image *appImage, const char *fun
   return getBasicBlock(fg, addr)->getImmediateDominator();
 }
 
-Block *getImmediateDominator2(Function *f, long unsigned int addr) {
-  Block *target = NULL;
-  for (auto bit = f->blocks().begin(); bit != f->blocks().end(); ++bit) {
-    Block *b = *bit;
-    if (addr >= b->start() && addr < b->end()) { // "Address immediately following the last instruction in the block."
-      target = b;
-      break;
-    }
-  }
-
-  if (target == NULL) {
-    cerr << "Failed to find basic block for function " << f->name() << " @ " << addr << endl;
-    return NULL;
-  }
-  return f->getImmediateDominator(target);
-}
-
 BPatch_function *getFunction(BPatch_image *appImage, const char *funcName){
   vector<BPatch_function *> functions;
   appImage->findFunction(funcName, functions);
@@ -212,37 +202,10 @@ BPatch_function *getFunction(BPatch_image *appImage, const char *funcName){
   return functions[0]; // TODO is this gonna be a problem?
 }
 
-//TODO, in the future, get a batch get function
-Function *getFunction2(SymtabCodeSource *stcs, CodeObject *co, const char *funcName) {
-  string funcNameStr(funcName);
-  const CodeObject::funclist &all = co->funcs();
-  if (all.size() == 0) {
-    fprintf(stderr, "No function in file.\n");
-    return NULL;
-  }
-
-  for (auto fit = all.begin(); fit != all.end(); ++fit) {
-    Function *f = *fit;
-    if (f->name().compare(funcNameStr) == 0) {
-      return f;
-    }
-  }
-  return NULL;
-}
-
 Instruction getIfCondition(BPatch_basicBlock *block) {
   vector <Instruction> insns;
   block->getInstructions(insns);
   Instruction ret = *insns.rbegin();
-  assert(ret.getCategory() == InsnCategory::c_BranchInsn);
-  return ret;
-}
-
-Instruction getIfCondition2(Block *b) {
-  // Decode the instruction
-  const unsigned char *buf = (const unsigned char *) b->obj()->cs()->getPtrToInstruction(b->last());
-  InstructionDecoder dec(buf, InstructionDecoder::maxInstructionLength, b->obj()->cs()->getArch());
-  Instruction ret = dec.decode();
   assert(ret.getCategory() == InsnCategory::c_BranchInsn);
   return ret;
 }
@@ -270,6 +233,51 @@ BPatch_basicBlock *getBasicBlock(BPatch_flowGraph *fg, long unsigned int addr) {
     return NULL;
   }
   return target;
+}
+#endif
+
+Block *getImmediateDominator2(Function *f, long unsigned int addr) {
+  Block *target = NULL;
+  for (auto bit = f->blocks().begin(); bit != f->blocks().end(); ++bit) {
+    Block *b = *bit;
+    if (addr >= b->start() && addr < b->end()) { // "Address immediately following the last instruction in the block."
+      target = b;
+      break;
+    }
+  }
+
+  if (target == NULL) {
+    cerr << "Failed to find basic block for function " << f->name() << " @ " << addr << endl;
+    return NULL;
+  }
+  return f->getImmediateDominator(target);
+}
+
+//TODO, in the future, get a batch get function
+Function *getFunction2(SymtabCodeSource *stcs, CodeObject *co, const char *funcName) {
+  string funcNameStr(funcName);
+  const CodeObject::funclist &all = co->funcs();
+  if (all.size() == 0) {
+    fprintf(stderr, "No function in file.\n");
+    return NULL;
+  }
+
+  for (auto fit = all.begin(); fit != all.end(); ++fit) {
+    Function *f = *fit;
+    if (f->name().compare(funcNameStr) == 0) {
+      return f;
+    }
+  }
+  return NULL;
+}
+
+Instruction getIfCondition2(Block *b) {
+  // Decode the instruction
+  const unsigned char *buf = (const unsigned char *) b->obj()->cs()->getPtrToInstruction(b->last());
+  InstructionDecoder dec(buf, InstructionDecoder::maxInstructionLength, b->obj()->cs()->getArch());
+  Instruction ret = dec.decode();
+  assert(ret.getCategory() == InsnCategory::c_BranchInsn);
+  return ret;
 }
 
 Block *getBasicBlock2(Function *f, long unsigned int addr) {
@@ -388,6 +396,8 @@ cJSON *printBBIdsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs) {
   return json_bbs;
 }
 
+#ifdef USE_BPATCH
+
 cJSON *printBBsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs,
                             boost::unordered_map<BPatch_basicBlock *, BPatch_Vector<BPatch_basicBlock *>> *backEdges) {
   cJSON *json_bbs = cJSON_CreateArray();
@@ -439,3 +449,92 @@ cJSON *printBBsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs,
   }
   return json_bbs;
 }
+
+#else
+
+cJSON *printBBsToJsonHelper(vector<Block *> &bbs,
+                            boost::unordered_map<Block *, vector<Block *>> &backEdges,
+                            Function *f, SymtabAPI::Symtab *symTab) {
+  cJSON *json_bbs = cJSON_CreateArray();
+  boost::unordered_map<Block *, int> blockIds;
+  int id = 1;
+  for(auto it = bbs.begin(); it != bbs.end(); ++it) {
+    Block *bb = *it;
+    blockIds.insert({bb, id});
+    id++;
+  }
+  for(auto it = bbs.begin(); it != bbs.end(); ++it) {
+    Block *bb = *it;
+    cJSON *json_bb  = cJSON_CreateObject();
+    int id = blockIds[bb];
+    cJSON_AddNumberToObject(json_bb, "id", id);
+    cJSON_AddNumberToObject(json_bb, "start_insn", bb->start());
+    cJSON_AddNumberToObject(json_bb, "end_insn", bb->last());
+
+    Block::Insns insns;
+    bb->getInsns(insns);
+    Instruction ret = insns.rbegin()->second;
+    int isBranch = (ret.getCategory() == InsnCategory::c_BranchInsn) ? 1 : 0;
+    cJSON_AddNumberToObject(json_bb, "ends_in_branch", isBranch);
+    int isEntry = (bb == f->entry()) ? 1 : 0;
+    cJSON_AddNumberToObject(json_bb, "is_entry", isEntry);
+
+    vector<Block *> predes;
+    Block::edgelist sources = bb->sources();
+    for (auto eit = sources.begin(); eit != sources.end(); eit++) {
+      //if ((*eit)->type() == CALL || (*eit)->type() == RET)
+      //  continue;
+      // Tryna imitate BPatch API behaviour LOL
+      Block *src = (*eit)->src();
+      if (blockIds.find(src) != blockIds.end()) {
+        predes.push_back(src);
+      }
+    }
+    cJSON_AddItemToObject(json_bb, "predes",  printBBIdsToJsonHelper(predes, blockIds));
+
+    vector<Block *> succes;
+    Block::edgelist targets = bb->targets();
+    for (auto eit = targets.begin(); eit != targets.end(); eit++) {
+      //if ((*eit)->type() == CALL || (*eit)->type() == RET)
+      //  continue;
+      Block *trg = (*eit)->trg();
+      if (blockIds.find(trg) != blockIds.end()) {
+        succes.push_back(trg);
+      }
+    }
+    cJSON_AddItemToObject(json_bb, "succes",  printBBIdsToJsonHelper(succes, blockIds));
+
+    Block * immedDom = f->getImmediateDominator(bb);
+    if (immedDom != NULL)
+      cJSON_AddNumberToObject(json_bb, "immed_dom",  blockIds[immedDom]);
+
+    if (backEdges.size() > 0) {
+      if (backEdges.find(bb) != backEdges.end()) {
+        cJSON_AddItemToObject(json_bb, "backedge_targets",  printBBIdsToJsonHelper(backEdges[bb], blockIds));
+      }
+    }
+
+    set<unsigned int> allLines;
+    // TODO: optimize this by putting it into one string?
+    cJSON *json_lines = cJSON_CreateArray();
+    for (auto iit = insns.begin(); iit != insns.end(); iit++) {
+      Address addr = (*iit).first;
+      vector<SymtabAPI::Statement::Ptr> lines;
+      symTab->getSourceLines(lines, addr - symTab->getBaseOffset());
+      for (auto lit = lines.begin(); lit != lines.end(); lit++) {
+        allLines.insert((*lit)->getLine());
+      }
+    }
+
+    for (auto it = allLines.begin(); it != allLines.end(); it++) {
+      cJSON *json_line  = cJSON_CreateObject();
+      cJSON_AddNumberToObject(json_line, "line", *it);
+      cJSON_AddItemToArray(json_lines, json_line);
+    }
+    cJSON_AddItemToObject(json_bb, "lines", json_lines);
+    cJSON_AddItemToArray(json_bbs, json_bb);
+  }
+  return json_bbs;
+}
+
+#endif

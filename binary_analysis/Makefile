@@ -11,7 +11,7 @@ CC=gcc
 #	       	-o analysis -std=c++11
 
 analysis: analysis.o util.o dataflow_analysis.o static_df_analysis.o stack_analysis.o cJSON.o
-	$(CXX) analysis.o cJSON.o -L$(DYNINST_LIB) -ldyninstAPI -lboost_system -ltbbmalloc_proxy -linstructionAPI -lparseAPI -lsymtabAPI -lcommon -lstdc++ -lm\
+	$(CXX) analysis.o util.o dataflow_analysis.o static_df_analysis.o stack_analysis.o cJSON.o -L$(DYNINST_LIB) -ldyninstAPI -lboost_system -ltbbmalloc_proxy -linstructionAPI -lparseAPI -lsymtabAPI -lcommon -lstdc++ -lm\
 	      -shared -Wl,-soname,static_analysis.so -o static_analysis.so -std=c++11
 
 analysis.o: analysis.cpp
@@ -36,6 +36,6 @@ cJSON.o: cJSON.c
 #	rm cJSON.o analysis.o analysis
 
 clean:
-	rm static_analysis.so
+	rm static_analysis.so *.o
 
 

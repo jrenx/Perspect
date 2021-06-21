@@ -1,3 +1,6 @@
+#ifndef BITVAR_ANALYSIS_HPP
+#define BITVAR_ANALYSIS_HPP
+
 #include <vector>
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
@@ -8,6 +11,12 @@
 #include "CFG.h"
 #include "Graph.h"
 #include "slicing.h"
+
+extern bool INFO;
+extern bool DEBUG;
+extern bool DEBUG_SLICE;
+extern bool DEBUG_BIT;
+extern bool DEBUG_STACK;
 
 void locateBitVariables(GraphPtr slice,
                         boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
@@ -32,3 +41,5 @@ bool findMemoryLoadHelper(Expression::Ptr memWrite,
                           boost::unordered_set<Assignment::Ptr> &visited);
 
 int getBitMaskDigits(Instruction insn, std::vector<AbsRegion> &regions);
+
+#endif
