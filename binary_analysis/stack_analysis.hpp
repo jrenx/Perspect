@@ -1,3 +1,5 @@
+#ifndef STACK_ANALYSIS_HPP
+#define STACK_ANALYSIS_HPP
 #include "util.hpp"
 
 #include <vector>
@@ -12,58 +14,13 @@
 #include "Graph.h"
 #include "slicing.h"
 
+extern bool INFO;
+extern bool DEBUG;
+extern bool DEBUG_SLICE;
+extern bool DEBUG_BIT;
+extern bool DEBUG_STACK;
 namespace boost {
-  class StackStore {
-  private:
-    MachRegister machReg_;
-    long offset_;
-    long stackheight_;
-  public:
-    bool isSpecial; // TODO, a bit ugly
-    std::size_t hash;
-    std::string str;
-
-    StackStore(MachRegister machReg, long offset, long stackheight) :
-        machReg_(machReg), offset_(offset), stackheight_(stackheight) {
-      isSpecial = false;
-      std::stringstream hash_ss;
-      hash_ss << machReg_.name() << " + " << (offset_ + stackheight_);
-      std::string hash_str = hash_ss.str();
-
-      hash = std::hash<std::string>{}(hash_str);
-
-      std::stringstream retVal;
-      retVal << machReg_.name() << " + " << std::hex << offset_ << " @ " << std::dec << stackheight_;
-      str = retVal.str();
-    }
-
-    bool operator==(const StackStore &rhs) const {
-      return machReg_ == rhs.machReg_ &&
-             (offset_ + stackheight_) == (rhs.offset_ + rhs.stackheight_);
-    }
-
-    bool operator!=(const StackStore &rhs) const {
-      return !(*this == rhs);
-    }
-
-    std::string format() const {
-      return str;
-    }
-
-    friend std::ostream& operator<<(std::ostream& stream, const StackStore& s)
-    {
-      stream << s.format() << std::endl;
-      return stream;
-    }
-  };
-
-  std::size_t hash_value(const StackStore &ss) {
-    // Compute individual hash values for first,
-    // second and third and combine them using XOR
-    // and bit shifting:
-
-    return ss.hash;
-  }
+  class StackStore;
 }
 
 extern boost::unordered_map<Address, boost::unordered_map<Address, Function *>> *stackCache;
@@ -88,3 +45,5 @@ void getAllRets(Function *f, boost::unordered_set<Address> &rets);
 void getAllRets(Function *f, boost::unordered_set<std::pair<Address, Block *>> &rets);
 void getAllInvokes(Function *f, Function *callee, boost::unordered_set<Address> &rets);
 Function *getFunction(std::vector<Function *> &funcs);
+
+#endif

@@ -1,4 +1,3 @@
-//#define USE_BPATCH
 #include "util.hpp"
 #include <stdio.h>
 #include <iostream>
@@ -36,7 +35,14 @@ using namespace InstructionAPI;
 using namespace ParseAPI;
 using namespace DataflowAPI;
 
+bool INFO = true;
+bool DEBUG = false;
+bool DEBUG_SLICE = false;
+bool DEBUG_BIT = false;
+bool DEBUG_STACK = false;
+
 #ifdef USE_BPATCH
+BPatch bpatch;
 // Attach, create, or open a file for rewriting
 BPatch_addressSpace *startInstrumenting(accessType_t accessType, const char *name, int pid, const char *argv[]) {
   BPatch_addressSpace *handle = NULL;

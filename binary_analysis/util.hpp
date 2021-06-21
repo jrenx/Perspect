@@ -1,8 +1,8 @@
-#define USE_BPATCH
 #ifndef UTIL_HPP
 #define UTIL_HPP
 
 #define USE_BPATCH
+
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
@@ -38,13 +38,11 @@ using namespace InstructionAPI;
 using namespace ParseAPI;
 using namespace DataflowAPI;
 
-BPatch bpatch;
-
-bool INFO = true;
-bool DEBUG = false;
-bool DEBUG_SLICE = false;
-bool DEBUG_BIT = false;
-bool DEBUG_STACK = false;
+extern bool INFO;
+extern bool DEBUG;
+extern bool DEBUG_SLICE;
+extern bool DEBUG_BIT;
+extern bool DEBUG_STACK;
 
 #ifdef USE_BPATCH
 typedef enum {

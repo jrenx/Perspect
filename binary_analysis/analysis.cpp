@@ -1,8 +1,7 @@
-#define USE_BPATCH
 #include "util.hpp"
 #include "dataflow_analysis.hpp"
-#include "stack_analysis.cpp"
-#include "bitvar_analysis.cpp"
+#include "stack_analysis.hpp"
+#include "bitvar_analysis.hpp"
 #include "static_df_analysis.hpp"
 #include <stdio.h>
 #include <iostream>
@@ -878,6 +877,6 @@ void backwardSlice(char *progName, char *funcName, long unsigned int addr, char 
 }
 
 int main() {
-  char *progName = "909_ziptest_exe9";
-  getMemWritesToStaticAddresses(progName);
+  const char *progName = "909_ziptest_exe9";
+  getMemWritesToStaticAddresses((char *)progName);
 }

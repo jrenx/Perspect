@@ -29,6 +29,24 @@ using namespace InstructionAPI;
 using namespace ParseAPI;
 using namespace DataflowAPI;
 
+boost::unordered_map<std::string, std::string> regMap =
+    {{"al"  ,"rax"}, {"ah"  ,"rax"}, {"ax"  ,"rax"}, {"eax","rax"},
+     {"bl"  ,"rbx"}, {"bh"  ,"rbx"}, {"bx"  ,"rbx"}, {"ebx","rbx"},
+     {"cl"  ,"rcx"}, {"ch"  ,"rcx"}, {"cx"  ,"rcx"}, {"ecx","rcx"},
+     {"dl"  ,"rdx"}, {"dh"  ,"rdx"}, {"dx"  ,"rdx"}, {"edx","rdx"},
+     {"sil" ,"rsi"}, {"si"  ,"rsi"}, {"esi" ,"rsi"},
+     {"dil" ,"rdi"}, {"di"  ,"rdi"}, {"edi" ,"rdi"},
+     {"bpl" ,"rbp"}, {"bp"  ,"rbp"}, {"ebp" ,"rbp"},
+     {"spl" ,"rsp"}, {"sp"  ,"rsp"}, {"esp" ,"rsp"},
+     {"r8b" , "r8"}, {"r8w" , "r8"}, {"r8d" , "r8"},
+     {"r9b" , "r9"}, {"r9w" , "r9"}, {"r9d" , "r9"},
+     {"r10b","r10"}, {"r10w","r10"}, {"r10d","r10"},
+     {"r11b","r11"}, {"r11w","r11"}, {"r11d","r11"},
+     {"r12b","r12"}, {"r12w","r12"}, {"r12d","r12"},
+     {"r13b","r13"}, {"r13w","r13"}, {"r13d","r13"},
+     {"r14b","r14"}, {"r14w","r14"}, {"r14d","r14"},
+     {"r15b","r15"}, {"r15w","r15"}, {"r15d","r15"}};
+
 void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
                          cJSON *json_reads, boost::unordered_set<Address> &visited,
                          char *progName, char *funcName,
@@ -57,7 +75,8 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
     if (!foundMemRead) {
       regName = (char *) newRegStr.c_str();
     } else {
-      regName = "";
+      const char *empty = "";
+      regName = (char*)empty;
     }
   }
 
@@ -187,7 +206,8 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
             func, assign->insn(), assign->addr(), readOff); //TODO, make this interprocedural too?
         cout << " [sa]  found " << writesToStaticAddrs.size() << " writes to static addresses " << endl;
         for (auto wit = writesToStaticAddrs.begin(); wit != writesToStaticAddrs.end(); wit++) {
-          backwardSliceHelper(stcs, co, json_reads, visited, progName, funcName, *wit, "", isKnownBitVar);
+          const char *empty = "";
+          backwardSliceHelper(stcs, co, json_reads, visited, progName, funcName, *wit, (char *)empty, isKnownBitVar);
         }
         continue;
       }
