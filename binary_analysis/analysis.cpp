@@ -39,7 +39,7 @@ using namespace Dyninst;
 using namespace InstructionAPI;
 using namespace ParseAPI;
 using namespace DataflowAPI;
-extern boost::unordered_map<Address, boost::unordered_map<Address, Function *>> *stackCache;
+boost::unordered_map<Address, boost::unordered_map<Address, Function *>> *stackCache;
 
 extern "C" {
 long unsigned int getImmedDom(char *progName, char *funcName, long unsigned int addr){

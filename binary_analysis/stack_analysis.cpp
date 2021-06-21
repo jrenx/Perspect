@@ -17,6 +17,8 @@
 #include "Graph.h"
 #include "slicing.h"
 
+extern boost::unordered_map<Address, boost::unordered_map<Address, Function *>> *stackCache;
+
 boost::unordered_map<Address, Function *> checkAndGetStackWrites(Function *f, Instruction readInsn, Address readAddr,
                                                                  MachRegister readReg, long readOff, int initHeight, int level) {
   cout << "[stack] Checking function: " << f->name() << " for "
