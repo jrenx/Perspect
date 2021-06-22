@@ -42,9 +42,10 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(boost::un
                                                                        boost::unordered_map<Address, long> &insnToStackHeight,
                                                                        boost::unordered_set<Address> &readAddrs,
                                                                        StackStore &stackRead, int level);
-void get_indirect_write_to_stack(Instruction insn, Address addr, Block *b, Function *f,
+bool get_indirect_write_to_stack(Instruction insn, Address addr, Block *b, Function *f,
                                  int stackHeight, StackStore &stackRead,
-                                 boost::unordered_map<Address, StackStore> &indirectWrites);
+                                 boost::unordered_map<Address, StackStore> &indirectWrites,
+                                 bool *stackWritesIntractable);
 bool readsFromStack(Instruction insn, Address addr, MachRegister *reg, long *off);
 bool writesToStack(Operand op, Instruction insn, Address addr);
 void getStackHeights(Function *f, std::vector<Block *> &list, boost::unordered_map<Address, long> &insnToStackHeight, int initHeight);
