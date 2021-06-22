@@ -36,7 +36,8 @@ extern boost::unordered_map<Address, boost::unordered_map<Address, Function *>> 
 
 boost::unordered_map<Address, Function *> checkAndGetStackWrites(Function *f, Instruction readInsn, Address readAddr,
                                                                  MachRegister readReg, long readOff, int initHeight, int level=0);
-boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(bool *resultIntractable, Function *f,
+boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(boost::unordered_map<Address, Function *> &ret,
+                                                                       bool *resultIntractable, Function *f,
                                                                        std::vector<Block *> &list,
                                                                        boost::unordered_map<Address, long> &insnToStackHeight,
                                                                        boost::unordered_set<Address> &readAddrs,
@@ -48,7 +49,7 @@ bool readsFromStack(Instruction insn, Address addr, MachRegister *reg, long *off
 bool writesToStack(Operand op, Instruction insn, Address addr);
 void getStackHeights(Function *f, std::vector<Block *> &list, boost::unordered_map<Address, long> &insnToStackHeight, int initHeight);
 
-void printReachableStores(boost::unordered_map<StackStore, boost::unordered_map<Address, Function *>> &reachableStores);
+void printReachableStores(boost::unordered_map<Address, Function *> &reachableStores);
 
 void getAllRets(Function *f, boost::unordered_set<Address> &rets);
 void getAllRets(Function *f, boost::unordered_set<std::pair<Address, Block *>> &rets);
