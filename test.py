@@ -150,107 +150,132 @@ class TestStaticSlicing(unittest.TestCase):
         self.assertEqual(len(results[0][2]), 1)
         self.assertEqual(results[0][2][0], [0x407bb2, 'RAX', 0, 0, None, False, False, 'regread', 'runtime.new'])
 
-    def test_sa_slices3_1(self):
+    def test_pass_by_reference(self):
         slice_starts = []
         slice_starts.append(['rax', 0x407bb2, 'runtime.new', False])
         # slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
+        self.assertEqual(results[0][0], 'rax')
+        self.assertEqual(results[0][1], 0x407bb2)
+        self.assertEqual(len(results[0][2]), 1)
+        self.assertEqual(results[0][2][0], [0x4072e5, 'RSP', 0, 48, None, False, False, 'memread', 'runtime.mallocgc'])
 
-    def test_sa_slices4(self):
+    def test_stack_param(self):
         slice_starts = []
         slice_starts.append(['', 0x40a9a6, 'runtime.markspan', False])
-        # slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        #TODO, dyninst has a bug that would not further slice one assignment,
+        # so it's returned as a result.
+        self.assertEqual(results[0][0], '')
+        self.assertEqual(results[0][1], 0x40a9a6)
+        #self.assertEqual(len(results[0][2]), 1)
+        self.assertTrue((results[0][2][0] == [0x4087af, 'RAX', 0, 0, None, False, False, 'regread', 'MCentral_Grow'])
+                    or (results[0][2][1] == [0x4087af, 'RAX', 0, 0, None, False, False, 'regread', 'MCentral_Grow']))
+
         print(results)
 
-    def test_sa_slices5(self):
+    def test_stack_param1(self):
         slice_starts = []
         slice_starts.append(['rax', 0x429b97, 'compress/flate.*decompressor·huffmanBlock', False])
         # slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
-
+        self.assertEqual(results[0][0], 'rax')
+        self.assertEqual(results[0][1], 0x429b97)
+        self.assertEqual(len(results[0][2]), 3)
+        self.assertTrue([0x429f38, 'RAX', 0, 0, None, False, False, 'regread', 'compress/flate.*decompressor·copyHuff'] in results[0][2])
+        self.assertTrue([0x428d32, 'RAX', 0, 0, None, False, False, 'regread', 'compress/flate.*decompressor·nextBlock'] in results[0][2])
+        self.assertTrue([0x428dac, 'RAX', 0, 0, None, False, False, 'regread', 'compress/flate.*decompressor·nextBlock'] in results[0][2])
+    """
     def test_sa_slices6(self):
         slice_starts = []
-        slice_starts.append(['', 4367815, 'compress/flate.*decompressor·moreBits', False])
-        # slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
+        slice_starts.append(['', 0x42a5c7, 'compress/flate.*decompressor·moreBits', False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
+    """
 
-    def test_sa_slices7(self):
+    def test_stack_intractable(self):
         slice_starts = []
         slice_starts.append(['rbx', 0x42dfd7, 'os.NewError', False])
-        # slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
+        self.assertEqual(results[0][0], 'rbx')
+        self.assertEqual(results[0][1], 0x42dfd7)
+        self.assertEqual(len(results[0][2]), 1)
+        self.assertEqual(results[0][2][0], [0x42dfd2, 'RSP', 0, 40, None, False, False, 'memread', 'os.NewError'])
 
-    def test_sa_slices8(self):
-        slice_starts = []
-        slice_starts.append(['', 0x4037ac, 'hash_subtable_new', False])
-        # slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
-        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
-        print(results)
 
-    def test_sa_slices9(self):
+    def test_stack_and_pass_by_reference1(self):
         slice_starts = []
         slice_starts.append(['', 0x408f78, 'runtime.addfinalizer', False])
-        # slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
+        self.assertEqual(results[0][0], '')
+        self.assertEqual(results[0][1], 0x408f78)
+        self.assertEqual(len(results[0][2]), 1)
+        self.assertEqual(results[0][2][0], [0x4072e5, 'RSP', 0, 48, None, False, False, 'memread', 'runtime.mallocgc'])
 
-    def test_sa_slices10(self):
+    def test_stack_and_pass_by_reference2(self):
         slice_starts = []
         slice_starts.append(['rax', 0x40bd4d, 'setaddrbucket', False])
-        # slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
-
-    def test_sa_slices11(self):  # can encounter some indirect writes
-        slice_starts = []
-        slice_starts.append(['', 0x41101f, 'runtime.slicearray', False])
-        # slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
-        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
-        print(results)
-
-    def test_sa_slices12(self):
-        slice_starts = []
-        slice_starts.append(['SPECIAL', 0x4037ac, "hash_subtable_new", False])
-        # slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
-        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
-        print(results)
+        self.assertEqual(results[0][0], 'rax')
+        self.assertEqual(results[0][1], 0x40bd4d)
+        self.assertEqual(len(results[0][2]), 1)
+        self.assertEqual(results[0][2][0], [0x4072e5, 'RSP', 0, 48, None, False, False, 'memread', 'runtime.mallocgc'])
 
     def test_sa_slices13(self):
         slice_starts = []
-        # slice_starts.append(['', 0x41b70b, "fmt.newCache", False])
-        # slice_starts.append(['rbx', 4346273, "fmt.init", False])
-        slice_starts.append(['rbx', 4345826, "fmt.init", False])
-        # slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
+        #TODO, need to double check if result is correct using RR
+        slice_starts.append(['', 0x41b70b, "fmt.newCache", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
+    """
+    def test_sa_TODO13(self):
+        #TODO this is a bug, static analysis seems to have returned the wrong insn
+        slice_starts = []
+        slice_starts.append(['rbx', 0x424fe2, "fmt.init", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
+    def test_sa_TODO13_1(self):
+        slice_starts = []
+        #TODO this is a bug, static analysis seems to have returned something different dispite being similar to the example above
+        slice_starts.append(['rbx', 0x4251a1, "fmt.init", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
+        
+    def test_sa_TODO8(self):
+        #TODO: load effective address in an operation in itself, this should not be traceable to a malloc
+        #confirmed, this is a fake pointer! although, not really like a 64bit address, need to double check if indeed marked
+        slice_starts = []
+        slice_starts.append(['', 0x4037ac, 'hash_subtable_new', False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
 
+    def test_sa_TODO11(self):  # can encounter some indirect writes
+        slice_starts = []
+        #TODO, another lea, addr is 0xf840041000, and is written to by a repeated copyin loop at 0x42adbb, probably another fake pointer
+        slice_starts.append(['', 0x41101f, 'runtime.slicearray', False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
+    """
+    """
     def test_sa_slices14(self):
         slice_starts = []
-        # slice_starts.append(['', 0x41b70b, "fmt.newCache", False])
-        # slice_starts.append(['rbx', 4346273, "fmt.init", False])
         slice_starts.append(['', 4253023, "runtime.malg", False])
-        # slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
 
     def test_sa_slices15(self):  # TODO fix
         slice_starts = []
-        # slice_starts.append(['', 0x41b70b, "fmt.newCache", False])
-        # slice_starts.append(['rbx', 4346273, "fmt.init", False])
         slice_starts.append(['SPECIAL', 4552810, "syscall.Syscall6", False])
-        # slice_starts.append(['', int('0x43c45c', 16), 'unicode.init', False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
 
     def test_sa_slices16(self):
         slice_starts = []
-        # slice_starts.append(['', 0x41b70b, "fmt.newCache", False])
-        # slice_starts.append(['rbx', 4346273, "fmt.init", False])
         # slice_starts.append(['SPECIAL', 0x41508f, "archive/zip.readDirectoryHeader", False])
         slice_starts.append(['', 0x415085, "archive/zip.readDirectoryHeader", False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
@@ -258,8 +283,6 @@ class TestStaticSlicing(unittest.TestCase):
 
     def test_sa_slices17(self):
         slice_starts = []
-        # slice_starts.append(['', 0x41b70b, "fmt.newCache", False])
-        # slice_starts.append(['rbx', 4346273, "fmt.init", False])
         # slice_starts.append(['SPECIAL', 0x41508f, "archive/zip.readDirectoryHeader", False])
         # slice_starts.append(['SPECIAL', 0x43408a, "time.timerHeap·Push", False])
         # slice_starts.append(['SPECIAL', 0x42594c, "io.NewSectionReader", False])
@@ -278,6 +301,6 @@ class TestStaticSlicing(unittest.TestCase):
         # slice_starts.append(['SPECIAL', 0x40bd778, "setaddrbucket", False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(len(results))
- 
+"""
 if __name__ == "__main__":
     unittest.main()
