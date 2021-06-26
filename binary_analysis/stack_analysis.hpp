@@ -37,7 +37,8 @@ extern boost::unordered_map<Address, boost::unordered_map<Address, Function *>> 
 boost::unordered_map<Address, Function *> checkAndGetStackWrites(Function *f, Instruction readInsn, Address readAddr,
                                                                  MachRegister readReg, long readOff, int initHeight, int level=0);
 boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(boost::unordered_map<Address, Function *> &ret,
-                                                                       bool *resultIntractable, Function *f,
+                                                                       bool *resultIntractable,
+                                                                       Function *f,
                                                                        std::vector<Block *> &list,
                                                                        boost::unordered_map<Address, long> &insnToStackHeight,
                                                                        boost::unordered_set<Address> &readAddrs,

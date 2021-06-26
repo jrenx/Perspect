@@ -128,6 +128,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(boost::un
       if (DEBUG && DEBUG_STACK)
         cout << "[stack] checking instruction: " << insn.format() << " @" << std::hex << addr << std::dec << endl;
       boost::unordered_map<Address, Function *> reachableStores;
+      bool stackWritesIntractable = false;
 
       if (level == 0) {
         boost::unordered_map<Address, Function *> allRets;
@@ -177,13 +178,15 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(boost::un
               getStackHeights(caller, callerList, callerInsnToStackHeight, stackOffSet);
               boost::unordered_set<Address> cuuReadAddrs;
               cuuReadAddrs.insert(readAddr);
-              checkAndGetStackWritesHelper(allRets, resultIntractable, caller, callerList, callerInsnToStackHeight, cuuReadAddrs, stackRead,
-                                                                             level - 1);
-
-              if (DEBUG_STACK && DEBUG)
+              bool resultIntractableInCaller = false;
+              checkAndGetStackWritesHelper(allRets, &resultIntractableInCaller, caller, callerList,
+                  callerInsnToStackHeight, cuuReadAddrs, stackRead, level - 1);
+              if (resultIntractableInCaller) stackWritesIntractable = true;
+              //if (DEBUG_STACK && DEBUG)
                 cout << "[stack] looked for stores" // at " << std::hex << addr << std::dec
                      << " from caller " << caller->name()
-                     << " currently found " << allRets.size() << " stores " << endl;
+                     << " currently found " << allRets.size() << " stores "
+                     << " result intractable? " << resultIntractableInCaller << endl;
             }
           }
         }
@@ -217,13 +220,15 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(boost::un
             getStackHeights(callee, calleeList, calleeInsnToStackHeight, insnToStackHeight[addr] - 8);
 
             cout << "[stack] checking invocation @ "  << std::hex << addr << std::dec << endl;
-            checkAndGetStackWritesHelper(allRets, resultIntractable, callee, calleeList, calleeInsnToStackHeight, readAddrs, stackRead,
-                                                                           level + 1);
-
-            if (DEBUG_STACK && DEBUG)
+            bool resultIntractableInCallee = false;
+            checkAndGetStackWritesHelper(allRets, &resultIntractableInCallee, callee, calleeList, calleeInsnToStackHeight,
+                                         readAddrs, stackRead, level + 1);
+            if (resultIntractableInCallee) stackWritesIntractable = true;
+            //if (DEBUG_STACK && DEBUG)
               cout << "[stack] looked for stores" // at " << std::hex << addr << std::dec
                    << " from callee " << callee->name()
-                   << " currently found " << allRets.size() << " stores " << endl;
+                   << " currently found " << allRets.size() << " stores "
+                  << " result intractable? " << resultIntractableInCallee << endl;
           }
         }
         if (allRets.size() > 0) {
@@ -233,7 +238,6 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(boost::un
         }
       }
 
-      bool stackWritesIntractable = false;
       if (insn.getOperation().getID() == e_lea) { //TODO, make a separate function...
         //cout << std::hex << addr << std::dec << endl;
         if (!insn.readsMemory()) {
@@ -350,7 +354,8 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(boost::un
           prevStackWritesIntractable = insnToIntractableStackWrites[addr];
           changed = false;
         } else {
-          insnToReachableStores[addr] = prevReachableStores;
+          if (!insnToIntractableStackWrites[addr])
+            insnToReachableStores[addr] = prevReachableStores;
           if (prevStackWritesIntractable)
             insnToIntractableStackWrites[addr] = prevStackWritesIntractable;
           prevStackWritesIntractable = insnToIntractableStackWrites[addr];
@@ -368,6 +373,9 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(boost::un
     // << "[stack] current stack read addr is: " << std::hex << readAddr << std::dec << endl;
     boost::unordered_map<Address, Function *> &curr = insnToReachableStores[readAddr];
     ret.insert(curr.begin(), curr.end());
+    if (insnToIntractableStackWrites[readAddr] == true) {
+      *resultIntractable = true;
+    }
   }
   return ret;
 }
@@ -396,7 +404,7 @@ bool get_indirect_write_to_stack(Instruction insn, Address addr, Block *b, Funct
         break;
       }
     }
-    if (machRegs.size() > 1) {
+    if (loadStackAddr && machRegs.size() > 1) {
       cout << "[stack] All writes to stack might be intractable! @" << std::hex << addr << std::dec << endl;
       *stackWritesIntractable = true;
     }

@@ -205,8 +205,7 @@ class TestStaticSlicing(unittest.TestCase):
         self.assertEqual(len(results[0][2]), 1)
         self.assertEqual(results[0][2][0], [0x42dfd2, 'RSP', 0, 40, None, False, False, 'memread', 'os.NewError'])
 
-
-    def test_stack_and_pass_by_reference1(self):
+    def test_sa_pass_by_reference_intractable_conservative(self):
         slice_starts = []
         slice_starts.append(['', 0x408f78, 'runtime.addfinalizer', False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
@@ -214,9 +213,10 @@ class TestStaticSlicing(unittest.TestCase):
         self.assertEqual(results[0][0], '')
         self.assertEqual(results[0][1], 0x408f78)
         self.assertEqual(len(results[0][2]), 1)
-        self.assertEqual(results[0][2][0], [0x4072e5, 'RSP', 0, 48, None, False, False, 'memread', 'runtime.mallocgc'])
+        self.assertEqual(results[0][2][0], [0x408f73, 'RSP', 0, 88, None, False, False, 'memread', 'runtime.addfinalizer'])
+        #self.assertEqual(results[0][2][0], [0x4072e5, 'RSP', 0, 48, None, False, False, 'memread', 'runtime.mallocgc'])
 
-    def test_stack_and_pass_by_reference2(self):
+    def test_stack_and_pass_by_reference(self):
         slice_starts = []
         slice_starts.append(['rax', 0x40bd4d, 'setaddrbucket', False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
@@ -226,6 +226,17 @@ class TestStaticSlicing(unittest.TestCase):
         self.assertEqual(len(results[0][2]), 1)
         self.assertEqual(results[0][2][0], [0x4072e5, 'RSP', 0, 48, None, False, False, 'memread', 'runtime.mallocgc'])
 
+    def test_sa_pass_by_reference_intractable_conservative1(self):
+        #TODO this is a bug, static analysis seems to have returned the wrong insn
+        slice_starts = []
+        slice_starts.append(['rbx', 0x424fe2, "fmt.init", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
+        self.assertEqual(results[0][0], 'rbx')
+        self.assertEqual(results[0][1], 0x424fe2)
+        self.assertEqual(len(results[0][2]), 1)
+        self.assertEqual(results[0][2][0], [0x424fdd, 'RSP', 0, 16, None, False, False, 'memread', 'fmt.init'])
+
     def test_sa_slices13(self):
         slice_starts = []
         #TODO, need to double check if result is correct using RR
@@ -233,12 +244,6 @@ class TestStaticSlicing(unittest.TestCase):
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
     """
-    def test_sa_TODO13(self):
-        #TODO this is a bug, static analysis seems to have returned the wrong insn
-        slice_starts = []
-        slice_starts.append(['rbx', 0x424fe2, "fmt.init", False])
-        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
-        print(results)
     def test_sa_TODO13_1(self):
         slice_starts = []
         #TODO this is a bug, static analysis seems to have returned something different dispite being similar to the example above
