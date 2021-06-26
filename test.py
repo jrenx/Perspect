@@ -237,17 +237,147 @@ class TestStaticSlicing(unittest.TestCase):
         self.assertEqual(len(results[0][2]), 1)
         self.assertEqual(results[0][2][0], [0x424fdd, 'RSP', 0, 16, None, False, False, 'memread', 'fmt.init'])
 
-    def test_sa_slices13(self):
+    def test_sa_stack_param2(self):
         slice_starts = []
-        #TODO, need to double check if result is correct using RR
         slice_starts.append(['', 0x41b70b, "fmt.newCache", False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
-    """
-    def test_sa_TODO13_1(self):
+        self.assertEqual(results[0][0], '')
+        self.assertEqual(results[0][1], 0x41b70b)
+        self.assertEqual(len(results[0][2]), 2)
+        self.assertTrue([0x424fe2, 'RBX', 0, 0, None, False, False, 'regread', 'fmt.init'] in results[0][2])
+        self.assertTrue([0x4251a1, 'RBX', 0, 0, None, False, False, 'regread', 'fmt.init'] in results[0][2])
+
+    def test_sa_pass_by_reference_intractable_conservative2(self):
         slice_starts = []
-        #TODO this is a bug, static analysis seems to have returned something different dispite being similar to the example above
         slice_starts.append(['rbx', 0x4251a1, "fmt.init", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
+        self.assertEqual(results[0][0], 'rbx')
+        self.assertEqual(results[0][1], 0x4251a1)
+        self.assertEqual(len(results[0][2]), 1)
+        self.assertEqual(results[0][2][0], [0x42519c, 'RSP', 0, 16, None, False, False, 'memread', 'fmt.init'])
+
+    def test_sa_pass_by_reference_intractable_conservative3(self):
+        slice_starts = []
+        slice_starts.append(['', 0x40e55f, "runtime.malg", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
+        self.assertEqual(results[0][0], '')
+        self.assertEqual(results[0][1], 0x40e55f)
+        self.assertEqual(len(results[0][2]), 1)
+        self.assertEqual(results[0][2][0], [0x40e55f, 'RSP', 0, 40, None, False, False, 'memread', 'runtime.malg'])
+
+    def test_sa_pass_by_reference_intractable_conservative4(self):
+        slice_starts = []
+        slice_starts.append(['SPECIAL', 0x43408a, "time.timerHeap·Push", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(len(results))
+        self.assertEqual(results[0][0], 'SPECIAL')
+        self.assertEqual(results[0][1], 0x43408a)
+        self.assertEqual(len(results[0][2]), 1)
+        self.assertEqual(results[0][2][0], [0x434068, 'RSP', 0, 32, None, False, False, 'memread', 'time.timerHeap·Push'])
+
+    def test_sa_pass_by_reference_intractable_conservative5(self):
+        slice_starts = []
+        slice_starts.append(['SPECIAL', 0x42594c, "io.NewSectionReader", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(len(results))
+        self.assertEqual(results[0][0], 'SPECIAL')
+        self.assertEqual(results[0][1], 0x42594c)
+        self.assertEqual(len(results[0][2]), 1)
+        self.assertEqual(results[0][2][0], [0x425947, 'RSP', 0, 32, None, False, False, 'memread', 'io.NewSectionReader'])
+
+    def test_sa_slices20(self):
+        slice_starts = []
+        slice_starts.append(['SPECIAL', 0x4251de, "fmt.init", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(len(results))
+
+    def test_sa_slices21(self):
+        slice_starts = []
+        slice_starts.append(['RBX', 0x42dfd7, "os.NewError", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(len(results))
+
+    def test_sa_slices22(self):
+        slice_starts = []
+        slice_starts.append(['SPECIAL', 0x4577b6, "syscall.init", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(len(results))
+
+    def test_sa_slices23(self):
+        slice_starts = []
+        slice_starts.append(['RAX', 0x4052a6, "runtime.makemap", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(len(results))
+
+    def test_sa_slices24(self):
+        slice_starts = []
+        slice_starts.append(['RDX', 0x405225, "runtime.makemap_c", False]) #TODO, why rsp is included?
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(len(results))
+
+    def test_sa_slices25(self):
+        slice_starts = []
+        slice_starts.append(['RAX', 0x404fa5, "runtime.makemap_c", False]) #TODO check later to verify this is re-sliced
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(len(results))
+
+    def test_sa_slices26(self):
+        slice_starts = []
+        slice_starts.append(['SPECIAL', 0x415fb1, "archive/zip.init", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(len(results))
+
+    def test_sa_slices27(self):
+        slice_starts = []
+        slice_starts.append(['RBX', 4382679, "os.NewError", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(len(results))
+
+    def test_sa_slices28(self):
+        slice_starts = []
+        slice_starts.append(['RAX', 0x40627e, "copyin", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(len(results))
+
+    def test_sa_slices29(self):
+        slice_starts = []
+        slice_starts.append(['RBX', 0x4251a1, "fmt.init", False])  # TODO, implement check for intractable stack writes
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(len(results))
+
+    def test_sa_slices30(self):
+        slice_starts = []
+        slice_starts.append(['RDX', 0x402448, "runtime.makechan_c", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(len(results))
+
+    def test_sa_slices31(self):
+        slice_starts.append(['SPECIAL', 0x40bd778, "setaddrbucket", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(len(results))
+
+    """ 
+    def test_sa_TODO15(self):  # TODO fix
+        slice_starts = []
+        #TODO, might be a bug, see how we got here in the first place
+        slice_starts.append(['SPECIAL', 0x45786a, "syscall.Syscall6", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
+        
+    def test_sa_TODO16(self):
+        slice_starts = []
+        #TODO, might be a bug, see how we got here in the first place
+        slice_starts.append(['', 0x415085, "archive/zip.readDirectoryHeader", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
+
+    def test_sa_TODO17(self):
+        slice_starts = []
+        #TODO, might be a bug, see how we got here in the first place
+        slice_starts.append(['SPECIAL', 0x41508f, "archive/zip.readDirectoryHeader", False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
         
@@ -258,7 +388,6 @@ class TestStaticSlicing(unittest.TestCase):
         slice_starts.append(['', 0x4037ac, 'hash_subtable_new', False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
-
     def test_sa_TODO11(self):  # can encounter some indirect writes
         slice_starts = []
         #TODO, another lea, addr is 0xf840041000, and is written to by a repeated copyin loop at 0x42adbb, probably another fake pointer
@@ -266,46 +395,5 @@ class TestStaticSlicing(unittest.TestCase):
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
     """
-    """
-    def test_sa_slices14(self):
-        slice_starts = []
-        slice_starts.append(['', 4253023, "runtime.malg", False])
-        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
-        print(results)
-
-    def test_sa_slices15(self):  # TODO fix
-        slice_starts = []
-        slice_starts.append(['SPECIAL', 4552810, "syscall.Syscall6", False])
-        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
-        print(results)
-
-    def test_sa_slices16(self):
-        slice_starts = []
-        # slice_starts.append(['SPECIAL', 0x41508f, "archive/zip.readDirectoryHeader", False])
-        slice_starts.append(['', 0x415085, "archive/zip.readDirectoryHeader", False])
-        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
-        print(results)
-
-    def test_sa_slices17(self):
-        slice_starts = []
-        # slice_starts.append(['SPECIAL', 0x41508f, "archive/zip.readDirectoryHeader", False])
-        # slice_starts.append(['SPECIAL', 0x43408a, "time.timerHeap·Push", False])
-        # slice_starts.append(['SPECIAL', 0x42594c, "io.NewSectionReader", False])
-        # slice_starts.append(['SPECIAL', 0x4251de, "fmt.init", False])
-        # slice_starts.append(['RBX', 0x42dfd7, "os.NewError", False])
-        # slice_starts.append(['SPECIAL', 0x4577b6, "syscall.init", False])
-        # slice_starts.append(['RAX', 4215462, "runtime.makemap", False])
-        # slice_starts.append(['RDX', 4215333, "runtime.makemap_c", False]) #TODO, why rsp is included?
-        # slice_starts.append(['RAX', 4214693, "runtime.makemap_c", False]) #TODO check later to verify this is re-sliced
-
-        # slice_starts.append(['SPECIAL', 0x415fb1, "archive/zip.init", False])
-        # slice_starts.append(['RBX', 4382679, "os.NewError", False])
-        # slice_starts.append(['RAX', 0x40627e, "copyin", False])
-        slice_starts.append(['RBX', 0x4251a1, "fmt.init", False])  # TODO, implement check for intractable stack writes
-        # slice_starts.append(['RDX', 0x402448, "runtime.makechan_c", False])
-        # slice_starts.append(['SPECIAL', 0x40bd778, "setaddrbucket", False])
-        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
-        print(len(results))
-"""
 if __name__ == "__main__":
     unittest.main()
