@@ -25,23 +25,25 @@ for wp in watchpoints:
 for br in breakpoints:
     gdb.execute("br {}".format(br))
 
-breakpoint_values = [int(br.strip('*'), base=16) for br in breakpoints]
-watchpoint_values = [int(wp.strip('*'), base=16) for wp in watchpoints]
-
 trace = []
+
+def wp_handler(event):
+    if not isinstance(event, gdb.BreakpointEvent):
+        return
+    frame = gdb.newest_frame()
+    br = event.breakpoints[-1]
+    trace.append((watchpoints[int(br.number) - 1], hex(frame.pc()), str(frame.name())))
+
+gdb.events.stop.connect(wp_handler)
+
+def exit_handler(event):
+    with open(os.path.join(rr_dir, 'watchpoints.log'), 'w') as log_file:
+        json.dump(trace, log_file)
+    gdb.execute('exit')
+    
 
 while True:
     try:
         gdb.execute('c')
-        frame = gdb.newest_frame()
     except Exception:
-        break # End of process
-    pc = int(frame.pc())
-    if pc in watchpoints:
-        func = str(frame.name())
-        trace.append((watchpoints[watchpoint_values.index(pc)], hex(pc), func))
-    else:
-        sys.stderr.write('[Error] gdb stop at unkown point {}'.format(hex(pc)))
-
-with open(os.path.join(rr_dir, 'watchpoints.log'), 'w') as log_file:
-    json.dump(trace, log_file)
+        break
