@@ -975,7 +975,7 @@ class StaticDepGraph:
             sg.nodes_in_df_slice.add(sg.id_to_node[n])
 
         for sn in sg.id_to_node.values():
-            if sn.bb:
+            if sn.bb is not None:
                 sn.bb = sg.cfg.id_to_bb[sn.bb]
         return sg
 
