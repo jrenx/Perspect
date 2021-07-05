@@ -12,6 +12,24 @@ using namespace std;
 using namespace boost;
 //TODO: fix all the weird casings in this file.
 
+boost::unordered_map<std::string, int> regSizeMap =
+    {{"al"   ,1}, {"ah"   ,1}, {"ax"   ,2}, {"eax" ,4},  {"rax" ,8},
+     {"bl"   ,1}, {"bh"   ,1}, {"bx"   ,2}, {"ebx" ,4},  {"rbx" ,8},
+     {"cl"   ,1}, {"ch"   ,1}, {"cx"   ,2}, {"ecx" ,4},  {"rcx" ,8},
+     {"dl"   ,1}, {"dh"   ,1}, {"dx"   ,2}, {"edx" ,4},  {"rdx" ,8},
+     {"sil"  ,1},              {"si"   ,2}, {"esi"  ,4}, {"rsi" ,8},
+     {"dil"  ,1},              {"di"   ,2}, {"edi"  ,4}, {"rdi" ,8},
+     {"bpl"  ,1},              {"bp"   ,2}, {"ebp"  ,4}, {"rbp" ,8},
+     {"spl"  ,1},              {"sp"   ,2}, {"esp"  ,4}, {"rsp" ,8},
+     {"r8b"  ,1},              {"r8w"  ,2}, {"r8d"  ,4}, {"r8"  ,8},
+     {"r9b"  ,1},              {"r9w"  ,2}, {"r9d"  ,4}, {"r9"  ,8},
+     {"r10b" ,1},              {"r10w" ,2}, {"r10d" ,4}, {"r10" ,8},
+     {"r11b" ,1},              {"r11w" ,2}, {"r11d" ,4}, {"r11" ,8},
+     {"r12b" ,1},              {"r12w" ,2}, {"r12d" ,4}, {"r12" ,8},
+     {"r13b" ,1},              {"r13w" ,2}, {"r13d" ,4}, {"r13" ,8},
+     {"r14b" ,1},              {"r14w" ,2}, {"r14d" ,4}, {"r14" ,8},
+     {"r15b" ,1},              {"r15w" ,2}, {"r15d" ,4}, {"r15" ,8}};
+
 class MemAccess {
 public:
   string reg;  //change to bool
@@ -57,6 +75,8 @@ public:
   std::vector<long> df_succe_codes;
   MemAccess *mem_load;
   MemAccess *mem_store;
+  int src_reg_size;
+  int dst_reg_size;
 };
 
 long *CodeToInsn;
@@ -195,6 +215,7 @@ void parseStaticNode(char *filename, int CodeCount) {
       if (InsnToCode.find(insn) == InsnToCode.end()) continue;
       unsigned short currCode =  InsnToCode[insn];
       //cout << "Parsing code: " << currCode << endl;
+      // FIXME: reduce array accesses here :p
       CodeToStaticNode[currCode] = new StaticNode();
       CodeToStaticNode[currCode]->insn = insn;
       CodeToStaticNode[currCode]->id = id;
@@ -217,6 +238,24 @@ void parseStaticNode(char *filename, int CodeCount) {
         //numAccess ++;
       }
       //cout << " code: " << currCode << " accesses " << numAccess <<  " reg count " << CodeToRegCount[currCode] << endl;
+
+      cJSON *json_regLoad = cJSON_GetObjectItem(json_staticNode, "reg_load");
+      if (json_regLoad->valuestring == NULL) {
+        CodeToStaticNode[currCode]->src_reg_size = 8;
+      } else if (regSizeMap.find(json_regLoad->valuestring) == regSizeMap.end()) {
+        CodeToStaticNode[currCode]->src_reg_size = 8;
+      } else { 
+        CodeToStaticNode[currCode]->src_reg_size = regSizeMap[json_regLoad->valuestring];
+      }
+
+      cJSON *json_regStore = cJSON_GetObjectItem(json_staticNode, "reg_store");
+      if (json_regStore->valuestring == NULL) {
+        CodeToStaticNode[currCode]->dst_reg_size = 8;
+      } else if (regSizeMap.find(json_regStore->valuestring) == regSizeMap.end()) {
+        CodeToStaticNode[currCode]->dst_reg_size = 8;
+      } else {
+        CodeToStaticNode[currCode]->dst_reg_size = regSizeMap[json_regStore->valuestring];
+      }
 
       cJSON *json_cfPredes = cJSON_GetObjectItem(json_staticNode, "cf_predes");
       int count = cJSON_GetArraySize(json_cfPredes);
@@ -499,7 +538,9 @@ int main()
         if (!PendingLocalDefCodes[code]) continue; // FIXME: unfortuanately, could be a local def dep too, need to make logic less messy if have more time ...
       } else {
         //cout << "  mem addr matched " << endl;
-        PendingAddrs.erase(addr);
+        // Approximation
+        if (sn->src_reg_size == 8)
+          PendingAddrs.erase(addr);
       }
     }
     if (regCount2 > 1) {

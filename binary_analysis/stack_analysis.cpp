@@ -181,7 +181,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(boost::un
               bool resultIntractableInCaller = false;
               checkAndGetStackWritesHelper(allRets, &resultIntractableInCaller, caller, callerList,
                   callerInsnToStackHeight, cuuReadAddrs, stackRead, level - 1);
-              //if (resultIntractableInCaller) stackWritesIntractable = true;
+              if (resultIntractableInCaller) stackWritesIntractable = true;
               //if (DEBUG_STACK && DEBUG)
                 cout << "[stack] looked for stores" // at " << std::hex << addr << std::dec
                      << " from caller " << caller->name()
@@ -223,7 +223,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(boost::un
             bool resultIntractableInCallee = false;
             checkAndGetStackWritesHelper(allRets, &resultIntractableInCallee, callee, calleeList, calleeInsnToStackHeight,
                                          readAddrs, stackRead, level + 1);
-            //if (resultIntractableInCallee) stackWritesIntractable = true;
+            if (resultIntractableInCallee) stackWritesIntractable = true;
             //if (DEBUG_STACK && DEBUG)
               cout << "[stack] looked for stores" // at " << std::hex << addr << std::dec
                    << " from callee " << callee->name()
@@ -385,6 +385,13 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(boost::un
   return ret;
 }
 
+// TODO, the proper way of doing this should be:
+// 1. if stack was stored in a register, need to do live variable analysis,
+//    then consider store to stack using this register while the def was live
+// 2. if the stack was stored to memory, likely also somewhere on the stack
+//    need to consider the 'liveness' of this stack location
+//    then reads from this location while its live
+//    then for those reads, repeat 1
 bool get_indirect_write_to_stack(Instruction insn, Address addr, Block *b, Function *f,
                                  int stackHeight, StackStore &stackRead,
                                  boost::unordered_map<Address, StackStore> &indirectWrites,
@@ -410,7 +417,7 @@ bool get_indirect_write_to_stack(Instruction insn, Address addr, Block *b, Funct
       }
     }
     if (loadStackAddr && machRegs.size() > 1) {
-      cout << "[stack] All writes to stack might be intractable! @" << std::hex << addr << std::dec << endl;
+      cout << "[stack] All writes to stack might be intractable type1 ! @" << std::hex << addr << std::dec << endl;
       *stackWritesIntractable = true;
     }
   }
@@ -472,7 +479,7 @@ bool get_indirect_write_to_stack(Instruction insn, Address addr, Block *b, Funct
             AbsRegion curr = arc.convert(*rit);
             if (curr == addrReg) {
               cout << "[stack] reg containing stack addr propogated to other addr ..." << endl;
-              cout << "[stack] All writes to stack might be intractable! @" << std::hex << currAddr << std::dec << endl;
+              cout << "[stack] All writes to stack might be intractable type2 ! @" << std::hex << currAddr << std::dec << endl;
               *stackWritesIntractable = true;
               break;
               //return loadStackAddr;

@@ -120,11 +120,14 @@ def parseLoadsOrStores(json_exprs):
 
         shift = int(shift, 16)
         off = int(off, 16)
+        dst = None
+        if 'dst' in json_expr:
+            dst = json_expr['dst']
         #both shift and offset are in hex form
         if DEBUG: print("Parsing result reg: " + expr_reg + \
                         " shift " + str(shift) + " off " + str(off) + " insn addr: " + str(insn_addr))
         #TODO, in the future use a map instead of a list...
-        data_points.append([insn_addr, reg, shift, off, off_reg, read_same_as_write, is_bit_var, type, func])
+        data_points.append([insn_addr, reg, shift, off, off_reg, read_same_as_write, is_bit_var, type, func, dst])
     return data_points
 
 #FIXME: call instructions insns and not addrs
@@ -247,6 +250,8 @@ def get_mem_writes(insn_to_func, prog):
         is_loop_insn = json_writes['is_loop_insn']
         func_name = json_writes['func_name']
         src_reg = json_writes['src']
+        if "::" in src_reg:
+            src_reg = src_reg.split("::")[1]
         if DEBUG: print("==> For instruction: " + str(insn) + " @ " + func_name)
         data_points = parseLoadsOrStores(json_writes['writes'])
 
@@ -255,6 +260,45 @@ def get_mem_writes(insn_to_func, prog):
 
     if DEBUG_CTYPE: print( "[main] sa returned " + str(mem_writes_per_insn))
     return mem_writes_per_insn
+
+def get_reg_read_or_written(insn_to_func, prog, is_read):
+    print()
+    print( "[main] getting the registers read or written at instructions: ")
+
+    insn_to_func_json = []
+    for pair in insn_to_func:
+        insn = pair[0]
+        func_name = pair[1]
+        insn_to_func_json.append({'addr': insn, 'func_name': func_name})
+    json_str = json.dumps(insn_to_func_json)
+    addr_to_func_str = c_char_p(str.encode(json_str))
+    prog_name = c_char_p(str.encode(prog))
+
+    if DEBUG_CTYPE: print( "[main] addr to func: " + json_str)
+    if DEBUG_CTYPE: print( "[main] prog: " + prog)
+    if DEBUG_CTYPE: print( "[main] : " + "Calling C", flush=True)
+
+    lib.getRegsReadOrWritten(addr_to_func_str, prog_name, is_read)
+    if DEBUG_CTYPE: print( "[main] : Back from C")
+
+    reg_read_or_written_per_insn = []
+    f = open(os.path.join(curr_dir, 'RegReadOrWrittenPerInsn_result'))
+    json_writes_per_insn = json.load(f)
+    if DEBUG_CTYPE: print("[main] : sa returned: " + str(json_writes_per_insn))
+    for json_writes in json_writes_per_insn:
+        if len(json_writes) == 0:
+            continue
+        insn = json_writes['addr']
+        func_name = json_writes['func_name']
+        src_reg = json_writes['src']
+        if "::" in src_reg:
+            src_reg = src_reg.split("::")[1]
+        if DEBUG: print("==> For instruction: " + str(insn) + " @ " + func_name)
+        reg_read_or_written_per_insn.append([insn, func_name, src_reg])
+    f.close()
+
+    if DEBUG_CTYPE: print( "[main] sa returned " + str(reg_read_or_written_per_insn))
+    return reg_read_or_written_per_insn
 
 def static_backslices(slice_starts, prog, sa_result_cache):
     print()
@@ -322,7 +366,6 @@ def static_backslices(slice_starts, prog, sa_result_cache):
 
     if DEBUG_CTYPE: print( "[main] returned" + str(data_points_per_reg))
     return data_points_per_reg
-
 
 def static_backslice(reg, insn, func, prog):
     print()

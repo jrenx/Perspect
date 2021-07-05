@@ -525,8 +525,18 @@ void getMemWrites(char *addrToFuncNames, char *progName) {
     }
     std::vector<Operand> ops;
     insn.getOperands(ops);
-    // TODO is this good enough?
-    cJSON_AddStringToObject(json_insn, "src", ops.rbegin() != ops.rend() ? (*ops.rbegin()).format(insn.getArch()).c_str() : "");
+    MachRegister reg;
+    for (auto oit = ops.rbegin(); oit != ops.rend(); oit++) {
+      bool isRegReadOnly = (*oit).isRead() && !(*oit).isWritten() && !(*oit).readsMemory() && !(*oit).writesMemory();
+      if (!isRegReadOnly) continue;
+      std::vector<MachRegister> regs;
+      long off = 0;
+      getRegAndOff((*oit).getValue(), regs, &off);
+      if (off != 0) continue;
+      if (regs.size() != 1) continue;
+      reg = regs[0];
+    }
+    cJSON_AddStringToObject(json_insn, "src", reg != InvalidReg ? reg.name().c_str() : "");
     cJSON_AddItemToObject(json_insn, "writes", json_writes);
     cJSON_AddItemToArray(json_insns, json_insn);
     if (DEBUG) cout << endl;
@@ -730,6 +740,80 @@ void getMemWritesToStaticAddresses(char *progName) {
   getNestedMemWritesToStaticAddresses(staticWriteInsns, progName);
   delete co;
   delete sts;
+}
+
+void getRegsReadOrWritten(char *addrToFuncNames, char *progName, bool isRead) {
+  if (DEBUG) cout << "[sa] ================================" << endl;
+  if (DEBUG) cout << "[sa] Getting registers read or written by instructions: " << endl;
+  if (DEBUG) cout << "[sa] addr to func: " << addrToFuncNames << endl;
+  if (DEBUG) cout << "[sa] prog: " << progName << endl;
+
+  SymtabCodeSource *stcs = new SymtabCodeSource((char *)progName);
+  CodeObject *co = new CodeObject(stcs);
+  co->parse();
+
+  cJSON *json_insns = cJSON_CreateArray();
+
+  cJSON *json_addrToFuncNames = cJSON_Parse(addrToFuncNames);
+  int size = cJSON_GetArraySize(json_addrToFuncNames);
+  if (DEBUG) cout << "[sa] size of addr to func array is:　" << size << endl;
+  for (int i = 0; i < size; i++) {
+    cJSON *json_pair = cJSON_GetArrayItem(json_addrToFuncNames, i);
+    cJSON *json_funcName = cJSON_GetObjectItem(json_pair, "func_name");
+    cJSON *json_addr = cJSON_GetObjectItem(json_pair, "addr");
+
+    errno = 0;
+    char *end;
+    //cout << json_addr->valuestring << endl;
+    long unsigned int addr = strtol(json_addr->valuestring, &end, 10);
+    if (errno != 0)
+      cout << " Encountered error " << errno << " while parsing " << json_addr->valuestring << endl;
+    char *funcName = json_funcName->valuestring;
+
+    cJSON *json_insn  = cJSON_CreateObject();
+    cJSON_AddNumberToObject(json_insn, "addr", addr);
+    cJSON_AddStringToObject(json_insn, "func_name", funcName);
+
+    if (INFO) cout << endl << "[sa] addr: 0x" << std::hex << addr << std::dec << endl;
+    if (INFO) cout << "[sa] func: " << funcName << endl;
+
+    Function *func = getFunction2(stcs, co, funcName);
+    Block *bb = getBasicBlock2(func, addr);
+    Instruction insn = bb->getInsn(addr);
+
+    std::vector<Operand> ops;
+    insn.getOperands(ops);
+    // TODO is this good enough?
+    MachRegister reg;
+    for (auto oit = ops.rbegin(); oit != ops.rend(); oit++) {
+      if (isRead) {
+        bool isRegReadOnly = (*oit).isRead() && !(*oit).isWritten() && !(*oit).readsMemory() && !(*oit).writesMemory();
+        if (!isRegReadOnly) continue;
+      } else {
+        bool isRegWrittenOnly = !(*oit).isRead() && (*oit).isWritten() && !(*oit).readsMemory() && !(*oit).writesMemory();
+        if (!isRegWrittenOnly) continue;
+      }
+      std::vector<MachRegister> regs;
+      long off = 0;
+      getRegAndOff((*oit).getValue(), regs, &off);
+      if (off != 0) continue;
+      if (regs.size() != 1) continue;
+      reg = regs[0];
+    }
+    cJSON_AddStringToObject(json_insn, "src", reg != InvalidReg ? reg.name().c_str() : "");
+    cJSON_AddItemToArray(json_insns, json_insn);
+    if (DEBUG) cout << endl;
+  }
+  char *rendered = cJSON_Print(json_insns);
+  cJSON_Delete(json_insns);
+  std::ofstream out("RegReadOrWrittenPerInsn_result");
+  out << rendered;
+  out.close();
+
+  if(DEBUG) cout << "[sa] all results saved to \"RegReadOrWrittenPerInsn_result\"";
+  if(DEBUG) cout << endl;
+  delete co;
+  delete stcs;
 }
 
 void getRegsWritten(char *progName, char *funcName, long unsigned int addr) {

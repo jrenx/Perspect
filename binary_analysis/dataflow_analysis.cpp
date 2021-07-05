@@ -236,6 +236,21 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
     cJSON_AddStringToObject(json_read, "func", funcName);
     cJSON_AddNumberToObject(json_read, "read_same_as_write", isKnownBitVar ? 1 : 0); // TODO, see analyzeKnownBitVariables for proper way to handle this
 
+    std::vector<Operand> ops;
+    insn.getOperands(ops);
+    MachRegister reg;
+    for (auto oit = ops.rbegin(); oit != ops.rend(); oit++) {
+      bool isRegWrittenOnly = !(*oit).isRead() && (*oit).isWritten() && !(*oit).readsMemory() && !(*oit).writesMemory();
+      if (!isRegWrittenOnly) continue;
+      std::vector<MachRegister> regs;
+      long off = 0;
+      getRegAndOff((*oit).getValue(), regs, &off);
+      if (off != 0) continue;
+      if (regs.size() != 1) continue;
+      reg = regs[0];
+    }
+    cJSON_AddStringToObject(json_read, "dst", reg != InvalidReg ? reg.name().c_str() : "");
+
     if (isBitVar) {
       std::vector<Assignment::Ptr> operations = bitOperations[assign];
       if (INFO) cout << "[sa] bit operations: " << endl;
