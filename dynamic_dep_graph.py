@@ -19,6 +19,22 @@ time_record = {}
 DEBUG_POST_ORDER = False
 DEBUG = False
 
+reg_size_map = dict(al=1,   ah=1, ax=2,   eax=4,  rax=8,
+					bl=1,   bh=1, bx=2,   ebx=4,  rbx=8,
+					cl=1,   ch=1, cx=2,   ecx=4,  rcx=8,
+					dl=1,   dh=1, dx=2,   edx=4,  rdx=8,
+					sil=1,        si=2,   esi=4,  rsi=8,
+					dil=1,        di=2,   edi=4,  rdi=8,
+					bpl=1,        bp=2,   ebp=4,  rbp=8,
+					spl=1,        sp=2,   esp=4,  rsp=8,
+					r8b=1,        r8w=2,  r8d=4,  r8=8,
+					r9b=1,        r9w=2,  r9d=4,  r9=8,
+					r10b=1,       r10w=2, r10d=4, r10=8,
+					r11b=1,       r11w=2, r11d=4, r11=8,
+					r12b=1,       r12w=2, r12d=4, r12=8,
+					r13b=1,       r13w=2, r13d=4, r13=8,
+					r14b=1,       r14w=2, r14d=4, r14=8,
+					r15b=1,       r15w=2, r15d=4, r15=8)
 
 class DynamicNode(JSONEncoder):
     id = 0
@@ -917,10 +933,25 @@ class DynamicGraph:
                 assert mem_store_addr is not None, str(insn_line) + "\n" + str(dynamic_node)
                 # assert mem_store_addr in addr_to_df_succe_node
                 if mem_store_addr in addr_to_df_succe_node:
+                    to_remove = []
                     for succe in addr_to_df_succe_node[mem_store_addr]:
                         succe.df_predes.append(dynamic_node)
                         dynamic_node.df_succes.append(succe)
-                    del addr_to_df_succe_node[mem_store_addr]
+
+                        # HACK: if the src reg is smaller than the dst reg, keep looking for more writes
+                        dst_reg = succe.static_node.dst_reg
+                        src_reg = dynamic_node.static_node.src_reg
+                        if dst_reg is not None and dst_reg != '' \
+                                and src_reg is not None and src_reg != '':
+                            dst_reg_size = reg_size_map[dst_reg]
+                            src_reg_size = reg_size_map[src_reg]
+                            if src_reg_size < dst_reg_size:
+                                continue
+                        to_remove.append(succe)
+                    for succe in to_remove:
+                        addr_to_df_succe_node[mem_store_addr].remove(succe)
+                    if len(addr_to_df_succe_node[mem_store_addr]) == 0:
+                        del addr_to_df_succe_node[mem_store_addr]
             loads_memory = True if static_node.mem_load is not None else False
             if static_node.df_predes or (loads_memory and static_node.mem_load.read_same_as_write):  # and insn not in insn_of_df_nodes:
                 for prede in static_node.df_predes:

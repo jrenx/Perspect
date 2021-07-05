@@ -1470,6 +1470,7 @@ class StaticDepGraph:
                 is_bit_var = load[6]
                 type = load[7]
                 curr_func = load[8]
+                dst_reg = load[9]
 
                 assert shift != '', str(load)
                 assert off != '', str(load)
@@ -1494,7 +1495,7 @@ class StaticDepGraph:
                             off_reg = ''
                             off = 0
                         prede.mem_load = MemoryAccess(prede_reg, shift, off, off_reg, is_bit_var)
-                        prede.reg_write = '' #TODO put actual register name here
+                        prede.reg_store = dst_reg #TODO put actual register name here
                         if read_same_as_write is True:
                             succe.mem_store.read_same_as_write = True
                             prede.mem_load.read_same_as_write = True
@@ -1583,6 +1584,8 @@ class StaticDepGraph:
                 load = result[0]
                 prede_insn = result[1]
                 curr_func = result[2]
+                src_reg = result[3]
+
                 if load is None: #TODO why?
                     continue
 
@@ -1612,7 +1615,7 @@ class StaticDepGraph:
                 prede = self.make_or_get_df_node(prede_insn, None, curr_func)
                 if prede.explained is False:
                     prede.mem_store = MemoryAccess(prede_reg, shift, off, off_reg, node.mem_load.is_bit_var)
-                    prede.reg_load = ''  # TODO put actual register name here
+                    prede.reg_load = src_reg  # TODO put actual register name here
                     if curr_func != func:
                         defs_in_diff_func.add(prede)
                     else:

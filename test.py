@@ -407,6 +407,21 @@ class TestStaticSlicing(unittest.TestCase):
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
 
+    def test_get_mem_writes(self):
+        insn_to_func = []
+        insn_to_func.append(['4224111', 'runtime.mallocgc']) #0x40746f
+        #insn_to_func.append(['4224347', 'runtime.free'])
+        #insn_to_func.append(['4224717', 'runtime.free'])
+        results = get_mem_writes(insn_to_func, '909_ziptest_exe9')
+        print(results)
+
+    def test_get_reg_read_or_written(self):
+        insn_to_func = []
+        insn_to_func.append(['4232057', 'scanblock']) #0x40746f
+        #insn_to_func.append(['4224347', 'runtime.free'])
+        #insn_to_func.append(['4224717', 'runtime.free'])
+        results = get_reg_read_or_written(insn_to_func, '909_ziptest_exe9', False)
+        print(results)
     """
     def test_sa_TODO16(self):
         slice_starts = []

@@ -306,10 +306,10 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
             shifts.append('')
             offsets.append(static_addr)  # already in hex
             off_regs.append('')
-            src_regs.append('')
+            src_regs.append('') #TODO, return a register
             loop_insn_flags.append('0')
             if insn not in all_unique_writes:
-                results.append([['', 0, int(static_addr, 16)], insn, func])
+                results.append([['', 0, int(static_addr, 16)], insn, func, ''])
                 all_unique_writes.add(insn)
                 explained_addrs.add(static_addr)
 
@@ -411,9 +411,10 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                 shifts.append(hex(curr_expr[2]))
                 offsets.append(hex(curr_expr[3])) #FIXME, when parsing should probably just return hex
                 off_regs.append(curr_expr[4].strip().lower() if curr_expr[4] is not None else '')
-                src_regs.append(line[4].strip().strip('%').lower())
+                src_reg = line[4].strip()
+                src_regs.append(src_reg)
                 loop_insn_flags.append(line[5])
-                results.append([curr_expr[1:], true_insn_addr, func])
+                results.append([curr_expr[1:], true_insn_addr, func, src_reg])
 
             print("[rr] all insns found " + str(reg_points))
             print("[rr] all registers found " + str(regs))

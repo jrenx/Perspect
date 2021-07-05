@@ -3,12 +3,13 @@
 #CXX=cl
 CXX=g++
 CC=gcc
+
+#analysis: analysis.o util.o dataflow_analysis.o static_df_analysis.o stack_analysis.o bitvar_analysis.o cJSON.o
+#	$(CXX) analysis.o util.o dataflow_analysis.o static_df_analysis.o stack_analysis.o bitvar_analysis.o cJSON.o -L$(DYNINST_LIB) -ldyninstAPI -lboost_system -ltbbmalloc_proxy -linstructionAPI -lparseAPI -lsymtabAPI -lcommon -lstdc++ -lm\
+#	       	-o analysis -std=c++11
+
 #analysis.o: analysis.cpp
 #	$(CXX) -g -c $(CFLAGS) -I$(DYNINST_INCLUDE) analysis.cpp -std=c++11
-
-#analysis: analysis.o cJSON.o
-#	$(CXX) analysis.o cJSON.o -L$(DYNINST_LIB) -ldyninstAPI -lboost_system -ltbbmalloc_proxy -linstructionAPI -lparseAPI -lsymtabAPI -lcommon -lstdc++ -lm\
-#	       	-o analysis -std=c++11
 
 analysis: analysis.o util.o dataflow_analysis.o static_df_analysis.o stack_analysis.o bitvar_analysis.o cJSON.o
 	$(CXX) analysis.o util.o dataflow_analysis.o static_df_analysis.o stack_analysis.o bitvar_analysis.o cJSON.o -L$(DYNINST_LIB) -ldyninstAPI -lboost_system -ltbbmalloc_proxy -linstructionAPI -lparseAPI -lsymtabAPI -lcommon -lstdc++ -lm\
