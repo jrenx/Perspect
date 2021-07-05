@@ -25,7 +25,7 @@ def run_watchpoint(breakpoints, watchpoints):
     print("Running watchpoints took: " + str(b - a))
     return success
 
-def parse_watchpoint(breakpoints, watchpoints):
+def parse_watchpoint():
     """
     :return: list of pair (watchpoint, addr, value). value is the location where watchpoint is triggered, None if addr is from
     breakpoints.
@@ -40,6 +40,6 @@ if __name__ == '__main__':
     #watchpoints = ['0x7fdc12590d28']
     watchpoints = ['0x479ef8']
     #run_watchpoint(breakpoints, watchpoints)
-    trace = parse_watchpoint(breakpoints, watchpoints, "*0x420e59")
+    #trace = parse_watchpoint(breakpoints, watchpoints, "*0x420e59")
     #print(trace[:10])
     #print(trace[90:100])
