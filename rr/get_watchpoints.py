@@ -15,7 +15,7 @@ def run_watchpoint(breakpoints, watchpoints):
 
     success = True
     a = datetime.datetime.now()
-    rr_process = subprocess.Popen('sudo rr replay >/dev/null', stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, shell=True)
+    rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, shell=True)
     try:
         rr_process.communicate(('source' + os.path.join(rr_dir, 'watchpoints.py')).encode(), timeout=60)
     except subprocess.TimeoutExpired:
@@ -38,8 +38,10 @@ if __name__ == '__main__':
     breakpoints = []
     #watchpoints = ['0xf83fffbe68', '0xf83fffefd8']
     #watchpoints = ['0x7fdc12590d28']
-    watchpoints = ['0x479ef8']
-    #run_watchpoint(breakpoints, watchpoints)
+    #watchpoints = ['0x479ef8']
+    watchpoints = ['0xf84002f7a0', '0xf8400021000000']
+    #watchpoints = ['0xf84002f7a0']
+    run_watchpoint(breakpoints, watchpoints)
     #trace = parse_watchpoint(breakpoints, watchpoints, "*0x420e59")
     #print(trace[:10])
     #print(trace[90:100])
