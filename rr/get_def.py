@@ -498,8 +498,4 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
 
 
 if __name__ == '__main__':
-    branch = '*0x409c84' #472
-    taken = '*0x409c55' #467
-    reg_point = '*0x409c24'
-    regs = 'rbp'
-    positive, negative = get_def('909_ziptest_exe9', branch, taken, reg_point, regs)
+    positive, negative = get_def('909_ziptest_exe9', '*0x409380', '*0x409418', '0x409379', 'reg', 0, 8, 'r13')
