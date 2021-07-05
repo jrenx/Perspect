@@ -240,14 +240,18 @@ void parseStaticNode(char *filename, int CodeCount) {
       //cout << " code: " << currCode << " accesses " << numAccess <<  " reg count " << CodeToRegCount[currCode] << endl;
 
       cJSON *json_regLoad = cJSON_GetObjectItem(json_staticNode, "reg_load");
-      if (json_regLoad->child == NULL) {
+      if (json_regLoad->valuestring == NULL) {
         CodeToStaticNode[currCode]->src_reg_size = 8;
-      } else {
+      } else if (regSizeMap.find(json_regLoad->valuestring) == regSizeMap.end()) {
+        CodeToStaticNode[currCode]->src_reg_size = 8;
+      } else { 
         CodeToStaticNode[currCode]->src_reg_size = regSizeMap[json_regLoad->valuestring];
       }
 
       cJSON *json_regStore = cJSON_GetObjectItem(json_staticNode, "reg_store");
-      if (json_regStore->child == NULL) {
+      if (json_regStore->valuestring == NULL) {
+        CodeToStaticNode[currCode]->dst_reg_size = 8;
+      } else if (regSizeMap.find(json_regStore->valuestring) == regSizeMap.end()) {
         CodeToStaticNode[currCode]->dst_reg_size = 8;
       } else {
         CodeToStaticNode[currCode]->dst_reg_size = regSizeMap[json_regStore->valuestring];

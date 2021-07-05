@@ -764,7 +764,7 @@ void getRegsReadOrWritten(char *addrToFuncNames, char *progName, bool isRead) {
 
     errno = 0;
     char *end;
-    cout << json_addr->valuestring << endl;
+    //cout << json_addr->valuestring << endl;
     long unsigned int addr = strtol(json_addr->valuestring, &end, 10);
     if (errno != 0)
       cout << " Encountered error " << errno << " while parsing " << json_addr->valuestring << endl;

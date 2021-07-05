@@ -939,12 +939,12 @@ class DynamicGraph:
                         dynamic_node.df_succes.append(succe)
 
                         # HACK: if the src reg is smaller than the dst reg, keep looking for more writes
-                        dst_reg = succe.static_node.dst_reg
-                        src_reg = dynamic_node.static_node.src_reg
+                        dst_reg = succe.static_node.reg_store
+                        src_reg = dynamic_node.static_node.reg_load
                         if dst_reg is not None and dst_reg != '' \
                                 and src_reg is not None and src_reg != '':
-                            dst_reg_size = reg_size_map[dst_reg]
-                            src_reg_size = reg_size_map[src_reg]
+                            dst_reg_size = reg_size_map[dst_reg.lower()]
+                            src_reg_size = reg_size_map[src_reg.lower()]
                             if src_reg_size < dst_reg_size:
                                 continue
                         to_remove.append(succe)
