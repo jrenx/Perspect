@@ -20,7 +20,7 @@ for wp in watchpoints:
         try:
             gdb.execute('watch *(long *){}'.format(wp))
         except Exception:
-            print('[Error] Failed to set watchpoint {}'.format(wp), file=sys.stderr)
+            sys.stderr.write('[Error] Failed to set watchpoint {}'.format(wp))
 
 for br in breakpoints:
     gdb.execute("br {}".format(br))
@@ -41,7 +41,7 @@ while True:
         func = str(frame.name())
         trace.append((watchpoints[watchpoint_values.index(pc)], hex(pc), func))
     else:
-        print('[Error] gdb stop at unkown point {}'.format(hex(pc)), file=sys.stderr)
+        sys.stderr.write('[Error] gdb stop at unkown point {}'.format(hex(pc)))
 
 with open(os.path.join(rr_dir, 'watchpoints.log'), 'w') as log_file:
     json.dump(trace, log_file)
