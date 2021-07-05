@@ -15,7 +15,7 @@ def run_watchpoint(breakpoints, watchpoints):
 
     success = True
     a = datetime.datetime.now()
-    rr_process = subprocess.Popen('sudo rr replay >/dev/null', stdin=subprocess.PIPE, shell=True)
+    rr_process = subprocess.Popen('sudo rr replay >/dev/null', stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, shell=True)
     try:
         rr_process.communicate(('source' + os.path.join(rr_dir, 'watchpoints.py')).encode(), timeout=60)
     except subprocess.TimeoutExpired:
