@@ -351,7 +351,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
         # Second pass
         print("[rr] Running second step for {} times".format(i + 1), flush=True)
         run_watchpoint([], watchpoints)
-        watchpoint_trace = parse_watchpoint([], watchpoints, read)
+        watchpoint_trace = parse_watchpoint()
         print("[rr] Parsed " + str(len(watchpoint_trace)) + " watchpoint hits")
         #("[tmp] " + str(watchpoint_trace))
         print("[rr] Second step finished")
