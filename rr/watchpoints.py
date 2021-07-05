@@ -41,6 +41,7 @@ def exit_handler(event):
         json.dump(trace, log_file)
     gdb.execute('exit')
     
+gdb.events.exited.connect(exit_handler)
 
 while True:
     try:
