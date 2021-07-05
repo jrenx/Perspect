@@ -39,7 +39,7 @@ gdb.events.stop.connect(wp_handler)
 def exit_handler(event):
     with open(os.path.join(rr_dir, 'watchpoints.log'), 'w') as log_file:
         json.dump(trace, log_file)
-    gdb.execute('exit')
+    gdb.execute('quit', False, True)
     
 gdb.events.exited.connect(exit_handler)
 
