@@ -39,7 +39,7 @@ if __name__ == '__main__':
     #watchpoints = ['0xf83fffbe68', '0xf83fffefd8']
     #watchpoints = ['0x7fdc12590d28']
     #watchpoints = ['0x479ef8']
-    watchpoints = ['0xf84002f7a0', '0xf8400021000000']
+    watchpoints = ['0xf840002dc0', '0x50a7f8']
     #watchpoints = ['0xf84002f7a0']
     run_watchpoint(breakpoints, watchpoints)
     #trace = parse_watchpoint(breakpoints, watchpoints, "*0x420e59")
