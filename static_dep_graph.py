@@ -71,6 +71,8 @@ class BasicBlock:
     @staticmethod
     def fromJSON(data):
         id = data['id']
+        if StaticNode.id <= id:
+            StaticNode.id = id + 1
         ends_in_branch = data['ends_in_branch']
         is_entry = True if data['is_entry'] == 1 else False
         lines = data['lines']
@@ -959,7 +961,10 @@ class StaticDepGraph:
         sg = StaticDepGraph(func, prog)
         if "cfg" in data:
             sg.cfg = CFG.fromJSON(data["cfg"])
-        sg.bb_id_to_node_id = data["bb_id_to_node_id"]
+            
+        sg.bb_id_to_node_id = {}
+        for key in data["bb_id_to_node_id"]:
+            sg.bb_id_to_node_id[int(key)] = data["bb_id_to_node_id"][key]
 
         #print("Current function: " + func)
         for n in data["id_to_node"]:
