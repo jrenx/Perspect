@@ -669,6 +669,7 @@ class StaticNode:
         else:
             self.id = StaticNode.id #TODO, incremenet ID here?
             StaticNode.id += 1
+        self.group_id = -1
         self.insn = insn #FIXME, this is long type right
         self.hex_insn = hex(insn)
         self.function = function #FIXME, maybe rename this to func?
@@ -765,6 +766,7 @@ class StaticNode:
         bb = data["bb"] if 'bb' in data else None #TODO, assign actual BB later
 
         sn = StaticNode(insn, bb, function, id)
+        sn.group_id = data["group_id"]
 
         sn.explained = data["explained"]
         sn.is_cf = data["is_cf"]
