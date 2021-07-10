@@ -422,6 +422,18 @@ class TestStaticSlicing(unittest.TestCase):
         #insn_to_func.append(['4224717', 'runtime.free'])
         results = get_reg_read_or_written(insn_to_func, '909_ziptest_exe9', False)
         print(results)
+
+    def test_stack(self):
+        slice_starts = []
+        slice_starts.append(['', 0x41658e, "bytes.*Buffer·ReadFrom", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
+        self.assertEqual(results[0][0], '')
+        self.assertEqual(results[0][1], 0x41658e)
+        self.assertEqual(len(results[0][2]), 2)
+        self.assertTrue([0x416723, 'RSP', 0, 24, None, False, False, 'memread', 'bytes.*Buffer·ReadFrom', ''] in results[0][2])
+        self.assertTrue([0x41650b, 'RAX', 0, 0, None, False, False, 'memread', 'bytes.*Buffer·ReadFrom', ''] in results[0][2])
+
     """
     def test_sa_TODO16(self):
         slice_starts = []
