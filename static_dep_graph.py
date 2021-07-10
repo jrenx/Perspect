@@ -93,6 +93,7 @@ class BasicBlock:
         bb.backedge_targets = data['backedge_targets']
         bb.predes = data['predes']
         bb.succes = data['succes']
+
         return bb
 
     def add_start_insn(self, start_insn):
@@ -701,6 +702,11 @@ class StaticNode:
         self.backedge_targets = set()
         self.backedge_sources = set()
 
+        # For grouping together nodes with a OR relation
+        self.group_ids = None
+        self.group_insns = None
+        self.virtual_nodes = []
+
     def print_node(self, prefix): #FIXME change the one in dynamic graph
         print(prefix
               + " s_id: " + str(self.id)
@@ -762,11 +768,11 @@ class StaticNode:
     def fromJSON(data):
         id = data["id"]
         insn = data["insn"]
+        StaticDepGraph.insn_to_node[sn.insn] = sn
         function = data["function"]
         bb = data["bb"] if 'bb' in data else None #TODO, assign actual BB later
 
         sn = StaticNode(insn, bb, function, id)
-        sn.group_id = data["group_id"]
 
         sn.explained = data["explained"]
         sn.is_cf = data["is_cf"]
@@ -791,6 +797,15 @@ class StaticNode:
 
         sn.backedge_targets = set(data['node_backedge_targets'])
         sn.backedge_sources = set(data['node_backedge_sources'])
+
+        sn.group_ids = data["group_ids"]
+        sn.group_insns = data["group_insns"]
+        if sn.group_ids is not None:
+            for group_id in sn.group_ids:
+                if group_id not in StaticDepGraph.group_to_nodes:
+                    StaticDepGraph.group_to_nodes[group_id] = set()
+                StaticDepGraph.group_to_nodes[group_id].add(sn)
+
         return sn
 
     @staticmethod
@@ -913,6 +928,9 @@ class StaticDepGraph:
     exit_nodes = set()
 
     pending_callsite_nodes = []
+
+    group_to_nodes = {}
+    insn_to_node = {}
 
     def __init__(self, func, prog):
         self.func = func
@@ -1102,6 +1120,8 @@ class StaticDepGraph:
 
         node = StaticNode(insn, bb, function)
         #print("Creating node: " + str(node))
+        assert insn not in StaticDepGraph.insn_to_node
+        StaticDepGraph.insn_to_node[insn] = node
 
         if function in StaticDepGraph.func_to_graph:
             graph = StaticDepGraph.func_to_graph[function]
@@ -1467,6 +1487,8 @@ class StaticDepGraph:
                 continue
 
             succe = addr_to_node[insn]
+            group = False if len(loads) <= 1 else True
+            group_size = 0
             for load in loads:
                 prede_insn = load[0]
                 prede_reg = load[1]
@@ -1488,6 +1510,20 @@ class StaticDepGraph:
                 #else:
                 prede = StaticDepGraph.make_or_get_df_node(prede_insn, None,
                                                            curr_func)  # TODO, might need to include func here too
+                if group is True:
+                    if prede.group_insns is None:
+                        prede.group_insns = []
+                    if succe.insn in prede.group_insns:
+                        group is False
+                    else:
+                        prede.group_insns.append(succe.insn)
+                        if prede.group_ids is None:
+                            prede.group_ids = []
+                        prede.group_ids.append(StaticNode.group_id)
+                        group_size += 1
+                        if StaticNode.group_id not in StaticDepGraph.group_to_nodes:
+                            StaticDepGraph.group_to_nodes[StaticNode.group_id] = set()
+                        StaticDepGraph.group_to_nodes[StaticNode.group_id].add(prede)
                 #print(prede)
                 if prede == succe and read_same_as_write is False:
                     if succe.mem_load is None:
@@ -1537,7 +1573,10 @@ class StaticDepGraph:
                 #    prede.explained = True
                 #else:
                     #assert prede.mem_load is not None or prede.reg_load is not None, str(prede)
-
+            if group is True:
+                print("Creating new group id: " + str(StaticNode.group_id) + " size " + str(size) + " parent " + hex(
+                    succe.insn))
+                StaticNode.group_id += 1
         print("[static_dep] Found " + str(len(defs_in_same_func)) + " dataflow nodes local in function ")
         tmp_defs_in_same_func = set([])
 

@@ -283,6 +283,30 @@ class RelationAnalysis:
                     output_node.input_sets[node_insn] = set()
                 output_node.input_sets[node_insn].add(node)
 
+        if node.static_node.group_ids is not None:
+            for i in range(len(node.static_node.group_ids)):
+                group_id = node.static_node.group_ids[i]
+                group_insn = node.static_node.group_insns[i]
+                if group_id in StaticDepGraph.insn_to_node:
+                    virtual_static_node = StaticDepGraph.insn_to_node[group_id]
+                else:
+                    virtual_static_node = StaticNode(group_id, None, hex(group_insn))
+                    virtual_static_node.explained = True
+                    StaticDepGraph.insn_to_node[group_id] = virtual_static_node
+                #node.static_node.print_node("Child node: ")
+                #virtual_static_node.print_node("Creating virtual static node: ")
+                node.static_node.virtual_nodes.append(virtual_static_node)
+                virtual_node = DynamicNode(group_id, virtual_static_node)
+                if group_id not in dgraph.insn_to_dyn_nodes:
+                    dgraph.insn_to_dyn_nodes[group_id] = []
+                dgraph.insn_to_dyn_nodes[group_id].append(virtual_node)
+
+                virtual_node.output_set = virtual_node.output_set.union(node.output_set)
+                for output_node in node.output_set:
+                    if group_id not in output_node.input_sets:
+                        output_node.input_sets[group_id] = set()
+                    output_node.input_sets[group_id].add(virtual_node)
+
         worklist = deque()
         worklist.append(starting_node)
         visited = set() #TODO, ideally wanna propogate all the way, for now don't do that
@@ -395,6 +419,8 @@ class RelationAnalysis:
                 worklist.append(p)
             for p in static_node.df_predes:
                 worklist.append(p)
+            for v in static_node.virtual_nodes:
+                worklist.append(v)
         """
         for static_node in wavefront:
             print("[ra] pending node: " + static_node.hex_insn
@@ -565,6 +591,9 @@ class RelationAnalysis:
                 worklist.append(p)
             for p in static_node.df_predes:
                 worklist.append(p)
+            for v in static_node.virtual_nodes:
+                worklist.append(v)
+
         """
         for static_node in wavefront:
             print("[ra] pending node: " + static_node.hex_insn
