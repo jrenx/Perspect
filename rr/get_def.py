@@ -499,5 +499,6 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
 
 
 if __name__ == '__main__':
-    result = get_def('909_ziptest_exe9', '*0x409380', '*0x409418', '*0x409379', 'rdx', 0, 8, 'r13')
-    print(result[0])
+    result = get_def('909_ziptest_exe9', '*0x409380', '*0x409418', '*0x409379', 'rdx', '0x0', '0x8', 'r13')
+    print(result)
+    print(len(result))
