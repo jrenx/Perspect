@@ -60,6 +60,7 @@ class DynamicNode(JSONEncoder):
         self.output_set = set() #TODO, persist these two as well?
         self.output_set1 = set()
         self.input_sets = {}
+        self.weight = -1
 
     def __str__(self):
         s = "===============================================\n"
@@ -152,10 +153,11 @@ class DynamicNode(JSONEncoder):
         return dn
 
 class DynamicDependence:
-    def __init__(self, insn, func, prog, arg, path, starting_events=[]):
+    def __init__(self, reg, insn, func, prog, arg, path, additional_insn_to_funcs=[]):
         self.prog = prog
         self.arg = arg
         self.path = path
+        self.start_reg = reg
         self.start_insn = insn
         self.start_func = func
         self.key = None
@@ -171,9 +173,17 @@ class DynamicDependence:
         self.insn_to_reg_count2 = {}
         self.code_to_insn = {}
         self.insns_with_regs = set()
+
+        # phase out this eventually and just use one unified list to represent every starting event
+        self.additional_insn_to_funcs = additional_insn_to_funcs
         self.start_insns = set()
-        for p in starting_events:
-            self.start_insns.add(p[0])
+        #self.start_insns.add(insn)
+        for p in additional_insn_to_funcs:
+            self.start_insns.add(p[1]) #FIXME: change start to starting?
+        self.start_events = list(additional_insn_to_funcs)
+        self.start_events.append([reg, insn, func])
+
+        self.init_graph = None
 
     def get_dynamic_trace(self, prog, arg, path, trace_name=""):
         trace_name = trace_name + 'instruction_trace.out'
@@ -182,6 +192,19 @@ class DynamicDependence:
         instructions = []
         unique_insns = set()
         i = 0
+
+        for start_event in self.start_events:
+            reg = start_event[0]
+            insn = start_event[1]
+            if insn in unique_insns:
+                continue
+            unique_insns.add(insn)
+
+            i += 1
+            self.code_to_insn[i] = insn
+            instructions.append([hex(insn), reg, i])
+            self.insns_with_regs.add(insn)
+            self.insn_to_reg_count[insn] = 1
 
         for node in self.all_static_df_nodes:
             #print("DF" + node.hex_insn)
@@ -236,7 +259,6 @@ class DynamicDependence:
 
             i += 1
             self.code_to_insn[i] = node.insn
-
             instructions.append([node.hex_insn, 'pc', i])
 
 
@@ -281,8 +303,12 @@ class DynamicDependence:
                 #print(node)
         return used_cached_result
 
-    def build_dyanmic_dependencies(self, insn):
-        result_file = os.path.join(curr_dir, 'cache', 'dynamic_graph_result_' + self.key + "_" + str(insn))
+    # TODO, refactor into a more user friendly interface?
+    def build_dyanmic_dependencies(self, insn, additional_insns=set(),start_events=set()):
+        file_name = 'dynamic_graph_result_' + self.key + "_" + hex(insn)
+        for additional_insn in additional_insns:
+            file_name = file_name + "_" + hex(additional_insn)
+        result_file = os.path.join(curr_dir, 'cache', file_name)
         if os.path.isfile(result_file):
             with open(result_file, 'r') as f:
                 in_result = json.load(f)
@@ -294,16 +320,14 @@ class DynamicDependence:
                 time_record["load_json"] = time.time()
                 print("[TIME]Load Slice time: ", time.asctime(time.localtime(time_record["load_json"])))
         else:
-            trace_path = self.get_dynamic_trace(self.prog, self.arg, self.path, self.key + "_")
-            time_record["invoke_pin"] = time.time()
-            print("[TIME]Invoke Pin time: ", time.asctime(time.localtime(time_record["invoke_pin"])), flush=True)
+
             a = time.time()
 
             preprocess_data = {
                 "trace_file": trace_path,
                 "static_graph_file": StaticDepGraph.result_file,
                 "start_insn": insn,
-                "start_insns" : list(self.start_insns),
+                "start_insns" : additional_insns,
                 "code_to_insn" : self.code_to_insn,
                 "insns_with_regs" : list(self.insns_with_regs),
                 "insn_of_cf_nodes" : self.insn_of_cf_nodes,
@@ -332,7 +356,7 @@ class DynamicDependence:
             b = time.time()
             print("Loading trace took: " + str(b-a), flush=True)
 
-            dynamic_graph = DynamicGraph(insn, self.start_insns)
+            dynamic_graph = DynamicGraph(insn, additional_insns, start_events)
             dynamic_graph.build_dynamic_graph(byte_seq, self.code_to_insn, self.insns_with_regs, self.insn_to_static_node,
                                               set(self.insn_of_cf_nodes), set(self.insn_of_df_nodes),
                                               set(self.insn_of_local_df_nodes), set(self.insn_of_remote_df_nodes),
@@ -343,7 +367,7 @@ class DynamicDependence:
 
             dynamic_graph.sanity_check()
             dynamic_graph.find_entry_and_exit_nodes()
-            dynamic_graph.find_target_nodes(insn)
+            dynamic_graph.find_target_nodes(insn, additional_insns)
             dynamic_graph.build_postorder_list()
             dynamic_graph.build_reverse_postorder_list()
 
@@ -361,6 +385,59 @@ class DynamicDependence:
         print("[dyn_dep] total number of dynamic nodes: " + str(len(dynamic_graph.dynamic_nodes)))
         return dynamic_graph
 
+    def propogate_weight(self, reference=None):
+        assert(len(postorder_list) > 0)
+
+        #backward pass
+        if reference is not None:
+            for node in self.target_nodes:
+                if node.id in reference.id_to_node:
+                    node.weight = reference.id_to_node[node.id].weight
+
+        for node in self.postorder_list:  # a node will be visited only if its successors have all been visited
+            if node in self.target_nodes:
+                assert(node.weight != -1)
+                continue
+            assert(node.weight == -1)
+            weights = set()
+            for cf_succe in node.cf_succes:
+                weights.add(cf_succe.weight)
+            for df_succe in node.df_succes:
+                weights.add(df_succe.weight)
+            if len(weights) > 2:
+                node.static_node.print_node("Do not aggregate weights: " + str(weights))
+                continue
+            for w in weights:
+                if w == -1:
+                    continue
+                node.weight = w
+
+        # forward pass
+        if reference is not None:
+            for node in self.id_to_nodes.values():
+                if node.id in reference.id_to_node:
+                    if node.weight != -1:
+                        assert(node.weight == reference.id_to_node[node.id].weight)
+                        continue
+                    node.weight = reference.id_to_node[node.id].weight
+
+            for node in self.reverse_postorder_list:  # a node will be visited only if its predecessors have all been visited
+                weights = set()
+                for cf_prede in node.cf_predes:
+                    weights.add(cf_prede.weight)
+                for df_prede in node.df_predes:
+                    weights.add(df_prede.weight)
+                if len(weights) > 2:
+                    node.static_node.print_node("Do not aggregate weights: " + str(weights))
+                    continue
+                for w in weights:
+                    if w == -1:
+                        continue
+                    if node.weight != -1:
+                        assert(node.weight == w)
+                        continue
+                    node.weight = w
+
     def prepare_to_build_dynamic_dependencies(self, sa_steps=10000):
         time_record["start_time"] = time.time()
         print("[TIME]Start time: ", time.asctime(time.localtime(time_record["start_time"])))
@@ -369,16 +446,33 @@ class DynamicDependence:
         #FIXME: convert start instruction to hex
         self.key = str(self.start_insn) + "_" + str(self.start_func) + "_" + str(self.prog) + "_" + str(sa_steps)
 
-        used_cached_result = self.build_static_dependencies(self.start_insn, self.start_func, self.prog, sa_steps)
+        used_cached_result = \
+            self.build_static_dependencies(self.start_reg, self.start_insn, self.start_func, self.prog, limit=sa_steps,
+                                           additional_insn_to_funcs=self.additional_insn_to_funcs)
         time_record["get_slice_start"] = time.time()
         print("[TIME]Get Slice time: ", time.asctime(time.localtime(time_record["get_slice_start"])))
 
+        trace_path = self.get_dynamic_trace(self.prog, self.arg, self.path, self.key + "_")
+        time_record["invoke_pin"] = time.time()
+        print("[TIME]Invoke Pin time: ", time.asctime(time.localtime(time_record["invoke_pin"])), flush=True)
+        self.init_graph = self.build_dyanmic_dependencies(self.start_insn, self.start_insns, self.start_events)
+        self.init_graph.propogate_weight(None)
 
 class DynamicGraph:
     # TODO: restructure DynamicGraph
-    def __init__(self, insn, extra_insns=set()):
+    def __init__(self, insn, additional_insns=set(), start_events=set()):
         self.start_insn = insn
-        self.start_insns = extra_insns
+        self.start_insns = additional_insns
+
+        self.start_insn_to_reg = {}
+        for event in start_events:
+            curr_reg = event[0]
+            if curr_reg == "none":
+                continue
+            curr_insn = event[1]
+            assert(curr_insn not in self.start_insn_to_reg)
+            self.start_insn_to_reg[curr_insn] = curr_reg
+
         self.insn_to_id = {self.start_insn: 1}
         self.dynamic_nodes = []
         self.target_dir = os.path.join(curr_dir, 'dynamicGraph')
@@ -390,6 +484,7 @@ class DynamicGraph:
         self.exit_nodes = set()
         self.target_nodes = set()
         self.insn_to_dyn_nodes = {}
+        self.id_to_node = {}
         
     def toJSON(self):
         data = {}
@@ -442,6 +537,7 @@ class DynamicGraph:
             if insn not in dg.insn_to_dyn_nodes:
                 dg.insn_to_dyn_nodes[insn] = []
             dg.insn_to_dyn_nodes[insn].append(dn)
+            dg.id_to_node[dn.id] = dn
 
             cf_predes = []
             for id in dn.cf_predes:
@@ -683,12 +779,12 @@ class DynamicGraph:
         print("[dyn_dep] total number of entry nodes: " + str(len(self.entry_nodes)))
         print("[dyn_dep] total number of exit nodes: " + str(len(self.exit_nodes)))
 
-    def find_target_nodes(self, insn):
+    def find_target_nodes(self, insn, additional_insns=set()):
         self.target_nodes = []
         #if len(self.target_nodes) > 0:
         #    return
         for node in self.dynamic_nodes: #Dont use exit node, not every target node is an exit node
-            if node.static_node.insn == insn:
+            if node.static_node.insn == insn or node.static_node.insn in additional_insns:
                 self.target_nodes.append(node)
         print("[dyn_dep] total number of target nodes: " + str(len(self.target_nodes)))
 
@@ -783,17 +879,23 @@ class DynamicGraph:
             index += 2
 
             ok = False
+            start = False
             if insn == self.start_insn or insn in self.start_insns:
                 ok = True
+                start = True
             elif insn in cf_prede_insn_to_succe_node \
                     or insn in local_df_prede_insn_to_succe_node \
                     or insn in remote_df_prede_insn_to_succe_node: #TODO, could optiimze
                 ok = True
 
             if ok is False:
+                index += 8 #for uid
                 if insn in insns_with_regs:
                     index += 8
                 continue
+
+            uid = int.from_bytes(byte_seq[index:index + 8], byteorder='little')
+            index += 8
 
             if insn in insns_with_regs:
                 reg_value = int.from_bytes(byte_seq[index:index+8], byteorder='little')
@@ -803,7 +905,6 @@ class DynamicGraph:
                 reg_value = None
             #assert (byte_seq[index] == 58)
             #index -= 1
-
             static_node = self.insn_to_static_node[insn]
 
             #print(" pending " + str(pending_reg_count))
@@ -847,7 +948,6 @@ class DynamicGraph:
                     #print("has just one reg ")
                     pending_regs = None
 
-
             if insn in remote_df_prede_insn_to_succe_node:
                 mem_store_addr = 0
                 if static_node.mem_store is not None:
@@ -868,10 +968,14 @@ class DynamicGraph:
                 self.insn_to_id[insn] = insn_id
                 insn_id += 1
 
-            dynamic_node = DynamicNode(self.insn_to_id[insn], static_node)
+            dynamic_node = DynamicNode(self.insn_to_id[insn], static_node, id=uid)
+            if insn in self.start_insn_to_reg:
+                dynamic_node.weight = reg_value
+                print("[dyn_dep] Appending weight " + str(reg_value) + " to node with id: " + str(dynamic_node.id))
             if insn not in self.insn_to_dyn_nodes:
                 self.insn_to_dyn_nodes[insn] = []
             self.insn_to_dyn_nodes[insn].append(dynamic_node)
+            self.id_to_node[dynamic_node.id] = dynamic_node
 
             if DEBUG:
                 print("[dyn_dep] created Dynamic Node id: " + str(dynamic_node.id) \
@@ -1101,10 +1205,12 @@ if __name__ == '__main__':
             lines = f.readlines()
             for l in lines:
                 segs = l.strip().split()
-                additional_insn_to_funcs.append([int(segs[0], 16), segs[1]])
+                additional_insn_to_funcs.append([segs[0], int(segs[1], 16), segs[2]])
             print(additional_insn_to_funcs)
 
-    dd = DynamicDependence(0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
+    dd = DynamicDependence("rdi", 0x409daa, "sweep",
+                           "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/",
+                           additional_insn_to_funcs)
     dd.prepare_to_build_dynamic_dependencies(10000)
     dg = dd.build_dyanmic_dependencies(0x409418)
     #dg.build_reverse_postorder_list()

@@ -1182,7 +1182,7 @@ class StaticDepGraph:
         return self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
     @staticmethod
-    def build_dependencies(insn, func, prog, limit=100000, use_cache=True, additional_insn_to_funcs=[]):
+    def build_dependencies(reg, insn, func, prog, limit=100000, use_cache=True, additional_insn_to_funcs=[]):
         targets = set()
         targets.add(insn)
         for i in additional_insn_to_funcs: #FIXME later redundancy
@@ -1217,12 +1217,17 @@ class StaticDepGraph:
             iteration = 0
             worklist = deque()
             starting_node = StaticDepGraph.make_or_get_cf_node(insn, None, func)
+            if reg is not None:
+                starting_node.reg_load = reg #TODO, for now, it is not considered a dataflow node yet
             StaticDepGraph.starting_node = starting_node
             worklist.append([insn, func, prog, starting_node])
             for line in additional_insn_to_funcs:
-                curr_insn = line[0]
-                curr_func = line[1]
+                curr_reg = line[0]
+                curr_insn = line[1]
+                curr_func = line[2]
                 node = StaticDepGraph.make_or_get_cf_node(curr_insn, None, curr_func)
+                if curr_reg != "none":
+                    node.reg_load = curr_reg
                 worklist.append([curr_insn, curr_func, prog, node])
             while len(worklist) > 0:
                 if iteration >= limit:
@@ -1989,11 +1994,11 @@ if __name__ == "__main__":
             lines = f.readlines()
             for l in lines:
                 segs = l.strip().split()
-                additional_insn_to_funcs.append([int(segs[0], 16), segs[1]])
+                additional_insn_to_funcs.append([int(segs[1], 16), segs[2]])
             print(additional_insn_to_funcs)
 
-    StaticDepGraph.build_dependencies(0x409daa, "sweep", "909_ziptest_exe9",
-                                      limit=100000, use_cache=False, additional_insn_to_funcs=additional_insn_to_funcs)
+    StaticDepGraph.build_dependencies("rdi", 0x409daa, "sweep", "909_ziptest_exe9",
+                                      limit=10000, use_cache=False, additional_insn_to_funcs=additional_insn_to_funcs)
     """
     print("HERERERE")
     for func in StaticDepGraph.func_to_graph:

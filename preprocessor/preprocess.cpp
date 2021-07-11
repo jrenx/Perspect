@@ -464,9 +464,12 @@ int main()
   long prevOffRegValue = 0;
 
   int nodeCount = 0;
+  long uid = -1;
+  // Note: the same instruction executed will have multiple UIDs if multiple regs are printed at the instrustion
   for (long i = length; i >= 0;) {
     unsigned short code;
     long regValue = 0;
+    uid ++;
     i-=2;
     std::memcpy(&code, buffer+i, sizeof(unsigned short));
 
@@ -545,19 +548,23 @@ int main()
     }
     if (regCount2 > 1) {
       os.write((char*)&code, sizeof(unsigned short));
+      os.write((char*)&uid, sizeof(long));
       os.write((char*)&prevOffRegValue, sizeof(long));
     }
     if (regCount2 > 0) {
       os.write((char*)&code, sizeof(unsigned short));
+      os.write((char*)&uid, sizeof(long));
       os.write((char*)&prevRegValue, sizeof(long));
     }
 
     if (CodeToRegCount[code] > 1) {
       os.write((char*)&code, sizeof(unsigned short));
+      os.write((char*)&uid, sizeof(long));
       os.write((char*)&offRegValue, sizeof(long));
     }
 
     os.write((char*)&code, sizeof(unsigned short));
+    os.write((char*)&uid, sizeof(long));
     if (CodesWithRegs[code]) {
       os.write((char*)&regValue, sizeof(long));
     }
