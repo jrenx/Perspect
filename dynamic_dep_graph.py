@@ -172,6 +172,7 @@ class DynamicDependence:
         self.insn_to_reg_count2 = {}
         self.code_to_insn = {}
         self.insns_with_regs = set()
+        self.trace_path = None
 
         # phase out this eventually and just use one unified list to represent every starting event
         self.starting_insns = set()
@@ -301,10 +302,11 @@ class DynamicDependence:
         return used_cached_result
 
     # TODO, refactor into a more user friendly interface?
-    def build_dyanmic_dependencies(self, trace_path, insn=None):
+    def build_dyanmic_dependencies(self, insn=None):
         file_name = 'dynamic_graph_result_' + self.key + "_" + (hex(insn) if insn is not None else str(insn))
         result_file = os.path.join(curr_dir, 'cache', self.prog, file_name)
         if os.path.isfile(result_file):
+            print("Reading from file:" + result_file)
             with open(result_file, 'r') as f:
                 in_result = json.load(f)
                 static_id_to_node = {}
@@ -315,10 +317,9 @@ class DynamicDependence:
                 time_record["load_json"] = time.time()
                 print("[TIME]Load Slice time: ", time.asctime(time.localtime(time_record["load_json"])))
         else:
-            
             a = time.time()
             preprocess_data = {
-                "trace_file": trace_path,
+                "trace_file": self.trace_path,
                 "static_graph_file": StaticDepGraph.result_file,
                 "starting_insns" : list(self.starting_insns) if insn is None else [insn],
                 "code_to_insn" : self.code_to_insn,
@@ -343,7 +344,7 @@ class DynamicDependence:
             print("Preparsing trace took: " + str(b-a), flush=True)
 
             a = time.time()
-            with open(trace_path + ".parsed", 'rb') as f:
+            with open(self.trace_path + ".parsed", 'rb') as f:
                 byte_seq = f.read() #more than twice faster than readlines!
 
             b = time.time()
@@ -399,10 +400,10 @@ class DynamicDependence:
         time_record["get_slice_start"] = time.time()
         print("[TIME]Get Slice time: ", time.asctime(time.localtime(time_record["get_slice_start"])))
 
-        trace_path = self.get_dynamic_trace(self.prog, self.arg, self.path, self.key + "_")
+        self.trace_path = self.get_dynamic_trace(self.prog, self.arg, self.path, self.key + "_")
         time_record["invoke_pin"] = time.time()
         print("[TIME]Invoke Pin time: ", time.asctime(time.localtime(time_record["invoke_pin"])), flush=True)
-        self.init_graph = self.build_dyanmic_dependencies(trace_path)
+        self.init_graph = self.build_dyanmic_dependencies()
         self.init_graph.propogate_weight(None)
 
 class DynamicGraph:
@@ -469,8 +470,7 @@ class DynamicGraph:
 
     @staticmethod
     def fromJSON(data, static_id_to_node):
-        starting_insns = set(data["starting_events"])
-        dg = DynamicGraph(starting_insns)
+        dg = DynamicGraph(data["starting_events"])
         dg.insn_to_id = data["insn_to_id"]
 
         id_to_node = {}
