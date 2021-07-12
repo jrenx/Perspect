@@ -381,7 +381,7 @@ def static_backslice(reg, insn, func, prog):
     func_name = c_char_p(str.encode(func))
     prog_name = c_char_p(str.encode(prog))
     if DEBUG_CTYPE: print( "[main] reg: "  + reg)
-    if DEBUG_CTYPE: print( "[main] addr: " + str(insn))
+    if DEBUG_CTYPE: print( "[main] addr: " + hex(insn))
     if DEBUG_CTYPE: print( "[main] func: " + func)
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] : " + "Calling C", flush=True)
@@ -405,7 +405,7 @@ def getImmedDom(sym, prog):
     prog_name = c_char_p(str.encode(prog))
     if DEBUG_CTYPE: print( "[main] prog: " + str(prog_name))
     if DEBUG_CTYPE: print( "[main] func: " + str(func_name))
-    if DEBUG_CTYPE: print( "[main] addr: " + str(addr))
+    if DEBUG_CTYPE: print( "[main] addr: " + hex(addr))
     dom = lib.getImmedDom(prog_name, func_name, addr)
     if DEBUG_CTYPE: print( "[main] immed dom: " + str(dom))
     return dom
@@ -413,23 +413,27 @@ def getImmedDom(sym, prog):
 
 
 def getImmedDom(insn, func, prog):
+    print()
+    print( "[main] getting the immediate dominator: ")
     addr = c_ulong(insn)
     func_name = c_char_p(str.encode(func))
     prog_name = c_char_p(str.encode(prog))
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] func: " + func)
-    if DEBUG_CTYPE: print( "[main] addr: " + str(insn))
+    if DEBUG_CTYPE: print( "[main] addr: " + hex(insn))
     dom = lib.getImmedDom(prog_name, func_name, addr)
     if DEBUG_CTYPE: print( "[main] immed dom: " + str(dom))
     return dom
 
 def getAllPredes(insn, func, prog):
+    print()
+    print( "[main] getting all predecessors: ")
     addr = c_ulong(insn)
     func_name = c_char_p(str.encode(func))
     prog_name = c_char_p(str.encode(prog))
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] func: " + func)
-    if DEBUG_CTYPE: print( "[main] addr: " + str(insn), flush=True)
+    if DEBUG_CTYPE: print( "[main] addr: " + hex(insn), flush=True)
     lib.getAllPredes(prog_name, func_name, addr)
     f = open(os.path.join(curr_dir, 'getAllPredes_result'))
     json_bbs = json.load(f)
@@ -438,12 +442,14 @@ def getAllPredes(insn, func, prog):
     return json_bbs
 
 def getAllBBs(insn, func, prog):
+    print()
+    print( "[main] getting all basic blocks: ")
     addr = c_ulong(insn)
     func_name = c_char_p(str.encode(func))
     prog_name = c_char_p(str.encode(prog))
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] func: " + func)
-    if DEBUG_CTYPE: print( "[main] addr: " + str(insn), flush=True)
+    if DEBUG_CTYPE: print( "[main] addr: " + hex(insn), flush=True)
     lib.getAllBBs(prog_name, func_name, addr)
     f = open(os.path.join(curr_dir, 'getAllBBs_result'))
     json_bbs = json.load(f)
@@ -459,7 +465,7 @@ def getFirstInstrInBB(sym, prog):
     prog_name = c_char_p(str.encode(prog))
     if DEBUG_CTYPE: print( "[main] prog: " + str(prog_name))
     if DEBUG_CTYPE: print( "[main] func: " + str(func_name))
-    if DEBUG_CTYPE: print( "[main] addr: " + str(addr))
+    if DEBUG_CTYPE: print( "[main] addr: " + hex(addr))
     f_insn = lib.getFirstInstrInBB(prog_name, func_name, addr)
     if DEBUG_CTYPE: print( "[main] first instr: " + str(f_insn))
     return f_insn
@@ -467,24 +473,28 @@ def getFirstInstrInBB(sym, prog):
 
 
 def getFirstInstrInBB(insn, func, prog):
+    print()
+    print( "[main] getting the first instruction in basic block: ")
     addr = c_ulong(insn)
     func_name = c_char_p(str.encode(func))
     prog_name = c_char_p(str.encode(prog))
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] func: " + func)
-    if DEBUG_CTYPE: print( "[main] addr: " + str(insn))
+    if DEBUG_CTYPE: print( "[main] addr: " + hex(insn))
     f_insn = lib.getFirstInstrInBB(prog_name, func_name, addr)
     if DEBUG_CTYPE: print( "[main] first instr: " + str(f_insn))
     return f_insn
 
 
 def getInstrAfter(insn, func, prog):
+    print()
+    print( "[main] getting the instruction after: ")
     addr = c_ulong(insn)
     func_name = c_char_p(str.encode(func))
     prog_name = c_char_p(str.encode(prog))
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] func: " + func)
-    if DEBUG_CTYPE: print( "[main] addr: " + str(insn), flush=True)
+    if DEBUG_CTYPE: print( "[main] addr: " + hex(insn), flush=True)
     f_insn = lib.getInstrAfter(prog_name, func_name, addr)
     if DEBUG_CTYPE: print( "[main] first instr: " + str(f_insn))
     return f_insn
@@ -497,7 +507,7 @@ def getLastInstrInBB(sym, prog):
     prog_name = c_char_p(str.encode(prog))
     if DEBUG_CTYPE: print( "[main] prog: " + str(prog_name))
     if DEBUG_CTYPE: print( "[main] func: " + str(func_name))
-    if DEBUG_CTYPE: print( "[main] addr: " + str(addr))
+    if DEBUG_CTYPE: print( "[main] addr: " + hex(addr))
     l_insn = lib.getLastInstrInBB(prog_name, func_name, addr)
     if DEBUG_CTYPE: print( "[main] first instr: " + str(l_insn))
     return l_insn
@@ -505,12 +515,14 @@ def getLastInstrInBB(sym, prog):
 
 
 def getLastInstrInBB(insn, func, prog):
+    print()
+    print( "[main] getting the last instruction in basic block: ")
     addr = c_ulong(insn)
     func_name = c_char_p(str.encode(func))
     prog_name = c_char_p(str.encode(prog))
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] func: " + func)
-    if DEBUG_CTYPE: print( "[main] addr: " + str(insn), flush=True)
+    if DEBUG_CTYPE: print( "[main] addr: " + hex(insn), flush=True)
     l_insn = lib.getLastInstrInBB(prog_name, func_name, addr)
     if DEBUG_CTYPE: print( "[main] first instr: " + str(l_insn))
     return l_insn

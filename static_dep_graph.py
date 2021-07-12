@@ -150,6 +150,7 @@ class CFG:
 
         self.built = False
         self.sliced = False
+        self.jsonified = False
 
     def toJSON(self):
         data = {}
@@ -186,6 +187,7 @@ class CFG:
         prog = data["prog"]
 
         cfg = CFG(func, prog)
+        cfg.jsonified = True
 
         for n in data["ordered_bbs"]:
             bb = BasicBlock.fromJSON(n)
@@ -515,6 +517,8 @@ class CFG:
         # Find all the control flow predecessors of the given instruction
         # https://stackoverflow.com/questions/35206372/understanding-stacks-and-queues-in-python/35206452
         worklist = deque()
+        #if DEBUG_SLICE:
+        print("Targets for slicing: " + str([bb.id for bb in self.target_bbs]))
         for bb in self.target_bbs:
             worklist.append(bb)
         visited = set([])
@@ -762,17 +766,19 @@ class StaticNode:
         for n in self.backedges:
             data["backedges"].append(n.id)
         """
+        data["group_ids"] = self.group_ids
+        data["group_insns"] = self.group_insns
         return data
 
     @staticmethod
     def fromJSON(data):
         id = data["id"]
         insn = data["insn"]
-        StaticDepGraph.insn_to_node[sn.insn] = sn
         function = data["function"]
         bb = data["bb"] if 'bb' in data else None #TODO, assign actual BB later
 
         sn = StaticNode(insn, bb, function, id)
+        StaticDepGraph.insn_to_node[sn.insn] = sn
 
         sn.explained = data["explained"]
         sn.is_cf = data["is_cf"]
@@ -944,6 +950,7 @@ class StaticDepGraph:
 
         self.nodes_in_cf_slice = set()
         self.nodes_in_df_slice = set()
+        self.none_df_starting_nodes = set()
 
         self.pending_callsite_nodes = []
 
@@ -952,6 +959,7 @@ class StaticDepGraph:
                 self.id_to_node[n.id] = n
                 self.insn_to_node[n.insn] = n
             del StaticDepGraph.pending_nodes[func]
+        self.changed = True
 
     def toJSON(self):
         data = {}
@@ -972,6 +980,10 @@ class StaticDepGraph:
         data["nodes_in_df_slice"] = []
         for n in self.nodes_in_df_slice:
             data["nodes_in_df_slice"].append(n.id)
+
+        data["none_df_starting_nodes"] = []
+        for n in self.nodes_in_df_slice:
+            data["none_df_starting_nodes"].append(n.id)
         return data
 
     @staticmethod
@@ -979,6 +991,7 @@ class StaticDepGraph:
         func = data["func"]
         prog = data["prog"]
         sg = StaticDepGraph(func, prog)
+        sg.changed = False
         if "cfg" in data:
             sg.cfg = CFG.fromJSON(data["cfg"])
             
@@ -998,6 +1011,10 @@ class StaticDepGraph:
 
         for n in data["nodes_in_df_slice"]:
             sg.nodes_in_df_slice.add(sg.id_to_node[n])
+
+        if "none_df_starting_nodes" in data:
+            for n in data["none_df_starting_nodes"]:
+                sg.nodes_in_df_slice.add(sg.id_to_node[n])
 
         for sn in sg.id_to_node.values():
             if sn.bb is not None:
@@ -1182,22 +1199,28 @@ class StaticDepGraph:
         return self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
     @staticmethod
-    def build_dependencies(reg, insn, func, prog, limit=100000, use_cache=True, additional_insn_to_funcs=[]):
-        targets = set()
-        targets.add(insn)
-        for i in additional_insn_to_funcs: #FIXME later redundancy
-            targets.add(i[0])
-
+    def build_dependencies(starting_events, prog, limit=10000, use_cache=True):
         start = time.time()
-        key = str(insn) + "_" + str(func) + "_" + str(prog) + "_" + str(limit)
-        result_file = os.path.join(curr_dir, 'cache', 'static_graph_result_' + key)
+        result_dir = os.path.join(curr_dir, 'cache', prog)
+        if not os.path.exists(result_dir):
+            os.makedirs(result_dir)
+
+        key = ""
+        for i in range(len(starting_events)):
+            event = starting_events[i]
+            reg = event[0]
+            insn = event[1]
+            key += reg + "_" + hex(insn)
+            if i + 1 < len(starting_events):
+                key += "_"
+        result_file = os.path.join(result_dir, 'static_graph_' + str(limit) + "_" + key)
         StaticDepGraph.result_file = result_file
         if use_cache and os.path.isfile(result_file):
             StaticDepGraph.loadJSON(result_file)
             StaticDepGraph.print_graph_info()
             return True
 
-        rr_result_file = os.path.join(curr_dir, 'cache', 'rr_results_' + prog + '.json')
+        rr_result_file = os.path.join(result_dir, 'rr_results_' + prog + '.json')
         rr_result_size = 0
         if os.path.exists(rr_result_file):
             with open(rr_result_file) as file:
@@ -1205,7 +1228,7 @@ class StaticDepGraph:
                 rr_result_size = len(StaticDepGraph.rr_result_cache)
 
         sa_result_size = 0
-        sa_result_file = os.path.join(curr_dir, 'cache', 'sa_results_' + prog + '.json')
+        sa_result_file = os.path.join(result_dir, 'sa_results_' + prog + '.json')
         if os.path.exists(sa_result_file):
             with open(sa_result_file) as cache_file:
                 StaticDepGraph.sa_result_cache = json.load(cache_file)
@@ -1216,19 +1239,14 @@ class StaticDepGraph:
             #print(StaticDepGraph.func_to_callsites)
             iteration = 0
             worklist = deque()
-            starting_node = StaticDepGraph.make_or_get_cf_node(insn, None, func)
-            if reg is not None:
-                starting_node.reg_load = reg #TODO, for now, it is not considered a dataflow node yet
-            StaticDepGraph.starting_node = starting_node
-            worklist.append([insn, func, prog, starting_node])
-            for line in additional_insn_to_funcs:
-                curr_reg = line[0]
-                curr_insn = line[1]
-                curr_func = line[2]
-                node = StaticDepGraph.make_or_get_cf_node(curr_insn, None, curr_func)
-                if curr_reg != "none":
-                    node.reg_load = curr_reg
-                worklist.append([curr_insn, curr_func, prog, node])
+            for event in starting_events:
+                reg = event[0]
+                insn = event[1]
+                func = event[2]
+                node = StaticDepGraph.make_or_get_cf_node(insn, None, func)
+                if reg is not None:
+                    node.reg_load = reg
+                worklist.append([insn, func, prog, node])
             while len(worklist) > 0:
                 if iteration >= limit:
                     break
@@ -1255,9 +1273,12 @@ class StaticDepGraph:
 
             for func in StaticDepGraph.func_to_graph:
                 graph = StaticDepGraph.func_to_graph[func]
+                if graph.changed is False:
+                    continue
                 target_bbs = set()
-                graph.build_control_flow_dependencies(target_bbs, final=True, targets=targets)
-                graph.merge_data_flow_nodes(graph.nodes_in_df_slice, True)
+                graph.build_control_flow_dependencies(target_bbs, final=True, targets=set([e[1] for e in starting_events]))
+                graph.merge_nodes(graph.nodes_in_df_slice, True)
+                graph.merge_nodes(graph.none_df_starting_nodes, True)
                 if TRACKS_DIRECT_CALLER: graph.merge_callsite_nodes()
                 for n in graph.nodes_in_cf_slice:
                     print(str(n))
@@ -1272,7 +1293,7 @@ class StaticDepGraph:
             StaticDepGraph.print_graph_info()
         except Exception as e:
             print("Caught exception: " + str(e))
-            #raise e
+            raise e
         except AssertionError as ae:
             print("Failed assertion: " + str(ae))
         except KeyboardInterrupt:
@@ -1322,12 +1343,11 @@ class StaticDepGraph:
         """
 
     @staticmethod
-    def build_dependencies_in_function(insn, func, prog, initial_node=None):
+    def build_dependencies_in_function(insn, func, prog, initial_node):
         new_nodes = set()
         df_node = None
-        if initial_node is not None:
-            if initial_node.is_df is True:
-                df_node = initial_node
+        if initial_node.is_df is True:
+            df_node = initial_node
         iter = 0
         print("[static_dep] ")
         print("[static_dep] Building dependencies for function: " + str(func))
@@ -1337,6 +1357,11 @@ class StaticDepGraph:
 
         if func in StaticDepGraph.func_to_graph:
             graph = StaticDepGraph.func_to_graph[func]
+            # cf nodes are not merged, they are discarded after info is pasted in!
+            if initial_node.is_df is False:
+                bb = graph.cfg.getBB(insn)
+                target_bbs.add(bb)
+                graph.build_control_flow_dependencies(target_bbs)
         else:
             graph = StaticDepGraph(func, prog)
             StaticDepGraph.func_to_graph[func] = graph
@@ -1355,11 +1380,13 @@ class StaticDepGraph:
                         new_node = StaticDepGraph.make_or_get_cf_node(c[0], None, c[1])
                         new_nodes.add(new_node)
                         graph.pending_callsite_nodes.append(new_node)
-
+        if initial_node.is_df is False:
+            graph.none_df_starting_nodes.add(initial_node)
+        graph.changed = True
         """
         if df_node is not None:
             assert df_node.bb is None
-            graph.merge_data_flow_nodes([df_node])
+            graph.merge_nodes([df_node])
             #TODO, also need to do dataflow tracing for this one!!
         """
 
@@ -1385,13 +1412,15 @@ class StaticDepGraph:
                 new_local_defs_found = True
             for df_node in df_nodes:
                 if df_node.is_cf is False:
-                    assert df_node.bb is None, df_node
+                    if df_node.bb is not None:
+                        continue
+                    #assert df_node.bb is None, df_node
                 defs_in_same_func.add(df_node)
                 if df_node not in graph.nodes_in_df_slice:
                     graph.nodes_in_df_slice.add(df_node)
                 #df_node = None
                 # TODO, also need to do dataflow tracing for this one!!
-            graph.merge_data_flow_nodes(defs_in_same_func)
+            graph.merge_nodes(defs_in_same_func)
             df_nodes = list(remote_defs_in_same_func)
 
         new_nodes = all_defs_in_diff_func.union(new_nodes)
@@ -1407,14 +1436,16 @@ class StaticDepGraph:
                     n.cf_predes.append(callsite)
 
     #FIXME, think about if this makes sense
-    def merge_data_flow_nodes(self, df_nodes, final=False):
+    def merge_nodes(self, nodes, final=False):
         if len(self.cfg.ordered_bbs) == 0:
             print("[static_dep][warn] Failed to load the cfg, ignoring merging the datanode...")
             return
         #if final is False:
-       #     return
-        for node in df_nodes:
-            assert node.is_df is True
+        #     return
+        # could happen that we try to merge the node with the same node,
+        # in that case it should just work too
+        for node in nodes:
+            #assert node.is_df is True
             if not final and node.explained is True:
                 print("[static_dep][warn] Node already explained, why merge again?")
                 print(node)
@@ -1617,7 +1648,6 @@ class StaticDepGraph:
                     print("Farthest target is at " + hex(target_insn))
                 else:
                     print("[warn] closest dep branch is found but not the farthest target node?")
-            results = []
             try:
                 results = rr_backslice(prog, branch_insn, target_insn, #4234305, 0x409C41 | 4234325, 0x409C55
                                    node.insn, node.mem_load.reg, node.mem_load.shift, node.mem_load.off,
@@ -1708,14 +1738,15 @@ class StaticDepGraph:
         # Build the control flow graph for the entire function then slice
         self.cfg.build(insn)  # FIXME: for now, order the BBs such that the one that contains insn appears first
 
-        first = True
+        #first = True
         # FIXME, make the logic less awkward?
         for bb in self.cfg.ordered_bbs:
-            if first:
-                node = StaticDepGraph.make_or_get_cf_node(insn, bb, self.func)
-                first = False
-            else:
-                node = StaticDepGraph.make_or_get_cf_node(bb.last_insn, bb, self.func)
+            #if first:
+                #node = StaticDepGraph.make_or_get_cf_node(insn, bb, self.func)
+                #first = False
+            #else:
+                #node = StaticDepGraph.make_or_get_cf_node(bb.last_insn, bb, self.func)
+            node = StaticDepGraph.make_or_get_cf_node(bb.last_insn, bb, self.func)
             if node is None:
                 continue
             self.bb_id_to_node_id[bb.id] = node.id
@@ -1732,6 +1763,37 @@ class StaticDepGraph:
 
     def build_control_flow_dependencies(self, target_bbs, final=False, targets=[]):
         self.cfg.target_bbs = self.cfg.target_bbs.union(target_bbs)
+        if self.cfg.jsonified is True and final is False:
+            print("Re-constructing a CFG")
+            orig_start_insn_to_bb = {}
+            for bb in self.cfg.ordered_bbs:
+                assert bb.start_insn not in orig_start_insn_to_bb
+                orig_start_insn_to_bb[bb.start_insn] = bb
+                # print(bb)
+                bb.backedge_targets = []
+                bb.backedge_sources = []
+                bb.predes = []
+                bb.succes = []
+            # print("=====================================================")
+            cfg = CFG(self.func, self.prog)
+            cfg.build(self.cfg.ordered_bbs[0].start_insn)
+            # new_start_insn_to_bb = {}
+            # print("=====================================================")
+            id_map = {}
+            for bb in cfg.ordered_bbs:
+                # assert bb.start_insn not in new_start_insn_to_bb
+                # new_start_insn_to_bb[bb.start_insn] = bb
+                orig_bb = orig_start_insn_to_bb[bb.start_insn]
+                id_map[bb.id] = orig_bb.id
+                orig_bb.backedge_targets = [orig_start_insn_to_bb[b.start_insn] for b in bb.backedge_targets]
+                orig_bb.backedge_sources = [orig_start_insn_to_bb[b.start_insn] for b in bb.backedge_sources]
+                orig_bb.predes = [orig_start_insn_to_bb[b.start_insn] for b in bb.predes]
+                orig_bb.succes = [orig_start_insn_to_bb[b.start_insn] for b in bb.succes]
+                # print(orig_bb)
+            print("BB id mappings: " + str(id_map))
+            self.cfg.jsonified = False
+        # print(self.bb_id_to_node_id)
+
         self.cfg.slice(final)
 
         if final is True:
@@ -1745,6 +1807,7 @@ class StaticDepGraph:
             bb = self.cfg.id_to_bb[bb_id]
             node_id = self.bb_id_to_node_id[bb_id]
             node = self.id_to_node[node_id]
+            #print("BB id: " + str(bb_id) + " node insn: " + hex(node.insn))
             #if final is True:
             #    node.cf_predes = []
             #    node.cf_succes = []
@@ -1987,18 +2050,14 @@ class StaticDepGraph:
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
 if __name__ == "__main__":
-    additional_insn_to_funcs = []
-    starting_event_file = os.path.join(curr_dir, 'starting_events')
-    if os.path.exists(starting_event_file):
-        with open(starting_event_file, 'r') as f:
-            lines = f.readlines()
-            for l in lines:
-                segs = l.strip().split()
-                additional_insn_to_funcs.append([int(segs[1], 16), segs[2]])
-            print(additional_insn_to_funcs)
+    starting_events = []
+    starting_events.append(["rdi", 0x409daa, "sweep"])
+    starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
+    starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
+    starting_events.append(["rcx", 0x40764c, "runtime.free"])
+    StaticDepGraph.build_dependencies(starting_events, "909_ziptest_exe9",
+                                      limit=10000, use_cache=True)
 
-    StaticDepGraph.build_dependencies("rdi", 0x409daa, "sweep", "909_ziptest_exe9",
-                                      limit=10000, use_cache=False, additional_insn_to_funcs=additional_insn_to_funcs)
     """
     print("HERERERE")
     for func in StaticDepGraph.func_to_graph:
