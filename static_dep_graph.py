@@ -982,7 +982,7 @@ class StaticDepGraph:
             data["nodes_in_df_slice"].append(n.id)
 
         data["none_df_starting_nodes"] = []
-        for n in self.nodes_in_df_slice:
+        for n in self.none_df_starting_nodes:
             data["none_df_starting_nodes"].append(n.id)
         return data
 

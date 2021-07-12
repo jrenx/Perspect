@@ -79,6 +79,7 @@ public:
   int dst_reg_size;
 };
 
+int CodeCount = -1;
 long *CodeToInsn;
 unordered_map<long, unsigned short> InsnToCode;
 
@@ -194,7 +195,7 @@ MemAccess *parseMemoryAccess(cJSON *json_memAccess) {
   return memAccess;
 }
 
-void parseStaticNode(char *filename, int CodeCount) {
+void parseStaticNode(char *filename) {
   long length;
   char *buffer = readFile(filename, length);
   cJSON *data = cJSON_Parse(buffer);
@@ -318,7 +319,6 @@ void parseStaticNode(char *filename, int CodeCount) {
 void initData() {
   long length;
   char *buffer = readFile("preprocess_data", length);//TODO delete
-  int CodeCount;
 
   cJSON *data = cJSON_Parse(buffer);
   delete[] buffer;
@@ -430,7 +430,7 @@ void initData() {
   traceFile = json_traceFile->valuestring;
 
   cJSON *json_staticGraphFile = cJSON_GetObjectItem(data, "static_graph_file");
-  parseStaticNode(json_staticGraphFile->valuestring, CodeCount);
+  parseStaticNode(json_staticGraphFile->valuestring);
   // TODO free json data lol
 }
 
@@ -466,15 +466,18 @@ int main()
   int nodeCount = 0;
   long uid = -1;
   // Note: the same instruction executed will have multiple UIDs if multiple regs are printed at the instrustion
-  for (long i = length; i >= 0;) {
+  for (long i = length; i > 0;) {
     unsigned short code;
     long regValue = 0;
     uid ++;
     i-=2;
     std::memcpy(&code, buffer+i, sizeof(unsigned short));
+    assert(code <= CodeCount);
+    assert(code > 0);
 
     bool parse = false;
-    if (code <= MaxStartCode || PendingCodes[code]) {
+    if (CodeOfStartInsns[code] || PendingCodes[code]) {
+    //if ((code > 0 && code <= MaxStartCode) || PendingCodes[code]) {
       parse = true;
     }
     if (CodesWithRegs[code]) {
@@ -538,7 +541,8 @@ int main()
         }
       }
       //long addr = sn->mem_store->calc_addr(regValue, offRegValue);
-      if (PendingAddrs.find(addr) == PendingAddrs.end() && code <= MaxStartCode) {
+      //if (PendingAddrs.find(addr) == PendingAddrs.end() && (code > 0 && code > MaxStartCode)) {
+      if (PendingAddrs.find(addr) == PendingAddrs.end() && !CodeOfStartInsns[code]) {
         if (!PendingLocalDefCodes[code]) continue; // FIXME: unfortuanately, could be a local def dep too, need to make logic less messy if have more time ...
       } else {
         //cout << "  mem addr matched " << endl;

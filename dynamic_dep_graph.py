@@ -275,15 +275,16 @@ class DynamicDependence:
         used_cached_result = StaticDepGraph.build_dependencies(starting_events, prog, limit=sa_steps)
 
         for graph in StaticDepGraph.func_to_graph.values():
+
+            for node in graph.none_df_starting_nodes:
+                self.insn_to_static_node[node.insn] = node
+
             for node in graph.nodes_in_cf_slice:
                 self.all_static_cf_nodes.append(node)
+                self.insn_to_static_node[node.insn] = node
+                self.insn_of_cf_nodes.append(node.insn)
+                #print(node)
 
-        for node in self.all_static_cf_nodes:
-            self.insn_to_static_node[node.insn] = node
-            self.insn_of_cf_nodes.append(node.insn)
-            #print(node)
-
-        for graph in StaticDepGraph.func_to_graph.values():
             for node in graph.nodes_in_df_slice:
                 # trace local
                 #if node.mem_load != None or node.mem_store != None:
@@ -314,7 +315,7 @@ class DynamicDependence:
                 time_record["load_json"] = time.time()
                 print("[TIME]Load Slice time: ", time.asctime(time.localtime(time_record["load_json"])))
         else:
-
+            
             a = time.time()
             preprocess_data = {
                 "trace_file": trace_path,
