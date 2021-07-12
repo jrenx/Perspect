@@ -88,6 +88,7 @@ int *CodeToRegCount2;
 
 unordered_set<long> StartInsns;
 bool *CodeOfStartInsns;
+int MaxStartCode = 0;
 
 unordered_set<long> InsnsWithRegs;
 bool *CodesWithRegs;
@@ -105,7 +106,6 @@ unordered_set<long> InsnOfRemoteDFNodes;
 bool * CodesOfMemStoreNodes;
 
 long StartInsn;
-unsigned short StartInsnCode;
 
 std::vector<StaticNode*> *CfPredeCodeToSucceNodes;
 bool *PendingCfPredeCodes;
@@ -322,7 +322,6 @@ void initData() {
 
   cJSON *data = cJSON_Parse(buffer);
   delete[] buffer;
-  StartInsn = (long)cJSON_GetObjectItem(data, "start_insn")->valueint;
 
   cJSON *json_codeToInsn = cJSON_GetObjectItem(data, "code_to_insn");
   unordered_map<long, long> map1;
@@ -333,17 +332,19 @@ void initData() {
     CodeToInsn[(*it).first] = (*it).second;
     InsnToCode.insert({(*it).second, (unsigned short)(*it).first});
   }
-  StartInsnCode = InsnToCode[StartInsn];
 
-  cJSON *json_startInsns = cJSON_GetObjectItem(data, "start_insns");
+  cJSON *json_startInsns = cJSON_GetObjectItem(data, "starting_insns");
   if (json_startInsns != NULL) {
     parseJsonList(json_startInsns, StartInsns);
     CodeOfStartInsns = new bool[CodeCount];
     for (int i = 0; i < CodeCount; i++) CodeOfStartInsns[i] = false;
     for (auto it = StartInsns.begin(); it != StartInsns.end(); it++) {
-      CodeOfStartInsns[InsnToCode[(*it)]] = true;
+      short code = InsnToCode[(*it)];
+      if (code > MaxStartCode) MaxStartCode = code;
+      CodeOfStartInsns[code] = true;
       cout << InsnToCode[(*it)] << " is start code " << endl;
     }
+    cout << "Max start code is " << MaxStartCode << endl;
   }
 
   cJSON *json_insnsWithRegs = cJSON_GetObjectItem(data, "insns_with_regs");
@@ -451,7 +452,6 @@ int main()
   ofstream os;
   os.open(outTraceFile.c_str(), ios::out);
 
-  cout << "Starting insn is: 0x" << std::hex << StartInsn << std::dec << " code is: " << StartInsnCode << endl;
   //long j = 0;
   bool found = false;
   int pendingRegCount = 0;
@@ -474,7 +474,7 @@ int main()
     std::memcpy(&code, buffer+i, sizeof(unsigned short));
 
     bool parse = false;
-    if (code == StartInsnCode || CodeOfStartInsns[code] || PendingCodes[code]) {
+    if (code <= MaxStartCode || PendingCodes[code]) {
       parse = true;
     }
     if (CodesWithRegs[code]) {
@@ -485,6 +485,7 @@ int main()
       //cout << "contains reg" << code << endl;
     }
     if (!parse) continue;
+    //cout << code << endl;
 
     /*
     if (code == 3252) {
@@ -537,7 +538,7 @@ int main()
         }
       }
       //long addr = sn->mem_store->calc_addr(regValue, offRegValue);
-      if (PendingAddrs.find(addr) == PendingAddrs.end() && code != StartInsnCode) {
+      if (PendingAddrs.find(addr) == PendingAddrs.end() && code <= MaxStartCode) {
         if (!PendingLocalDefCodes[code]) continue; // FIXME: unfortuanately, could be a local def dep too, need to make logic less messy if have more time ...
       } else {
         //cout << "  mem addr matched " << endl;
