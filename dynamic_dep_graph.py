@@ -351,7 +351,7 @@ class DynamicDependence:
             print("Loading trace took: " + str(b-a), flush=True)
 
             dynamic_graph = DynamicGraph(self.starting_events)
-            dynamic_graph.build_dynamic_graph(byte_seq, self.code_to_insn, self.insns_with_regs, self.insn_to_static_node,
+            dynamic_graph.build_dynamic_graph(byte_seq, insn, self.code_to_insn, self.insns_with_regs, self.insn_to_static_node,
                                               set(self.insn_of_cf_nodes), set(self.insn_of_df_nodes),
                                               set(self.insn_of_local_df_nodes), set(self.insn_of_remote_df_nodes),
                                               self.insn_to_reg_count, self.insn_to_reg_count2)
@@ -779,7 +779,7 @@ class DynamicGraph:
                 #assert node in node.df_predes, str(node) + str(s)
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
-    def build_dynamic_graph(self, byte_seq, code_to_insn, insns_with_regs, insn_to_static_node, insn_of_cf_nodes, insn_of_df_nodes,
+    def build_dynamic_graph(self, byte_seq, insn, code_to_insn, insns_with_regs, insn_to_static_node, insn_of_cf_nodes, insn_of_df_nodes,
                            insn_of_local_df_nodes, insn_of_remote_df_nodes, insn_to_reg_count, insn_to_reg_count2):
 
         print("[TIME]Build Dynamic Graph Start Time: ", time.asctime(time.localtime(time.time())))
@@ -818,7 +818,8 @@ class DynamicGraph:
         index = 0
         length = len(byte_seq)
         ii = 0
-        print("START: " + str(self.starting_insns))
+        starting_insns = self.starting_insns if insn is None else set([insn])
+        print("START: " + str(starting_insns))
         while index < length:
             code = int.from_bytes(byte_seq[index:index + 2], byteorder='little')
             #print("Code: " + str(code))
@@ -828,7 +829,7 @@ class DynamicGraph:
 
             ok = False
             start = False
-            if insn in self.starting_insns:
+            if insn in starting_insns:
                 ok = True
                 start = True
             elif insn in cf_prede_insn_to_succe_node \
@@ -1222,15 +1223,56 @@ if __name__ == '__main__':
         print("[Summary] Dynamic Graph Json Saved: ", str(time_record["graph_traversal"] - time_record["build_finish"]))
         print("[Summary] Graph Traversal: ", str(time_record["save_dynamic_graph_as_json"] - time_record["graph_traversal"]))
     """
+    sizes = {}
+    with open("weight", "r") as f:
+        lines = f.readlines()
+        for l in lines:
+            segs = l.split()
+            addr = int(segs[0], 16)
+            if addr in sizes:
+                if sizes[addr] != segs[1]:
+                    print(segs[1])
+                    print(sizes[addr])
+            #print("HERE1 " + hex(addr))
+            sizes[addr] = segs[1]
+
+    total_weight = 0
+    #for addr in sizes:
+    #    total_weight+= int(sizes[addr])
+
     addr_not_explained = set()
     addr_explained = set()
     prede_found = 0
     prede_not_found = 0
-    connected_predes = set()
+    connected_predes = {}
     connected_predes_not_connected_to_malloc = {}
+    connected_predes_not_connected_to_malloc1 = {}
     from_malloc = 0
     addr_from_malloc = set()
+    node_to_weight = {}
+    connected_count = 0
     for n in dg.insn_to_dyn_nodes[4232057]:
+        sw = deque()
+        sw.append(n)
+        visited = set()
+        while len(sw) > 0:
+            sc = sw.popleft()
+            if sc in visited:
+                continue
+            visited.add(sc)
+            if sc.static_node.insn == 0x409418:
+                if sc.mem_load_addr in sizes:
+                    node_to_weight[n] = sizes[sc.mem_load_addr]
+                else:
+                    node_to_weight[n] = 0
+                #print("FOUND SUCCE")
+                break
+            for scs in sc.df_succes:
+                sw.append(scs)
+            for scs in sc.cf_succes:
+                sw.append(scs)
+        
+        total_weight += int(node_to_weight[n])
         if len(n.df_predes) == 0:
             prede_not_found += 1
             addr_not_explained.add(hex(n.mem_load_addr))
@@ -1240,7 +1282,10 @@ if __name__ == '__main__':
             prede_found += 1
             addr_explained.add(hex(n.mem_load_addr))
             for p in n.df_predes:
-                connected_predes.add(p.static_node)
+                if p.static_node not in connected_predes:
+                    connected_predes[p.static_node] = 0
+                connected_predes[p.static_node] += \
+                        connected_predes[p.static_node] + int(node_to_weight[n])
             wl = deque()
             wl.append(n)
             visited = set()
@@ -1272,9 +1317,15 @@ if __name__ == '__main__':
             if connected_to_malloc is False:
                 if p.static_node not in connected_predes_not_connected_to_malloc:
                     connected_predes_not_connected_to_malloc[p.static_node] = 0
+                    connected_predes_not_connected_to_malloc1[p.static_node] = []
                 connected_predes_not_connected_to_malloc[p.static_node] =\
-                connected_predes_not_connected_to_malloc[p.static_node] + 1
+                connected_predes_not_connected_to_malloc[p.static_node] + int(node_to_weight[n])#+ 1
+                connected_predes_not_connected_to_malloc1[p.static_node].append(hex(n.mem_load_addr))
+            else:
+                connected_count += int(node_to_weight[n])
 
+
+    print("Total weight " + str(total_weight))
     print(" Total count " + str(len(dg.insn_to_dyn_nodes[4232057])))
     print(" Total count with prede " + str(prede_found) + " " + str(len(addr_explained)))
     print(" Total count with no prede " + str(prede_not_found) + " " + str(len(addr_not_explained)))
@@ -1297,17 +1348,28 @@ if __name__ == '__main__':
         p.print_node(" all predes: ")
     print("==============================")
     """
+    #total_not_connected = 0
     for p in connected_predes:
         print(p.mem_store)
         p.print_node(" connected:  ")
+        #print(" count: " + str(connected_predes[p]))
+        #total_not_connected += connected_predes[p]
+    #print( " TOTAL COUNT: " + str(total_not_connected))
+    #print( " % " + str(total_not_connected/total_weight))
     print("==============================")
     total_not_connected = 0
     for p in connected_predes_not_connected_to_malloc:
         print(p.mem_store)
         p.print_node(" connected but not to malloc:  ")
         print(" count: " + str(connected_predes_not_connected_to_malloc[p]))
+        print(" % : " + str(connected_predes_not_connected_to_malloc[p]/total_weight*100))
+        print(" addrs : " + str(connected_predes_not_connected_to_malloc1[p]))
         total_not_connected += connected_predes_not_connected_to_malloc[p]
     print( " TOTAL COUNT: " + str(total_not_connected))
+    print( " TOTAL WEIGHT: " + str(total_not_connected))
+    print( " % " + str(total_not_connected/total_weight*100))
+    print( " TOTAL COUNT: " + str(connected_count))
+    print( " % " + str(connected_count/total_weight*100))
     print("==============================")
     for p in sn.df_predes:
         if p in connected_predes:
