@@ -80,6 +80,7 @@ void getReversePostOrderListHelper(Block *b,
 
 void getRegAndOff(Expression::Ptr exp, MachRegister *machReg, long *off);
 void getRegAndOff(Expression::Ptr exp, std::vector<MachRegister> &machRegs, long *off);
+std::string getLoadRegName(Instruction insn);
 
 cJSON * printBBIdsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs);
 #ifdef USE_BPATCH
@@ -93,5 +94,4 @@ cJSON *printBBsToJsonHelper(vector<Block *> &bbs,
 
 void getReversePostOrderListHelper(Node::Ptr node, std::vector<Node::Ptr> *list, boost::unordered_set<Node::Ptr> &visited);
 void getReversePostOrderList(GraphPtr slice, std::vector<Node::Ptr> *list);
-
 #endif

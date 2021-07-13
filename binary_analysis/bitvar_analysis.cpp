@@ -72,26 +72,38 @@ void analyzeKnownBitVariables(GraphPtr slice,
 
     if (it == list.begin()) {
       source = assign->out();
-      continue;
+      if(list.size() > 1) continue;
     }
 
-    bool usesSource = false;
-    std::vector<AbsRegion> regions;
-    for (auto rit = assign->inputs().begin(); rit != assign->inputs().end(); rit++) {
-      if (*rit == source) {
-        usesSource = true;
-        break;
+    // If the same instruction reads and writes to the memory location,
+    // Just find the reg load operand
+    if (list.size() == 1) {
+      std::string regStr = getLoadRegName(assign->insn());
+      for (auto rit = assign->inputs().begin(); rit != assign->inputs().end(); rit++) {
+        if ((*rit).format() == regStr) {
+          bitOperands.insert({assign, *rit});
+          break;
+        }
       }
-    }
-
-    if (usesSource) {
+    } else {
+      bool usesSource = false;
+      std::vector <AbsRegion> regions;
       for (auto rit = assign->inputs().begin(); rit != assign->inputs().end(); rit++) {
         if (*rit == source) {
-          continue;
+          usesSource = true;
+          break;
         }
-        bitOperands.insert({assign, *rit});
       }
-      source = assign->out();
+
+      if (usesSource) {
+        for (auto rit = assign->inputs().begin(); rit != assign->inputs().end(); rit++) {
+          if (*rit == source) {
+            continue;
+          }
+          bitOperands.insert({assign, *rit});
+        }
+        source = assign->out();
+      }
     }
 
     switch (id) {

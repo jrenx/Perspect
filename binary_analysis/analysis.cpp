@@ -909,6 +909,15 @@ void backwardSlices(char *addrToRegNames, char *progName) {
 
     cJSON *json_reads = cJSON_CreateArray();
     boost::unordered_set<Address> visited;
+
+    Function *func = getFunction2(stcs, co, funcName);
+    Block *bb = getBasicBlock2(func, addr);
+    Instruction insn = bb->getInsn(addr);
+
+    if (strcmp(regName, "[x86_64::special]") == 0) {
+      regName = (char *) getLoadRegName(insn).c_str();
+    }
+
     backwardSliceHelper(stcs, co, json_reads, visited, progName, funcName, addr, regName, isKnownBitVar);
     cJSON_AddItemToObject(json_slice, "reads", json_reads);
     cJSON_AddItemToArray(json_slices, json_slice);

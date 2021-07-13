@@ -104,32 +104,37 @@ class TestStaticSlicing(unittest.TestCase):
         self.assertEqual(results[0][1], 0x409d28)
         self.assertEqual(len(results[0][2]), 1)
         # first boolean: read_same_as_write | second boolean: is_bit_var
-        self.assertEqual(results[0][2][0], [0x409d0e, 'RBP', 0, 0, None, True, True, 'memread', 'sweep'])
-
+        self.assertEqual(results[0][2][0][0:9], [0x409d0e, 'RBP', 0, 0, None, True, True, 'memread', 'sweep'])
+        #^ OK
         self.assertEqual(results[1][0], 'rax')
         self.assertEqual(results[1][1], 0x409c6a)
         self.assertEqual(len(results[1][2]), 1)
-        self.assertEqual(results[1][2][0], [0x409c6a, 'RBP', 0, 0, None, True, True, 'memread', 'sweep'])
+        self.assertEqual(results[1][2][0][0:9], [0x409c6a, 'RBP', 0, 0, None, True, True, 'memread', 'sweep'])
+        #^ yes no op, then just test RAX, or just return the original op TODO
 
         self.assertEqual(results[2][0], 'rax')
         self.assertEqual(results[2][1], 0x409418)
         self.assertEqual(len(results[2][2]), 1)
-        self.assertEqual(results[2][2][0], [0x409418, 'R9', 0, 0, None, True, True, 'memread', 'scanblock'])
+        self.assertEqual(results[2][2][0][0:9], [0x409418, 'R9', 0, 0, None, True, True, 'memread', 'scanblock'])
+        # ^ yes no op, then just test RAX, or just return the original op TODO
 
         self.assertEqual(results[3][0], 'rdx')
         self.assertEqual(results[3][1], 0x40a6aa)
         self.assertEqual(len(results[3][2]), 1)
-        self.assertEqual(results[3][2][0], [0x40a652, 'RSI', 0, 0, None, True, True, 'memread', 'runtime.markallocated'])
+        self.assertEqual(results[3][2][0][0:9], [0x40a652, 'RSI', 0, 0, None, True, True, 'memread', 'runtime.markallocated'])
+        #^ OK
 
         self.assertEqual(results[4][0], 'rax')
         self.assertEqual(results[4][1], 0x40a7a2)
         self.assertEqual(len(results[4][2]), 1)
-        self.assertEqual(results[4][2][0], [0x40a763, 'RBP', 0, 0, None, True, True, 'memread', 'runtime.markfreed'])
+        self.assertEqual(results[4][2][0][0:9], [0x40a763, 'RBP', 0, 0, None, True, True, 'memread', 'runtime.markfreed'])
+        #^ OK
 
         self.assertEqual(results[5][0], 'rax')
         self.assertEqual(results[5][1], 0x40a996)
         self.assertEqual(len(results[5][2]), 1)
-        self.assertEqual(results[5][2][0], [0x40a97d, 'RBX', 0, 0, None, True, True, 'memread', 'runtime.markspan'])
+        self.assertEqual(results[5][2][0][0:9], [0x40a97d, 'RBX', 0, 0, None, True, True, 'memread', 'runtime.markspan'])
+        #^ OK
 
         self.assertEqual(results[6][0], 'rax')
         self.assertEqual(results[6][1], 0x40aaad)
@@ -138,8 +143,9 @@ class TestStaticSlicing(unittest.TestCase):
         self.assertEqual(results[7][0], 'rdx')
         self.assertEqual(results[7][1], 0x40abcc)
         self.assertEqual(len(results[7][2]), 1)
-        self.assertEqual(results[7][2][0], [0x40aba3, 'RBP', 0, 0, None, True, True, 'memread', 'runtime.setblockspecial'])
-
+        self.assertEqual(results[7][2][0][0:9], [0x40aba3, 'RBP', 0, 0, None, True, True, 'memread', 'runtime.setblockspecial'])
+        #^OK
+        
     def test_stack_and_pass_by_reference(self):
         slice_starts = []
         slice_starts.append(['', 0x43c46c, 'unicode.init', False])
@@ -433,6 +439,12 @@ class TestStaticSlicing(unittest.TestCase):
         self.assertEqual(len(results[0][2]), 2)
         self.assertTrue([0x416723, 'RSP', 0, 24, None, False, False, 'memread', 'bytes.*Buffer·ReadFrom', ''] in results[0][2])
         self.assertTrue([0x41650b, 'RAX', 0, 0, None, False, False, 'memread', 'bytes.*Buffer·ReadFrom', ''] in results[0][2])
+
+    def test_tmp(self):
+        slice_starts = []
+        slice_starts.append(['SPECIAL', 0x409d28, "sweep", True])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
 
     """
     def test_sa_TODO16(self):
