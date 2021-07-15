@@ -172,6 +172,8 @@ class DynamicDependence:
         self.insn_to_reg_count2 = {}
         self.code_to_insn = {}
         self.insns_with_regs = set()
+        self.load_insn_to_bit_ops = {}
+        self.bit_op_to_store_insns = {}
         self.trace_path = None
 
         # phase out this eventually and just use one unified list to represent every starting event
@@ -190,11 +192,46 @@ class DynamicDependence:
         unique_insns = set()
         i = 0
 
+        insn_to_bit_operand = {}
+        for node in self.all_static_df_nodes:
+            if node.mem_load != None:
+                if node.mem_load.bit_operations is not None:
+                    if node.mem_load.is_bit_var is not True:
+                        print(node.print_node("[WARN] Should be a bit var! "))
+                    for bos in node.mem_load.bit_operations:
+                        for bo in bos:
+                            if bo.operand.lower() not in reg_map:
+                                continue
+                            if bo.insn in insn_to_bit_operand:
+                                assert(insn_to_bit_operand[bo.insn] == bo.operand)
+                            else:
+                                insn_to_bit_operand[bo.insn] = bo.operand.lower()
+                            if node.insn not in self.load_insn_to_bit_ops:
+                                self.load_insn_to_bit_ops[node.insn] = []
+                            if bo.insn not in self.load_insn_to_bit_ops[node.insn]:
+                                self.load_insn_to_bit_ops[node.insn].append(bo.insn)
+
+            if node.mem_store != None:
+                if node.mem_store.bit_operations is not None:
+                    if node.mem_store.is_bit_var is not True:
+                        print(node.print_node("[WARN] Should be a bit var! "))
+                    for bos in node.mem_store.bit_operations:
+                        for bo in bos:
+                            if bo.operand.lower() not in reg_map:
+                                continue
+                            if bo.insn in insn_to_bit_operand:
+                                assert(insn_to_bit_operand[bo.insn] == bo.operand)
+                            else:
+                                insn_to_bit_operand[bo.insn] = bo.operand.lower()
+                            if bo.insn not in self.bit_op_to_store_insns:
+                                self.bit_op_to_store_insns[bo.insn] = []
+                            if node.insn not in self.bit_op_to_store_insns[bo.insn]:
+                                self.bit_op_to_store_insns[bo.insn].append(node.insn)
+
         for start_event in self.starting_events:
             reg = start_event[0]
             insn = start_event[1]
-            if insn in unique_insns:
-                continue
+            assert insn not in unique_insns
             unique_insns.add(insn)
 
             i += 1
@@ -203,10 +240,11 @@ class DynamicDependence:
             self.insns_with_regs.add(insn)
             self.insn_to_reg_count[insn] = 1
 
+        #go through every dataflow node to find the bit vars first
+
         for node in self.all_static_df_nodes:
             #print("DF" + node.hex_insn)
-            if node.insn in unique_insns:
-                continue
+            assert node.insn not in unique_insns
             unique_insns.add(node.insn)
 
             i += 1
@@ -216,6 +254,13 @@ class DynamicDependence:
             has_reg = False
             load_reg_count = 0
             store_reg_count = 0
+
+            if node.insn in insn_to_bit_operand:
+                instructions.append([node.hex_insn, insn_to_bit_operand[node.insn], i])
+                load_reg_count += 1
+                has_reg = True
+                del insn_to_bit_operand[node.insn]
+
             if node.mem_load != None:
                 if node.mem_load.reg != None and node.mem_load.reg != '':
                     instructions.append([node.hex_insn, node.mem_load.reg.lower(), i])
@@ -225,6 +270,7 @@ class DynamicDependence:
                     instructions.append([node.hex_insn, node.mem_load.off_reg.lower(), i])
                     load_reg_count += 1
                     has_reg = True
+                # bit var ops treated as load
             # trace remote
             #TODO handle this!!
             if node.mem_store != None:
@@ -248,6 +294,17 @@ class DynamicDependence:
                     self.insn_to_reg_count2[node.insn] = store_reg_count
             if reg_count >= 1:
                 self.insns_with_regs.add(node.insn)
+
+        for insn in insn_to_bit_operand:
+            reg = insn_to_bit_operand[insn]
+            assert insn not in unique_insns
+            unique_insns.add(insn)
+
+            i += 1
+            self.code_to_insn[i] = insn
+            instructions.append([hex(insn), reg, i])
+            self.insns_with_regs.add(insn)
+            self.insn_to_reg_count[insn] = 1
 
         for node in self.all_static_cf_nodes:
             if node.insn in unique_insns:
@@ -329,7 +386,9 @@ class DynamicDependence:
                 "insn_of_local_df_nodes" : self.insn_of_local_df_nodes,
                 "insn_of_remote_df_nodes" : self.insn_of_remote_df_nodes,
                 "insn_to_reg_count" : self.insn_to_reg_count,
-                "insn_to_reg_count2": self.insn_to_reg_count2
+                "insn_to_reg_count2": self.insn_to_reg_count2,
+                "load_insn_to_bit_ops": self.load_insn_to_bit_ops,
+                "bit_op_to_store_insns": self.bit_op_to_store_insns
             }
             preprocess_data_file = os.path.join(curr_dir, 'preprocess_data')
             with open(preprocess_data_file, 'w') as f:
@@ -354,7 +413,8 @@ class DynamicDependence:
             dynamic_graph.build_dynamic_graph(byte_seq, insn, self.code_to_insn, self.insns_with_regs, self.insn_to_static_node,
                                               set(self.insn_of_cf_nodes), set(self.insn_of_df_nodes),
                                               set(self.insn_of_local_df_nodes), set(self.insn_of_remote_df_nodes),
-                                              self.insn_to_reg_count, self.insn_to_reg_count2)
+                                              self.insn_to_reg_count, self.insn_to_reg_count2,
+                                              self.load_insn_to_bit_ops, self.bit_op_to_store_insns)
 
             time_record["build_finish"] = time.time()
             print("[TIME]Build Dynamic Graph Finish Time: ", time.asctime(time.localtime(time_record["build_finish"])))
@@ -779,8 +839,9 @@ class DynamicGraph:
                 #assert node in node.df_predes, str(node) + str(s)
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
-    def build_dynamic_graph(self, byte_seq, insn, code_to_insn, insns_with_regs, insn_to_static_node, insn_of_cf_nodes, insn_of_df_nodes,
-                           insn_of_local_df_nodes, insn_of_remote_df_nodes, insn_to_reg_count, insn_to_reg_count2):
+    def build_dynamic_graph(self, byte_seq, insn, code_to_insn, insns_with_regs, insn_to_static_node,
+                            insn_of_cf_nodes, insn_of_df_nodes, insn_of_local_df_nodes, insn_of_remote_df_nodes,
+                            insn_to_reg_count, insn_to_reg_count2, load_insn_to_bit_ops, bit_op_to_store_insns):
 
         print("[TIME]Build Dynamic Graph Start Time: ", time.asctime(time.localtime(time.time())))
 

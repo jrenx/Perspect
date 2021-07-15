@@ -631,7 +631,7 @@ class CFG:
 class BitOperation:
     def __init__(self, insn, operand, operation):
         self.insn = insn
-        self.operand = operand
+        self.operand = operand.lower()
         self.operation = operation
 
     def __str__(self):
@@ -716,7 +716,7 @@ class MemoryAccess:
                 bos = []
                 ma.bit_operations.append(bos)
                 for json_bo in json_bos:
-                    bos.append(json_bo.fromJSON())
+                    bos.append(BitOperation.fromJSON(json_bo))
         return ma
 
     def __str__(self):
