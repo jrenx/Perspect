@@ -628,6 +628,28 @@ class CFG:
             str(len(self.id_to_bb)) + " " + str(len(self.ordered_bbs))
         print("[static_dep] number of basic blocks in the entire cfg: " + str(len(self.ordered_bbs)))
 
+class BitOperation:
+    def __init__(self, insn, operand, operation):
+        self.insn = insn
+        self.operand = operand
+        self.operation = operation
+
+    def __str__(self):
+        s = "BIT OP insn " + hex(self.insn) + " operand " \
+            + str(self.operand) + " operation " + str(self.operation)
+        return s
+    
+    def toJSON(self):
+        data = {}
+        data["insn"] = self.insn
+        data["operand"] = self.operand
+        data["operation"] = self.operation
+        return data
+
+    @staticmethod
+    def fromJSON(data):
+        bo = BitOperation(data['insn'], data['operand'], data['operation'])
+        return bo
 
 class MemoryAccess:
     def __init__(self, reg, shift, off, off_reg, is_bit_var):
@@ -636,7 +658,20 @@ class MemoryAccess:
         self.off = off
         self.off_reg = off_reg
         self.is_bit_var = is_bit_var
+        self.bit_operations = None
         self.read_same_as_write = False
+
+    def add_bit_operations(self, bit_operations):
+        overwrite = False
+        if self.bit_operations is not None:
+            overwrite = True
+            print("BEFORE " + str(self.bit_operations))
+        assert self.bit_operations is None
+        self.bit_operations = []
+        for bo in bit_operations:
+            self.bit_operations.append(BitOperation(bo[0], bo[1], bo[2]))
+        if overwrite is True:
+            print("AFTER " + str(self.bit_operations))
 
     def toJSON(self):
         data = {}
@@ -645,6 +680,10 @@ class MemoryAccess:
         data["off"] = self.off
         data["off_reg"] = self.off_reg
         data["is_bit_var"] = self.is_bit_var
+        if self.bit_operations is not None:
+            data["bit_operations"] = []
+            for bit_operation in self.bit_operations:
+                data["bit_operations"].append(bit_operation.toJSON())
         data["read_same_as_write"] = 0 if self.read_same_as_write is False else 1
         return data
 
@@ -652,6 +691,10 @@ class MemoryAccess:
     def fromJSON(data):
         ma = MemoryAccess(data['reg'], data['shift'], data['off'], data['off_reg'], data['is_bit_var'])
         ma.read_same_as_write = False if data['read_same_as_write'] == 0 else True
+        if "bit_operations" in data:
+            ma.bit_operations = []
+            for bo in data["bit_operations"]:
+                ma.bit_operations.append(bo.fromJSON())
         return ma
 
     def __str__(self):
@@ -662,6 +705,8 @@ class MemoryAccess:
         if self.is_bit_var is not None:
             s += " is bit var: " + str(self.is_bit_var)# + "\n"
         s += " read same as write: " + str(self.read_same_as_write)
+        if self.bit_operations is not None:
+            s += "\n" + str([str(bo) for bo in self.bit_operations])
         return s
 
 
@@ -1536,6 +1581,7 @@ class StaticDepGraph:
                 type = load[7]
                 curr_func = load[8]
                 dst_reg = load[9]
+                bit_ops = load[10]
 
                 assert shift != '', str(load)
                 assert off != '', str(load)
@@ -1574,6 +1620,7 @@ class StaticDepGraph:
                             off_reg = ''
                             off = 0
                         prede.mem_load = MemoryAccess(prede_reg, shift, off, off_reg, is_bit_var)
+                        prede.mem_load.add_bit_operations(bit_ops)
                         prede.reg_store = dst_reg #TODO put actual register name here
                         if read_same_as_write is True:
                             succe.mem_store.read_same_as_write = True

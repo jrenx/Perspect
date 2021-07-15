@@ -53,6 +53,13 @@ def parseLoadsOrStores(json_exprs):
         is_bit_var = None
         if 'is_bit_var' in json_expr:
             is_bit_var = True if json_expr['is_bit_var'] == 1 else False
+        bit_operations = None
+        if is_bit_var is True:
+            bit_operations = []
+            json_bit_operations = json_expr['bit_operations']
+            for json_bit_operation in json_bit_operations:
+                bit_operations.append(
+                    [json_bit_operation['insn_addr'], json_bit_operation['operand'], json_bit_operation['operation']])
         func = None
         if 'func' in json_expr:
             func = json_expr['func']
@@ -127,7 +134,8 @@ def parseLoadsOrStores(json_exprs):
         if DEBUG: print("Parsing result reg: " + expr_reg + \
                         " shift " + str(shift) + " off " + str(off) + " insn addr: " + str(insn_addr))
         #TODO, in the future use a map instead of a list...
-        data_points.append([insn_addr, reg, shift, off, off_reg, read_same_as_write, is_bit_var, type, func, dst])
+        data_points.append([insn_addr, reg, shift, off, off_reg, 
+                            read_same_as_write, is_bit_var, type, func, dst, bit_operations])
     return data_points
 
 #FIXME: call instructions insns and not addrs

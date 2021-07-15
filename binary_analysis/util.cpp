@@ -41,6 +41,25 @@ bool DEBUG_SLICE = false;
 bool DEBUG_BIT = false;
 bool DEBUG_STACK = false;
 
+
+boost::unordered_map<std::string, std::string> regMap =
+    {{"al"  ,"rax"}, {"ah"  ,"rax"}, {"ax"  ,"rax"}, {"eax" ,"rax"}, {"rax","rax"},
+     {"bl"  ,"rbx"}, {"bh"  ,"rbx"}, {"bx"  ,"rbx"}, {"ebx" ,"rbx"}, {"rbx","rbx"},
+     {"cl"  ,"rcx"}, {"ch"  ,"rcx"}, {"cx"  ,"rcx"}, {"ecx" ,"rcx"}, {"rcx","rcx"},
+     {"dl"  ,"rdx"}, {"dh"  ,"rdx"}, {"dx"  ,"rdx"}, {"edx" ,"rdx"}, {"rdx","rdx"},
+     {"sil" ,"rsi"}, {"si"  ,"rsi"},                 {"esi" ,"rsi"}, {"rsi","rsi"},
+     {"dil" ,"rdi"}, {"di"  ,"rdi"},                 {"edi" ,"rdi"}, {"rdi","rdi"},
+     {"bpl" ,"rbp"}, {"bp"  ,"rbp"},                 {"ebp" ,"rbp"}, {"rbp","rbp"},
+     {"spl" ,"rsp"}, {"sp"  ,"rsp"},                 {"esp" ,"rsp"}, {"rsp","rsp"},
+     {"r8b" , "r8"}, {"r8w" , "r8"},                 {"r8d" , "r8"}, {"r8" , "r8"},
+     {"r9b" , "r9"}, {"r9w" , "r9"},                 {"r9d" , "r9"}, {"r9" , "r9"},
+     {"r10b","r10"}, {"r10w","r10"},                 {"r10d","r10"}, {"r10","r10"},
+     {"r11b","r11"}, {"r11w","r11"},                 {"r11d","r11"}, {"r11","r11"},
+     {"r12b","r12"}, {"r12w","r12"},                 {"r12d","r12"}, {"r12","r12"},
+     {"r13b","r13"}, {"r13w","r13"},                 {"r13d","r13"}, {"r13","r13"},
+     {"r14b","r14"}, {"r14w","r14"},                 {"r14d","r14"}, {"r14","r14"},
+     {"r15b","r15"}, {"r15w","r15"},                 {"r15d","r15"}, {"r15","r15"}};
+
 #ifdef USE_BPATCH
 BPatch bpatch;
 // Attach, create, or open a file for rewriting
@@ -385,6 +404,35 @@ void getRegAndOff(Expression::Ptr exp, std::vector<MachRegister> &machRegs, long
   }
 }
 
+std::string getLoadRegName(Instruction insn) {
+  std::string regStr("");
+  std::vector<Operand> ops;
+  insn.getOperands(ops);
+  for (auto oit = ops.rbegin(); oit != ops.rend(); oit++) {
+    bool isRegReadOnly = (*oit).isRead() && !(*oit).isWritten() && !(*oit).readsMemory() && !(*oit).writesMemory();
+    if (!isRegReadOnly) continue;
+    std::vector<MachRegister> regs;
+    long off = 0;
+    getRegAndOff((*oit).getValue(), regs, &off);
+    if (off != 0) continue;
+    if (regs.size() != 1) {
+      cout << "[sa] Operand has multipl reg reads" << endl;
+      continue;
+    }
+    if (regStr != "") {
+      cout << "[sa] Instruction has multipl reg reads" << endl;
+      return string("");
+    }
+    regStr = (*oit).getValue()->format();
+    boost::algorithm::to_lower(regStr);
+  }
+  cout << regStr << endl;
+  if (regStr != "")
+    return "[x86_64::" + regMap[regStr] + "]";
+  else
+    return regStr;
+}
+
 cJSON *printBBIdsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs) {
   cJSON *json_bbs  = cJSON_CreateArray();
   for (int i=0; i<bbs.size(); i++) {
@@ -564,5 +612,4 @@ void getReversePostOrderList(GraphPtr slice,
     getReversePostOrderListHelper(*it, list, visited);
   }
 }
-
 #endif

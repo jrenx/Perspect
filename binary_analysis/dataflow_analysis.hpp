@@ -160,8 +160,5 @@ void handlePassByReference(AbsRegion targetReg, Address startAddr,
 
 std::string findMatchingOpExprStr(Assignment::Ptr assign, AbsRegion region);
 
-std::string getReadStr(Instruction insn, bool *memReadFound, bool *regFound);
-std::string inline getLoadRegName(Function *newFunc, Address newAddr, bool *foundMemRead);
-std::string inline getLoadRegName(Instruction newInsn, bool *foundMemRead);
-
+std::string getMemReadStrIfNotRegReadStr(Instruction insn, bool *memReadFound, bool *regFound);
 #endif

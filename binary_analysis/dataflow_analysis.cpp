@@ -2,6 +2,7 @@
 #include "stack_analysis.hpp"
 #include "bitvar_analysis.hpp"
 #include "static_df_analysis.hpp"
+#include "util.hpp"
 
 #include <stdio.h>
 #include <iostream>
@@ -29,24 +30,6 @@ using namespace InstructionAPI;
 using namespace ParseAPI;
 using namespace DataflowAPI;
 
-boost::unordered_map<std::string, std::string> regMap =
-    {{"al"  ,"rax"}, {"ah"  ,"rax"}, {"ax"  ,"rax"}, {"eax","rax"},
-     {"bl"  ,"rbx"}, {"bh"  ,"rbx"}, {"bx"  ,"rbx"}, {"ebx","rbx"},
-     {"cl"  ,"rcx"}, {"ch"  ,"rcx"}, {"cx"  ,"rcx"}, {"ecx","rcx"},
-     {"dl"  ,"rdx"}, {"dh"  ,"rdx"}, {"dx"  ,"rdx"}, {"edx","rdx"},
-     {"sil" ,"rsi"}, {"si"  ,"rsi"}, {"esi" ,"rsi"},
-     {"dil" ,"rdi"}, {"di"  ,"rdi"}, {"edi" ,"rdi"},
-     {"bpl" ,"rbp"}, {"bp"  ,"rbp"}, {"ebp" ,"rbp"},
-     {"spl" ,"rsp"}, {"sp"  ,"rsp"}, {"esp" ,"rsp"},
-     {"r8b" , "r8"}, {"r8w" , "r8"}, {"r8d" , "r8"},
-     {"r9b" , "r9"}, {"r9w" , "r9"}, {"r9d" , "r9"},
-     {"r10b","r10"}, {"r10w","r10"}, {"r10d","r10"},
-     {"r11b","r11"}, {"r11w","r11"}, {"r11d","r11"},
-     {"r12b","r12"}, {"r12w","r12"}, {"r12d","r12"},
-     {"r13b","r13"}, {"r13w","r13"}, {"r13d","r13"},
-     {"r14b","r14"}, {"r14w","r14"}, {"r14d","r14"},
-     {"r15b","r15"}, {"r15w","r15"}, {"r15d","r15"}};
-
 void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
                          cJSON *json_reads, boost::unordered_set<Address> &visited,
                          char *progName, char *funcName,
@@ -71,9 +54,11 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
 
   if (strcmp(regName, "[x86_64::special]") == 0) {
     bool foundMemRead = false;
-    std::string newRegStr = getLoadRegName(insn, &foundMemRead);
+    std::set<Expression::Ptr> memReads;
+    insn.getMemoryReadOperands(memReads);
+    if (memReads.size() > 0) foundMemRead = true;
     if (!foundMemRead) {
-      regName = (char *) newRegStr.c_str();
+      regName = (char *) getLoadRegName(insn).c_str();
     } else {
       const char *empty = "";
       regName = (char*)empty;
@@ -120,7 +105,13 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
           Address newAddr = (*rit).first;
 
           bool foundMemRead = false;
-          std::string newRegStr = getLoadRegName(newFunc, newAddr, &foundMemRead);
+          Block *newBB = getBasicBlock2(newFunc, newAddr);
+          Instruction newInsn = newBB->getInsn(newAddr);
+          std::set<Expression::Ptr> memReads;
+          newInsn.getMemoryReadOperands(memReads);
+          if (memReads.size() > 0) foundMemRead = true;
+
+          std::string newRegStr = getLoadRegName(newInsn);
           if (foundMemRead) atEndPoint = true;
           char *newRegName = (char *) newRegStr.c_str();
           // TODO, in the future even refactor the signature of the backwardSliceHelper function ...
@@ -198,7 +189,13 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
           Address newAddr = (*stit).first;
 
           bool foundMemRead = false;
-          std::string newRegStr = getLoadRegName(newFunc, newAddr, &foundMemRead);
+          Block *newBB = getBasicBlock2(newFunc, newAddr);
+          Instruction newInsn = newBB->getInsn(newAddr);
+          std::set<Expression::Ptr> memReads;
+          newInsn.getMemoryReadOperands(memReads);
+          if (memReads.size() > 0) foundMemRead = true;
+
+          std::string newRegStr = getLoadRegName(newInsn);
           if (foundMemRead) atEndPoint = true;
           char * newRegName = (char *)newRegStr.c_str();
           backwardSliceHelper(stcs, co, json_reads, visited, progName, newFuncName, newAddr, newRegName, isKnownBitVar, atEndPoint);
@@ -221,7 +218,7 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
     if (INFO) cout << "[sa] checking result instruction: " << assign->insn().format() << endl;
 
     bool memReadFound = false, regFound = false;
-    std::string readStr = getReadStr(assign->insn(), &memReadFound, &regFound);
+    std::string readStr = getMemReadStrIfNotRegReadStr(assign->insn(), &memReadFound, &regFound);
     if (!memReadFound && !regFound) {
       if (INFO) cout << "[sa] result is a constant load, ignore" << endl;
       continue;
@@ -498,7 +495,7 @@ std::string findMatchingOpExprStr(Assignment::Ptr assign, AbsRegion region) {
   }
 }
 
-std::string getReadStr(Instruction insn, bool *memReadFound, bool *regFound) {
+std::string getMemReadStrIfNotRegReadStr(Instruction insn, bool *memReadFound, bool *regFound) {
   // TODO, refactor this function!
   Expression::Ptr read;
   std::string readStr;
@@ -539,30 +536,4 @@ std::string getReadStr(Instruction insn, bool *memReadFound, bool *regFound) {
     }
   }
   return readStr;
-}
-
-std::string inline getLoadRegName(Function *newFunc, Address newAddr, bool *foundMemRead) {
-  Block *newBB = getBasicBlock2(newFunc, newAddr);
-  Instruction newInsn = newBB->getInsn(newAddr);
-  return getLoadRegName(newInsn, foundMemRead);
-}
-std::string inline getLoadRegName(Instruction newInsn, bool *foundMemRead) {
-  bool memReadFound = false, regFound = false;
-  std::string readStr = getReadStr(newInsn, &memReadFound, &regFound);
-  std::string delim = "|";
-  int delimIndex = readStr.find(delim);
-  std::string type = readStr.substr(0, delimIndex);
-  std::string reg = "";
-  if (regFound && type == "regread") {
-    reg = readStr.substr(delimIndex + 1, readStr.length());
-    boost::algorithm::to_lower(reg);
-    if (regMap.find(reg) != regMap.end()) {
-      reg = regMap[reg];
-    }
-    reg = "[x86_64::" + reg + "]";
-  } else if (type == "memread") {
-    cout << "[sa][warn] expect a register read here? " << endl; //TODO how to handle this??
-    *foundMemRead = true;
-  }
-  return reg;
 }
