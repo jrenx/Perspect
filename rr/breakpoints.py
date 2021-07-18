@@ -62,7 +62,7 @@ def read_breakpoint(br_num, frame):
         reg_value = int(frame.read_register(reg))
     if off_reg != '':
         off_reg_value = int(frame.read_register(off_reg))
-    addr = hex(reg_value << shift + off_reg_value * int(offset, 16))
+    addr = hex(reg_value << shift + off_reg_value * int(offset))
 
     if not config['deref']:
         trace.append((hex(int(frame.pc())), hex(reg_value), None))
