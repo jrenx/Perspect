@@ -53,7 +53,7 @@ def br_handler(event):
 
     elif br_num < len(reg_points) + len(breakpoints):
         br_num -= len(reg_points)
-        trace.append((hex(int(frame.pc())), None, None))
+        trace.append(breakpoints[br_num], None, None))
     else:
         raise RuntimeError("Unknown breakpoint number: {}".format(br_num + 1))
 
@@ -81,7 +81,7 @@ def read_breakpoint(br_num, frame):
     addr = hex(reg_value << shift + off_reg_value * offset)
 
     if not config['deref']:
-        trace.append((hex(int(frame.pc())), hex(reg_value), None))
+        trace.append(reg_points[br_num], hex(reg_value), None)
     else:
         if '(' in src_reg or ',' in src_reg or '%' in src_reg:
             cmd = 'p/x *(' + addr + ')'
@@ -93,7 +93,7 @@ def read_breakpoint(br_num, frame):
             print("SPECIAL")
             cmd = 'x/32b ' + addr
         value = hex(int(gdb.execute(cmd, False, True)))
-        trace.append(hex(int(frame.pc())), hex(addr), value)
+        trace.append(reg_points[br_num], hex(addr), value)
 
 gdb.events.stop.connect(br_handler)
 
