@@ -2,6 +2,7 @@ import gdb
 
 import json
 import os
+import time
 
 rr_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -10,6 +11,8 @@ with open(os.path.join(rr_dir, 'config.json')) as configFile:
 
 breakpoints = config['breakpoints']
 reg_points = config['reg_points']
+timeout = config['timeout']
+start_time = time.time()
 
 for br in reg_points:
     gdb.execute('br {}'.format(br))
@@ -18,8 +21,13 @@ for br in breakpoints:
         gdb.execute('br {}'.format(br))
 
 trace = []
+not_exit = True
 
 def br_handler(event):
+    if time.time() - start_time > timeout:
+        global not_exit
+        not_exit = False
+        return
     if not isinstance(event, gdb.BreakpointEvent):
         return
     frame = gdb.newest_frame()
@@ -80,8 +88,6 @@ def read_breakpoint(br_num, frame):
         trace.append(hex(int(frame.pc())), hex(addr), value)
 
 gdb.events.stop.connect(br_handler)
-
-not_exit = True
 
 def exit_handler(event):
     global not_exit
