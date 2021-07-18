@@ -32,7 +32,7 @@ def wp_handler(event):
         return
     frame = gdb.newest_frame()
     br = event.breakpoints[-1]
-    trace.append((watchpoints[int(br.number) - 1], hex(frame.pc()).strip('L'), str(frame.name())))
+    trace.append((watchpoints[int(br.number) - 1], hex(frame.pc()).strip('L'), frame.name()))
 
 gdb.events.stop.connect(wp_handler)
 
