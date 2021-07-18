@@ -39,8 +39,6 @@ gdb.events.stop.connect(wp_handler)
 not_exit = True
 
 def exit_handler(event):
-    with open(os.path.join(rr_dir, 'watchpoints.log'), 'w') as log_file:
-        json.dump(trace, log_file)
     global not_exit
     not_exit = False
     
@@ -51,5 +49,8 @@ while not_exit:
         gdb.execute('c')
     except Exception:
         break
+
+with open(os.path.join(rr_dir, 'watchpoints.log'), 'w') as log_file:
+    json.dump(trace, log_file)
 
 gdb.execute('quit', False, True)
