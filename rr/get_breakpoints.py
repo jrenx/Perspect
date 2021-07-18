@@ -37,15 +37,15 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
     count = len(breakpoints) + len(reg_points)
     success = True
     a = datetime.datetime.now()
-    rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, shell=True)
     try:
         if do_timeout is True:
             print("Total number of breakpoints: " + str(count))
             timeout = max(300, count*15)
             print("Timeout is: " + str(timeout), flush=True)
-            rr_process.communicate(('source' + os.path.join(rr_dir, 'get_breakpoints.py')).encode(), timeout=timeout)
+            rr_process.communicate(('source' + os.path.join(rr_dir, 'breakpoints.py')).encode(), timeout=timeout)
         else:
-            rr_process.communicate(('source' + os.path.join(rr_dir, 'get_breakpoints.py')).encode(), timeout=120)
+            rr_process.communicate(('source' + os.path.join(rr_dir, 'breakpoints.py')).encode(), timeout=120)
     except subprocess.TimeoutExpired:
         rr_process.kill()
         success = False
