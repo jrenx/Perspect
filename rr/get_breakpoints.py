@@ -66,10 +66,21 @@ def parse_breakpoint(breakpoints, reg_points, deref):
 
 
 if __name__ == '__main__':
-    breakpoints = ['*0x40937d', '*0x409394']
-    reg_points = ['*0x409379']
+    #breakpoints = ['*0x40937d', '*0x409394']
+    #reg_points = ['*0x409379']
     #regs = ['rbp']
     #run_breakpoint(breakpoints, reg_points, regs, False, False)
+    breakpoints = ["*0x409380", "*0x409418"]
+    reg_points = ["*0x409379"]
+    regs = ["rdx"]
+    off_regs = ["r13"]
+    offsets = [8]
+    shifts = [0]
+    src_regs = [""]
+    loop_insn_flags = ["0"]
+    step = False
+    deref = False
+    run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, step, deref)
     trace = parse_breakpoint(breakpoints, reg_points, True)
     #print(trace[:10])
     #print(trace[-10:])
