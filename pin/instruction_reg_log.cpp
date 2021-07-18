@@ -146,6 +146,7 @@ VOID ImageLoad(IMG img, VOID *v)
                     INS_InsertCall(ins, IPOINT_BEFORE, AFUNPTR(record_reg), IARG_INST_PTR, IARG_INST_PTR, IARG_END);
                     no_reg_list[addr] = addr;
                   } else {
+		    //std::cout << reg << endl;
                     INS_InsertCall(ins, IPOINT_BEFORE, AFUNPTR(record_reg), IARG_INST_PTR, IARG_REG_VALUE, reg_map[reg], IARG_END);
                   }
                 }
@@ -260,6 +261,7 @@ int main (INT32 argc, CHAR *argv[])
     // Initialize reg_map
     reg_map["rax"] = REG_RAX;
     reg_map["rbp"] = REG_RBP;
+    reg_map["ebp"] = REG_EBP;
     reg_map["rsp"] = REG_RSP;
     reg_map["rdx"] = REG_RDX;
     reg_map["rbx"] = REG_RBX;

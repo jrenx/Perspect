@@ -87,6 +87,9 @@ unordered_map<long, int> InsnToRegCount;
 int *CodeToRegCount;
 int *CodeToRegCount2;
 
+short **CodeToBitOpCodes;
+short **BitOpCodeToCodes;
+
 unordered_set<long> StartInsns;
 bool *CodeOfStartInsns;
 int MaxStartCode = 0;
@@ -145,6 +148,19 @@ void parseJsonList(cJSON *json_List, unordered_set<long> &set) {
   for (int i = 0; i < size; i++) {
     cJSON *ele = cJSON_GetArrayItem(json_List, i);
     set.insert((long)ele->valueint); //TODO long?? save as string??
+  }
+}
+
+void parseJsonMapOfLists(cJSON *json_Map, unordered_map<long, unordered_set<long>*> &map) {
+  int size = cJSON_GetArraySize(json_Map);
+  for (int i = 0; i < size; i++) {
+    cJSON *ele = cJSON_GetArrayItem(json_Map, i);
+    long key = atol(ele->string);
+    unordered_set<long> *set = new unordered_set<long>; //TODO, properly clean up, right now ignored LOL
+    parseJsonList(ele, *set);
+    //cout << key << endl;
+    //cout << ele->valueint << endl;
+    map.insert({key, set});
   }
 }
 
@@ -213,9 +229,10 @@ void parseStaticNode(char *filename) {
       int id = cJSON_GetObjectItem(json_staticNode, "id")->valueint;
       long insn = cJSON_GetObjectItem(json_staticNode, "insn")->valueint;
       StaticNodeIdToInsn.insert({id, insn});
+      cout << "Parsing insn: " << std::hex << insn << std::dec <<endl;
       if (InsnToCode.find(insn) == InsnToCode.end()) continue;
       unsigned short currCode =  InsnToCode[insn];
-      //cout << "Parsing code: " << currCode << endl;
+      cout << "Parsing code: " << currCode << endl;
       // FIXME: reduce array accesses here :p
       CodeToStaticNode[currCode] = new StaticNode();
       CodeToStaticNode[currCode]->insn = insn;
@@ -396,7 +413,6 @@ void initData() {
   CodeToRegCount = new int[CodeCount];
   for (int i = 0; i < CodeCount; i++) CodeToRegCount[i] = 0;
   for (auto it = map2.begin(); it != map2.end(); it++) {
-    //InsnToRegCount.insert({(long)(*it).first, (int)(*it).second});
     CodeToRegCount[InsnToCode[(long)(*it).first]] = (int)(*it).second;
   }
 
@@ -406,8 +422,39 @@ void initData() {
   CodeToRegCount2 = new int[CodeCount];
   for (int i = 0; i < CodeCount; i++) CodeToRegCount2[i] = 0;
   for (auto it = map3.begin(); it != map3.end(); it++) {
-    //InsnToRegCount.insert({(long)(*it).first, (int)(*it).second});
     CodeToRegCount2[InsnToCode[(long)(*it).first]] = (int)(*it).second;
+  }
+
+  cJSON *json_loadInsnToBitOps = cJSON_GetObjectItem(data, "load_insn_to_bit_ops");
+  unordered_map<long, unordered_set<long>*> map4;
+  parseJsonMapOfLists(json_loadInsnToBitOps, map4);
+  CodeToBitOpCodes = new short*[CodeCount];
+  for (int i = 0; i < CodeCount; i++) CodeToBitOpCodes[i] = NULL;
+  for (auto it = map4.begin(); it != map4.end(); it++) {
+    short key = InsnToCode[(long)(*it).first];
+    unordered_set<long> *set = (*it).second;
+    CodeToBitOpCodes[key] = new short[set->size()];
+    int i = 0;
+    for (auto sit = set->begin(); sit != set->end(); sit++) {
+      CodeToBitOpCodes[key][i] = InsnToCode[*sit];
+      i++;
+    }
+  }
+
+  cJSON *json_bitOpToStoreInsns = cJSON_GetObjectItem(data, "bit_op_to_store_insns");
+  unordered_map<long, unordered_set<long>*> map5;
+  parseJsonMapOfLists(json_bitOpToStoreInsns, map5);
+  BitOpCodeToCodes = new short*[CodeCount];
+  for (int i = 0; i < CodeCount; i++) BitOpCodeToCodes[i] = NULL;
+  for (auto it = map5.begin(); it != map5.end(); it++) {
+    short key = InsnToCode[(long)(*it).first];
+    unordered_set<long> *set = (*it).second;
+    BitOpCodeToCodes[key] = new short[set->size()];
+    int i = 0;
+    for (auto sit = set->begin(); sit != set->end(); sit++) {
+      BitOpCodeToCodes[key][i] = InsnToCode[*sit];
+      i++;
+    }
   }
 
   PendingCodes = new bool[CodeCount];
@@ -495,6 +542,8 @@ int main()
       cout << "HERE" << endl;
     }*/
 
+    // A bit hacky, but essentially if an instruction both loads and stores
+    // treat the load and store expressions as two separate things so old logic can be reused
     int regCount2 =  CodeToRegCount2[code];
     if (!hasPrevValues && regCount2 > 0) {
       if (regCount2 > 1) {

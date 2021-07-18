@@ -19,22 +19,22 @@ DEBUG = False
 # AL is the lower 8 bits
 # AH is the bits 8 through 15 (zero-based)
 #https://docs.microsoft.com/en-us/windows-hardware/drivers/debugger/x64-architecture
-reg_map = dict(al='rax', ah='rax', ax='rax', eax='rax',
-               bl='rbx', bh='rbx', bx='rbx', ebx='rbx',
-               cl='rcx', ch='rcx', cx='rcx', ecx='rcx',
-               dl='rdx', dh='rdx', dx='rdx', edx='rdx',
-               sil='rsi', si='rsi', esi='rsi',
-               dil='rdi', di='rdi', edi='rdi',
-               bpl='rbp', bp='rbp', ebp='rbp',
-               spl='rsp', sp='rsp', esp='rsp',
-               r8b='r8', r8w='r8', r8d='r8',
-               r9b='r9', r9w='r9', r9d='r9',
-               r10b='r10', r10w='r10', r10d='r10',
-               r11b='r11', r11w='r11', r11d='r11',
-               r12b='r12', r12w='r12', r12d='r12',
-               r13b='r13', r13w='r13', r13d='r13',
-               r14b='r14', r14w='r14', r14d='r14',
-               r15b='r15', r15w='r15', r15d='r15')
+reg_map = dict(al='rax',   ah='rax',   ax='rax',   eax='rax',  rax='rax',
+               bl='rbx',   bh='rbx',   bx='rbx',   ebx='rbx',  rbx='rbx',
+               cl='rcx',   ch='rcx',   cx='rcx',   ecx='rcx',  rcx='rcx',
+               dl='rdx',   dh='rdx',   dx='rdx',   edx='rdx',  rdx='rdx',
+               sil='rsi',  si='rsi',               esi='rsi',  rsi='rsi',
+               dil='rdi',  di='rdi',               edi='rdi',  rdi='rdi',
+               bpl='rbp',  bp='rbp',               ebp='rbp',  rbp='rbp',
+               spl='rsp',  sp='rsp',               esp='rsp',  rsp='rsp',
+               r8b='r8',   r8w='r8',               r8d='r8',   r8='r8',
+               r9b='r9',   r9w='r9',               r9d='r9',   r9='r9',
+               r10b='r10', r10w='r10',             r10d='r10', r10='r10',
+               r11b='r11', r11w='r11',             r11d='r11', r11='r11',
+               r12b='r12', r12w='r12',             r12d='r12', r12='r12',
+               r13b='r13', r13w='r13',             r13d='r13', r13='r13',
+               r14b='r14', r14w='r14',             r14d='r14', r14='r14',
+               r15b='r15', r15w='r15',             r15d='r15', r15='r15' )
 ################################################################
 #### C function declarations for accessing Dyninst analysis ####
 ################################################################

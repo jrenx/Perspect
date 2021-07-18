@@ -631,7 +631,7 @@ class CFG:
 class BitOperation:
     def __init__(self, insn, operand, operation):
         self.insn = insn
-        self.operand = operand
+        self.operand = operand.lower()
         self.operation = operation
 
     def __str__(self):
@@ -662,16 +662,18 @@ class MemoryAccess:
         self.read_same_as_write = False
 
     def add_bit_operations(self, bit_operations):
-        overwrite = False
-        if self.bit_operations is not None:
-            overwrite = True
-            print("BEFORE " + str(self.bit_operations))
-        assert self.bit_operations is None
-        self.bit_operations = []
+        # overwrite = False
+        # if self.bit_operations is not None:
+        #    overwrite = True
+        #    print("BEFORE " + str(self.bit_operations))
+        if self.bit_operations is None:
+            self.bit_operations = []
+        bos = []
         for bo in bit_operations:
-            self.bit_operations.append(BitOperation(bo[0], bo[1], bo[2]))
-        if overwrite is True:
-            print("AFTER " + str(self.bit_operations))
+            bos.append(BitOperation(bo[0], bo[1], bo[2]))
+        self.bit_operations.append(bos)
+        # if overwrite is True:
+        #    print("AFTER " + str(self.bit_operations))
 
     def toJSON(self):
         data = {}
@@ -687,14 +689,34 @@ class MemoryAccess:
         data["read_same_as_write"] = 0 if self.read_same_as_write is False else 1
         return data
 
+    def toJSON(self):
+        data = {}
+        data["reg"] = self.reg
+        data["shift"] = self.shift
+        data["off"] = self.off
+        data["off_reg"] = self.off_reg
+        data["is_bit_var"] = self.is_bit_var
+        if self.bit_operations is not None:
+            data["bit_operations"] = []
+            for bos in self.bit_operations:
+                json_bos = []
+                data["bit_operations"].append(json_bos)
+                for bo in bos:
+                    json_bos.append(bo.toJSON())
+        data["read_same_as_write"] = 0 if self.read_same_as_write is False else 1
+        return data
+
     @staticmethod
     def fromJSON(data):
         ma = MemoryAccess(data['reg'], data['shift'], data['off'], data['off_reg'], data['is_bit_var'])
         ma.read_same_as_write = False if data['read_same_as_write'] == 0 else True
         if "bit_operations" in data:
             ma.bit_operations = []
-            for bo in data["bit_operations"]:
-                ma.bit_operations.append(bo.fromJSON())
+            for json_bos in data["bit_operations"]:
+                bos = []
+                ma.bit_operations.append(bos)
+                for json_bo in json_bos:
+                    bos.append(BitOperation.fromJSON(json_bo))
         return ma
 
     def __str__(self):
@@ -706,7 +728,8 @@ class MemoryAccess:
             s += " is bit var: " + str(self.is_bit_var)# + "\n"
         s += " read same as write: " + str(self.read_same_as_write)
         if self.bit_operations is not None:
-            s += "\n" + str([str(bo) for bo in self.bit_operations])
+            for bos in self.bit_operations:
+                s += "\n" + str([str(bo) for bo in bos])
         return s
 
 
