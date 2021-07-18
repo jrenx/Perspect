@@ -53,7 +53,7 @@ def br_handler(event):
 
     elif br_num < len(reg_points) + len(breakpoints):
         br_num -= len(reg_points)
-        trace.append(breakpoints[br_num], None, None))
+        trace.append(breakpoints[br_num], None, None)
     else:
         raise RuntimeError("Unknown breakpoint number: {}".format(br_num + 1))
 
