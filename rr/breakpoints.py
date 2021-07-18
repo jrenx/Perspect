@@ -63,6 +63,10 @@ def read_breakpoint(br_num, frame):
     off_reg = config['off_regs'][br_num]
     src_reg = config['src_regs'][br_num]
     offset = config['offsets'][br_num]
+    if '0x' in shift:
+        shift = int(shift, 16)
+    else:
+        shift = int(shift)
     if '0x' in offset:
         offset = int(offset, 16)
     else:
