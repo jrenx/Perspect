@@ -662,6 +662,8 @@ class MemoryAccess:
         self.read_same_as_write = False
 
     def add_bit_operations(self, bit_operations):
+        if len(bit_operations) == 0:
+            return
         # overwrite = False
         # if self.bit_operations is not None:
         #    overwrite = True
@@ -711,12 +713,16 @@ class MemoryAccess:
         ma = MemoryAccess(data['reg'], data['shift'], data['off'], data['off_reg'], data['is_bit_var'])
         ma.read_same_as_write = False if data['read_same_as_write'] == 0 else True
         if "bit_operations" in data:
-            ma.bit_operations = []
+            bit_operations = []
             for json_bos in data["bit_operations"]:
                 bos = []
-                ma.bit_operations.append(bos)
                 for json_bo in json_bos:
                     bos.append(BitOperation.fromJSON(json_bo))
+                if len(bos) > 0:
+                    bit_operations.append(bos)
+        #TODO: sometimes there could be empty bit operations ... why?
+            if len(bit_operations) > 0:
+                ma.bit_operations = bit_operations
         return ma
 
     def __str__(self):

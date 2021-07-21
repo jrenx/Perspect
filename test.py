@@ -136,6 +136,11 @@ class TestStaticSlicing(unittest.TestCase):
         self.assertEqual(results[5][2][0][0:9], [0x40a97d, 'RBX', 0, 0, None, True, True, 'memread', 'runtime.markspan'])
         #^ OK
 
+        # TODO, because it sets 0x0 to all bits, currently
+        # analysis will not return anything as it ignores constant definitions
+        # and will not treat it as a bit var
+        # the correct way to do this is to treat it as a bit var
+        # that modifies all the digits
         self.assertEqual(results[6][0], 'rax')
         self.assertEqual(results[6][1], 0x40aaad)
         self.assertEqual(len(results[6][2]), 0)

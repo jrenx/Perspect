@@ -53,10 +53,11 @@ class DynamicNode(JSONEncoder):
         self.cf_succes = []
         self.df_predes = []
         self.df_succes = []
-        self.mem_load = None
         self.mem_load_addr = None
-        self.mem_store = None
         self.mem_store_addr = None
+        self.bit_ops = None
+        self.load_bit_mask = None
+        self.store_bit_mask = None
         self.output_set = set() #TODO, persist these two as well?
         self.output_set1 = set()
         self.input_sets = {}
@@ -76,27 +77,29 @@ class DynamicNode(JSONEncoder):
         #s += "    -------------------------------------\n"
         s += "    dynamic control flow predecessors: ["
         for prede in self.cf_predes:
-            s += '[' + str(prede.id) + "," + str(prede.insn_id) + ']'
+            s += '[' + str(prede.id) + "," + str(prede.static_node.hex_insn) + ']'
         s = s.strip(",")
         s += "] \n"
         s += "    dynamic control flow successors: ["
         for succe in self.cf_succes:
-            s += '[' + str(succe.id) + "," + str(succe.insn_id) + ']'
+            s += '[' + str(succe.id) + "," + str(succe.static_node.hex_insn) + ']'
         s = s.strip(",")
         s += "] \n"
         s += "    dynamic data flow predecessors: ["
         for prede in self.df_predes:
-            s += '[' + str(prede.id) + "," + str(prede.insn_id) + ']'
+            s += '[' + str(prede.id) + "," + str(prede.static_node.hex_insn) + ']'
         s = s.strip(",")
         s += "] \n"
         s += "    dynamic data flow successors: ["
         for succe in self.df_succes:
-            s += '[' + str(succe.id) + "," + str(succe.insn_id) + ']'
+            s += '[' + str(succe.id) + "," + str(succe.static_node.hex_insn) + ']'
         s = s.strip(",")
         s += "] \n"
         s += "    mem_load_addr: " + (hex(self.mem_load_addr) if self.mem_load_addr is not None else str(None)) + "\n"
         s += "    mem_store_addr: " + (hex(self.mem_store_addr) if self.mem_store_addr is not None else str(None)) + "\n"
-        s += " weight: " + str(weight)
+        s += "    load_bit_mask: " + ("{:64b}".format(self.load_bit_mask) if self.load_bit_mask is not None else str(None)) + "\n"
+        s += "    store_bit_mask: " + ("{:64b}".format(self.store_bit_mask) if self.store_bit_mask is not None else str(None)) + "\n"
+        s += " weight: " + str(self.weight)
         return s
 
     def toJSON(self):
@@ -119,14 +122,22 @@ class DynamicNode(JSONEncoder):
         data["df_succes"] = []
         for n in self.df_succes:
             data["df_succes"].append(n.id)
-        data["mem_load"] = self.mem_load if self.mem_load is None or not isinstance(self.mem_load, MemoryAccess) else \
-                                        self.mem_load.toJSON()
         data["mem_load_addr"] = self.mem_load_addr
         data["mem_load_addr_hex"] = None if self.mem_load_addr is None else hex(self.mem_load_addr) #for debugging
-        data["mem_store"] = self.mem_store if self.mem_store is None or not isinstance(self.mem_store, MemoryAccess) else \
-                                        self.mem_store.toJSON()
         data["mem_store_addr"] = self.mem_store_addr
         data["mem_store_addr_hex"] = None if self.mem_store_addr is None else hex(self.mem_store_addr) #for debugging
+        if self.bit_ops is not None:
+            data["bit_ops"] = self.bit_ops
+            bit_ops_binary = {}
+            for insn in self.bit_ops:
+                bit_ops_binary[hex(insn)] = "{:64b}".format(self.bit_ops[insn])
+            data["bit_ops_binary"] = bit_ops_binary
+        if self.load_bit_mask is not None:
+            data["load_bit_mask"] = self.load_bit_mask
+            data["load_bit_mask_binary"] = "{:64b}".format(self.load_bit_mask)
+        if self.store_bit_mask is not None:
+            data["store_bit_mask"] = self.store_bit_mask
+            data["store_bit_mask_binary"] = "{:64b}".format(self.store_bit_mask)
         data["weight"] = self.weight
         return data
 
@@ -137,13 +148,7 @@ class DynamicNode(JSONEncoder):
         static_node = data["static_node"]
         dn = DynamicNode(insn_id, static_node, id)
 
-        dn.mem_load = data["mem_load"]
-        if isinstance(dn.mem_load, dict):
-            dn.mem_load = MemoryAccess.fromJSON(dn.mem_load)
         dn.mem_load_addr = data["mem_load_addr"]
-        dn.mem_store = data["mem_store"]
-        if isinstance(dn.mem_store, dict):
-            dn.mem_store = MemoryAccess.fromJSON(dn.mem_store)
         dn.mem_store_addr = data["mem_store_addr"]
 
         dn.cf_predes = data['cf_predes']
@@ -151,8 +156,94 @@ class DynamicNode(JSONEncoder):
         dn.df_predes = data['df_predes']
         dn.df_succes = data['df_succes']
         dn.cf_predes_insn_id = data["cf_predes_insn_id"]
+        if "bit_ops" in data:
+            dn.bit_ops = data["bit_ops"]
+        if "load_bit_mask" in data:
+            dn.load_bit_mask = data["load_bit_mask"]
+        if "store_bit_mask" in data:
+            dn.store_bit_mask = data["store_bit_mask"]
         dn.weight = data["weight"]
         return dn
+
+
+    # Just trying to figure out which bits are being read
+    def calculate_load_bit_mask(self):
+        #TODO, technically even if an instruction does not use a register and uses only a constant
+        # still wanna print the instruction so that we know it executed...
+        # this is not currently implemented
+        assert self.static_node.mem_load is not None
+        if self.static_node.mem_load.read_same_as_write is True:
+            self.load_bit_mask = 0
+        else:
+            bit_opses = self.static_node.mem_load.bit_operations
+            for bit_ops in bit_opses:
+                all_ops_encountered = True
+                # Sometimes, not all sets of bit operations are guaranteed to be executed
+                # but at least one set should have been encountered
+                for bit_op in bit_ops:
+                    if bit_op.operand not in reg_map:
+                        self.bit_ops[bit_op.insn] = int(bit_op.operand, 16)
+                    if bit_op.insn not in self.bit_ops:
+                        all_ops_encountered = False
+                        break
+                if all_ops_encountered is False:
+                    continue
+
+                load_bit_mask = None
+                for bit_op in bit_ops:
+                    if bit_op.operation == "and":
+                        if load_bit_mask is None:
+                            load_bit_mask = self.bit_ops[bit_op.insn]
+                            continue
+                    elif bit_op.operation == "shr":
+                        assert load_bit_mask is not None
+                        # do the reverse shift
+                        load_bit_mask = load_bit_mask << self.bit_ops[bit_op.insn]
+                        continue
+                    elif bit_op.operation == "shl":
+                        assert load_bit_mask is not None
+                        # do the reverse shift
+                        load_bit_mask = load_bit_mask >> self.bit_ops[bit_op.insn]
+                        continue
+                    print("Unhandled bit op: " + str(bit_op.operation))
+                    print(self.static_node)
+                    raise Exception
+                if self.load_bit_mask is None:
+                    self.load_bit_mask = load_bit_mask
+                else:
+                    self.load_bit_mask = self.load_bit_mask | load_bit_mask
+        print("load mask calculated for " + self.static_node.hex_insn + " to be " + "{:64b}".format(self.load_bit_mask))
+
+    # calculates the bits that are being modified
+    # for an AND, a bit could  be modified when we and it with a 0,
+    # so we not the AND operand to obtain possible modification bits
+    # for an OR, a bit could  be modified when we and it with a 1
+    def calculate_store_bit_mask(self):
+        assert self.static_node.mem_store is not None
+        bit_opses = self.static_node.mem_store.bit_operations
+        for bit_ops in bit_opses:
+            for bit_op in bit_ops:
+                if bit_op.operand not in reg_map:
+                    self.bit_ops[bit_op.insn] = int(bit_op.operand, 16)
+                if bit_op.insn not in self.bit_ops:
+                    print("[warn] not all bit ops are encountered yet for " + self.static_node.hex_insn)
+                    return
+                if bit_op.operation == "and":
+                    if self.store_bit_mask is None:
+                        self.store_bit_mask = ~self.bit_ops[bit_op.insn]
+                    else:
+                        self.store_bit_mask = self.store_bit_mask | (~self.bit_ops[bit_op.insn])
+                    continue
+                elif bit_op.operation == "or":
+                    if self.store_bit_mask is None:
+                        self.store_bit_mask = self.bit_ops[bit_op.insn]
+                    else:
+                        self.store_bit_mask = self.store_bit_mask | (self.bit_ops[bit_op.insn])
+                    continue
+                print("Unhandled bit op: " + str(bit_op.operation))
+                raise Exception
+        print("store mask calculated for " + self.static_node.hex_insn + " to be " + "{:64b}".format(self.store_bit_mask))
+
 
 class DynamicDependence:
     def __init__(self, starting_events, prog, arg, path):
@@ -164,7 +255,7 @@ class DynamicDependence:
         self.all_static_df_nodes = []
         self.insn_of_cf_nodes = []
         self.insn_of_df_nodes = []
-        self.dynamic_nodes = []
+        self.dynamic_nodes = OrderedDict()
         self.insn_to_static_node = {}
         self.insn_of_local_df_nodes = []
         self.insn_of_remote_df_nodes = []
@@ -172,8 +263,10 @@ class DynamicDependence:
         self.insn_to_reg_count2 = {}
         self.code_to_insn = {}
         self.insns_with_regs = set()
-        self.load_insn_to_bit_ops = {}
-        self.bit_op_to_store_insns = {}
+        self.max_code_with_static_node = -1
+        self.load_insn_to_bit_ops = {} #bit op follows the load
+        self.bit_op_to_store_insns = {} #bit op precedes store
+        self.store_insn_to_bit_ops = {}
         self.trace_path = None
 
         # phase out this eventually and just use one unified list to represent every starting event
@@ -194,23 +287,6 @@ class DynamicDependence:
 
         insn_to_bit_operand = {}
         for node in self.all_static_df_nodes:
-            if node.mem_load != None:
-                if node.mem_load.bit_operations is not None:
-                    if node.mem_load.is_bit_var is not True:
-                        print(node.print_node("[WARN] Should be a bit var! "))
-                    for bos in node.mem_load.bit_operations:
-                        for bo in bos:
-                            if bo.operand.lower() not in reg_map:
-                                continue
-                            if bo.insn in insn_to_bit_operand:
-                                assert(insn_to_bit_operand[bo.insn] == bo.operand)
-                            else:
-                                insn_to_bit_operand[bo.insn] = bo.operand.lower()
-                            if node.insn not in self.load_insn_to_bit_ops:
-                                self.load_insn_to_bit_ops[node.insn] = []
-                            if bo.insn not in self.load_insn_to_bit_ops[node.insn]:
-                                self.load_insn_to_bit_ops[node.insn].append(bo.insn)
-
             if node.mem_store != None:
                 if node.mem_store.bit_operations is not None:
                     if node.mem_store.is_bit_var is not True:
@@ -219,14 +295,43 @@ class DynamicDependence:
                         for bo in bos:
                             if bo.operand.lower() not in reg_map:
                                 continue
+
                             if bo.insn in insn_to_bit_operand:
                                 assert(insn_to_bit_operand[bo.insn] == bo.operand)
                             else:
                                 insn_to_bit_operand[bo.insn] = bo.operand.lower()
+
                             if bo.insn not in self.bit_op_to_store_insns:
                                 self.bit_op_to_store_insns[bo.insn] = []
                             if node.insn not in self.bit_op_to_store_insns[bo.insn]:
                                 self.bit_op_to_store_insns[bo.insn].append(node.insn)
+
+                            if node.insn not in self.store_insn_to_bit_ops:
+                                self.store_insn_to_bit_ops[node.insn] = []
+                            if bo.insn not in self.store_insn_to_bit_ops[node.insn]:
+                                self.store_insn_to_bit_ops[node.insn].append(bo.insn)
+
+            if node.mem_load != None:
+                if node.mem_load.bit_operations is not None:
+                    if node.mem_load.is_bit_var is not True:
+                        print(node.print_node("[WARN] Should be a bit var! "))
+                    for bos in node.mem_load.bit_operations:
+                        for bo in bos:
+                            if bo.operand.lower() not in reg_map:
+                                continue
+
+                            if bo.insn in insn_to_bit_operand:
+                                #if already included by load, do not include in store
+                                # because this is likely the case where
+                                # we load and store from the same instruction while doing a bit op
+                                assert(insn_to_bit_operand[bo.insn] == bo.operand)
+                                continue
+                            insn_to_bit_operand[bo.insn] = bo.operand.lower()
+
+                            if node.insn not in self.load_insn_to_bit_ops:
+                                self.load_insn_to_bit_ops[node.insn] = []
+                            if bo.insn not in self.load_insn_to_bit_ops[node.insn]:
+                                self.load_insn_to_bit_ops[node.insn].append(bo.insn)
 
         for start_event in self.starting_events:
             reg = start_event[0]
@@ -244,7 +349,8 @@ class DynamicDependence:
 
         for node in self.all_static_df_nodes:
             #print("DF" + node.hex_insn)
-            assert node.insn not in unique_insns
+            if node.insn in unique_insns: #TODO should not have overlaps ..
+                continue
             unique_insns.add(node.insn)
 
             i += 1
@@ -255,10 +361,13 @@ class DynamicDependence:
             load_reg_count = 0
             store_reg_count = 0
 
+            #order matters here,
+            # 1. mem_load needs to be logged before mem_store regs
+            # 2. the bit operand must be logged first and read last,
+            # in case the same instruction has both store/read and bit_operation
             if node.insn in insn_to_bit_operand:
                 instructions.append([node.hex_insn, insn_to_bit_operand[node.insn], i])
-                load_reg_count += 1
-                has_reg = True
+                #has_reg = True
                 del insn_to_bit_operand[node.insn]
 
             if node.mem_load != None:
@@ -296,15 +405,8 @@ class DynamicDependence:
                 self.insns_with_regs.add(node.insn)
 
         for insn in insn_to_bit_operand:
-            reg = insn_to_bit_operand[insn]
             assert insn not in unique_insns
             unique_insns.add(insn)
-
-            i += 1
-            self.code_to_insn[i] = insn
-            instructions.append([hex(insn), reg, i])
-            self.insns_with_regs.add(insn)
-            self.insn_to_reg_count[insn] = 1
 
         for node in self.all_static_cf_nodes:
             if node.insn in unique_insns:
@@ -315,6 +417,15 @@ class DynamicDependence:
             self.code_to_insn[i] = node.insn
             instructions.append([node.hex_insn, 'pc', i])
 
+        self.max_code_with_static_node = i
+
+        for insn in insn_to_bit_operand:
+            i += 1
+            self.code_to_insn[i] = insn
+            reg = insn_to_bit_operand[insn]
+            instructions.append([hex(insn), reg, i])
+            #self.insns_with_regs.add(insn)
+            #self.insn_to_reg_count[insn] = 1
 
         if os.path.isfile(trace_path):
             return trace_path
@@ -362,6 +473,7 @@ class DynamicDependence:
     def build_dyanmic_dependencies(self, insn=None):
         file_name = 'dynamic_graph_result_' + self.key + "_" + (hex(insn) if insn is not None else str(insn))
         result_file = os.path.join(curr_dir, 'cache', self.prog, file_name)
+        time_record["start"] = time.time()
         if os.path.isfile(result_file):
             print("Reading from file:" + result_file)
             with open(result_file, 'r') as f:
@@ -372,9 +484,8 @@ class DynamicDependence:
                         static_id_to_node[sn.id] = sn
                 dynamic_graph = DynamicGraph.fromJSON(in_result, static_id_to_node)
                 time_record["load_json"] = time.time()
-                print("[TIME]Load Slice time: ", time.asctime(time.localtime(time_record["load_json"])))
+                print("[TIME] Loading graph from json: ", str(time_record["load_json"] - time_record["start"]), flush=True)
         else:
-            a = time.time()
             preprocess_data = {
                 "trace_file": self.trace_path,
                 "static_graph_file": StaticDepGraph.result_file,
@@ -388,8 +499,10 @@ class DynamicDependence:
                 "insn_to_reg_count" : self.insn_to_reg_count,
                 "insn_to_reg_count2": self.insn_to_reg_count2,
                 "load_insn_to_bit_ops": self.load_insn_to_bit_ops,
-                "bit_op_to_store_insns": self.bit_op_to_store_insns
+                "bit_op_to_store_insns": self.bit_op_to_store_insns,
+                "max_code_with_static_node": self.max_code_with_static_node
             }
+
             preprocess_data_file = os.path.join(curr_dir, 'preprocess_data')
             with open(preprocess_data_file, 'w') as f:
                 json.dump(preprocess_data, f, indent=4, ensure_ascii=False)
@@ -399,50 +512,69 @@ class DynamicDependence:
             print(stdout)
             print(stderr)
 
-            b = time.time()
-            print("Preparsing trace took: " + str(b-a), flush=True)
+            time_record["preparse"] = time.time()
+            print("[TIME] Preparsing trace took: ", str(time_record["preparse"] - time_record["start"]), flush=True)
 
-            a = time.time()
             with open(self.trace_path + ".parsed", 'rb') as f:
                 byte_seq = f.read() #more than twice faster than readlines!
 
-            b = time.time()
-            print("Loading trace took: " + str(b-a), flush=True)
+            time_record["read_preparse"] = time.time()
+            print("[TIME] Loading preparsed trace took: ", str(time_record["read_preparse"] - time_record["preparse"]), flush=True)
 
             dynamic_graph = DynamicGraph(self.starting_events)
-            dynamic_graph.build_dynamic_graph(byte_seq, insn, self.code_to_insn, self.insns_with_regs, self.insn_to_static_node,
+            dynamic_graph.build_dynamic_graph(byte_seq, self.starting_insns if insn is None else set([insn]),
+                                              self.code_to_insn, self.insns_with_regs, self.insn_to_static_node,
                                               set(self.insn_of_cf_nodes), set(self.insn_of_df_nodes),
                                               set(self.insn_of_local_df_nodes), set(self.insn_of_remote_df_nodes),
                                               self.insn_to_reg_count, self.insn_to_reg_count2,
-                                              self.load_insn_to_bit_ops, self.bit_op_to_store_insns)
-
+                                              self.load_insn_to_bit_ops, self.store_insn_to_bit_ops)
             time_record["build_finish"] = time.time()
-            print("[TIME]Build Dynamic Graph Finish Time: ", time.asctime(time.localtime(time_record["build_finish"])))
+            print("[TIME] Building dynamic graph took: ", str(time_record["build_finish"] - time_record["read_preparse"]), flush=True)
+
+            dynamic_graph.trim_dynamic_graph(self.starting_insns if insn is None else set([insn]))
+            time_record["trim_finish"] = time.time()
+            print("[TIME] Trimming dynamic graph took: ", str(time_record["trim_finish"] - time_record["build_finish"]), flush=True)
+
+            dynamic_graph.report_result()
+            time_record["report_result"] = time.time()
+            print("[TIME] Reporting result took: ", str(time_record["report_result"] - time_record["trim_finish"]), flush=True)
 
             dynamic_graph.sanity_check()
-            dynamic_graph.find_entry_and_exit_nodes()
-            dynamic_graph.find_target_nodes(self.starting_insns)
-            dynamic_graph.build_postorder_list()
-            dynamic_graph.build_reverse_postorder_list()
+            time_record["sanity_check"] = time.time()
+            print("[TIME] Sanity check took: ", str(time_record["sanity_check"] - time_record["report_result"]), flush=True)
 
-            time_record["graph_traversal"] = time.time()
-            print("[TIME] Graph traversal Time: ",
-                  time.asctime(time.localtime(time_record["graph_traversal"])))
+            dynamic_graph.find_entry_and_exit_nodes()
+            dynamic_graph.find_target_nodes(self.starting_insns if insn is None else set([insn]))
+            time_record["find_target_nodes"] = time.time()
+            print("[TIME] Locating entry&exit&target nodes took: ",
+                  str(time_record["find_target_nodes"] - time_record["sanity_check"]), flush=True)
+
+            dynamic_graph.build_postorder_list()
+            time_record["postorder"] = time.time()
+            print("[TIME] Postorder traversal took: ",
+                  str(time_record["postorder"] - time_record["find_target_nodes"]), flush=True)
+
+            dynamic_graph.build_reverse_postorder_list()
+            time_record["reverse_postorder"] = time.time()
+            print("[TIME] Reverse postorder traversal took: ",
+                  str(time_record["reverse_postorder"] - time_record["postorder"]), flush=True)
+
+            dynamic_graph.propogate_weight(self.init_graph)
+            time_record["propogate_weight"] = time.time()
+            print("[TIME] Propogating weight took: ",
+                  str(time_record["propogate_weight"] - time_record["reverse_postorder"]), flush=True)
 
             with open(result_file, 'w') as f:
                 json.dump(dynamic_graph.toJSON(), f, indent=4, ensure_ascii=False)
 
             time_record["save_dynamic_graph_as_json"] = time.time()
-            print("[TIME] Dynamic Graph Json Save Time: ",
-                  time.asctime(time.localtime(time_record["save_dynamic_graph_as_json"])))
+            print("[TIME] Saving graph in json took: ",
+                  str(time_record["save_dynamic_graph_as_json"] - time_record["propogate_weight"]), flush=True)
 
         print("[dyn_dep] total number of dynamic nodes: " + str(len(dynamic_graph.dynamic_nodes)))
         return dynamic_graph
 
     def prepare_to_build_dynamic_dependencies(self, sa_steps=10000):
-        time_record["start_time"] = time.time()
-        print("[TIME]Start time: ", time.asctime(time.localtime(time_record["start_time"])))
-
         # Get static dep, then invoke pin to get execution results, and build CFG
         #FIXME: convert start instruction to hex
         key = ""
@@ -455,16 +587,18 @@ class DynamicDependence:
                 key += "_"
         self.key = key
 
+        time_record["before_static_slice"] = time.time()
         used_cached_result = \
             self.build_static_dependencies(self.starting_events, self.prog, sa_steps)
-        time_record["get_slice_start"] = time.time()
-        print("[TIME]Get Slice time: ", time.asctime(time.localtime(time_record["get_slice_start"])))
+        time_record["static_slice"] = time.time()
+        print("[TIME] Getting static slice: ",
+              str(time_record["static_slice"] - time_record["before_static_slice"]), flush=True)
 
         self.trace_path = self.get_dynamic_trace(self.prog, self.arg, self.path, self.key + "_")
         time_record["invoke_pin"] = time.time()
-        print("[TIME]Invoke Pin time: ", time.asctime(time.localtime(time_record["invoke_pin"])), flush=True)
+        print("[TIME] Invoking PIN took: ",
+              str(time_record["invoke_pin"] - time_record["static_slice"]), flush=True)
         self.init_graph = self.build_dyanmic_dependencies()
-        self.init_graph.propogate_weight(None)
 
 class DynamicGraph:
     # TODO: restructure DynamicGraph
@@ -483,7 +617,7 @@ class DynamicGraph:
             self.starting_insn_to_reg[curr_insn] = curr_reg
 
         self.insn_to_id = {}
-        self.dynamic_nodes = []
+        self.dynamic_nodes = OrderedDict()
         self.target_dir = os.path.join(curr_dir, 'dynamicGraph')
         self.node_frequencies = {}
         self.insn_to_static_node = None
@@ -493,7 +627,7 @@ class DynamicGraph:
         self.exit_nodes = set()
         self.target_nodes = set()
         self.insn_to_dyn_nodes = {}
-        self.id_to_node = {}
+        self.id_to_node = {} #TODO, obselete now
         
     def toJSON(self):
         data = {}
@@ -501,7 +635,7 @@ class DynamicGraph:
         data["insn_to_id"] = self.insn_to_id
 
         data["dynamic_nodes"] = []
-        for n in self.dynamic_nodes:
+        for n in self.dynamic_nodes.values():
             data["dynamic_nodes"].append(n.toJSON())
 
         data["node_frequencies"] = self.node_frequencies
@@ -536,15 +670,15 @@ class DynamicGraph:
         id_to_node = {}
         for n in data["dynamic_nodes"]:
             dn = DynamicNode.fromJSON(n)
-            dg.dynamic_nodes.append(dn)
+            dg.dynamic_nodes[dn.id] = dn
             id_to_node[dn.id] = dn
             dn.static_node = static_id_to_node[dn.static_node]
 
-        for dn in dg.dynamic_nodes:
+        for dn in dg.dynamic_nodes.values():
             insn = dn.static_node.insn
             if insn not in dg.insn_to_dyn_nodes:
-                dg.insn_to_dyn_nodes[insn] = []
-            dg.insn_to_dyn_nodes[insn].append(dn)
+                dg.insn_to_dyn_nodes[insn] = set()
+            dg.insn_to_dyn_nodes[insn].add(dn)
             dg.id_to_node[dn.id] = dn
 
             cf_predes = []
@@ -591,11 +725,11 @@ class DynamicGraph:
 
     """
     def groupNodesByInsn(self):
-        for node in self.dynamic_nodes:
+        for node in self.dynamic_nodes.values():
             insn = node.static_node.insn
             if insn not in self.insn_to_dyn_nodes:
-                self.insn_to_dyn_nodes[insn] = []
-            self.insn_to_dyn_nodes[insn].append(node)
+                self.insn_to_dyn_nodes[insn] = set()
+            self.insn_to_dyn_nodes[insn].add(node)
     """
 
     def print_node(self, prefix, n):
@@ -616,12 +750,15 @@ class DynamicGraph:
         all_completed = set()
         visited = set()
         worklist = deque()
+        worklist_set = set()
         for n in self.entry_nodes:
             worklist.append(n)
+            worklist_set.add(n)
             if DEBUG_POST_ORDER: self.print_node("Initial  ", n)
 
         while len(worklist) > 0:
             curr = worklist.popleft()
+            worklist_set.remove(curr)
             if DEBUG_POST_ORDER: self.print_node("Visiting ", curr)
             assert curr not in visited, str(curr in self.reverse_postorder_list) + " " + str(curr in all_completed)
             visited.add(curr)
@@ -652,18 +789,20 @@ class DynamicGraph:
                     for s in completed.cf_succes:
                         if s in node_to_pending_prede_count:
                             continue
-                        if s in worklist:
+                        if s in worklist_set:
                             continue
                         assert s not in all_completed
                         worklist.append(s)
+                        worklist_set.add(s)
                         if DEBUG_POST_ORDER: self.print_node("Queuing  ", s)
                     for s in completed.df_succes:
                         if s in node_to_pending_prede_count:
                             continue
-                        if s in worklist:
+                        if s in worklist_set:
                             continue
                         assert s not in all_completed
                         worklist.append(s)
+                        worklist_set.add(s)
                         if DEBUG_POST_ORDER: self.print_node("Queuing  ", s)
                     if completed in prede_to_node:
                         for n in prede_to_node[completed]:
@@ -698,12 +837,15 @@ class DynamicGraph:
         all_completed = set()
         visited = set()
         worklist = deque()
+        worklist_set = set()
         for n in self.exit_nodes:
             worklist.append(n)
+            worklist_set.add(n)
             if DEBUG_POST_ORDER: self.print_node("Initial  ", n)
 
         while len(worklist) > 0:
             curr = worklist.popleft()
+            worklist_set.remove(curr)
             if DEBUG_POST_ORDER: self.print_node("Visiting ", curr)
             assert curr not in visited, str(curr in self.postorder_list) + " " + str(curr in all_completed)
             visited.add(curr)
@@ -734,18 +876,20 @@ class DynamicGraph:
                     for p in completed.cf_predes:
                         if p in node_to_pending_succe_count:
                             continue
-                        if p in worklist:
+                        if p in worklist_set:
                             continue
                         assert p not in all_completed
                         worklist.append(p)
+                        worklist_set.add(p)
                         if DEBUG_POST_ORDER: self.print_node("Queuing    ", p)
                     for p in completed.df_predes:
                         if p in node_to_pending_succe_count:
                             continue
-                        if p in worklist:
+                        if p in worklist_set:
                             continue
                         assert p not in all_completed
                         worklist.append(p)
+                        worklist_set.add(p)
                         if DEBUG_POST_ORDER: self.print_node("Queuing    ", p)
                     if completed in succe_to_node:
                         for n in succe_to_node[completed]:
@@ -777,7 +921,7 @@ class DynamicGraph:
         assert len(self.entry_nodes) == 0
         assert len(self.exit_nodes) == 0
 
-        for node in self.dynamic_nodes:
+        for node in self.dynamic_nodes.values():
             if len(node.cf_predes) == 0 and len(node.df_predes) == 0:
                 assert node not in self.entry_nodes
                 self.entry_nodes.add(node)
@@ -791,20 +935,32 @@ class DynamicGraph:
         self.target_nodes = []
         #if len(self.target_nodes) > 0:
         #    return
-        for node in self.dynamic_nodes: #Dont use exit node, not every target node is an exit node
+        for node in self.dynamic_nodes.values(): #Dont use exit node, not every target node is an exit node
             if node.static_node.insn in target_insns:
                 self.target_nodes.append(node)
         print("[dyn_dep] total number of target nodes: " + str(len(self.target_nodes)))
 
     def sanity_check(self):
-        for n in self.dynamic_nodes:
+        for n in self.dynamic_nodes.values():
+            if n.bit_ops is not None:
+                has_bit_op = False
+                if n.static_node.mem_store is not None:
+                    if n.static_node.mem_store.bit_operations is not None:
+                        has_bit_op = True
+                if n.static_node.mem_load is not None:
+                    if n.static_node.mem_load.bit_operations is not None:
+                        has_bit_op = True
+                assert has_bit_op is True, str(n)
+
+        """
+        for n in self.dynamic_nodes.values():
             for p in n.cf_predes:
                 assert p.static_node.id != n.static_node.id
             for s in n.cf_succes:
                 assert s.static_node.id != n.static_node.id
 
         bad_count = 0
-        for node in self.dynamic_nodes:
+        for node in self.dynamic_nodes.values():
             for p in node.cf_predes:
                 if node not in p.cf_succes:
                     bad_count += 1
@@ -838,13 +994,11 @@ class DynamicGraph:
                     print(s)
                 #assert node in node.df_predes, str(node) + str(s)
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
+        """
 
-    def build_dynamic_graph(self, byte_seq, insn, code_to_insn, insns_with_regs, insn_to_static_node,
+    def build_dynamic_graph(self, byte_seq, starting_insns, code_to_insn, insns_with_regs, insn_to_static_node,
                             insn_of_cf_nodes, insn_of_df_nodes, insn_of_local_df_nodes, insn_of_remote_df_nodes,
-                            insn_to_reg_count, insn_to_reg_count2, load_insn_to_bit_ops, bit_op_to_store_insns):
-
-        print("[TIME]Build Dynamic Graph Start Time: ", time.asctime(time.localtime(time.time())))
-
+                            insn_to_reg_count, insn_to_reg_count2, load_insn_to_bit_ops, store_insn_to_bit_ops):
         # reverse the executetable, and remove insns beyond the start insn
         self.insn_to_static_node = dict(insn_to_static_node)
 
@@ -867,6 +1021,18 @@ class DynamicGraph:
         local_df_prede_insn_to_succe_node = {}
         remote_df_prede_insn_to_succe_node = {}
 
+        bit_insn_to_operand = {}
+        load_bit_insns = set()
+        for bit_insns in load_insn_to_bit_ops.values():
+            for bit_insn in bit_insns:
+                load_bit_insns.add(bit_insn)
+
+        bit_insn_to_node = {}
+        store_bit_insns = set()
+        for bit_insns in store_insn_to_bit_ops.values():
+            for bit_insn in bit_insns:
+                store_bit_insns.add(bit_insn)
+
         # traverse
         prev_insn = None
         pending_reg_count = 0
@@ -879,7 +1045,8 @@ class DynamicGraph:
         index = 0
         length = len(byte_seq)
         ii = 0
-        starting_insns = self.starting_insns if insn is None else set([insn])
+
+        other_regs_parsed = False
         print("START: " + str(starting_insns))
         while index < length:
             code = int.from_bytes(byte_seq[index:index + 2], byteorder='little')
@@ -889,30 +1056,77 @@ class DynamicGraph:
             index += 2
 
             ok = False
-            start = False
             if insn in starting_insns:
                 ok = True
-                start = True
             elif insn in cf_prede_insn_to_succe_node \
                     or insn in local_df_prede_insn_to_succe_node \
                     or insn in remote_df_prede_insn_to_succe_node: #TODO, could optiimze
                 ok = True
 
-            if ok is False:
+            contains_bit_op = insn in load_bit_insns or insn in store_bit_insns
+
+            if ok is False and contains_bit_op is False:
                 index += 8 #for uid
                 if insn in insns_with_regs:
                     index += 8
+                if insn in bit_insn_to_node:
+                    del bit_insn_to_node[bit_insn]
                 continue
 
             uid = int.from_bytes(byte_seq[index:index + 8], byteorder='little')
             index += 8
 
-            if insn in insns_with_regs:
+            if insn in insns_with_regs or contains_bit_op is True:
                 reg_value = int.from_bytes(byte_seq[index:index+8], byteorder='little')
                 #print("Reg " + hex(reg_value))
                 index += 8
             else:
                 reg_value = None
+
+            if contains_bit_op is True:
+                if other_regs_parsed is True or insn not in insns_with_regs:
+                    other_regs_parsed = False
+                    if insn in load_bit_insns:
+                        bit_insn_to_operand[insn] = reg_value
+                    if insn in store_bit_insns:
+                        if insn in bit_insn_to_node:
+                            parent_node = bit_insn_to_node[insn]
+                            if parent_node.bit_ops is None:
+                                parent_node.bit_ops = {}
+                            # Only save to the closest store
+                            if insn not in parent_node.bit_ops:
+                                parent_node.bit_ops[insn] = reg_value
+                                #Re-calculate the store bit mask every time
+                                parent_node.store_bit_mask = None
+                                parent_node.calculate_store_bit_mask()
+                                # if an instruction has both a load and a store, and a bit op,
+                                # the load is considered to not really have a bitmask
+                                if parent_node.static_node.mem_load is not None and \
+                                        parent_node.static_node.mem_load.bit_operations is not None:
+                                    assert parent_node.static_node.mem_load.read_same_as_write is True
+                                    parent_node.load_bit_mask = 0
+                                # if we found a match for the a successor node,
+                                # remove it from "addr_to_df_succe_node" which stores nodes with loads pending nodes with stores
+                                # this does not guarantee that nodes with non-matching bit mask has already been added to the dataflow predecessor of a node
+                                # so further trimming is needed
+                                if parent_node.store_bit_mask is not None:
+                                    for succe in parent_node.df_succes:
+                                        if succe.load_bit_mask is None:
+                                            continue
+                                        if succe.mem_load_addr is None:
+                                            continue
+                                        assert succe.mem_load_addr == parent_node.mem_store_addr
+                                        if parent_node.store_bit_mask & succe.load_bit_mask != 0x0:
+                                            if succe in addr_to_df_succe_node[succe.mem_load_addr]:
+                                                addr_to_df_succe_node[succe.mem_load_addr].remove(succe)
+                                                if len(addr_to_df_succe_node[succe.mem_load_addr]) == 0:
+                                                    del addr_to_df_succe_node[succe.mem_load_addr]
+                            #del bit_insn_to_node[insn]
+                    continue
+
+            if insn in bit_insn_to_node:
+                del bit_insn_to_node[insn]
+
             #assert (byte_seq[index] == 58)
             #index -= 1
             static_node = self.insn_to_static_node[insn]
@@ -958,6 +1172,8 @@ class DynamicGraph:
                     #print("has just one reg ")
                     pending_regs = None
 
+            if contains_bit_op: other_regs_parsed = True
+
             if insn in remote_df_prede_insn_to_succe_node:
                 mem_store_addr = 0
                 if static_node.mem_store is not None:
@@ -968,7 +1184,7 @@ class DynamicGraph:
                         mem_store_addr = self.calculate_mem_addr(reg_value, static_node.mem_store,
                                                          None if pending_regs is None else pending_regs[0])
                 #print("[build] Store " + hex(insn) + " to " + hex(mem_store_addr))
-                if (insn not in self.starting_insns) and (mem_store_addr not in addr_to_df_succe_node):
+                if (insn not in starting_insns) and (mem_store_addr not in addr_to_df_succe_node):
                     if insn not in local_df_prede_insn_to_succe_node:
                         hasPrevValues = False
                         continue
@@ -979,27 +1195,43 @@ class DynamicGraph:
                 insn_id += 1
 
             dynamic_node = DynamicNode(self.insn_to_id[insn], static_node, id=uid)
+            assert dynamic_node.id not in self.dynamic_nodes
+            self.dynamic_nodes[dynamic_node.id] = dynamic_node
+            if insn not in self.insn_to_dyn_nodes:
+                self.insn_to_dyn_nodes[insn] = set()
+            self.insn_to_dyn_nodes[insn].add(dynamic_node)
+            self.id_to_node[dynamic_node.id] = dynamic_node
+
+            #if DEBUG:
+            print("[dyn_dep] created Dynamic Node id: " + str(dynamic_node.id) \
+                  + " Static Node id: " + str(dynamic_node.static_node.id) \
+                  + " insn: " + str(dynamic_node.static_node.hex_insn) \
+                  + " lines: " + ("" if dynamic_node.static_node.bb is None else str(dynamic_node.static_node.bb.lines)))
+
+            #Note, if a variable has both a load and a store with bit ops
+            # the bit mask will be associated to the store
+            # and the dataflow will be broken at the load for now
+            # as we will not look for further predecessors of the load
+            if insn in load_insn_to_bit_ops:
+                #assert dynamic_node.bit_ops is None
+                dynamic_node.bit_ops = {}
+                for bit_insn in load_insn_to_bit_ops[insn]:
+                    dynamic_node.bit_ops[bit_insn] = bit_insn_to_operand[bit_insn]
+                dynamic_node.calculate_load_bit_mask()
+            if insn in store_insn_to_bit_ops:
+                for bit_insn in store_insn_to_bit_ops[insn]:
+                    bit_insn_to_node[bit_insn] = dynamic_node
+
             if insn in self.starting_insn_to_reg:
                 dynamic_node.weight = reg_value
                 print("[dyn_dep] Appending weight " + str(reg_value) + " to node with id: " + str(dynamic_node.id))
-            if insn not in self.insn_to_dyn_nodes:
-                self.insn_to_dyn_nodes[insn] = []
-            self.insn_to_dyn_nodes[insn].append(dynamic_node)
-            self.id_to_node[dynamic_node.id] = dynamic_node
-
-            if DEBUG:
-                print("[dyn_dep] created Dynamic Node id: " + str(dynamic_node.id) \
-                  + " Static Node id: " + str(dynamic_node.static_node.id) \
-                  + " insn: " + str(dynamic_node.static_node.hex_insn) \
-                  + " lines: " + str(dynamic_node.static_node.bb.lines))
-            self.dynamic_nodes.append(dynamic_node)
             """
             if insn not in self.node_frequencies:
                 self.node_frequencies[insn] = 0
             self.node_frequencies[insn] = self.node_frequencies[insn] + 1
             """
             if insn in cf_prede_insn_to_succe_node:
-                to_remove = set([])
+                to_remove = set()
                 for succe in cf_prede_insn_to_succe_node[insn]:
                     assert succe.id != dynamic_node.id
                     succe.cf_predes.append(dynamic_node)
@@ -1047,10 +1279,12 @@ class DynamicGraph:
                 assert mem_store_addr is not None, str(insn_line) + "\n" + str(dynamic_node)
                 # assert mem_store_addr in addr_to_df_succe_node
                 if mem_store_addr in addr_to_df_succe_node:
-                    to_remove = []
+                    to_remove = set()
                     for succe in addr_to_df_succe_node[mem_store_addr]:
                         succe.df_predes.append(dynamic_node)
                         dynamic_node.df_succes.append(succe)
+                        if succe.load_bit_mask is not None:
+                            continue
 
                         # HACK: if the src reg is smaller than the dst reg, keep looking for more writes
                         dst_reg = succe.static_node.reg_store
@@ -1061,11 +1295,12 @@ class DynamicGraph:
                             src_reg_size = reg_size_map[src_reg.lower()]
                             if src_reg_size < dst_reg_size:
                                 continue
-                        to_remove.append(succe)
+                        to_remove.add(succe)
                     for succe in to_remove:
                         addr_to_df_succe_node[mem_store_addr].remove(succe)
                     if len(addr_to_df_succe_node[mem_store_addr]) == 0:
                         del addr_to_df_succe_node[mem_store_addr]
+
             loads_memory = True if static_node.mem_load is not None else False
             if static_node.df_predes or (loads_memory and static_node.mem_load.read_same_as_write):  # and insn not in insn_of_df_nodes:
                 for prede in static_node.df_predes:
@@ -1114,7 +1349,62 @@ class DynamicGraph:
                 print("[dyn_dep] created Dynamic Node id: " + str(dynamic_node.id) \
                   + " dynamic cf predes: " + str([p.static_node.id for p in dynamic_node.cf_predes]) \
                   + " dynamic cf succes: " + str([s.static_node.id for s in dynamic_node.cf_succes]))
-        self.report_result()
+
+    def trim_dynamic_graph(self, target_insns):
+        # get all the nodes with dataflow connection, and where addrs match,
+        # check bit mask where they exist, then trim ones that do not match
+        for dnode in self.dynamic_nodes.values():
+            if dnode.mem_load_addr is None:
+                continue
+            if dnode.bit_ops is None:
+                continue
+            assert dnode.load_bit_mask is not None, str(dnode) + str(dnode.static_node)
+            to_remove = set()
+            for df_prede in dnode.df_predes:
+                if df_prede.mem_store_addr != dnode.mem_load_addr:
+                    continue
+                if df_prede.store_bit_mask is None:
+                    print("[WARN] store has no bit mask, excluding: " +
+                          str(df_prede) + str(df_prede.static_node) + str(dnode) + str(dnode.static_node))
+                if (df_prede.store_bit_mask is None) or (df_prede.store_bit_mask & dnode.load_bit_mask == 0x0):
+                    df_prede.df_succes.remove(dnode)
+                    to_remove.add(df_prede)
+                    print("TRIM Addrs match but bit masks do not: ")# + str(dnode) + " " + str(df_prede))
+                else:
+                    print("KEEP Addrs match AND bit masks do: ")# + str(dnode) + " " + str(df_prede))
+            for df_prede in to_remove:
+                dnode.df_predes.remove(df_prede)
+
+        worklist = deque()
+        visited_ids = set()
+        # do a one pass traversal to colour nodes
+        for node in self.dynamic_nodes.values(): #Dont use exit node, not every target node is an exit node
+            if node.static_node.insn in target_insns:
+                worklist.append(node)
+
+        while(len(worklist) > 0):
+            node = worklist.popleft()
+            if node.id in visited_ids:
+                continue
+            visited_ids.add(node.id)
+            for cf_prede in node.cf_predes:
+                worklist.append(cf_prede)
+            for df_prede in node.df_predes:
+                worklist.append(df_prede)
+
+        to_remove = set()
+        for node in self.dynamic_nodes.values():
+            if node.id not in visited_ids:
+                to_remove.add(node)
+        print("Total number of nodes removed: " + str(len(to_remove)))
+        for node in to_remove: #TODO, might be slow..
+            for df_prede in node.df_predes:
+                df_prede.df_succes.remove(node)
+            for cf_prede in node.cf_predes:
+                cf_prede.cf_succes.remove(node)
+            del self.dynamic_nodes[node.id]
+            del self.id_to_node[node.id]
+            self.insn_to_dyn_nodes[node.static_node.insn].remove(node)
 
     def report_result(self):
         """
@@ -1136,7 +1426,7 @@ class DynamicGraph:
         """
         print("[Report]There are a total of " + str(len(self.dynamic_nodes)) + " nodes.")
 
-    def calculate_mem_addr(self, reg_value, expr, off_reg_value=None):
+    def calculate_mem_addr(self, reg_value, expr, off_reg_value=None): #TODO, why not move this into the dynamic node object?
         """
         dict = {}
         json_exprs = []
@@ -1195,6 +1485,7 @@ class DynamicGraph:
         for node in self.dynamic_nodes:
             with open(fname, 'a') as out:
                 out.write(str(node))
+
     def propogate_weight(self, reference=None):
         assert(len(self.postorder_list) > 0)
         #backward pass
@@ -1205,28 +1496,32 @@ class DynamicGraph:
 
         for node in self.postorder_list:  # a node will be visited only if its successors have all been visited
             if node in self.target_nodes:
-                assert(node.weight != -1)
+                #assert(node.weight != -1)
                 continue
-            assert(node.weight == -1)
+            #assert(node.weight == -1)
             weights = set()
             for cf_succe in node.cf_succes:
                 weights.add(cf_succe.weight)
             for df_succe in node.df_succes:
                 weights.add(df_succe.weight)
-            if len(weights) > 2:
+            if -1 in weights:
+                weights.remove(-1)
+            if len(weights) > 1:
                 node.static_node.print_node("Do not aggregate weights: " + str(weights))
                 continue
             for w in weights:
-                if w == -1:
-                    continue
+                assert w != -1
                 node.weight = w
 
         # forward pass
         if reference is not None:
-            for node in self.id_to_nodes.values():
+            for node in self.id_to_node.values():
                 if node.id in reference.id_to_node:
                     if node.weight != -1:
-                        assert(node.weight == reference.id_to_node[node.id].weight)
+                        assert (node.weight == reference.id_to_node[node.id].weight 
+                                or reference.id_to_node[node.id].weight == -1), \
+                            str(node.weight) + " " + str(reference.id_to_node[node.id].weight) \
+                            + str(node) + " " + str(reference.id_to_node[node.id])
                         continue
                     node.weight = reference.id_to_node[node.id].weight
 
@@ -1236,16 +1531,18 @@ class DynamicGraph:
                     weights.add(cf_prede.weight)
                 for df_prede in node.df_predes:
                     weights.add(df_prede.weight)
-                if len(weights) > 2:
+                if -1 in weights:
+                    weights.remove(-1)
+                if len(weights) > 1:
                     node.static_node.print_node("Do not aggregate weights: " + str(weights))
                     continue
                 for w in weights:
-                    if w == -1:
-                        continue
+                    assert w != -1
                     if node.weight != -1:
                         assert(node.weight == w)
-                        continue
+                        break
                     node.weight = w
+                    break
 
 def print_path(curr_node, end_id):
     for p in curr_node.df_predes:#itertools.chain(curr_node.cf_predes, curr_node.df_predes):
@@ -1268,22 +1565,7 @@ if __name__ == '__main__':
     dd = DynamicDependence(starting_events, "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
     dd.prepare_to_build_dynamic_dependencies(10000)
     dg = dd.build_dyanmic_dependencies(0x409418)
-    #dg.build_reverse_postorder_list()
-    """
-    dd.prepare_to_build_dynamic_dependencies(900)
-    dg = dd.build_dyanmic_dependencies(0x409418)
-    # dynamic_graph.prepare_to_build_dynamic_dependencies(0x409418, "scanblock", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
-    #dynamic_graph.prepare_to_build_dynamic_dependencies(0x409408, "scanblock", "909_ziptest_exe9")
-    
-    print("[Summary] Get Slice: ", str(time_record["get_slice_start"] - time_record["start_time"]))
-    if "load_json" in time_record:
-        print("[Summary] Json Load: ", str(time_record["load_json"] - time_record["get_slice_start"]))
-    else:
-        print("[Summary] Invoke Pin: ", str(time_record["invoke_pin"] - time_record["get_slice_start"]))
-        print("[Summary] Build Dynamic Graph: ", str(time_record["build_finish"] - time_record["invoke_pin"]))
-        print("[Summary] Dynamic Graph Json Saved: ", str(time_record["graph_traversal"] - time_record["build_finish"]))
-        print("[Summary] Graph Traversal: ", str(time_record["save_dynamic_graph_as_json"] - time_record["graph_traversal"]))
-    """
+
     sizes = {}
     with open("weight", "r") as f:
         lines = f.readlines()

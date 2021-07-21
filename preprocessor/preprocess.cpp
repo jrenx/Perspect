@@ -8,6 +8,7 @@
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
 #include <chrono>
+#include <bitset>
 using namespace std;
 using namespace boost;
 //TODO: fix all the weird casings in this file.
@@ -80,6 +81,7 @@ public:
 };
 
 int CodeCount = -1;
+int CodeCountWithStaticNode = -1;
 long *CodeToInsn;
 unordered_map<long, unsigned short> InsnToCode;
 
@@ -87,8 +89,15 @@ unordered_map<long, int> InsnToRegCount;
 int *CodeToRegCount;
 int *CodeToRegCount2;
 
-short **CodeToBitOpCodes;
-short **BitOpCodeToCodes;
+long *codeToBitOperand;
+bool *isBitCode;
+
+short **CodeToPriorBitOpCodes;
+int *CodeToPriorBitOpCodeCount;
+
+bool *CodeWithLaterBitOpsExecuted;
+short **LaterBitOpCodeToCodes;
+int *LaterBitOpCodeToCodeCount;
 
 unordered_set<long> StartInsns;
 bool *CodeOfStartInsns;
@@ -229,10 +238,10 @@ void parseStaticNode(char *filename) {
       int id = cJSON_GetObjectItem(json_staticNode, "id")->valueint;
       long insn = cJSON_GetObjectItem(json_staticNode, "insn")->valueint;
       StaticNodeIdToInsn.insert({id, insn});
-      cout << "Parsing insn: " << std::hex << insn << std::dec <<endl;
+      //cout << "Parsing insn: " << std::hex << insn << std::dec <<endl;
       if (InsnToCode.find(insn) == InsnToCode.end()) continue;
       unsigned short currCode =  InsnToCode[insn];
-      cout << "Parsing code: " << currCode << endl;
+      //cout << "Parsing code: " << currCode << endl;
       // FIXME: reduce array accesses here :p
       CodeToStaticNode[currCode] = new StaticNode();
       CodeToStaticNode[currCode]->insn = insn;
@@ -305,7 +314,7 @@ void parseStaticNode(char *filename) {
     }
   }
 
-  for (int i = 1; i < CodeCount; i++) {
+  for (int i = 1; i <= CodeCountWithStaticNode; i++) {
     for (int j = 0; j < CodeToStaticNode[i]->cf_prede_ids.size(); j++) {
       int id = CodeToStaticNode[i]->cf_prede_ids[j];
       if (StaticNodeIdToInsn.find(id) != StaticNodeIdToInsn.end()) {
@@ -339,6 +348,8 @@ void initData() {
 
   cJSON *data = cJSON_Parse(buffer);
   delete[] buffer;
+
+  CodeCountWithStaticNode = cJSON_GetObjectItem(data, "max_code_with_static_node")->valueint;
 
   cJSON *json_codeToInsn = cJSON_GetObjectItem(data, "code_to_insn");
   unordered_map<long, long> map1;
@@ -425,34 +436,51 @@ void initData() {
     CodeToRegCount2[InsnToCode[(long)(*it).first]] = (int)(*it).second;
   }
 
+  codeToBitOperand = new long[CodeCount];
+  isBitCode = new bool[CodeCount];
+  for (int i = 0; i < CodeCount; i++) isBitCode[i] = false;
+
   cJSON *json_loadInsnToBitOps = cJSON_GetObjectItem(data, "load_insn_to_bit_ops");
   unordered_map<long, unordered_set<long>*> map4;
   parseJsonMapOfLists(json_loadInsnToBitOps, map4);
-  CodeToBitOpCodes = new short*[CodeCount];
-  for (int i = 0; i < CodeCount; i++) CodeToBitOpCodes[i] = NULL;
+  CodeToPriorBitOpCodes = new short*[CodeCount];
+  CodeToPriorBitOpCodeCount = new int[CodeCount];
+  for (int i = 0; i < CodeCount; i++) CodeToPriorBitOpCodes[i] = NULL;
+  for (int i = 0; i < CodeCount; i++) CodeToPriorBitOpCodeCount[i] = -1;
   for (auto it = map4.begin(); it != map4.end(); it++) {
     short key = InsnToCode[(long)(*it).first];
     unordered_set<long> *set = (*it).second;
-    CodeToBitOpCodes[key] = new short[set->size()];
+    CodeToPriorBitOpCodes[key] = new short[set->size()];
+    CodeToPriorBitOpCodeCount[key] = set->size();
     int i = 0;
     for (auto sit = set->begin(); sit != set->end(); sit++) {
-      CodeToBitOpCodes[key][i] = InsnToCode[*sit];
+      short c = InsnToCode[*sit];
+      CodeToPriorBitOpCodes[key][i] = c;
+      isBitCode[c] = true;
       i++;
     }
   }
 
+  CodeWithLaterBitOpsExecuted = new bool[CodeCount];
+  for (int i = 0; i < CodeCount; i++) CodeWithLaterBitOpsExecuted[i] = false;
+
   cJSON *json_bitOpToStoreInsns = cJSON_GetObjectItem(data, "bit_op_to_store_insns");
   unordered_map<long, unordered_set<long>*> map5;
   parseJsonMapOfLists(json_bitOpToStoreInsns, map5);
-  BitOpCodeToCodes = new short*[CodeCount];
-  for (int i = 0; i < CodeCount; i++) BitOpCodeToCodes[i] = NULL;
+  LaterBitOpCodeToCodes = new short*[CodeCount];
+  LaterBitOpCodeToCodeCount = new int[CodeCount];
+  for (int i = 0; i < CodeCount; i++) LaterBitOpCodeToCodes[i] = NULL;
+  for (int i = 0; i < CodeCount; i++) LaterBitOpCodeToCodeCount[i] = -1;
   for (auto it = map5.begin(); it != map5.end(); it++) {
     short key = InsnToCode[(long)(*it).first];
     unordered_set<long> *set = (*it).second;
-    BitOpCodeToCodes[key] = new short[set->size()];
+    LaterBitOpCodeToCodes[key] = new short[set->size()];
+    LaterBitOpCodeToCodeCount[key] = set->size();
+    isBitCode[key] = true;
     int i = 0;
     for (auto sit = set->begin(); sit != set->end(); sit++) {
-      BitOpCodeToCodes[key][i] = InsnToCode[*sit];
+      short c = InsnToCode[*sit];
+      LaterBitOpCodeToCodes[key][i] = c;
       i++;
     }
   }
@@ -513,44 +541,92 @@ int main()
   int nodeCount = 0;
   long uid = -1;
   // Note: the same instruction executed will have multiple UIDs if multiple regs are printed at the instrustion
+  unsigned short code;
+  long regValue;
+  StaticNode *sn;
+  bool loadsMemory;
+  int regCount2;
+
+  short *bitOps;
+  bool otherRegsParsed = false;
   for (long i = length; i > 0;) {
-    unsigned short code;
-    long regValue = 0;
+    regValue = 0;
     uid ++;
     i-=2;
     std::memcpy(&code, buffer+i, sizeof(unsigned short));
     assert(code <= CodeCount);
     assert(code > 0);
 
+    if (code == 55) {
+      cout << "HERE" << endl;
+    }
+
     bool parse = false;
     if (CodeOfStartInsns[code] || PendingCodes[code]) {
     //if ((code > 0 && code <= MaxStartCode) || PendingCodes[code]) {
       parse = true;
     }
-    if (CodesWithRegs[code]) {
+
+    bool containsBitOp = isBitCode[code];
+    bool containsReg = CodesWithRegs[code];
+    if (containsReg || containsBitOp) {
       i-=8;
-      if (parse) {
+      if (parse || containsBitOp) {
         std::memcpy(&regValue, buffer + i, sizeof(long));
       }
       //cout << "contains reg" << code << endl;
     }
-    if (!parse) continue;
-    //cout << code << endl;
 
-    /*
-    if (code == 3252) {
-      cout << "HERE" << endl;
-    }*/
+    // TODO, if other regs are not parsed, won't parse the bit var at all
+    // could this be a problem?
+    if (containsBitOp && (!containsReg || otherRegsParsed)) {
+      // The use of the "otherRegsParsed" variable is to ensure that
+      // if an instruction has an addr load and store or both (so parse is true), and a bit op
+      // we parse the bit op last, after any load or store has been parsed
+      // and not confuse it with a load and store
+      otherRegsParsed = false;
+
+      short *parentOfBitOps = LaterBitOpCodeToCodes[code];
+      if (parentOfBitOps != NULL) {
+        // The associated instruction is supposed to happen before the bit operations
+        // in the reversed trace, and it should have been a store instruction
+        // if the store associated instruction was included in the parsed result
+        // we include the bit ops into the parsed result right away
+        int count = LaterBitOpCodeToCodeCount[code];
+        for (int j = 0; j < count; j++) {
+          if (CodeWithLaterBitOpsExecuted[parentOfBitOps[j]] == true) {
+            cout << "[store]  " << code << " " << parentOfBitOps[j] << " " << std::bitset<64>(regValue) << endl;
+            os.write((char *) &code, sizeof(unsigned short));
+            os.write((char *) &uid, sizeof(long));
+            os.write((char *) &regValue, sizeof(long));
+            //CodeWithLaterBitOpsExecuted[parentOfBitOps[j]] = false;
+          }
+        }
+      } else {
+        // The associated instruction is supposed to happen after the bit operations
+        // in the reversed trace, and it should have been a load instruction
+        // we cache the bit operations for now and wait for the
+        // associated load instruction to be included in the parsed result
+        // then include the cached bit operations as well
+        codeToBitOperand[code] = regValue;
+      }
+      continue;
+    }
+
+    if (!parse) {
+      goto DONT_PARSE;
+    }
+    //cout << code << endl;
 
     // A bit hacky, but essentially if an instruction both loads and stores
     // treat the load and store expressions as two separate things so old logic can be reused
-    int regCount2 =  CodeToRegCount2[code];
+    regCount2 =  CodeToRegCount2[code];
     if (!hasPrevValues && regCount2 > 0) {
       if (regCount2 > 1) {
         if (pendingRegCount == 0) {
           pendingRegCount = 1;
           offRegValue = regValue;
-          continue;
+          goto DONT_PARSE;
         }
         pendingRegCount = 0;
       } else {
@@ -559,22 +635,22 @@ int main()
       prevRegValue = regValue;
       prevOffRegValue = offRegValue;
       hasPrevValues = true;
-      continue;
+      goto DONT_PARSE;
     } else {
       int regCount1 =  CodeToRegCount[code];
       if (regCount1 > 1) { // large than zero only if has more than one reg!
         if (pendingRegCount == 0) {
           pendingRegCount = 1;
           offRegValue = regValue;
-          continue;
+          goto DONT_PARSE;
         }
         pendingRegCount = 0;
       } else {
         offRegValue = 0;
       }
     }
-
-    StaticNode *sn = CodeToStaticNode[code];
+    if (containsBitOp) otherRegsParsed = true;
+    sn = CodeToStaticNode[code];
     if (PendingRemoteDefCodes[code]) {
       long addr = 0;
       if (sn->mem_store == NULL) {
@@ -589,37 +665,59 @@ int main()
           addr = sn->mem_store->calc_addr(regValue, offRegValue);
         }
       }
+      assert(hasPrevValues == false);
       //long addr = sn->mem_store->calc_addr(regValue, offRegValue);
       //if (PendingAddrs.find(addr) == PendingAddrs.end() && (code > 0 && code > MaxStartCode)) {
       if (PendingAddrs.find(addr) == PendingAddrs.end() && !CodeOfStartInsns[code]) {
-        if (!PendingLocalDefCodes[code]) continue; // FIXME: unfortuanately, could be a local def dep too, need to make logic less messy if have more time ...
+        if (!PendingLocalDefCodes[code]) goto DONT_PARSE; // FIXME: unfortuanately, could be a local def dep too, need to make logic less messy if have more time ...
       } else {
         //cout << "  mem addr matched " << endl;
         // Approximation
         if (sn->src_reg_size == 8)
           PendingAddrs.erase(addr);
       }
+    } else {
+      hasPrevValues = false;
+      assert(hasPrevValues == false);
     }
+
+    bitOps = CodeToPriorBitOpCodes[code];
+    if (bitOps != NULL) {
+      int count = CodeToPriorBitOpCodeCount[code];
+      for (int j = 0; j < count; j++) {
+        short bitOpCode = bitOps[j];
+        cout << "[load] " << bitOpCode << " " << count << " "<< std::bitset<64>(codeToBitOperand[bitOpCode]) << endl;
+        os.write((char*)&bitOpCode, sizeof(unsigned short));
+        os.write((char*)&uid, sizeof(long));
+        os.write((char*)&codeToBitOperand[bitOpCode], sizeof(long));
+      }
+    }
+
     if (regCount2 > 1) {
+      cout << "Persisting1 " << code << endl;
       os.write((char*)&code, sizeof(unsigned short));
       os.write((char*)&uid, sizeof(long));
       os.write((char*)&prevOffRegValue, sizeof(long));
     }
     if (regCount2 > 0) {
+      cout << "Persisting2 " << code << endl;
       os.write((char*)&code, sizeof(unsigned short));
       os.write((char*)&uid, sizeof(long));
       os.write((char*)&prevRegValue, sizeof(long));
     }
 
     if (CodeToRegCount[code] > 1) {
+      cout << "Persisting3 " << code << endl;
       os.write((char*)&code, sizeof(unsigned short));
       os.write((char*)&uid, sizeof(long));
       os.write((char*)&offRegValue, sizeof(long));
     }
 
+    cout << "Persisting4 " << code << endl;
     os.write((char*)&code, sizeof(unsigned short));
     os.write((char*)&uid, sizeof(long));
     if (CodesWithRegs[code]) {
+      cout << "Persisting5 " << code << endl;
       os.write((char*)&regValue, sizeof(long));
     }
 
@@ -628,8 +726,7 @@ int main()
     //cout << std::hex << CodeToInsn[code] << std::dec << "\n";
 
     nodeCount ++;
-
-
+    
     if (PendingCfPredeCodes[code]) {
       std::vector<unsigned short> toRemove;
       for(auto it = CfPredeCodeToSucceNodes[code].begin(); it != CfPredeCodeToSucceNodes[code].end(); it++) {
@@ -665,7 +762,7 @@ int main()
       }
     }
 
-    bool loadsMemory = sn->mem_load != NULL;
+    loadsMemory = sn->mem_load != NULL;
     if (sn->df_prede_codes.size() > 0) {
       for (auto it = sn->df_prede_codes.begin(); it != sn->df_prede_codes.end(); it++) {
         unsigned short currCode = *it;
@@ -703,6 +800,13 @@ int main()
         PendingCfPredeCodes[currCode] = true;
         PendingCodes[currCode] = true;
       }
+    }
+    CodeWithLaterBitOpsExecuted[code] = true;
+    continue;
+
+    DONT_PARSE:
+    if (LaterBitOpCodeToCodes[code] != NULL) {
+      CodeWithLaterBitOpsExecuted[code] = false;
     }
   }
   os.close();
