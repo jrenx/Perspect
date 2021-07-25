@@ -661,6 +661,10 @@ class MemoryAccess:
         self.bit_operations = None
         self.read_same_as_write = False
 
+    def add_bit_operationses(self, bit_operationses):
+        for bit_operations in bit_operationses:
+            self.add_bit_operations(bit_operations)
+
     def add_bit_operations(self, bit_operations):
         if len(bit_operations) == 0:
             return
@@ -1649,11 +1653,12 @@ class StaticDepGraph:
                             off_reg = ''
                             off = 0
                         prede.mem_load = MemoryAccess(prede_reg, shift, off, off_reg, is_bit_var)
-                        prede.mem_load.add_bit_operations(bit_ops)
+                        prede.mem_load.add_bit_operationses(bit_ops)
                         prede.reg_store = dst_reg #TODO put actual register name here
                         if read_same_as_write is True:
-                            succe.mem_store.read_same_as_write = True
                             prede.mem_load.read_same_as_write = True
+                            succe.mem_store.read_same_as_write = True
+                            succe.mem_store.add_bit_operationses(bit_ops)
                     elif type == 'regread':
                         prede.reg_load = prede_reg
                     elif type == 'empty':

@@ -32,13 +32,13 @@ void analyzeKnownBitVariables(GraphPtr slice,
                               boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
                               boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
                               boost::unordered_map<Assignment::Ptr, AbsRegion> &bitOperands,
-                              boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations);
+                              boost::unordered_map<Assignment::Ptr, std::vector<std::vector<Assignment::Ptr>>> &bitOperationses);
 
 void locateBitVariables(GraphPtr slice,
                         boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariables,
                         boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> &bitVariablesToIgnore,
                         boost::unordered_map<Assignment::Ptr, AbsRegion> &bitOperands,
-                        boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> &bitOperations);
+                        boost::unordered_map<Assignment::Ptr, std::vector<std::vector<Assignment::Ptr>>> &bitOperationses);
 
 void findMemoryLoad(Expression::Ptr memWrite,
                     GraphPtr slice,

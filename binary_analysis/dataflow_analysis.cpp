@@ -126,9 +126,9 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
   boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariables;
   boost::unordered_map<Assignment::Ptr, std::vector<AbsRegion>> bitVariablesToIgnore;
   boost::unordered_map<Assignment::Ptr, AbsRegion> bitOperands;
-  boost::unordered_map<Assignment::Ptr, std::vector<Assignment::Ptr>> bitOperations;
+  boost::unordered_map<Assignment::Ptr, std::vector<std::vector<Assignment::Ptr>>> bitOperationses;
   if (!isKnownBitVar) {
-    locateBitVariables(slice, bitVariables, bitVariablesToIgnore, bitOperands, bitOperations);
+    locateBitVariables(slice, bitVariables, bitVariablesToIgnore, bitOperands, bitOperationses);
   } else {
     std::set<Expression::Ptr> memWrites;
     insn.getMemoryWriteOperands(memWrites);
@@ -138,7 +138,7 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
     }
     assert(memWrites.size() == 1);
     analyzeKnownBitVariables(slice, *memWrites.begin(), bitVariables, bitVariablesToIgnore, bitOperands,
-                             bitOperations);
+                             bitOperationses);
   } // TODO propogate the bit operands.
 
   // get all the leaf nodes.
@@ -249,24 +249,29 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
     cJSON_AddStringToObject(json_read, "dst", reg != InvalidReg ? reg.name().c_str() : "");
 
     if (isBitVar) {
-      std::vector<Assignment::Ptr> operations = bitOperations[assign];
+      std::vector<std::vector<Assignment::Ptr>> operationses = bitOperationses[assign];
       if (INFO) cout << "[sa] bit operations: " << endl;
       cJSON_AddNumberToObject(json_read, "is_bit_var",  1);
-      cJSON *json_bitOps = cJSON_CreateArray();
-      for (auto oit = operations.begin(); oit != operations.end(); ++oit) {
-        cJSON *json_bitOp  = cJSON_CreateObject();
-        Assignment::Ptr opAssign = (*oit);
-        if (INFO) cout << "	operation: " << opAssign->format() << opAssign->insn().format();
-        if (bitOperands.find(opAssign) != bitOperands.end()) {
-          if (INFO) cout << "	operand: " << bitOperands[opAssign].format();
+      cJSON *json_bitOpses = cJSON_CreateArray();
+      for (auto osit = operationses.begin(); osit != operationses.end(); ++osit) {
+        cJSON *json_bitOps = cJSON_CreateArray();
+        for (auto oit = (*osit).begin(); oit != (*osit).end(); ++oit) {
+          cJSON *json_bitOp  = cJSON_CreateObject();
+          Assignment::Ptr opAssign = (*oit);
+          if (INFO) cout << "	operation: " << opAssign->format() << opAssign->insn().format();
+          if (bitOperands.find(opAssign) != bitOperands.end()) {
+            if (INFO) cout << "	operand: " << bitOperands[opAssign].format();
+          }
+          if (INFO) cout << endl;
+          cJSON_AddNumberToObject(json_bitOp, "insn_addr", opAssign->addr());
+          cJSON_AddStringToObject(json_bitOp, "operand", findMatchingOpExprStr(opAssign, bitOperands[opAssign]).c_str());
+          cJSON_AddStringToObject(json_bitOp, "operation", opAssign->insn().getOperation().format().c_str());
+          cJSON_AddItemToArray(json_bitOps, json_bitOp);
         }
-        if (INFO) cout << endl;
-        cJSON_AddNumberToObject(json_bitOp, "insn_addr", opAssign->addr());
-        cJSON_AddStringToObject(json_bitOp, "operand", findMatchingOpExprStr(opAssign, bitOperands[opAssign]).c_str());
-        cJSON_AddStringToObject(json_bitOp, "operation", opAssign->insn().getOperation().format().c_str());
-        cJSON_AddItemToArray(json_bitOps, json_bitOp);
+        cJSON_AddItemToArray(json_bitOpses,  json_bitOps);
       }
-      cJSON_AddItemToObject(json_read, "bit_operations",  json_bitOps);
+      cJSON_AddItemToObject(json_read, "bit_operationses",  json_bitOpses);
+
     } else {
       cJSON_AddNumberToObject(json_read, "is_bit_var",  0);
     }
