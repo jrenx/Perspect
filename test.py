@@ -238,7 +238,7 @@ class TestStaticSlicing(unittest.TestCase):
         self.assertEqual(results[0][2][0][0:9], [0x408f73, 'RSP', 0, 88, None, False, False, 'memread', 'runtime.addfinalizer'])
         #self.assertEqual(results[0][2][0], [0x4072e5, 'RSP', 0, 48, None, False, False, 'memread', 'runtime.mallocgc'])
 
-    def test_stack_and_pass_by_reference(self):
+    def test_stack_and_pass_by_reference1(self):
         slice_starts = []
         slice_starts.append(['rax', 0x40bd4d, 'setaddrbucket', False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
@@ -369,7 +369,7 @@ class TestStaticSlicing(unittest.TestCase):
         self.assertTrue([0x405220, 'RSP', 0, 112, None, False, False, 'memread', 'runtime.makemap_c', 'x86_64::rax', None] in results[0][2])
         self.assertTrue([0x4051a3, 'RSP', 0, 112, None, False, False, 'memread', 'runtime.makemap_c', 'x86_64::rax', None] in results[0][2])
 
-    def test_stack_and_pass_by_reference1(self):
+    def test_stack_and_pass_by_reference2(self):
         slice_starts = []
         slice_starts.append(['RAX', 0x404fa5, "runtime.makemap_c", False]) #TODO check later to verify this is re-sliced
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
@@ -389,7 +389,7 @@ class TestStaticSlicing(unittest.TestCase):
         self.assertEqual(len(results[0][2]), 1)
         self.assertEqual(results[0][2][0][0:9], [0x42dfd7, 'RBX', 0, 0, None, False, False, 'regread', 'os.NewError'])
 
-    def test_stack_and_pass_by_reference1(self):
+    def test_stack_and_pass_by_reference3(self):
         slice_starts = []
         slice_starts.append(['RAX', 0x40627e, "copyin", False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
