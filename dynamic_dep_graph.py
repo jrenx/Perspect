@@ -63,6 +63,8 @@ class DynamicNode(JSONEncoder):
         self.output_set1 = set()
         self.input_sets = {}
         self.weight = -1
+        self.weight_origins = set()
+        self.weight_paths = set()
         self.is_valid_weight = False
         self.is_aggregate_weight = False
 
@@ -147,6 +149,8 @@ class DynamicNode(JSONEncoder):
             data["store_bit_mask"] = self.store_bit_mask
             data["store_bit_mask_binary"] = "{:64b}".format(self.store_bit_mask)
         data["weight"] = self.weight
+        data["weight_origins"] = list(self.weight_origins)
+        data["weight_paths"] = list(self.weight_paths)
         data["is_valid_weight"] = self.is_valid_weight
         data["is_aggregate_weight"] = self.is_aggregate_weight
         return data
@@ -167,14 +171,18 @@ class DynamicNode(JSONEncoder):
         dn.df_succes = data['df_succes']
         dn.cf_predes_insn_id = data["cf_predes_insn_id"]
         if "bit_ops" in data:
-            dn.bit_ops = data["bit_ops"]
+            dn.bit_ops = {}
+            for key in data["bit_ops"]:
+                dn.bit_ops[int(key)] = data["bit_ops"][key]
         if "load_bit_mask" in data:
             dn.load_bit_mask = data["load_bit_mask"]
         if "remaining_load_bit_mask" in data:
-            dn.load_bit_mask = data["remaining_load_bit_mask"]
+            dn.remaining_load_bit_mask = data["remaining_load_bit_mask"]
         if "store_bit_mask" in data:
             dn.store_bit_mask = data["store_bit_mask"]
         dn.weight = data["weight"]
+        dn.weight_origins = set(data["weight_origins"])
+        dn.weight_paths = set(data["weight_paths"])
         dn.is_valid_weight = data["is_valid_weight"]
         dn.is_aggregate_weight = data["is_aggregate_weight"]
         return dn
@@ -590,12 +598,13 @@ class DynamicDependence:
             print("[TIME] Saving graph in json took: ",
                   str(time_record["save_dynamic_graph_as_json"] - time_record["propogate_weight"]), flush=True)
 
-        #if self.init_graph is None:
-        #    pass
-        #else:
-        #    dynamic_graph.propogate_weight(self.init_graph)
-        #    with open(result_file, 'w') as f:
-        #        json.dump(dynamic_graph.toJSON(), f, indent=4, ensure_ascii=False)
+        if self.init_graph is None:
+            pass
+            #dynamic_graph.propogate_initial_graph_weight()
+        else:
+            dynamic_graph.propogate_weight(self.init_graph)
+        with open(result_file, 'w') as f:
+            json.dump(dynamic_graph.toJSON(), f, indent=4, ensure_ascii=False)
         print("[dyn_dep] total number of dynamic nodes: " + str(len(dynamic_graph.dynamic_nodes)))
         return dynamic_graph
 
@@ -1269,6 +1278,8 @@ class DynamicGraph:
             if insn in self.starting_insn_to_reg:
                 dynamic_node.weight = reg_value
                 dynamic_node.is_valid_weight = True
+                dynamic_node.weight_origins.add(dynamic_node.id)
+                dynamic_node.weight_paths.add(dynamic_node.static_node.id)
                 print("[dyn_dep] Appending weight " + str(reg_value) + " to node with id: " + str(dynamic_node.id))
             """
             if insn not in self.node_frequencies:
@@ -1560,6 +1571,18 @@ class DynamicGraph:
 
     def propogate_initial_graph_weight(self):
         assert(len(self.postorder_list) > 0)
+        """
+        for node in self.id_to_node.values():
+            if node in self.target_nodes:
+                print("Skipping clearing target node: " + str(node.id) + " " + node.static_node.hex_insn)
+                continue
+            node.is_valid_weight = False
+            node.is_aggregate_weight = False
+            node.weight = -1
+            node.weight_origins = set()
+            node.weight_paths = set()
+        """
+
         #backward pass
         for node in self.postorder_list:  # a node will be visited only if its successors have all been visited
             if node in self.target_nodes:
@@ -1567,6 +1590,8 @@ class DynamicGraph:
                 continue
             #assert(node.weight == -1)
             weights = set()
+            weight_origins = set()
+            weight_paths = set()
             is_aggregate_weight = False
 
             #for succe in node.cf_succes:
@@ -1576,20 +1601,42 @@ class DynamicGraph:
             #    if succe.is_valid_weight is False:
             #        continue
             #    weights.add(succe.weight)
-
             for succe in itertools.chain(node.cf_succes, node.df_succes): #hack: break df links
                 if succe.is_aggregate_weight is True:
                     continue
                 if succe.is_valid_weight is False:
                     continue
                 weights.add(succe.weight)
+                weight_origins = weight_origins.union(succe.weight_origins)
+                weight_paths = weight_paths.union(succe.weight_paths)
 
+            assert -1 not in weights
+            if len(weights) > 1:
+                weights = set()
+                weight_origins = set()
+                weight_paths = set()
+                for succe in itertools.chain(node.cf_succes, node.df_succes):  # hack: break df links
+                    if succe.is_aggregate_weight is True:
+                        continue
+                    if succe.is_valid_weight is False:
+                        continue
+                    if node.static_node.id in succe.weight_paths:
+                        print("[weight] At " + node.static_node.hex_insn + " " + str(node.id) +
+                              " ignore weight from " + succe.static_node.hex_insn + " " + str(succe.id) + " for cycles1")
+                        continue
+                    weights.add(succe.weight)
+                    weight_origins = weight_origins.union(succe.weight_origins)
+                    weight_paths = weight_paths.union(succe.weight_paths)
+
+            weight_paths.add(node.static_node.id)
             if len(weights) > 1:
                 node.static_node.print_node("Do not aggregate weights: " + str(weights))
                 is_aggregate_weight = True
             if is_aggregate_weight is True:
                 node.is_aggregate_weight = True
                 continue
+            node.weight_origins = weight_origins
+            node.weight_paths = weight_paths
             for w in weights:
                 assert w != -1
                 node.weight = w
@@ -1604,6 +1651,8 @@ class DynamicGraph:
             node.is_valid_weight = False
             node.is_aggregate_weight = False
             node.weight = -1
+            node.weight_origins = set()
+            node.weight_paths = set()
             if node.id in reference.id_to_node:
                 assert node.is_valid_weight is False
                 assert node.is_aggregate_weight is False
@@ -1612,13 +1661,19 @@ class DynamicGraph:
                     assert reference.id_to_node[node.id].weight == -1
                     continue
                 print("has valid weight")
-                node.weight = reference.id_to_node[node.id].weight
+                ref_node = reference.id_to_node[node.id]
+                node.weight = ref_node.weight
+                node.weight_origins = set(ref_node.weight_origins)
+                node.weight_paths = set(ref_node.weight_paths)
                 node.is_valid_weight = True
                 assert node.weight != -1
 
+        aggregate_static_node_ids = set()
         for i in range(0,1):
             for node in self.postorder_list:  # a node will be visited only if its successors have all been visited
                 weights = set()
+                weight_origins = set()
+                weight_paths = set()
                 is_aggregate_weight = False
                 for succe in itertools.chain(node.cf_succes, node.df_succes):
                     #if succe.is_aggregate_weight is True:
@@ -1627,29 +1682,90 @@ class DynamicGraph:
                     if succe.is_valid_weight is False:
                         continue
                     weights.add(succe.weight)
+                    weight_origins = weight_origins.union(succe.weight_origins)
+                    weight_paths = weight_paths.union(succe.weight_paths)
+                if len(weights) > 1:
+                    weights = set()
+                    weight_origins = set()
+                    weight_paths = set()
+                    for succe in itertools.chain(node.cf_succes, node.df_succes):
+                        # if succe.is_aggregate_weight is True:
+                        #    is_aggregate_weight = True
+                        #    break
+                        if succe.is_valid_weight is False:
+                            continue
+                        if node.static_node.id in succe.weight_paths:
+                            print("[weight] At " + node.static_node.hex_insn + " " + str(node.id) +
+                                  " ignore weight from " + succe.static_node.hex_insn + " " + str(
+                                succe.id) + " for cycles2")
+                            continue
+                        weights.add(succe.weight)
+                        weight_origins = weight_origins.union(succe.weight_origins)
+                        weight_paths = weight_paths.union(succe.weight_paths)
+                weight_paths = weight_paths.union(node.weight_paths)
+                weight_paths.add(node.static_node.id)
                 assert -1 not in weights
                 if len(weights) > 1:
                     is_aggregate_weight = True
 
                 if is_aggregate_weight is True:
                     node.is_aggregate_weight = True
-                # else:
+                    aggregate_static_node_ids.add(node.static_node.id)
+                else:
+                    node.weight_paths = weight_paths
+                #else:
                 #    for w in weights:
                 #        assert w != -1
                 #        node.weight = w
                 #        node.is_valid_weight = True
+                #        node.weight_origins = weight_origins
+                #        break
 
             for node in self.reverse_postorder_list:  # a node will be visited only if its predecessors have all been visited
                 weights = set()
+                weight_origins = set()
+                weight_paths = set()
                 for prede in itertools.chain(node.cf_predes, node.df_predes):
                     if prede.is_aggregate_weight is True:
+                        continue
+                    if prede.static_node.id in aggregate_static_node_ids:
+                        prede.is_aggregate_weight = True
                         continue
                     if prede.is_valid_weight is False:
                         continue
                     weights.add(prede.weight)
+                    weight_origins = weight_origins.union(prede.weight_origins)
+                    weight_paths = weight_paths.union(prede.weight_paths)
                 if len(weights) > 1:
+                    weights = set()
+                    weight_origins = set()
+                    weight_paths = set()
+                    for prede in itertools.chain(node.cf_predes, node.df_predes):
+                        if prede.is_aggregate_weight is True:
+                            continue
+                        if prede.static_node.id in aggregate_static_node_ids:
+                            prede.is_aggregate_weight = True
+                            continue
+                        if prede.is_valid_weight is False:
+                            continue
+                        if node.static_node.id in prede.weight_paths:
+                            print("[weight] At " + node.static_node.hex_insn + " " + str(node.id) +
+                                  " ignore weight from " + prede.static_node.hex_insn + " " + str(
+                                prede.id) + " for cycles3")
+                            continue
+                        weights.add(prede.weight)
+                        weight_origins = weight_origins.union(prede.weight_origins)
+                        weight_paths = weight_paths.union(prede.weight_paths)
+                weight_paths.add(node.static_node.id)
+                if len(weights) > 1:
+                    node.weight = -1
+                    node.is_valid_weight = False
+                    node.is_aggregate_weight = True
                     node.static_node.print_node("Do not aggregate weights: " + str(node.id) + " " + str(weights))
                     continue
+                if len(weights) > 0:
+                    node.weight_origins = weight_origins
+                    node.weight_paths = weight_paths
                 for w in weights:
                     assert w != -1  # TODO remove
                     node.weight = w
