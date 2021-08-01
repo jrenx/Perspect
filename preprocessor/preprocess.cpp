@@ -90,7 +90,9 @@ int *CodeToRegCount;
 int *CodeToRegCount2;
 
 long *codeToBitOperand;
-bool *isBitCode;
+bool *codeToBitOperandIsValid;
+bool *isBitOpCode;
+bool *containsBitOpCode;
 
 short **CodeToPriorBitOpCodes;
 int *CodeToPriorBitOpCodeCount;
@@ -437,8 +439,15 @@ void initData() {
   }
 
   codeToBitOperand = new long[CodeCount];
-  isBitCode = new bool[CodeCount];
-  for (int i = 0; i < CodeCount; i++) isBitCode[i] = false;
+
+  codeToBitOperandIsValid = new bool[CodeCount];
+  for (int i = 0; i < CodeCount; i++) codeToBitOperandIsValid[i] = false;
+
+  isBitOpCode = new bool[CodeCount];
+  for (int i = 0; i < CodeCount; i++) isBitOpCode[i] = false;
+
+  containsBitOpCode = new bool[CodeCount];
+  for (int i = 0; i < CodeCount; i++) containsBitOpCode[i] = false;
 
   cJSON *json_loadInsnToBitOps = cJSON_GetObjectItem(data, "load_insn_to_bit_ops");
   unordered_map<long, unordered_set<long>*> map4;
@@ -450,13 +459,14 @@ void initData() {
   for (auto it = map4.begin(); it != map4.end(); it++) {
     short key = InsnToCode[(long)(*it).first];
     unordered_set<long> *set = (*it).second;
+    containsBitOpCode[key] = true;
     CodeToPriorBitOpCodes[key] = new short[set->size()];
     CodeToPriorBitOpCodeCount[key] = set->size();
     int i = 0;
     for (auto sit = set->begin(); sit != set->end(); sit++) {
       short c = InsnToCode[*sit];
       CodeToPriorBitOpCodes[key][i] = c;
-      isBitCode[c] = true;
+      isBitOpCode[c] = true;
       i++;
     }
   }
@@ -474,9 +484,10 @@ void initData() {
   for (auto it = map5.begin(); it != map5.end(); it++) {
     short key = InsnToCode[(long)(*it).first];
     unordered_set<long> *set = (*it).second;
+    containsBitOpCode[key] = true;
     LaterBitOpCodeToCodes[key] = new short[set->size()];
     LaterBitOpCodeToCodeCount[key] = set->size();
-    isBitCode[key] = true;
+    isBitOpCode[key] = true;
     int i = 0;
     for (auto sit = set->begin(); sit != set->end(); sit++) {
       short c = InsnToCode[*sit];
@@ -557,9 +568,9 @@ int main()
     assert(code <= CodeCount);
     assert(code > 0);
 
-    if (code == 55) {
-      cout << "HERE" << endl;
-    }
+    //if (code == 2 || code == 3) {
+    //  cout << "HERE " <<uid << endl;
+    //}
 
     bool parse = false;
     if (CodeOfStartInsns[code] || PendingCodes[code]) {
@@ -567,11 +578,11 @@ int main()
       parse = true;
     }
 
-    bool containsBitOp = isBitCode[code];
+    bool isBitOp = isBitOpCode[code];
     bool containsReg = CodesWithRegs[code];
-    if (containsReg || containsBitOp) {
+    if (containsReg || isBitOp) {
       i-=8;
-      if (parse || containsBitOp) {
+      if (parse || isBitOp) {
         std::memcpy(&regValue, buffer + i, sizeof(long));
       }
       //cout << "contains reg" << code << endl;
@@ -579,7 +590,7 @@ int main()
 
     // TODO, if other regs are not parsed, won't parse the bit var at all
     // could this be a problem?
-    if (containsBitOp && (!containsReg || otherRegsParsed)) {
+    if (isBitOp && (!containsReg || otherRegsParsed)) {
       // The use of the "otherRegsParsed" variable is to ensure that
       // if an instruction has an addr load and store or both (so parse is true), and a bit op
       // we parse the bit op last, after any load or store has been parsed
@@ -594,7 +605,7 @@ int main()
         // we include the bit ops into the parsed result right away
         int count = LaterBitOpCodeToCodeCount[code];
         for (int j = 0; j < count; j++) {
-          if (CodeWithLaterBitOpsExecuted[parentOfBitOps[j]] == true) {
+          if (CodeWithLaterBitOpsExecuted[parentOfBitOps[j]]) {
             cout << "[store]  " << code << " " << parentOfBitOps[j] << " " << std::bitset<64>(regValue) << endl;
             os.write((char *) &code, sizeof(unsigned short));
             os.write((char *) &uid, sizeof(long));
@@ -609,6 +620,7 @@ int main()
         // associated load instruction to be included in the parsed result
         // then include the cached bit operations as well
         codeToBitOperand[code] = regValue;
+        codeToBitOperandIsValid[code] = true;
       }
       continue;
     }
@@ -649,7 +661,7 @@ int main()
         offRegValue = 0;
       }
     }
-    if (containsBitOp) otherRegsParsed = true;
+    if (isBitOp) otherRegsParsed = true;
     sn = CodeToStaticNode[code];
     if (PendingRemoteDefCodes[code]) {
       long addr = 0;
@@ -673,7 +685,8 @@ int main()
       } else {
         //cout << "  mem addr matched " << endl;
         // Approximation
-        if (sn->src_reg_size == 8)
+
+        if (sn->src_reg_size == 8 && !containsBitOpCode[code])
           PendingAddrs.erase(addr);
       }
     } else {
@@ -686,10 +699,13 @@ int main()
       int count = CodeToPriorBitOpCodeCount[code];
       for (int j = 0; j < count; j++) {
         short bitOpCode = bitOps[j];
-        cout << "[load] " << bitOpCode << " " << count << " "<< std::bitset<64>(codeToBitOperand[bitOpCode]) << endl;
-        os.write((char*)&bitOpCode, sizeof(unsigned short));
-        os.write((char*)&uid, sizeof(long));
-        os.write((char*)&codeToBitOperand[bitOpCode], sizeof(long));
+        if (codeToBitOperandIsValid[bitOpCode]) {
+          cout << "[load] " << bitOpCode << " " << count << " " << std::bitset<64>(codeToBitOperand[bitOpCode]) << endl;
+          os.write((char *) &bitOpCode, sizeof(unsigned short));
+          os.write((char *) &uid, sizeof(long));
+          os.write((char *) &codeToBitOperand[bitOpCode], sizeof(long));
+          codeToBitOperandIsValid[bitOpCode] = false;
+        }
       }
     }
 
@@ -807,6 +823,15 @@ int main()
     DONT_PARSE:
     if (LaterBitOpCodeToCodes[code] != NULL) {
       CodeWithLaterBitOpsExecuted[code] = false;
+    }
+
+    bitOps = CodeToPriorBitOpCodes[code];
+    if (bitOps != NULL) {
+      int count = CodeToPriorBitOpCodeCount[code];
+      for (int j = 0; j < count; j++) {
+        short bitOpCode = bitOps[j];
+        codeToBitOperandIsValid[bitOpCode] = false;
+      }
     }
   }
   os.close();

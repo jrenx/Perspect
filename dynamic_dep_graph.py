@@ -56,12 +56,15 @@ class DynamicNode(JSONEncoder):
         self.mem_load_addr = None
         self.mem_store_addr = None
         self.bit_ops = None
+        self.remaining_load_bit_mask = None
         self.load_bit_mask = None
         self.store_bit_mask = None
         self.output_set = set() #TODO, persist these two as well?
         self.output_set1 = set()
         self.input_sets = {}
         self.weight = -1
+        self.is_valid_weight = False
+        self.is_aggregate_weight = False
 
     def __str__(self):
         s = "===============================================\n"
@@ -98,8 +101,11 @@ class DynamicNode(JSONEncoder):
         s += "    mem_load_addr: " + (hex(self.mem_load_addr) if self.mem_load_addr is not None else str(None)) + "\n"
         s += "    mem_store_addr: " + (hex(self.mem_store_addr) if self.mem_store_addr is not None else str(None)) + "\n"
         s += "    load_bit_mask: " + ("{:64b}".format(self.load_bit_mask) if self.load_bit_mask is not None else str(None)) + "\n"
+        s += "    remaining_load_bit_mask: " + ("{:64b}".format(self.remaining_load_bit_mask) if self.remaining_load_bit_mask is not None else str(None)) + "\n"
         s += "    store_bit_mask: " + ("{:64b}".format(self.store_bit_mask) if self.store_bit_mask is not None else str(None)) + "\n"
-        s += " weight: " + str(self.weight)
+        s += "    weight: " + str(self.weight) + "\n"
+        s += "    is valid weight: " + str(self.is_valid_weight) + "\n"
+        s += "    is aggregate weight: " + str(self.is_aggregate_weight) + "\n"
         return s
 
     def toJSON(self):
@@ -135,10 +141,14 @@ class DynamicNode(JSONEncoder):
         if self.load_bit_mask is not None:
             data["load_bit_mask"] = self.load_bit_mask
             data["load_bit_mask_binary"] = "{:64b}".format(self.load_bit_mask)
+            data["remaining_load_bit_mask"] = self.remaining_load_bit_mask
+            data["remaining_load_bit_mask_binary"] = "{:64b}".format(self.remaining_load_bit_mask)
         if self.store_bit_mask is not None:
             data["store_bit_mask"] = self.store_bit_mask
             data["store_bit_mask_binary"] = "{:64b}".format(self.store_bit_mask)
         data["weight"] = self.weight
+        data["is_valid_weight"] = self.is_valid_weight
+        data["is_aggregate_weight"] = self.is_aggregate_weight
         return data
 
     @staticmethod
@@ -160,9 +170,13 @@ class DynamicNode(JSONEncoder):
             dn.bit_ops = data["bit_ops"]
         if "load_bit_mask" in data:
             dn.load_bit_mask = data["load_bit_mask"]
+        if "remaining_load_bit_mask" in data:
+            dn.load_bit_mask = data["remaining_load_bit_mask"]
         if "store_bit_mask" in data:
             dn.store_bit_mask = data["store_bit_mask"]
         dn.weight = data["weight"]
+        dn.is_valid_weight = data["is_valid_weight"]
+        dn.is_aggregate_weight = data["is_aggregate_weight"]
         return dn
 
 
@@ -212,6 +226,7 @@ class DynamicNode(JSONEncoder):
                     self.load_bit_mask = load_bit_mask
                 else:
                     self.load_bit_mask = self.load_bit_mask | load_bit_mask
+        self.remaining_load_bit_mask = self.load_bit_mask
         print("load mask calculated for " + self.static_node.hex_insn + " to be " + "{:64b}".format(self.load_bit_mask))
 
     # calculates the bits that are being modified
@@ -230,9 +245,9 @@ class DynamicNode(JSONEncoder):
                     return
                 if bit_op.operation == "and":
                     if self.store_bit_mask is None:
-                        self.store_bit_mask = ~self.bit_ops[bit_op.insn]
+                        self.store_bit_mask = (~self.bit_ops[bit_op.insn])&0xffffffffffffffff
                     else:
-                        self.store_bit_mask = self.store_bit_mask | (~self.bit_ops[bit_op.insn])
+                        self.store_bit_mask = self.store_bit_mask | ((~self.bit_ops[bit_op.insn])&0xffffffffffffffff)
                     continue
                 elif bit_op.operation == "or":
                     if self.store_bit_mask is None:
@@ -559,7 +574,11 @@ class DynamicDependence:
             print("[TIME] Reverse postorder traversal took: ",
                   str(time_record["reverse_postorder"] - time_record["postorder"]), flush=True)
 
-            dynamic_graph.propogate_weight(self.init_graph)
+            if self.init_graph is None:
+                dynamic_graph.propogate_initial_graph_weight()
+            else:
+                dynamic_graph.propogate_weight(self.init_graph)
+
             time_record["propogate_weight"] = time.time()
             print("[TIME] Propogating weight took: ",
                   str(time_record["propogate_weight"] - time_record["reverse_postorder"]), flush=True)
@@ -571,6 +590,12 @@ class DynamicDependence:
             print("[TIME] Saving graph in json took: ",
                   str(time_record["save_dynamic_graph_as_json"] - time_record["propogate_weight"]), flush=True)
 
+        #if self.init_graph is None:
+        #    pass
+        #else:
+        #    dynamic_graph.propogate_weight(self.init_graph)
+        #    with open(result_file, 'w') as f:
+        #        json.dump(dynamic_graph.toJSON(), f, indent=4, ensure_ascii=False)
         print("[dyn_dep] total number of dynamic nodes: " + str(len(dynamic_graph.dynamic_nodes)))
         return dynamic_graph
 
@@ -1071,6 +1096,11 @@ class DynamicGraph:
                     index += 8
                 if insn in bit_insn_to_node:
                     del bit_insn_to_node[bit_insn]
+
+                if insn in load_insn_to_bit_ops:
+                    for bit_insn in load_insn_to_bit_ops[insn]:
+                        if bit_insn in bit_insn_to_operand:
+                            del bit_insn_to_operand[bit_insn]
                 continue
 
             uid = int.from_bytes(byte_seq[index:index + 8], byteorder='little')
@@ -1105,6 +1135,7 @@ class DynamicGraph:
                                         parent_node.static_node.mem_load.bit_operations is not None:
                                     assert parent_node.static_node.mem_load.read_same_as_write is True
                                     parent_node.load_bit_mask = 0
+                                    parent_node.remaining_load_bit_mask = 0
                                 # if we found a match for the a successor node,
                                 # remove it from "addr_to_df_succe_node" which stores nodes with loads pending nodes with stores
                                 # this does not guarantee that nodes with non-matching bit mask has already been added to the dataflow predecessor of a node
@@ -1116,11 +1147,17 @@ class DynamicGraph:
                                         if succe.mem_load_addr is None:
                                             continue
                                         assert succe.mem_load_addr == parent_node.mem_store_addr
-                                        if parent_node.store_bit_mask & succe.load_bit_mask != 0x0:
-                                            if succe in addr_to_df_succe_node[succe.mem_load_addr]:
-                                                addr_to_df_succe_node[succe.mem_load_addr].remove(succe)
-                                                if len(addr_to_df_succe_node[succe.mem_load_addr]) == 0:
-                                                    del addr_to_df_succe_node[succe.mem_load_addr]
+                                        overlap = parent_node.store_bit_mask & succe.remaining_load_bit_mask
+                                        if overlap != 0x0:
+                                            print("[bit_var] store bit mask " + "{:64b}".format(parent_node.store_bit_mask))
+                                            print("[bit_var] load bit mask before " + "{:64b}".format(succe.remaining_load_bit_mask))
+                                            succe.remaining_load_bit_mask = succe.remaining_load_bit_mask&((~overlap)&0xffffffffffffffff)
+                                            print("[bit_var] load bit mask after " + "{:64b}".format(succe.remaining_load_bit_mask))
+                                            if succe.remaining_load_bit_mask == 0x0:
+                                                if succe in addr_to_df_succe_node[succe.mem_load_addr]:
+                                                    addr_to_df_succe_node[succe.mem_load_addr].remove(succe)
+                                                    if len(addr_to_df_succe_node[succe.mem_load_addr]) == 0:
+                                                        del addr_to_df_succe_node[succe.mem_load_addr]
                             #del bit_insn_to_node[insn]
                     continue
 
@@ -1187,6 +1224,11 @@ class DynamicGraph:
                 if (insn not in starting_insns) and (mem_store_addr not in addr_to_df_succe_node):
                     if insn not in local_df_prede_insn_to_succe_node:
                         hasPrevValues = False
+
+                        if insn in load_insn_to_bit_ops:
+                            for bit_insn in load_insn_to_bit_ops[insn]:
+                                if bit_insn in bit_insn_to_operand:
+                                    del bit_insn_to_operand[bit_insn]
                         continue
             hasPrevValues = False
 
@@ -1216,7 +1258,9 @@ class DynamicGraph:
                 #assert dynamic_node.bit_ops is None
                 dynamic_node.bit_ops = {}
                 for bit_insn in load_insn_to_bit_ops[insn]:
-                    dynamic_node.bit_ops[bit_insn] = bit_insn_to_operand[bit_insn]
+                    if bit_insn in bit_insn_to_operand:
+                        dynamic_node.bit_ops[bit_insn] = bit_insn_to_operand[bit_insn]
+                        del bit_insn_to_operand[bit_insn] #TODO
                 dynamic_node.calculate_load_bit_mask()
             if insn in store_insn_to_bit_ops:
                 for bit_insn in store_insn_to_bit_ops[insn]:
@@ -1224,6 +1268,7 @@ class DynamicGraph:
 
             if insn in self.starting_insn_to_reg:
                 dynamic_node.weight = reg_value
+                dynamic_node.is_valid_weight = True
                 print("[dyn_dep] Appending weight " + str(reg_value) + " to node with id: " + str(dynamic_node.id))
             """
             if insn not in self.node_frequencies:
@@ -1352,26 +1397,53 @@ class DynamicGraph:
 
     def trim_dynamic_graph(self, target_insns):
         # get all the nodes with dataflow connection, and where addrs match,
+        for dnode in self.dynamic_nodes.values():
+            if dnode.mem_store_addr is None:
+                continue
+            if dnode.bit_ops is None:
+                continue
+            if dnode.mem_load_addr is not None:
+                continue
+            if dnode.static_node.mem_store.read_same_as_write is not True:
+                continue
+            to_remove = set()
+            for df_prede in dnode.df_predes:
+                if df_prede.static_node.mem_load is None:
+                    continue
+                if df_prede.static_node.mem_load.read_same_as_write is True:
+                    assert df_prede.mem_store_addr is None
+                    to_remove.add(df_prede)
+                    print("TRIM Do not consider the load for bit vars ")
+            for df_prede in to_remove:
+                dnode.df_predes.remove(df_prede)
         # check bit mask where they exist, then trim ones that do not match
         for dnode in self.dynamic_nodes.values():
+            dnode.remaining_load_bit_mask = dnode.load_bit_mask
             if dnode.mem_load_addr is None:
                 continue
             if dnode.bit_ops is None:
                 continue
             assert dnode.load_bit_mask is not None, str(dnode) + str(dnode.static_node)
             to_remove = set()
+            prede_map = {}
             for df_prede in dnode.df_predes:
+                prede_map[df_prede.id] = df_prede
+            od = OrderedDict(sorted(prede_map.items()))
+            for df_prede in od.values():
+                print("CHECKING PREDE " + str(df_prede.id))
                 if df_prede.mem_store_addr != dnode.mem_load_addr:
                     continue
                 if df_prede.store_bit_mask is None:
                     print("[WARN] store has no bit mask, excluding: " +
                           str(df_prede) + str(df_prede.static_node) + str(dnode) + str(dnode.static_node))
-                if (df_prede.store_bit_mask is None) or (df_prede.store_bit_mask & dnode.load_bit_mask == 0x0):
+                if (df_prede.store_bit_mask is None) or (df_prede.store_bit_mask & dnode.remaining_load_bit_mask == 0x0):
                     df_prede.df_succes.remove(dnode)
                     to_remove.add(df_prede)
                     print("TRIM Addrs match but bit masks do not: ")# + str(dnode) + " " + str(df_prede))
                 else:
                     print("KEEP Addrs match AND bit masks do: ")# + str(dnode) + " " + str(df_prede))
+                    overlap = df_prede.store_bit_mask & dnode.remaining_load_bit_mask
+                    dnode.remaining_load_bit_mask = dnode.remaining_load_bit_mask&((~overlap)&0xffffffffffffffff)
             for df_prede in to_remove:
                 dnode.df_predes.remove(df_prede)
 
@@ -1486,63 +1558,109 @@ class DynamicGraph:
             with open(fname, 'a') as out:
                 out.write(str(node))
 
-    def propogate_weight(self, reference=None):
+    def propogate_initial_graph_weight(self):
         assert(len(self.postorder_list) > 0)
         #backward pass
-        if reference is not None:
-            for node in self.target_nodes:
-                if node.id in reference.id_to_node:
-                    node.weight = reference.id_to_node[node.id].weight
-
         for node in self.postorder_list:  # a node will be visited only if its successors have all been visited
             if node in self.target_nodes:
                 #assert(node.weight != -1)
                 continue
             #assert(node.weight == -1)
             weights = set()
-            for cf_succe in node.cf_succes:
-                weights.add(cf_succe.weight)
-            for df_succe in node.df_succes:
-                weights.add(df_succe.weight)
-            if -1 in weights:
-                weights.remove(-1)
+            is_aggregate_weight = False
+
+            #for succe in node.cf_succes:
+            #    if succe.is_aggregate_weight is True:
+            #        is_aggregate_weight = True
+            #        break
+            #    if succe.is_valid_weight is False:
+            #        continue
+            #    weights.add(succe.weight)
+
+            for succe in itertools.chain(node.cf_succes, node.df_succes): #hack: break df links
+                if succe.is_aggregate_weight is True:
+                    continue
+                if succe.is_valid_weight is False:
+                    continue
+                weights.add(succe.weight)
+
             if len(weights) > 1:
                 node.static_node.print_node("Do not aggregate weights: " + str(weights))
+                is_aggregate_weight = True
+            if is_aggregate_weight is True:
+                node.is_aggregate_weight = True
                 continue
             for w in weights:
                 assert w != -1
                 node.weight = w
+                node.is_valid_weight = True
+                break
 
-        # forward pass
-        if reference is not None:
-            for node in self.id_to_node.values():
-                if node.id in reference.id_to_node:
-                    if node.weight != -1:
-                        assert (node.weight == reference.id_to_node[node.id].weight 
-                                or reference.id_to_node[node.id].weight == -1), \
-                            str(node.weight) + " " + str(reference.id_to_node[node.id].weight) \
-                            + str(node) + " " + str(reference.id_to_node[node.id])
+    def propogate_weight(self, reference):
+        assert(len(self.postorder_list) > 0)
+        assert (len(self.reverse_postorder_list) > 0)
+
+        for node in self.id_to_node.values():
+            node.is_valid_weight = False
+            node.is_aggregate_weight = False
+            node.weight = -1
+            if node.id in reference.id_to_node:
+                assert node.is_valid_weight is False
+                assert node.is_aggregate_weight is False
+                print("in reference graph")
+                if reference.id_to_node[node.id].is_valid_weight is False:
+                    assert reference.id_to_node[node.id].weight == -1
+                    continue
+                print("has valid weight")
+                node.weight = reference.id_to_node[node.id].weight
+                node.is_valid_weight = True
+                assert node.weight != -1
+
+        for i in range(0,1):
+            for node in self.postorder_list:  # a node will be visited only if its successors have all been visited
+                weights = set()
+                is_aggregate_weight = False
+                for succe in itertools.chain(node.cf_succes, node.df_succes):
+                    #if succe.is_aggregate_weight is True:
+                    #    is_aggregate_weight = True
+                    #    break
+                    if succe.is_valid_weight is False:
                         continue
-                    node.weight = reference.id_to_node[node.id].weight
+                    weights.add(succe.weight)
+                assert -1 not in weights
+                if len(weights) > 1:
+                    is_aggregate_weight = True
+
+                if is_aggregate_weight is True:
+                    node.is_aggregate_weight = True
+                # else:
+                #    for w in weights:
+                #        assert w != -1
+                #        node.weight = w
+                #        node.is_valid_weight = True
 
             for node in self.reverse_postorder_list:  # a node will be visited only if its predecessors have all been visited
                 weights = set()
-                for cf_prede in node.cf_predes:
-                    weights.add(cf_prede.weight)
-                for df_prede in node.df_predes:
-                    weights.add(df_prede.weight)
-                if -1 in weights:
-                    weights.remove(-1)
+                for prede in itertools.chain(node.cf_predes, node.df_predes):
+                    if prede.is_aggregate_weight is True:
+                        continue
+                    if prede.is_valid_weight is False:
+                        continue
+                    weights.add(prede.weight)
                 if len(weights) > 1:
-                    node.static_node.print_node("Do not aggregate weights: " + str(weights))
+                    node.static_node.print_node("Do not aggregate weights: " + str(node.id) + " " + str(weights))
                     continue
                 for w in weights:
-                    assert w != -1
-                    if node.weight != -1:
-                        assert(node.weight == w)
-                        break
+                    assert w != -1  # TODO remove
                     node.weight = w
+                    node.is_valid_weight = True
                     break
+            done = True
+            for node in self.target_nodes:
+                if node.is_valid_weight is False:
+                    done = False
+            if done:
+                break
 
 def print_path(curr_node, end_id):
     for p in curr_node.df_predes:#itertools.chain(curr_node.cf_predes, curr_node.df_predes):
@@ -1564,6 +1682,7 @@ if __name__ == '__main__':
 
     dd = DynamicDependence(starting_events, "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
     dd.prepare_to_build_dynamic_dependencies(10000)
+
     dg = dd.build_dyanmic_dependencies(0x409418)
 
     sizes = {}
@@ -1604,10 +1723,13 @@ if __name__ == '__main__':
                 continue
             visited.add(sc)
             if sc.static_node.insn == 0x409418:
+                node_to_weight[n] = n.weight
+                """
                 if sc.mem_load_addr in sizes:
                     node_to_weight[n] = sizes[sc.mem_load_addr]
                 else:
                     node_to_weight[n] = 0
+                """
                 #print("FOUND SUCCE")
                 break
             for scs in sc.df_succes:
