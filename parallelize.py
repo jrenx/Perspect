@@ -20,7 +20,7 @@ for i in range(num_processor):
     rr_dir = os.path.join(process_dir, 'rr')
     if os.path.exists(rr_dir):
         shutil.rmtree(rr_dir)
-    shutil.copytree('rr', rr_dir)
+    shutil.copytree('rr', rr_dir, ignore=shutil.ignore_patterns('.*', '_*'))
     shutil.copy('rr_util.py', process_dir)
 
 rr_result_cache = {}
