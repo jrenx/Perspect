@@ -23,7 +23,7 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
     #print("[tmp] reg_points: " + str(reg_points))
     #print("[tmp] regs: " + str(regs))
     #print("[tmp] indice_map: " + str(indice_map))
-    timeout = 120
+    timeout = None
     if do_timeout:
         count = len(breakpoints) + len(reg_points)
         timeout = max(300, count * 15)

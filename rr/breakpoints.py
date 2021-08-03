@@ -24,7 +24,7 @@ trace = []
 not_exit = True
 
 def br_handler(event):
-    if time.time() - start_time > timeout:
+    if timeout is not None and time.time() - start_time > timeout:
         global not_exit
         not_exit = False
         return
