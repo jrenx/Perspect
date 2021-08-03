@@ -67,7 +67,7 @@ def send_task(pipe):
         pipe.send("Shutdown")
 
 for i in range(1000):
-    static_dep_graph.main()
+    os.system('python3 static_dep_graph >> out')
     lines = open('rr_inputs', 'r').readlines()
 
     processes = []
