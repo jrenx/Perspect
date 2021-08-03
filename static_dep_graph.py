@@ -2130,7 +2130,7 @@ class StaticDepGraph:
                     #assert node in node.df_predes, str(node) + str(s)
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
-if __name__ == "__main__":
+def main():
     starting_events = []
     starting_events.append(["rdi", 0x409daa, "sweep"])
     starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
@@ -2164,3 +2164,7 @@ if __name__ == "__main__":
         assert len(func_to_graph[func].nodes_in_cf_slice) == len(StaticDepGraph.func_to_graph[func].nodes_in_cf_slice)
         assert len(func_to_graph[func].nodes_in_df_slice) == len(StaticDepGraph.func_to_graph[func].nodes_in_df_slice)
     """
+
+
+if __name__ == "__main__":
+    main()
