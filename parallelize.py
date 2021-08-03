@@ -2,6 +2,7 @@ import os
 import shutil
 import multiprocessing as mp
 import threading
+import json
 
 import static_dep_graph
 
@@ -19,8 +20,7 @@ for i in range(num_processor):
     shutil.copytree('rr', rr_dir)
     shutil.copy('rr_util.py', process_dir)
 
-static_dep_graph.main()
-lines = open('rr_inputs', 'r').readlines()
+rr_result_cache = {}
 
 def run_task(id, pipe):
     os.chdir('run_{}'.format(id))
@@ -35,7 +35,6 @@ def run_task(id, pipe):
         pipe.send(rr_result_cache)
     pipe.send("Shutdown")
 
-rr_result_cache = {}
 
 def send_task(pipe):
     while True:
@@ -64,20 +63,23 @@ def send_task(pipe):
     while pipe.recv() != "Shutdown":
         pipe.send("Shutdown")
 
+for i in range(1000):
+    static_dep_graph.main()
+    lines = open('rr_inputs', 'r').readlines()
 
-processes = []
-threads = []
-mp.set_start_method('spawn')
-for i in range(num_processor):
-    parent_conn, child_conn = mp.Pipe(duplex=True)
-    p = mp.Process(target = run_task, args=(i, child_conn))
-    p.start()
-    processes.append(p)
-    t = threading.Thread(target=send_task, args=(parent_conn, ))
-    t.start()
-    threads.append(t)
+    processes = []
+    threads = []
+    mp.set_start_method('spawn')
+    for i in range(num_processor):
+        parent_conn, child_conn = mp.Pipe(duplex=True)
+        p = mp.Process(target = run_task, args=(i, child_conn))
+        p.start()
+        processes.append(p)
+        t = threading.Thread(target=send_task, args=(parent_conn, ))
+        t.start()
+        threads.append(t)
 
-for i in range(num_processor):
-    processes[i].join()
-    threads[i].join()
-
+    for i in range(num_processor):
+        processes[i].join()
+        threads[i].join()
+    json.dump(rr_result_cache, open(os.path.join(curr_dir, 'cache', 'rr_results_{}.json'.format(prog))))
