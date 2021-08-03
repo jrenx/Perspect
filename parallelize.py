@@ -1,3 +1,4 @@
+import sys
 import os
 import shutil
 import multiprocessing as mp
@@ -8,7 +9,9 @@ import static_dep_graph
 
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 num_processor = 16
-prog = sys.argv[1]
+prog = '909_ziptest_exe9'
+if len(sys.argv) > 1:
+    prog = sys.argv[1]
 
 for i in range(num_processor):
     process_dir = os.path.join(curr_dir, 'run_{}'.format(i))
