@@ -46,6 +46,27 @@ def dynamic_backslice2_old(branch, target, reg, off, insn):
                                  insn_str, reg, off)
     return list(rr_result_defs[0].union(rr_result_defs[1]))
 
+def rr_backslice2(prog, branch_str, target_str, insn_str, reg_str, shift_str, off_str, off_reg_str, rr_result_cache): #, rr_result_cache = None):
+
+    print("[main] Inputting to RR: " \
+        + " reg: " + str(reg_str) + " shift: " + str(shift_str) + " off_reg: " + str(off_reg_str) + " off: " + str(off_str)\
+        + " @ " + str(insn_str) + " branch @" + str(branch_str) + " target @" + str(target_str)\
+        + " program: " +str(prog), flush=True)
+
+    key = prog + "_" + str(branch_str) + "_" + str(target_str) + "_" \
+          + insn_str + "_" + reg_str + "_" + shift_str + "_" + off_str + "_" + str(off_reg_str)
+    
+    rr_result_defs = get_def(prog, branch_str, target_str, insn_str, reg_str, shift_str, off_str, off_reg_str)
+    print("[main] Result from RR: " + str(len(rr_result_defs)) + " def points: " + str(rr_result_defs))
+
+    rr_result_cache[key] = rr_result_defs
+
+    #rr_result_file = os.path.join(curr_dir, 'rr_results.json')
+    #with open(rr_result_file, 'w') as f:
+    #    json.dump(rr_result_cache, f)
+
+    return rr_result_defs
+
 #FIXME: just pass in the MemoryAccess struct?
 def rr_backslice(prog, branch, target, insn, reg, shift, off, off_reg, rr_result_cache): #, rr_result_cache = None):
     #TODO, the offset and shift are stored as decimals,
@@ -62,23 +83,17 @@ def rr_backslice(prog, branch, target, insn, reg, shift, off, off_reg, rr_result
           + insn_str + "_" + reg_str + "_" + shift_str + "_" + off_str + "_" + str(off_reg_str)
     if key in rr_result_cache:
         return rr_result_cache[key]
+    with open("rr_inputs", "a") as f:
+        f.write(key+"\n")
+    raise Exception()
 
-    retry_count = 0
-    while retry_count >= 0: #TODO, really, can retry if it has a remote dataflow dep!
-        print("[main] Inputting to RR: " \
-            + " reg: " + str(reg_str) + " shift: " + str(shift_str) + " off_reg: " + str(off_reg_str) + " off: " + str(off_str)\
-            + " @ " + str(insn_str) + " branch @" + str(branch_str) + " target @" + str(target_str)\
-            + " program: " +str(prog), flush=True)
-
-        rr_result_defs = get_def(prog, branch_str, target_str, insn_str, reg_str, shift_str, off_str, off_reg_str)
-        print("[main] Result from RR: " + str(len(rr_result_defs)) + " def points: " + str(rr_result_defs))
-        if len(rr_result_defs) > 0:
-            break
-        retry_count -= 1
-        if branch_str is not None and target_str is not None:
-            branch_str = None
-            target_str = None
-        print("Re-trying!")
+    print("[main] Inputting to RR: " \
+        + " reg: " + str(reg_str) + " shift: " + str(shift_str) + " off_reg: " + str(off_reg_str) + " off: " + str(off_str)\
+        + " @ " + str(insn_str) + " branch @" + str(branch_str) + " target @" + str(target_str)\
+        + " program: " +str(prog), flush=True)
+    
+    rr_result_defs = get_def(prog, branch_str, target_str, insn_str, reg_str, shift_str, off_str, off_reg_str)
+    print("[main] Result from RR: " + str(len(rr_result_defs)) + " def points: " + str(rr_result_defs))
 
     rr_result_cache[key] = rr_result_defs
 
