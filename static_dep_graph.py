@@ -211,6 +211,11 @@ class CFG:
                 backedge_targets.append(cfg.id_to_bb[id])
             bb.backedge_targets = backedge_targets
 
+            backedge_sources = []
+            for id in bb.backedge_sources:
+                backedge_sources.append(cfg.id_to_bb[id])
+            bb.backedge_sources = backedge_sources
+
             predes = []
             for id in bb.predes:
                 predes.append(cfg.id_to_bb[id])
@@ -1103,7 +1108,7 @@ class StaticDepGraph:
 
         if "none_df_starting_nodes" in data:
             for n in data["none_df_starting_nodes"]:
-                sg.nodes_in_df_slice.add(sg.id_to_node[n])
+                sg.none_df_starting_nodes.add(sg.id_to_node[n])
 
         for sn in sg.id_to_node.values():
             if sn.bb is not None:
