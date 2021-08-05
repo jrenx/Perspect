@@ -71,8 +71,6 @@ class BasicBlock:
     @staticmethod
     def fromJSON(data):
         id = data['id']
-        if StaticNode.id <= id:
-            StaticNode.id = id + 1
         ends_in_branch = data['ends_in_branch']
         is_entry = True if data['is_entry'] == 1 else False
         lines = data['lines']
@@ -91,6 +89,7 @@ class BasicBlock:
         if 'pdoms' in data:
             bb.pdoms = data['pdoms']
         bb.backedge_targets = data['backedge_targets']
+        bb.backedge_sources = data['backedge_sources']
         bb.predes = data['predes']
         bb.succes = data['succes']
 
@@ -295,7 +294,7 @@ class CFG:
 
     def simplify(self, final=False):
         for entry in self.entry_bbs:
-            visited = set([])
+            visited = set()
             self.postorderTraversal(entry, visited)
 
         postorder_map = {}
@@ -517,11 +516,13 @@ class CFG:
         # Find all the control flow predecessors of the given instruction
         # https://stackoverflow.com/questions/35206372/understanding-stacks-and-queues-in-python/35206452
         worklist = deque()
+
         #if DEBUG_SLICE:
+        print("Slicing for function: " + self.func)
         print("Targets for slicing: " + str([bb.id for bb in self.target_bbs]))
         for bb in self.target_bbs:
             worklist.append(bb)
-        visited = set([])
+        visited = set()
         while len(worklist) > 0:
             bb = worklist.popleft()
             if bb.id in visited:
@@ -662,6 +663,8 @@ class MemoryAccess:
         self.read_same_as_write = False
 
     def add_bit_operationses(self, bit_operationses):
+        if bit_operationses is None:
+            return
         for bit_operations in bit_operationses:
             self.add_bit_operations(bit_operations)
 
@@ -745,10 +748,12 @@ class MemoryAccess:
 
 class StaticNode:
     id = 0
-
+    group_id = 0
     def __init__(self, insn, bb, function, id=None):
         if id is not None:
             self.id = id
+            if StaticNode.id <= id:
+                StaticNode.id = id + 1
         else:
             self.id = StaticNode.id #TODO, incremenet ID here?
             StaticNode.id += 1
@@ -788,6 +793,8 @@ class StaticNode:
         self.group_ids = None
         self.group_insns = None
         self.virtual_nodes = []
+
+        self.is_intermediate_node = False
 
     def print_node(self, prefix): #FIXME change the one in dynamic graph
         print(prefix
@@ -846,6 +853,8 @@ class StaticNode:
         """
         data["group_ids"] = self.group_ids
         data["group_insns"] = self.group_insns
+        if self.is_intermediate_node is True:
+            data["is_intermediate_node"] = self.is_intermediate_node
         return data
 
     @staticmethod
@@ -890,6 +899,8 @@ class StaticNode:
                     StaticDepGraph.group_to_nodes[group_id] = set()
                 StaticDepGraph.group_to_nodes[group_id].add(sn)
 
+        if "is_intermediate_node" in data:
+            sn.is_intermediate_node = data["is_intermediate_node"]
         return sn
 
     @staticmethod
@@ -1153,9 +1164,19 @@ class StaticDepGraph:
             func_to_graph[graph.func] = graph
         for func in func_to_graph:
             StaticDepGraph.fromJSON_finish(func_to_graph[func], all_id_to_node)
+        to_remove = set()
         for func in pending_nodes:
             for node in pending_nodes[func].values():
                 StaticNode.fromJSON_finish(node, all_id_to_node)
+
+            if func in func_to_graph:
+                to_remove.add(func)
+                for pending_node in pending_nodes[func].values():
+                    func_to_graph[graph].id_to_node[pending_node.id] = pending_node
+                    func_to_graph[graph].insn_to_node[pending_node.insn] = pending_node
+
+        for func in to_remove:
+            del pending_nodes[func]
 
         postorder_list = []
         for json_node in in_result["graph_postorder_list"]:
@@ -1233,7 +1254,7 @@ class StaticDepGraph:
     def get_closest_dep_branch(self, node): #TODO, is getting the farthest one
         # TODO, what if has no direct cf predecessor, is that possible?
         #print("===========================")
-        succes = set([])
+        succes = set()
         for succe in node.df_succes:
             if succe.bb is not None and succe.bb.ends_in_branch:
                 succes.add(succe.bb)
@@ -1248,8 +1269,8 @@ class StaticDepGraph:
         return last_bb if last_bb is None else self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
     def get_farthest_target(self, node):
-        visited = set([])
-        reachable_targets = set([])
+        visited = set()
+        reachable_targets = set()
         worklist = deque()
         worklist.append(node.bb)
         #print("All target BBs: " + str([bb.id for bb in self.cfg.target_bbs]))
@@ -1353,8 +1374,8 @@ class StaticDepGraph:
                 graph = StaticDepGraph.func_to_graph[func]
                 if graph.changed is False:
                     continue
-                target_bbs = set()
-                graph.build_control_flow_dependencies(target_bbs, final=True, targets=set([e[1] for e in starting_events]))
+                graph.build_control_flow_dependencies(set(), final=True)
+                graph.remove_extra_nodes(set([e[1] for e in starting_events]))
                 graph.merge_nodes(graph.nodes_in_df_slice, True)
                 graph.merge_nodes(graph.none_df_starting_nodes, True)
                 if TRACKS_DIRECT_CALLER: graph.merge_callsite_nodes()
@@ -1429,9 +1450,9 @@ class StaticDepGraph:
         iter = 0
         print("[static_dep] ")
         print("[static_dep] Building dependencies for function: " + str(func))
-        print("[static_dep] Existing dataflow node: ")
-        print("[static_dep] " + str(df_node))
-        target_bbs = set([])
+        print("[static_dep] Existing node: ")
+        print("[static_dep] " + str(initial_node))
+        target_bbs = set()
 
         if func in StaticDepGraph.func_to_graph:
             graph = StaticDepGraph.func_to_graph[func]
@@ -1443,6 +1464,12 @@ class StaticDepGraph:
         else:
             graph = StaticDepGraph(func, prog)
             StaticDepGraph.func_to_graph[func] = graph
+            if func in StaticDepGraph.pending_nodes:
+                print("Adding pending nodes for function: " + func)
+                for pending_node in StaticDepGraph.pending_nodes[func].values():
+                    graph.id_to_node[pending_node.id] = pending_node
+                    graph.insn_to_node[pending_node.insn] = pending_node
+
             graph.build_control_flow_nodes(insn)
             if len(graph.cfg.ordered_bbs) == 0:
                 print("[static_dep][warn] Failed to load the cfg for function: "
@@ -1460,7 +1487,6 @@ class StaticDepGraph:
                         graph.pending_callsite_nodes.append(new_node)
         if initial_node.is_df is False:
             graph.none_df_starting_nodes.add(initial_node)
-        graph.changed = True
         """
         if df_node is not None:
             assert df_node.bb is None
@@ -1468,7 +1494,7 @@ class StaticDepGraph:
             #TODO, also need to do dataflow tracing for this one!!
         """
 
-        all_defs_in_diff_func = set([])
+        all_defs_in_diff_func = set()
         df_nodes = []
         if df_node is not None:
             df_nodes.append(df_node)
@@ -1477,13 +1503,13 @@ class StaticDepGraph:
             new_local_defs_found = False
             print("[static_dep] Building dependencies for function: " + str(func) + " iteration: " + str(iter))
             iter += 1
-            defs_in_same_func, remote_defs_in_same_func, defs_in_diff_func = graph.build_data_flow_dependencies(func, prog, df_nodes)
+            defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func = graph.build_data_flow_dependencies(func, prog, df_nodes)
             all_defs_in_diff_func = all_defs_in_diff_func.union(defs_in_diff_func)
             if len(graph.cfg.ordered_bbs) == 0:
                 print("[static_dep][warn] Previously failed to load the cfg for function: "
                       + func + " ignoring the function...")
                 return all_defs_in_diff_func
-            if len(defs_in_same_func) > 0 or len(remote_defs_in_same_func) > 0:
+            if len(defs_in_same_func) > 0 or len(intermediate_defs_in_same_func) > 0:
                 new_bbs = [graph.cfg.getBB(defn.insn) for defn in defs_in_same_func]
                 target_bbs = target_bbs.union(new_bbs)
                 graph.build_control_flow_dependencies(target_bbs)
@@ -1499,7 +1525,7 @@ class StaticDepGraph:
                 #df_node = None
                 # TODO, also need to do dataflow tracing for this one!!
             graph.merge_nodes(defs_in_same_func)
-            df_nodes = list(remote_defs_in_same_func)
+            df_nodes = list(intermediate_defs_in_same_func)
 
         new_nodes = all_defs_in_diff_func.union(new_nodes)
         return new_nodes
@@ -1550,10 +1576,121 @@ class StaticDepGraph:
                     node.cf_succes.append(self.id_to_node[succe_node_id])
             """
 
+    def build_local_data_flow_dependencies(self, loads, succe, func, defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func):
+        if loads is None or len(loads) == 0:
+            return
+
+        group = False if len(loads) <= 1 else True
+        group_size = 0
+        nodes = []
+        for load in loads:
+            prede, group_size = self.build_single_local_data_flow_dependency(load, succe, func, group, group_size, defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func)
+            nodes.append(prede)
+        if group is True:
+            print("Creating new group id: " + str(StaticNode.group_id) + " size " + str(group_size) + " parent " + hex(
+                succe.insn))
+            StaticNode.group_id += 1
+        return nodes
+
+    def build_single_local_data_flow_dependency(self, load, succe, func, group, group_size, defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func):
+        prede_insn = load[0]
+        prede_reg = load[1]
+        shift = load[2]
+        off = load[3]
+        off_reg = load[4]
+        read_same_as_write = load[5]
+        is_bit_var = load[6]
+        if succe.is_intermediate_node is True and succe.contains_bit_var() is True and is_bit_var is False:
+            is_bit_var = True
+        type = load[7]
+        curr_func = load[8]
+        dst_reg = load[9]
+        bit_ops = load[10]
+
+        assert shift != '', str(load)
+        assert off != '', str(load)
+        # print(succe)
+        # if succe.insn == prede_insn and read_same_as_write is False:
+        #    print("[static_dep][warn]Ignoring the predecessor as it is the same as the successor: ")
+        #    print(succe)
+        # else:
+        prede = StaticDepGraph.make_or_get_df_node(prede_insn, None,
+                                                   curr_func)  # TODO, might need to include func here too
+        if group is True:
+            if prede.group_insns is None:
+                prede.group_insns = []
+            if succe.insn in prede.group_insns:
+                group is False
+            else:
+                prede.group_insns.append(succe.insn)
+                if prede.group_ids is None:
+                    prede.group_ids = []
+                prede.group_ids.append(StaticNode.group_id)
+                group_size += 1
+                if StaticNode.group_id not in StaticDepGraph.group_to_nodes:
+                    StaticDepGraph.group_to_nodes[StaticNode.group_id] = set()
+                StaticDepGraph.group_to_nodes[StaticNode.group_id].add(prede)
+        # print(prede)
+        if prede == succe and read_same_as_write is False:
+            if succe.mem_load is None:
+                succe.explained = False
+            # TODO, sometimes statically slicing the same node end up returning the same node cuz its a mem read
+            #     still keep explaining!
+            # TODO, need better scheme for checking I guess
+        if prede.explained is False or read_same_as_write is True:
+            if type == 'memread':
+                if off_reg == 'DS':
+                    print("[warn] ignoring the offset register DS")
+                    off_reg = ''
+                    off = 0
+                prede.mem_load = MemoryAccess(prede_reg, shift, off, off_reg, is_bit_var)
+                prede.mem_load.add_bit_operationses(bit_ops)
+                prede.reg_store = dst_reg  # TODO put actual register name here
+                if read_same_as_write is True:
+                    prede.mem_load.read_same_as_write = True
+                    succe.mem_store.read_same_as_write = True
+                    succe.mem_store.add_bit_operationses(bit_ops)
+            elif type == 'regread':
+                prede.reg_load = prede_reg
+            elif type == 'empty':
+                return prede, group_size# pass
+            else:
+                print("type not supported " + str(type))
+                # raise Exception
+
+        if prede != succe:
+            if prede not in succe.df_predes:
+                succe.df_predes.append(prede)
+            if succe not in prede.df_succes:
+                prede.df_succes.append(succe)
+        if prede.explained is False:
+            if load[11] is True:
+                intermediate_defs_in_same_func.add(prede)
+                prede.is_intermediate_node = True
+            elif curr_func != func:
+                defs_in_diff_func.add(prede)
+            else:
+                if prede.reg_load is not None and prede.mem_load is None and prede != succe:
+                    # TODO, should make this prettier,
+                    # but sometimes dyninst will stop slicing at reg load
+                    # possibly cuz the reg is pass by reference?
+                    # in this case, wanna slice again, in the next iteration
+                    defs_in_diff_func.add(prede)
+                    print("Dyninst stopped at reg load? slice again")
+                    print(prede)
+                else:
+                    defs_in_same_func.add(prede)
+        # if read_same_as_write is True:
+        #    prede.explained = True
+        # else:
+        # assert prede.mem_load is not None or prede.reg_load is not None, str(prede)
+        return prede, group_size
+
     def build_data_flow_dependencies(self, func, prog, df_nodes=[]):
         print("[static_dep] Building dataflow dependencies local in function: " + str(func))
-        defs_in_same_func = set([])
-        defs_in_diff_func = set([])
+        defs_in_same_func = set()
+        intermediate_defs_in_same_func = set()
+        defs_in_diff_func = set()
 
         slice_starts = []
         addr_to_node = {}
@@ -1587,7 +1724,8 @@ class StaticDepGraph:
                 regLoad = df_node.reg_load
             else:
                 regLoad = "SPECIAL"
-            slice_starts.append([regLoad.lower(), df_node.insn, df_node.function, df_node.contains_bit_var()])
+            slice_starts.append([regLoad.lower(), df_node.insn, df_node.function,
+                                 df_node.contains_bit_var() if df_node.is_intermediate_node is False else False])
             #TODO for now, just ignore those that writes to memory in SA
             assert df_node.insn not in addr_to_node
             addr_to_node[df_node.insn] = df_node
@@ -1597,105 +1735,10 @@ class StaticDepGraph:
             #reg_name = result[0]
             insn = result[1]
             loads = result[2]
-            if loads is None: #TODO, how is this possible?
-                continue
-
             succe = addr_to_node[insn]
-            group = False if len(loads) <= 1 else True
-            group_size = 0
-            for load in loads:
-                prede_insn = load[0]
-                prede_reg = load[1]
-                shift = load[2]
-                off = load[3]
-                off_reg = load[4]
-                read_same_as_write = load[5]
-                is_bit_var = load[6]
-                type = load[7]
-                curr_func = load[8]
-                dst_reg = load[9]
-                bit_ops = load[10]
-
-                assert shift != '', str(load)
-                assert off != '', str(load)
-                #print(succe)
-                #if succe.insn == prede_insn and read_same_as_write is False:
-                #    print("[static_dep][warn]Ignoring the predecessor as it is the same as the successor: ")
-                #    print(succe)
-                #else:
-                prede = StaticDepGraph.make_or_get_df_node(prede_insn, None,
-                                                           curr_func)  # TODO, might need to include func here too
-                if group is True:
-                    if prede.group_insns is None:
-                        prede.group_insns = []
-                    if succe.insn in prede.group_insns:
-                        group is False
-                    else:
-                        prede.group_insns.append(succe.insn)
-                        if prede.group_ids is None:
-                            prede.group_ids = []
-                        prede.group_ids.append(StaticNode.group_id)
-                        group_size += 1
-                        if StaticNode.group_id not in StaticDepGraph.group_to_nodes:
-                            StaticDepGraph.group_to_nodes[StaticNode.group_id] = set()
-                        StaticDepGraph.group_to_nodes[StaticNode.group_id].add(prede)
-                #print(prede)
-                if prede == succe and read_same_as_write is False:
-                    if succe.mem_load is None:
-                        succe.explained = False
-                    #TODO, sometimes statically slicing the same node end up returning the same node cuz its a mem read
-                    #     still keep explaining!
-                    #TODO, need better scheme for checking I guess
-                if prede.explained is False or read_same_as_write is True:
-                    if type == 'memread':
-                        if off_reg == 'DS':
-                            print("[warn] ignoring the offset register DS")
-                            off_reg = ''
-                            off = 0
-                        prede.mem_load = MemoryAccess(prede_reg, shift, off, off_reg, is_bit_var)
-                        prede.mem_load.add_bit_operationses(bit_ops)
-                        prede.reg_store = dst_reg #TODO put actual register name here
-                        if read_same_as_write is True:
-                            prede.mem_load.read_same_as_write = True
-                            succe.mem_store.read_same_as_write = True
-                            succe.mem_store.add_bit_operationses(bit_ops)
-                    elif type == 'regread':
-                        prede.reg_load = prede_reg
-                    elif type == 'empty':
-                        continue#pass
-                    else:
-                        print("type not supported " + str(type))
-                        #raise Exception
-
-                if prede != succe:
-                    if prede not in succe.df_predes:
-                        succe.df_predes.append(prede)
-                    if succe not in prede.df_succes:
-                        prede.df_succes.append(succe)
-                if prede.explained is False:
-                    if curr_func != func:
-                        defs_in_diff_func.add(prede)
-                    else:
-                        if prede.reg_load is not None and prede.mem_load is None and prede != succe:
-                            # TODO, should make this prettier,
-                            # but sometimes dyninst will stop slicing at reg load
-                            # possibly cuz the reg is pass by reference?
-                            # in this case, wanna slice again, in the next iterataion
-                            defs_in_diff_func.add(prede)
-                            print("Dyninst stopped at reg load? slice again")
-                            print(prede)
-                        else:
-                            defs_in_same_func.add(prede)
-                #if read_same_as_write is True:
-                #    prede.explained = True
-                #else:
-                    #assert prede.mem_load is not None or prede.reg_load is not None, str(prede)
-            if group is True:
-                print("Creating new group id: " + str(StaticNode.group_id) + " size " + str(size) + " parent " + hex(
-                    succe.insn))
-                StaticNode.group_id += 1
+            self.build_local_data_flow_dependencies(loads, succe, func, defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func)
         print("[static_dep] Found " + str(len(defs_in_same_func)) + " dataflow nodes local in function ")
-        tmp_defs_in_same_func = set([])
+
 
         print("[static_dep] Building dataflow dependencies non-local to function: " + str(func))
         for node in defs_in_same_func:
@@ -1781,7 +1824,7 @@ class StaticDepGraph:
                     if curr_func != func:
                         defs_in_diff_func.add(prede)
                     else:
-                        tmp_defs_in_same_func.add(prede)
+                        intermediate_defs_in_same_func.add(prede)
                 else:
                     if prede.mem_store is None and prede.reg_load is None:
                         print('[static_dep][warn] predecessor already explained '
@@ -1794,14 +1837,19 @@ class StaticDepGraph:
                     node.mem_load.read_same_as_write = True
                     node.mem_store.read_same_as_write = True
 
-        #defs_in_same_func = defs_in_same_func.union(tmp_defs_in_same_func)
-        print("[static_dep] Total number of new nodes in local  dataflow slice: " + str(len(defs_in_same_func)) + " " + \
+        print("[static_dep] Total number of      new     nodes in local dataflow slice: " + str(len(defs_in_same_func)) + " " + \
               str([hex(node.insn) for node in defs_in_same_func]))
         if VERBOSE:
             for node in defs_in_same_func:
                 print(str(node))
 
-        print("[static_dep] Total number of new nodes in remote dataflow slice: " + str(len(defs_in_diff_func)) + " " + \
+        print("[static_dep] Total number of intermediate nodes in local dataflow slice: " + str(len(intermediate_defs_in_same_func)) + " " + \
+              str([hex(node.insn) for node in intermediate_defs_in_same_func]))
+        if VERBOSE:
+            for node in intermediate_defs_in_same_func:
+                print(str(node))
+
+        print("[static_dep] Total number of     new      nodes in remote dataflow slice: " + str(len(defs_in_diff_func)) + " " + \
               str([hex(node.insn) for node in defs_in_diff_func]))
         if VERBOSE:
             for node in defs_in_diff_func:
@@ -1811,8 +1859,7 @@ class StaticDepGraph:
         print("[static_dep] Total number of nodes in data flow slice: " + str(len(self.nodes_in_df_slice)) + " " + \
               str([hex(node.insn) for node in self.nodes_in_df_slice]))
 
-
-        return defs_in_same_func, tmp_defs_in_same_func, defs_in_diff_func
+        return defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func
 
     def build_control_flow_nodes(self, insn):
         self.cfg = CFG(self.func, self.prog)
@@ -1842,10 +1889,12 @@ class StaticDepGraph:
                 print(str(self.id_to_node[node_id]))
 
 
-    def build_control_flow_dependencies(self, target_bbs, final=False, targets=[]):
+    def build_control_flow_dependencies(self, target_bbs, final=False):
+        if final is False:
+            self.changed = True
         self.cfg.target_bbs = self.cfg.target_bbs.union(target_bbs)
         if self.cfg.jsonified is True and final is False:
-            print("Re-constructing a CFG")
+            print("Re-constructing the CFG for " + self.func)
             orig_start_insn_to_bb = {}
             for bb in self.cfg.ordered_bbs:
                 assert bb.start_insn not in orig_start_insn_to_bb
@@ -1912,33 +1961,46 @@ class StaticDepGraph:
             if node not in self.nodes_in_cf_slice:
                 self.nodes_in_cf_slice.add(node)
 
-        if final is True:
-            for node in self.id_to_node.values():
-                if len(node.cf_succes) > 0 or len(node.df_succes) > 0:
-                    continue
-                if node == StaticDepGraph.starting_node:
-                    continue
-
-                worklist = deque()
-                worklist.append(node)
-                while len(worklist) > 0:
-                    curr = worklist.popleft()
-                    print(curr)
-                    if len(curr.cf_succes) == 0 and len(curr.df_succes) == 0:
-                        if curr.insn in targets:
-                            continue
-                        if curr in self.nodes_in_cf_slice:
-                            self.nodes_in_cf_slice.remove(curr)
-                            curr.print_node("Removing node because it has no successors: ")
-                        for p in node.cf_predes:
-                            if node in p.cf_succes:
-                                p.cf_succes.remove(node)
-                                worklist.append(p)
-                        for p in node.df_predes:
-                            if node in p.df_succes:
-                                p.df_succes.remove(node)
-                                worklist.append(p)
         print("[static_dep] Total number of nodes in control flow slice: " + str(len(self.nodes_in_cf_slice)) + " " + \
+              str([hex(node.insn) for node in self.nodes_in_cf_slice]))
+        if VERBOSE:
+            for node in self.nodes_in_cf_slice:
+                print(str(node))
+
+    def remove_extra_nodes(self, targets):
+        #TODO, technically, all slice nodes should be in id_to_node ...
+        all_nodes = set()
+        all_nodes = all_nodes.union(self.id_to_node.values())
+        #all_nodes = all_nodes.union(self.nodes_in_df_slice)
+        #all_nodes = all_nodes.union(self.nodes_in_cf_slice)
+        for node in all_nodes:
+            if len(node.cf_succes) > 0 or len(node.df_succes) > 0:
+                continue
+
+            worklist = deque()
+            worklist.append(node)
+            while len(worklist) > 0:
+                curr = worklist.popleft()
+                print(curr)
+                if len(curr.cf_succes) == 0 and len(curr.df_succes) == 0:
+                    if curr.insn in targets:
+                        continue
+                    if curr in self.nodes_in_cf_slice:
+                        self.nodes_in_cf_slice.remove(curr)
+                        curr.print_node("Removing node from cf slice because it has no successors: ")
+                    if curr in self.nodes_in_df_slice:
+                        self.nodes_in_df_slice.remove(curr)
+                        curr.print_node("Removing node from df slice because it has no successors: ")
+                    for p in node.cf_predes:
+                        if node in p.cf_succes:
+                            p.cf_succes.remove(node)
+                            worklist.append(p)
+                    for p in node.df_predes:
+                        if node in p.df_succes:
+                            p.df_succes.remove(node)
+                            worklist.append(p)
+
+        print("[static_dep] Total number of nodes in control flow slice after trimming: " + str(len(self.nodes_in_cf_slice)) + " " + \
               str([hex(node.insn) for node in self.nodes_in_cf_slice]))
         if VERBOSE:
             for node in self.nodes_in_cf_slice:
@@ -2091,12 +2153,14 @@ class StaticDepGraph:
         bad_count = 0
         for func in StaticDepGraph.func_to_graph:
             graph = StaticDepGraph.func_to_graph[func]
-            assert (len(graph.insn_to_node) == len(graph.id_to_node))
+            assert (len(graph.insn_to_node) == len(graph.id_to_node)), \
+                str(len(graph.insn_to_node)) + " " \
+                + str(len(graph.id_to_node)) + " " + graph.func
             for node in itertools.chain(graph.nodes_in_cf_slice, graph.nodes_in_df_slice):
                 for p in node.cf_predes:
                     if node not in p.cf_succes:
                         if node.is_df is True:
-                            assert len(node.df_succes) > 0
+                            assert len(node.df_succes) > 0, str(node)
                             continue
                         bad_count += 1
                         print("************ Type 1 ******************")

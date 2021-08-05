@@ -33,7 +33,8 @@ using namespace DataflowAPI;
 void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
                          cJSON *json_reads, boost::unordered_set<Address> &visited,
                          char *progName, char *funcName,
-                         long unsigned int addr, char *regName, bool isKnownBitVar, bool atEndPoint) {
+                         long unsigned int addr, char *regName, bool reversedOnce,
+                         bool isKnownBitVar, bool atEndPoint) {
 
   if (INFO) cout << endl;
   if (INFO) cout << "[sa] -------------------------------" << endl;
@@ -41,6 +42,9 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
   if (INFO) cout << "[sa] prog: " << progName << endl;
   if (INFO) cout << "[sa] func: " << funcName << endl;
   if (INFO) cout << "[sa] addr:  0x" << std::hex << addr << std::dec << endl;
+  if (INFO) cout << "[sa] reversed at least once " << reversedOnce << endl;
+  if (INFO) cout << "[sa] is known bit var " << isKnownBitVar << endl;
+  if (INFO) cout << "[sa] at end point " << atEndPoint << endl;
 
   if (visited.find(addr) != visited.end()) {
     if (INFO) cout << "[sa] address already visited, returning... " << endl;
@@ -77,6 +81,8 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
     long stackReadOff;
     inputInsnReadsFromStack = readsFromStack(insn, addr, &stackReadReg, &stackReadOff);
     cout << "[sa] input instruction reads from stack? " << inputInsnReadsFromStack << endl;
+
+    // Handle pass by reference
     if (!inputInsnReadsFromStack) {
       if (strcmp(regName, "") != 0 && !madeProgress && !atEndPoint) {
         AssignmentConverter ac(true, false);
@@ -115,8 +121,7 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
           if (foundMemRead) atEndPoint = true;
           char *newRegName = (char *) newRegStr.c_str();
           // TODO, in the future even refactor the signature of the backwardSliceHelper function ...
-          backwardSliceHelper(stcs, co, json_reads, visited, progName, newFuncName, newAddr, newRegName, isKnownBitVar,
-                              atEndPoint);
+          backwardSliceHelper(stcs, co, json_reads, visited, progName, newFuncName, newAddr, newRegName, true, isKnownBitVar, atEndPoint);
         }
         return;
       }
@@ -171,8 +176,10 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
       continue;
     }
 
+    // Handle reads from stack and stack addresses
     // TODO, technically for both below scenarios should verify with RR cuz no guarantee there's no other writes
     //       low prioirty for now.
+    bool pendingDefInNewFunction = false;
     if (!atEndPoint) {
       MachRegister readReg;
       long readOff;
@@ -186,35 +193,40 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
           Function *newFunc = (*stit).second;
           char *newFuncName = (char *) newFunc->name().c_str();
           bool atEndPoint = strcmp(newFuncName, funcName) != 0;
-          Address newAddr = (*stit).first;
 
-          bool foundMemRead = false;
-          Block *newBB = getBasicBlock2(newFunc, newAddr);
-          Instruction newInsn = newBB->getInsn(newAddr);
-          std::set<Expression::Ptr> memReads;
-          newInsn.getMemoryReadOperands(memReads);
-          if (memReads.size() > 0) foundMemRead = true;
+          if (!atEndPoint || !reversedOnce) {
+            Address newAddr = (*stit).first;
+            bool foundMemRead = false;
+            Block *newBB = getBasicBlock2(newFunc, newAddr);
+            Instruction newInsn = newBB->getInsn(newAddr);
+            std::set <Expression::Ptr> memReads;
+            newInsn.getMemoryReadOperands(memReads);
+            if (memReads.size() > 0) foundMemRead = true;
 
-          std::string newRegStr = getLoadRegName(newInsn);
-          if (foundMemRead) atEndPoint = true;
-          char * newRegName = (char *)newRegStr.c_str();
-          backwardSliceHelper(stcs, co, json_reads, visited, progName, newFuncName, newAddr, newRegName, isKnownBitVar, atEndPoint);
+            std::string newRegStr = getLoadRegName(newInsn);
+            if (foundMemRead) atEndPoint = true;
+            char *newRegName = (char *) newRegStr.c_str();
+            backwardSliceHelper(stcs, co, json_reads, visited, progName, newFuncName, newAddr, newRegName, true,
+                                isKnownBitVar, atEndPoint);
+          } else {
+            pendingDefInNewFunction = true;
+          }
         }
-        if (stackWrites.size() > 0) continue;
+        if (stackWrites.size() > 0 && !pendingDefInNewFunction) continue;
       } else if (readsFromStaticAddr(assign->insn(), assign->addr(),
                                      &readOff)) { //FIXME: currently only reads from same function.
+        // Assume static writes are always in the same function.... TODO fix this
         cout << "[sa] result of slicing is reading from static addr, looking for writes to static addrs..." << endl;
         boost::unordered_set<Address> writesToStaticAddrs = checkAndGetWritesToStaticAddrs(
             func, assign->insn(), assign->addr(), readOff); //TODO, make this interprocedural too?
         cout << " [sa]  found " << writesToStaticAddrs.size() << " writes to static addresses " << endl;
+        const char *empty = "";
         for (auto wit = writesToStaticAddrs.begin(); wit != writesToStaticAddrs.end(); wit++) {
-          const char *empty = "";
-          backwardSliceHelper(stcs, co, json_reads, visited, progName, funcName, *wit, (char *)empty, isKnownBitVar);
+          backwardSliceHelper(stcs, co, json_reads, visited, progName, funcName, *wit, (char *)empty, true, isKnownBitVar);
         }
         continue;
       }
     }
-
     if (INFO) cout << "[sa] checking result instruction: " << assign->insn().format() << endl;
 
     bool memReadFound = false, regFound = false;
@@ -224,6 +236,7 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
       continue;
     }
     if (INFO) cout << "[sa] => Instruction addr: " << std::hex << assign->addr() << std::dec << endl;
+    if (INFO) cout << "[sa] => Function: " << funcName << endl;
     if (INFO) cout << "[sa] => Read expr: " << readStr << endl;
     if (INFO) cout << "[sa] => Read same as write: " << (isKnownBitVar ? 1 : 0) << endl; // TODO maybe fix this
     if (INFO) cout << "[sa] => Is bit var: " << isBitVar << endl;
@@ -247,7 +260,8 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
       reg = regs[0];
     }
     cJSON_AddStringToObject(json_read, "dst", reg != InvalidReg ? reg.name().c_str() : "");
-
+    if (pendingDefInNewFunction)
+      cJSON_AddNumberToObject(json_read, "intermediate_def", 1);
     if (isBitVar) {
       std::vector<std::vector<Assignment::Ptr>> operationses = bitOperationses[assign];
       if (INFO) cout << "[sa] bit operations: " << endl;
@@ -276,7 +290,6 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
       cJSON_AddNumberToObject(json_read, "is_bit_var",  0);
     }
     cJSON_AddItemToArray(json_reads, json_read);
-
   }
 }
 
