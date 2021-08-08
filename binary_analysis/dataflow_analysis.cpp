@@ -76,6 +76,7 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
   bool madeProgress = true;
   GraphPtr slice = buildBackwardSlice(func, bb, insn, addr, regName, &madeProgress, atEndPoint);
   bool inputInsnReadsFromStack = false;
+  bool pendingDefInNewFunction = false;
   if (!isKnownBitVar) {
     MachRegister stackReadReg;
     long stackReadOff;
@@ -103,7 +104,8 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
         boost::unordered_set <Address> visitedAddrs;
         handlePassByReference(targetRegion, addr, bb, func, ret, visitedAddrs);
         cout << "[sa]  found " << ret.size() << " pass by reference defs " << endl;
-        for (auto rit = ret.begin(); rit != ret.end(); rit++) {
+        if (!reversedOnce) {
+          for (auto rit = ret.begin(); rit != ret.end(); rit++) {
           Function *newFunc = (*rit).second;
           char *newFuncName = (char *) newFunc->name().c_str();
           bool atEndPoint = strcmp(newFuncName, funcName) != 0;
@@ -123,7 +125,12 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
           // TODO, in the future even refactor the signature of the backwardSliceHelper function ...
           backwardSliceHelper(stcs, co, json_reads, visited, progName, newFuncName, newAddr, newRegName, true, isKnownBitVar, atEndPoint);
         }
-        return;
+          return;
+        } else {
+          cout << "[sa]  persisting intermediate results instead of pass by reference defs " << endl;
+          atEndPoint = true;
+          pendingDefInNewFunction = true;
+        }
       }
     }
   }
@@ -179,7 +186,6 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
     // Handle reads from stack and stack addresses
     // TODO, technically for both below scenarios should verify with RR cuz no guarantee there's no other writes
     //       low prioirty for now.
-    bool pendingDefInNewFunction = false;
     if (!atEndPoint) {
       MachRegister readReg;
       long readOff;

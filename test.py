@@ -179,6 +179,18 @@ class TestStaticSlicing(unittest.TestCase):
         self.assertEqual(len(results[0][2]), 1)
         self.assertEqual(results[0][2][0][0:9], [0x407bb2, 'RAX', 0, 0, None, False, False, 'regread', 'runtime.new'])
 
+    def test_stack_and_pass_by_reference_part2(self):
+        slice_starts = []
+        slice_starts.append(['', 4441009, 'unicode.init', False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
+
+    def test_stack_and_pass_by_reference_part3(self):
+        slice_starts = []
+        slice_starts.append(['rbx', 4464168, 'unicode.init', False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
+
     def test_pass_by_reference(self):
         slice_starts = []
         slice_starts.append(['rax', 0x407bb2, 'runtime.new', False])
@@ -469,6 +481,29 @@ class TestStaticSlicing(unittest.TestCase):
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
 
+    def test_tmp1(self):
+        slice_starts = []
+        slice_starts.append(['', 4383841, "os.*File\u00b7ReadAt", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
+
+    def test_tmp2(self):
+        slice_starts = []
+        slice_starts.append(['', 4208583, "hash_subtable_new", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
+
+    def test_tmp3(self):
+        slice_starts = []
+        slice_starts.append(['rax', 4208560, "hash_subtable_new", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
+
+    def test_tmp4(self):
+        slice_starts = []
+        slice_starts.append(['', 0x419f4c, "fmt.*fmt·writePadding", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
     """
     def test_sa_TODO16(self):
         slice_starts = []

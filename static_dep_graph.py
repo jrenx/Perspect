@@ -42,11 +42,11 @@ class BasicBlock:
         data["ends_in_branch"] = self.ends_in_branch
         data["is_entry"] = self.is_entry
         data["is_new_entry"] = self.is_new_entry
-        if self.immed_dom:
+        if self.immed_dom is not None:
             data["immed_dom"] = self.immed_dom.id
-        if self.immed_pdom:
+        if self.immed_pdom is not None:
             data["immed_pdom"] = self.immed_pdom.id
-        if self.pdoms:
+        if self.pdoms is not None:
             data["pdoms"] = []
             for n in self.pdoms:
                 data["pdoms"].append(n.id)
@@ -54,18 +54,23 @@ class BasicBlock:
         data["backedge_targets"] = []
         for n in self.backedge_targets:
             data["backedge_targets"].append(n.id)
+        data["backedge_targets"].sort()
 
         data["backedge_sources"] = []
         for n in self.backedge_sources:
             data["backedge_sources"].append(n.id)
+        data["backedge_sources"].sort()
 
         data["predes"] = []
         for n in self.predes:
             data["predes"].append(n.id)
+        data["predes"].sort()
 
         data["succes"] = []
         for n in self.succes:
             data["succes"].append(n.id)
+        data["succes"].sort()
+
         return data
 
     @staticmethod
@@ -167,10 +172,12 @@ class CFG:
         data["target_bbs"] = []
         for n in self.target_bbs:
             data["target_bbs"].append(n.id)
+        data["target_bbs"].sort()
 
         data["entry_bbs"] = []
         for n in self.entry_bbs:
             data["entry_bbs"].append(n.id)
+        data["entry_bbs"].sort()
 
         data["postorder_list"] = []
         for n in self.postorder_list:
@@ -829,9 +836,12 @@ class StaticNode:
         data["cf_predes"] = []
         for n in self.cf_predes:
             data["cf_predes"].append(n.id)
+        data["cf_predes"].sort()
+
         data["cf_succes"] = []
         for n in self.cf_succes:
             data["cf_succes"].append(n.id)
+        data["cf_succes"].sort()
 
         data["is_df"] = self.is_df
         data["mem_load"] = self.mem_load if self.mem_load is None or not isinstance(self.mem_load, MemoryAccess) else \
@@ -845,12 +855,17 @@ class StaticNode:
         data["df_predes"] = []
         for n in self.df_predes:
             data["df_predes"].append(n.id)
+        data["df_predes"].sort()
+
         data["df_succes"] = []
         for n in self.df_succes:
             data["df_succes"].append(n.id)
+        data["df_succes"].sort()
 
         data["node_backedge_targets"] = list(self.backedge_targets)
+        data["node_backedge_targets"].sort()
         data["node_backedge_sources"] = list(self.backedge_sources)
+        data["node_backedge_sources"].sort()
         """
         data["backedges"] = []
         for n in self.backedges:
@@ -1070,14 +1085,17 @@ class StaticDepGraph:
         data["nodes_in_cf_slice"] = []
         for n in self.nodes_in_cf_slice:
             data["nodes_in_cf_slice"].append(n.id)
+        data["nodes_in_cf_slice"].sort()
 
         data["nodes_in_df_slice"] = []
         for n in self.nodes_in_df_slice:
             data["nodes_in_df_slice"].append(n.id)
+        data["nodes_in_df_slice"].sort()
 
         data["none_df_starting_nodes"] = []
         for n in self.none_df_starting_nodes:
             data["none_df_starting_nodes"].append(n.id)
+        data["none_df_starting_nodes"].sort()
         return data
 
     @staticmethod
@@ -1517,8 +1535,13 @@ class StaticDepGraph:
             if len(defs_in_same_func) > 0 or len(intermediate_defs_in_same_func) > 0:
                 new_bbs = [graph.cfg.getBB(defn.insn) for defn in defs_in_same_func]
                 target_bbs = target_bbs.union(new_bbs)
+                #new_bbs = [graph.cfg.getBB(defn.insn) for defn in intermediate_defs_in_same_func]
+                #target_bbs = target_bbs.union(new_bbs)
                 graph.build_control_flow_dependencies(target_bbs)
                 new_local_defs_found = True
+            else: #TODO remove
+                for d in df_nodes: #TODO remove
+                    d.explained = True #TODO remove
             for df_node in df_nodes:
                 if df_node.is_cf is False:
                     if df_node.bb is not None:
@@ -1597,7 +1620,8 @@ class StaticDepGraph:
             StaticNode.group_id += 1
         return nodes
 
-    def build_single_local_data_flow_dependency(self, load, succe, func, group, group_size, defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func):
+    def build_single_local_data_flow_dependency(self, load, succe, func, group, group_size,
+                                                defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func):
         prede_insn = load[0]
         prede_reg = load[1]
         shift = load[2]
@@ -1656,7 +1680,7 @@ class StaticDepGraph:
                     succe.mem_store.read_same_as_write = True
                     succe.mem_store.add_bit_operationses(bit_ops)
             elif type == 'regread':
-                prede.reg_load = prede_reg
+                prede.reg_load = prede_reg.lower()
             elif type == 'empty':
                 return prede, group_size# pass
             else:
@@ -1668,8 +1692,13 @@ class StaticDepGraph:
                 succe.df_predes.append(prede)
             if succe not in prede.df_succes:
                 prede.df_succes.append(succe)
+            # This could only happen when the analysis goes into another function
+            # and is instructed to stop even if it could make further progress
+            # therefore could stop at a memory load (stack load) explanable by static analysis
+            if succe.mem_load is not None:
+                succe.mem_load = None
         if prede.explained is False:
-            if load[11] is True:
+            if load[11] is True: # and prede != succe:
                 intermediate_defs_in_same_func.add(prede)
                 prede.is_intermediate_node = True
             elif curr_func != func:
@@ -1701,6 +1730,8 @@ class StaticDepGraph:
         addr_to_node = {}
         for node in self.nodes_in_cf_slice:
             #assert node.is_cf is True, str(node) TODO
+            if node in df_nodes: #TODO, sometimes it could be a df node too...
+                continue
             if node.explained is True:
                 continue
             node.explained = True
@@ -1722,6 +1753,8 @@ class StaticDepGraph:
             assert insn not in addr_to_node
             addr_to_node[insn] = node
         for df_node in df_nodes: #TODO, registers?
+            if df_node.explained is True:
+                continue
             #TODO, change this later, the RR analysis should really return the src reg being loaded
             if df_node.mem_load is not None:
                 regLoad = ""
@@ -1825,7 +1858,7 @@ class StaticDepGraph:
                 prede = self.make_or_get_df_node(prede_insn, None, curr_func)
                 if prede.explained is False:
                     prede.mem_store = MemoryAccess(prede_reg, shift, off, off_reg, node.mem_load.is_bit_var)
-                    prede.reg_load = src_reg  # TODO put actual register name here
+                    prede.reg_load = src_reg.lower()  # TODO put actual register name here
                     if curr_func != func:
                         defs_in_diff_func.add(prede)
                     else:
@@ -1976,6 +2009,8 @@ class StaticDepGraph:
         #TODO, technically, all slice nodes should be in id_to_node ...
         all_nodes = set()
         all_nodes = all_nodes.union(self.id_to_node.values())
+        print("Removing extra nodes for " + self.func + " " +
+              str([n.id for n in all_nodes]))
         #all_nodes = all_nodes.union(self.nodes_in_df_slice)
         #all_nodes = all_nodes.union(self.nodes_in_cf_slice)
         for node in all_nodes:
@@ -1986,15 +2021,18 @@ class StaticDepGraph:
             worklist.append(node)
             while len(worklist) > 0:
                 curr = worklist.popleft()
+                if curr.function not in StaticDepGraph.func_to_graph:
+                    continue
+                graph = StaticDepGraph.func_to_graph[curr.function]
                 print(curr)
                 if len(curr.cf_succes) == 0 and len(curr.df_succes) == 0:
                     if curr.insn in targets:
                         continue
-                    if curr in self.nodes_in_cf_slice:
-                        self.nodes_in_cf_slice.remove(curr)
+                    if curr in graph.nodes_in_cf_slice:
+                        graph.nodes_in_cf_slice.remove(curr)
                         curr.print_node("Removing node from cf slice because it has no successors: ")
-                    if curr in self.nodes_in_df_slice:
-                        self.nodes_in_df_slice.remove(curr)
+                    if curr in graph.nodes_in_df_slice:
+                        graph.nodes_in_df_slice.remove(curr)
                         curr.print_node("Removing node from df slice because it has no successors: ")
                     for p in node.cf_predes:
                         if node in p.cf_succes:
