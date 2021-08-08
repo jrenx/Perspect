@@ -4,6 +4,7 @@ import shutil
 import multiprocessing as mp
 import threading
 import json
+import time
 
 import static_dep_graph
 
@@ -12,6 +13,8 @@ num_processor = 16
 prog = '909_ziptest_exe9'
 if len(sys.argv) > 1:
     prog = sys.argv[1]
+
+print("Setting up parallel environment")
 
 for i in range(num_processor):
     process_dir = os.path.join(curr_dir, 'run_{}'.format(i))
@@ -66,9 +69,14 @@ def send_task(pipe):
     while pipe.recv() != "Shutdown":
         pipe.send("Shutdown")
 
-for i in range(1000):
+print("Starting execution")
+
+for i in range(5):
+    print("In iteration {}".format(i))
+    start_time = time.time()
     os.system('python3 static_dep_graph.py >> out')
     lines = open('rr_inputs', 'r').readlines()
+    print("Static dep graph produces {} inputs".format(len(lines)))
 
     processes = []
     threads = []
@@ -86,3 +94,6 @@ for i in range(1000):
         processes[i].join()
         threads[i].join()
     json.dump(rr_result_cache, open(os.path.join(curr_dir, 'cache', 'rr_results_{}.json'.format(prog))))
+
+    duration = time.time() - time
+    print("Running iteration {} uses {} seconds".format(i, duration))
