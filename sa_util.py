@@ -132,14 +132,19 @@ def parseLoadsOrStores(json_exprs):
         shift = int(shift, 16)
         off = int(off, 16)
         dst = None
+        intermediate_def = False
         if 'dst' in json_expr:
             dst = json_expr['dst']
+            if "::" in dst:
+                dst = dst.split("::")[1]
+        if 'intermediate_def' in json_expr:
+            intermediate_def = True
         #both shift and offset are in hex form
         if DEBUG: print("Parsing result reg: " + expr_reg + \
                         " shift " + str(shift) + " off " + str(off) + " insn addr: " + str(insn_addr))
         #TODO, in the future use a map instead of a list...
         data_points.append([insn_addr, reg, shift, off, off_reg, 
-                            read_same_as_write, is_bit_var, type, func, dst, bit_operationses])
+                            read_same_as_write, is_bit_var, type, func, dst, bit_operationses, intermediate_def])
     return data_points
 
 #FIXME: call instructions insns and not addrs
@@ -376,7 +381,10 @@ def static_backslices(slice_starts, prog, sa_result_cache):
     #    with open(sa_result_file, 'w') as cache_file:
     #        json.dump(sa_result_cache, cache_file)
 
-    if DEBUG_CTYPE: print( "[main] returned" + str(data_points_per_reg))
+    for input in data_points_per_reg:
+        if DEBUG_CTYPE: print("[main] input " + str(input[0:2]))
+        for result in input[2]:
+            if DEBUG_CTYPE: print("[main] returned " + str(result))
     return data_points_per_reg
 
 def static_backslice(reg, insn, func, prog):

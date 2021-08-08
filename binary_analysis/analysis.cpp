@@ -918,7 +918,7 @@ void backwardSlices(char *addrToRegNames, char *progName) {
       regName = (char *) getLoadRegName(insn).c_str();
     }
 
-    backwardSliceHelper(stcs, co, json_reads, visited, progName, funcName, addr, regName, isKnownBitVar);
+    backwardSliceHelper(stcs, co, json_reads, visited, progName, funcName, addr, regName, false, isKnownBitVar);
     cJSON_AddItemToObject(json_slice, "reads", json_reads);
     cJSON_AddItemToArray(json_slices, json_slice);
     if (DEBUG) cout << endl;
@@ -954,7 +954,7 @@ void backwardSlice(char *progName, char *funcName, long unsigned int addr, char 
   cJSON *json_reads = cJSON_CreateArray();
   boost::unordered_set<Address> visited;
 
-  backwardSliceHelper(stcs, co, json_reads, visited, progName, funcName, addr, regName);
+  backwardSliceHelper(stcs, co, json_reads, visited, progName, funcName, addr, regName, false);
 
   char *rendered = cJSON_Print(json_reads);
   cJSON_Delete(json_reads);
