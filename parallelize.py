@@ -24,33 +24,6 @@ def run_task(id, pipe):
     pipe.send("Shutdown")
 
 
-def send_task(pipe):
-    while True:
-        try:
-            line = lines.pop()
-        except IndexError:
-            break
-        if line.startswith(prog):
-            line = line[len(prog):]
-        segs = line.split('_')
-        a0 = None if segs[0].strip() == "None" else segs[0].strip()
-        a1 = None if segs[1].strip() == "None" else segs[1].strip() 
-        a2 = None if segs[2].strip() == "None" else segs[2].strip() 
-        a3 = None if segs[3].strip() == "None" else segs[3].strip() 
-        a4 = None if segs[4].strip() == "None" else segs[4].strip() 
-        a5 = None if segs[5].strip() == "None" else segs[5].strip() 
-        a6 = None if segs[6].strip() == "None" else segs[6].strip() 
-        a7 = None if segs[7].strip() == "None" else segs[7].strip() 
-        pipe.send((prog, a1, a2, a3, a4, a5, a6, a7))
-        result_cache = pipe.recv()
-        for key, value in result_cache.items():
-            rr_result_cache[key] = value
-        
-    
-    pipe.send("Shutdown")
-    while pipe.recv() != "Shutdown":
-        pipe.send("Shutdown")
-
 
 
 def main():
@@ -80,6 +53,34 @@ def main():
         os.system('python3 static_dep_graph.py >> out')
         lines = open('rr_inputs', 'r').readlines()
         print("Static dep graph produces {} inputs".format(len(lines)))
+
+
+        def send_task(pipe):
+            while True:
+                try:
+                    line = lines.pop()
+                except IndexError:
+                    break
+                if line.startswith(prog):
+                    line = line[len(prog):]
+                segs = line.split('_')
+                a0 = None if segs[0].strip() == "None" else segs[0].strip()
+                a1 = None if segs[1].strip() == "None" else segs[1].strip() 
+                a2 = None if segs[2].strip() == "None" else segs[2].strip() 
+                a3 = None if segs[3].strip() == "None" else segs[3].strip() 
+                a4 = None if segs[4].strip() == "None" else segs[4].strip() 
+                a5 = None if segs[5].strip() == "None" else segs[5].strip() 
+                a6 = None if segs[6].strip() == "None" else segs[6].strip() 
+                a7 = None if segs[7].strip() == "None" else segs[7].strip() 
+                pipe.send((prog, a1, a2, a3, a4, a5, a6, a7))
+                result_cache = pipe.recv()
+                for key, value in result_cache.items():
+                    rr_result_cache[key] = value
+                
+            pipe.send("Shutdown")
+            while pipe.recv() != "Shutdown":
+                pipe.send("Shutdown")
+
 
         processes = []
         threads = []
