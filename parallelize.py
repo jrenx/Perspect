@@ -8,25 +8,7 @@ import time
 
 import static_dep_graph
 
-curr_dir = os.path.dirname(os.path.realpath(__file__))
-num_processor = 16
-prog = '909_ziptest_exe9'
-if len(sys.argv) > 1:
-    prog = sys.argv[1]
 
-print("Setting up parallel environment")
-
-for i in range(num_processor):
-    process_dir = os.path.join(curr_dir, 'run_{}'.format(i))
-    if not os.path.exists(process_dir):
-        os.mkdir(process_dir)
-    rr_dir = os.path.join(process_dir, 'rr')
-    if os.path.exists(rr_dir):
-        shutil.rmtree(rr_dir)
-    shutil.copytree('rr', rr_dir, ignore=shutil.ignore_patterns('.*', '_*'))
-    shutil.copy('rr_util.py', process_dir)
-
-rr_result_cache = {}
 
 def run_task(id, pipe):
     os.chdir('run_{}'.format(id))
@@ -69,31 +51,55 @@ def send_task(pipe):
     while pipe.recv() != "Shutdown":
         pipe.send("Shutdown")
 
-print("Starting execution")
 
-for i in range(5):
-    print("In iteration {}".format(i))
-    start_time = time.time()
-    os.system('python3 static_dep_graph.py >> out')
-    lines = open('rr_inputs', 'r').readlines()
-    print("Static dep graph produces {} inputs".format(len(lines)))
 
-    processes = []
-    threads = []
-    mp.set_start_method('spawn')
+def main():
+    curr_dir = os.path.dirname(os.path.realpath(__file__))
+    num_processor = 16
+    prog = '909_ziptest_exe9'
+    if len(sys.argv) > 1:
+        prog = sys.argv[1]
+
+    print("Setting up parallel environment")
     for i in range(num_processor):
-        parent_conn, child_conn = mp.Pipe(duplex=True)
-        p = mp.Process(target = run_task, args=(i, child_conn))
-        p.start()
-        processes.append(p)
-        t = threading.Thread(target=send_task, args=(parent_conn, ))
-        t.start()
-        threads.append(t)
+        process_dir = os.path.join(curr_dir, 'run_{}'.format(i))
+        if not os.path.exists(process_dir):
+            os.mkdir(process_dir)
+        rr_dir = os.path.join(process_dir, 'rr')
+        if os.path.exists(rr_dir):
+            shutil.rmtree(rr_dir)
+        shutil.copytree('rr', rr_dir, ignore=shutil.ignore_patterns('.*', '_*'))
+        shutil.copy('rr_util.py', process_dir)
 
-    for i in range(num_processor):
-        processes[i].join()
-        threads[i].join()
-    json.dump(rr_result_cache, open(os.path.join(curr_dir, 'cache', 'rr_results_{}.json'.format(prog))))
+    rr_result_cache = {}
 
-    duration = time.time() - time
+    print("Starting execution")
+    for i in range(5):
+        print("In iteration {}".format(i))
+        start_time = time.time()
+        os.system('python3 static_dep_graph.py >> out')
+        lines = open('rr_inputs', 'r').readlines()
+        print("Static dep graph produces {} inputs".format(len(lines)))
+
+        processes = []
+        threads = []
+        mp.set_start_method('spawn')
+        for i in range(num_processor):
+            parent_conn, child_conn = mp.Pipe(duplex=True)
+            p = mp.Process(target = run_task, args=(i, child_conn))
+            p.start()
+            processes.append(p)
+            t = threading.Thread(target=send_task, args=(parent_conn, ))
+            t.start()
+            threads.append(t)
+
+        for i in range(num_processor):
+            processes[i].join()
+            threads[i].join()
+        json.dump(rr_result_cache, open(os.path.join(curr_dir, 'cache', 'rr_results_{}.json'.format(prog))))
+
+        duration = time.time() - time
     print("Running iteration {} uses {} seconds".format(i, duration))
+
+if __name__ == '__main__':
+    main()
