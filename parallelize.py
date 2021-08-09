@@ -48,7 +48,7 @@ def main():
         shutil.copy('rr_util.py', process_dir)
         shutil.copy('sa_util.py', process_dir)
         binary_dir = os.path.join(process_dir, 'binary_analysis')
-        if not os.path.exists(binary_dir):
+        if os.path.exists(binary_dir):
             shutil.rmtree(binary_dir)
         shutil.copytree('binary_analysis', binary_dir, ignore=shutil.ignore_patterns('.*', '_*'))
 
