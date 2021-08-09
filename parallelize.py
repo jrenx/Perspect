@@ -18,10 +18,10 @@ def run_task(id, pipe):
         if obj == "Shutdown":
             break
         (prog, a1, a2, a3, a4, a5, a6, a7) = obj
-        print("Process {} recive task {}".format(id, '_'.join(prog, a1, a2, a3, a4, a5, a6, a7)))
+        print("Process {} recive task {}".format(id, '_'.join([prog, a1, a2, a3, a4, a5, a6, a7])))
         rr_result_cache = {}
         rr_util.rr_backslice2(prog, a1, a2, a3, a4, a5, a6, a6, rr_result_cache)
-        print("Process {} finish task {}".format(id, '_'.join(prog, a1, a2, a3, a4, a5, a6, a7)))
+        print("Process {} finish task {}".format(id, '_'.join([prog, a1, a2, a3, a4, a5, a6, a7])))
         pipe.send(rr_result_cache)
     pipe.send("Shutdown")
 
