@@ -1033,7 +1033,7 @@ class StaticDepGraph:
 
     func_to_callsites = None
 
-    starting_node = None
+    starting_nodes = []
     reverse_postorder_list = []
     # successor always after predecessor
     postorder_list = []
@@ -1157,7 +1157,7 @@ class StaticDepGraph:
         reverse_postorder_list = []
         for n in StaticDepGraph.reverse_postorder_list:
             reverse_postorder_list.append(n.id)
-        out = {"starting_node": StaticDepGraph.starting_node.id,
+        out = {"starting_nodes": [n.id for n in StaticDepGraph.starting_nodes],
                "out_result": out_result, "out_pending": out_pending,
                "graph_postorder_list": postorder_list,
                "graph_reverse_postorder_list": reverse_postorder_list}
@@ -1209,13 +1209,16 @@ class StaticDepGraph:
         for json_node in in_result["graph_reverse_postorder_list"]:
             reverse_postorder_list.append(all_id_to_node[json_node])
 
-        starting_node = all_id_to_node[in_result["starting_node"]]
+        starting_nodes = []
+        if "starting_nodes" in in_result:
+            for n_id in in_result["starting_nodes"]:
+                starting_nodes.append(all_id_to_node[n_id])
 
         StaticDepGraph.func_to_graph = func_to_graph
         StaticDepGraph.pending_nodes = pending_nodes
         StaticDepGraph.postorder_list = postorder_list
         StaticDepGraph.reverse_postorder_list = reverse_postorder_list
-        StaticDepGraph.starting_node = starting_node
+        StaticDepGraph.starting_nodes = starting_nodes
         return
 
     @staticmethod
@@ -1366,6 +1369,8 @@ class StaticDepGraph:
                 insn = event[1]
                 func = event[2]
                 node = StaticDepGraph.make_or_get_cf_node(insn, None, func)
+                if node not in StaticDepGraph.starting_nodes:
+                    StaticDepGraph.starting_nodes.append(node)
                 if reg is not None:
                     node.reg_load = reg
                 worklist.append([insn, func, prog, node])
@@ -2100,6 +2105,7 @@ class StaticDepGraph:
     # a node can be visited if all its predecessors are visited
     @staticmethod
     def build_reverse_postorder_list(): #TODO, save the postorder list too #FIXME: as a potential of stack overflow
+        StaticDepGraph.reverse_postorder_list = []
         visited = set()
         for node in StaticDepGraph.entry_nodes:
             StaticDepGraph.build_reverse_postorder_list_helper(node, visited)
@@ -2135,7 +2141,8 @@ class StaticDepGraph:
     def build_postorder_list(): #TODO, save the postorder list too #FIXME: as a potential of stack overflow
         StaticDepGraph.postorder_list = []
         visited = set()
-        StaticDepGraph.build_postorder_list_helper(StaticDepGraph.starting_node, visited)
+        for node in StaticDepGraph.starting_nodes:
+            StaticDepGraph.build_postorder_list_helper(node, visited)
         print("[static_dep] total number of nodes in the postorder list: "
               + str(len(StaticDepGraph.postorder_list)))
 
@@ -2170,7 +2177,8 @@ class StaticDepGraph:
         visited_df_nodes = set()
         visited_funcs = set()
         worklist = deque()
-        worklist.append(StaticDepGraph.starting_node.function)
+        for node in StaticDepGraph.starting_nodes:
+            worklist.append(node.function)
         while len(worklist) > 0:
             func = worklist.popleft()
             visited_funcs.add(func)
