@@ -1,3 +1,4 @@
+from rr.backtrace_bitmask import shift_bitmask
 import sys
 import os
 import shutil
@@ -46,6 +47,11 @@ def main():
             shutil.rmtree(rr_dir)
         shutil.copytree('rr', rr_dir, ignore=shutil.ignore_patterns('.*', '_*'))
         shutil.copy('rr_util.py', process_dir)
+        shutil.copy('sa_util.py', process_dir)
+        binary_dir = os.path.join(process_dir, 'binary_analysis')
+        if not os.path.exists(binary_dir):
+            shutil.rmtree(binary_dir)
+        shutil.copytree('binary_analysis', binary_dir, ignore=shutil.ignore_patterns('.*', '_*'))
 
     rr_result_cache = {}
 
