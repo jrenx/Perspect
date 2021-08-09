@@ -18,8 +18,10 @@ def run_task(id, pipe):
         if obj == "Shutdown":
             break
         (prog, a1, a2, a3, a4, a5, a6, a7) = pipe.recv()
+        print("Process {} recive task {}".format(id, '_'.join(prog, a1, a2, a3, a4, a5, a6, a7)))
         rr_result_cache = {}
         rr_util.rr_backslice2(prog, a1, a2, a3, a4, a5, a6, a6, rr_result_cache)
+        print("Process {} finish task {}".format(id, '_'.join(prog, a1, a2, a3, a4, a5, a6, a7)))
         pipe.send(rr_result_cache)
     pipe.send("Shutdown")
 
@@ -73,7 +75,9 @@ def main():
                 a6 = None if segs[6].strip() == "None" else segs[6].strip() 
                 a7 = None if segs[7].strip() == "None" else segs[7].strip() 
                 pipe.send((prog, a1, a2, a3, a4, a5, a6, a7))
+                print("Send task {}".format(line))
                 result_cache = pipe.recv()
+                print("Receiving result for task {}".format(line))
                 for key, value in result_cache.items():
                     rr_result_cache[key] = value
                 
