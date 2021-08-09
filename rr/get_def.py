@@ -3,7 +3,8 @@ import sys
 
 from get_breakpoints import *
 from get_watchpoints import *
-#sys.path.append(os.path.abspath('./..'))
+sys.path.append(os.path.abspath('./..'))
+sys.path.append(os.path.abspath('./../..'))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sa_util import *
 
