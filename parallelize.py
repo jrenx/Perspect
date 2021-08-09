@@ -1,4 +1,3 @@
-from rr.backtrace_bitmask import shift_bitmask
 import sys
 import os
 import shutil
