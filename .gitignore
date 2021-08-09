@@ -24,3 +24,4 @@ graph
 preprocess_data
 instruction_reg_log_arg
 binary_dump_*
+.vscode/*
