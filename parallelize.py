@@ -5,6 +5,7 @@ import multiprocessing as mp
 import threading
 import json
 import time
+import importlib
 
 import static_dep_graph
 
@@ -12,7 +13,7 @@ import static_dep_graph
 
 def run_task(id, pipe):
     os.chdir('run_{}'.format(id))
-    import rr_util
+    importlib.reload(rr_util)
     while True:
         obj = pipe.recv()
         if obj == "Shutdown":
