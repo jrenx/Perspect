@@ -1163,7 +1163,7 @@ class DynamicGraph:
                     continue
 
             if insn in bit_insn_to_node:
-                del bit_insn_to_node[bit_insn]
+                del bit_insn_to_node[insn]
 
             #assert (byte_seq[index] == 58)
             #index -= 1
