@@ -11,6 +11,7 @@ import time
 
 def run_task(id, pipe):
     os.chdir('run_{}'.format(id))
+    sys.path.insert(0, os.getcwd())
     import rr_util
     while True:
         obj = pipe.recv()
