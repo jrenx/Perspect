@@ -5,15 +5,13 @@ import multiprocessing as mp
 import threading
 import json
 import time
-import importlib
 
-import static_dep_graph
 
 
 
 def run_task(id, pipe):
     os.chdir('run_{}'.format(id))
-    importlib.reload(rr_util)
+    import rr_util
     while True:
         obj = pipe.recv()
         if obj == "Shutdown":
@@ -31,6 +29,7 @@ def run_task(id, pipe):
 
 
 def main():
+    import static_dep_graph
     curr_dir = os.path.dirname(os.path.realpath(__file__))
     num_processor = 16
     prog = '909_ziptest_exe9'
