@@ -7,10 +7,14 @@ import datetime
 
 rr_dir = os.path.dirname(os.path.realpath(__file__))
 DEBUG = True
-def run_watchpoint(breakpoints, watchpoints):
-    config = {'breakpoints': breakpoints,
-              'watchpoints': watchpoints,
-              'rwatchpoints': watchpoints,}
+def run_watchpoint(watchpoints, breakpoints=[], regs=[], off_regs=[], offsets=[], shifts=[]):
+    config = {'watchpoints': watchpoints,
+              'rwatchpoints': watchpoints,
+              'breakpoints': breakpoints,
+              'regs': regs,
+              'off_regs': off_regs,
+              'offsets': offsets,
+              'shifts': shifts}
     json.dump(config, open(os.path.join(rr_dir, 'config.json'), 'w'))
 
     success = True
@@ -25,13 +29,29 @@ def run_watchpoint(breakpoints, watchpoints):
     print("Running watchpoints took: " + str(b - a))
     return success
 
-def parse_watchpoint():
+def parse_watchpoint(reads=None, addr_to_def_to_ignore=None):
     """
     :return: list of pair (watchpoint, addr, value). value is the location where watchpoint is triggered, None if addr is from
     breakpoints.
     """
-    return json.load(open(os.path.join(rr_dir, 'watchpoints.log'), 'r'))
-
+    trace = json.load(open(os.path.join(rr_dir, 'watchpoints.log'), 'r'))
+    if reads is None:
+        return trace
+    else:
+        ret = []
+        addr_to_watchpoint = {}
+        for point in trace:
+            addr = point[0]
+            insn = point[1]
+            if insn in reads:
+                if addr in addr_to_watchpoint:
+                    ret.append(addr_to_watchpoint[addr])
+                    del addr_to_watchpoint[addr]
+            else:
+                if addr in addr_to_def_to_ignore:
+                    continue
+                addr_to_watchpoint[addr] = point
+        return ret, len(trace)
 
 if __name__ == '__main__':
     #breakpoints = ['*0x409c84']
