@@ -12,6 +12,7 @@ import time
 def run_task(id, pipe):
     os.chdir('run_{}'.format(id))
     sys.path.insert(0, os.getcwd())
+    sys.path.insert(2, os.path.join(os.getcwd(), 'rr'))
     import rr_util
     while True:
         obj = pipe.recv()
@@ -30,7 +31,6 @@ def run_task(id, pipe):
 
 
 def main():
-    import static_dep_graph
     curr_dir = os.path.dirname(os.path.realpath(__file__))
     num_processor = 16
     prog = '909_ziptest_exe9'
