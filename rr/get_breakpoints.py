@@ -79,7 +79,7 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
         success = False
     for child_id in children:
         print("Trying to kill child " + str(child_id), flush=True)
-        #os.system("sudo kill -9 " + str(child_id))
+        os.system("sudo kill -9 " + str(child_id))
     b = datetime.datetime.now()
     print("Running breakpoints took: " + str(b - a))
     return success
