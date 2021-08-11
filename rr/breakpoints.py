@@ -42,7 +42,7 @@ def br_handler(event):
             read_breakpoint(br_num, frame)
         else:
             gdb.events.stop.disconnect(br_handler)
-            loop_pc = int(reg_points[br_num].strip('*'))
+            loop_pc = int(reg_points[br_num].strip('*'), 16)
             gdb.execute('si')
             pc = int(frame.pc())
             while pc == loop_pc:
