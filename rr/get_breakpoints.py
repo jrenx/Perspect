@@ -92,8 +92,14 @@ def parse_breakpoint(breakpoints, reg_points, deref):
     :return: list of pair (breakpoint_addr, reg_vale, deref_value). reg_value and deref_value is None
     if info not available.
     """
-    return json.load(open(os.path.join(rr_dir, 'breakpoints.log'), 'r'))
+    trace = json.load(open(os.path.join(rr_dir, 'breakpoints.log'), 'r'))
 
+    if DEBUG is True:
+        timestamp = str(time.time())
+        print("[rr] renaming to " + str(os.path.join(rr_dir, 'breakpoints.log' + '.' + timestamp)))
+        os.rename(os.path.join(rr_dir, 'breakpoints.log'), os.path.join(rr_dir, 'breakpoints.log' + '.' + timestamp))
+
+    return trace
 
 if __name__ == '__main__':
     #breakpoints = ['*0x40937d', '*0x409394']

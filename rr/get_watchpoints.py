@@ -44,6 +44,7 @@ def run_watchpoint(watchpoints, breakpoints=[], regs=[], off_regs=[], offsets=[]
               'off_regs': off_regs,
               'offsets': offsets,
               'shifts': shifts}
+    print("Passing in config to watchpoint pass: " + str(config))
     json.dump(config, open(os.path.join(rr_dir, 'config.json'), 'w'))
 
     success = True
@@ -69,7 +70,7 @@ def parse_watchpoint(reads=None, addr_to_def_to_ignore=None):
     """
     trace = json.load(open(os.path.join(rr_dir, 'watchpoints.log'), 'r'))
     if reads is None:
-        return trace, len(trace)
+        ret = trace
     else:
         ret = []
         addr_to_watchpoint = {}
@@ -84,7 +85,13 @@ def parse_watchpoint(reads=None, addr_to_def_to_ignore=None):
                 if addr in addr_to_def_to_ignore:
                     continue
                 addr_to_watchpoint[addr] = point
-        return ret, len(trace)
+
+    if DEBUG is True:
+        timestamp = str(time.time())
+        print("[rr] renaming to " + str(os.path.join(rr_dir, 'watchpoints.log' + '.' + timestamp)))
+        os.rename(os.path.join(rr_dir, 'watchpoints.log'), os.path.join(rr_dir, 'watchpoints.log' + '.' + timestamp))
+
+    return ret, len(trace)
 
 if __name__ == '__main__':
     #breakpoints = ['*0x409c84']

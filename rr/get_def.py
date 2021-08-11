@@ -6,10 +6,11 @@ from get_watchpoints import *
 #sys.path.append(os.path.abspath('./..'))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sa_util import *
-MAX_WP_COUNT = 4
-LARGE_READ_POINT_COUNT = 1000
+MAX_WP_COUNT = 2
+SMALL_READ_POINT_COUNT = 2000
+LARGE_READ_POINT_COUNT = 10000
 SMALL_ADDR_COUNT = 250
-SMALL_IRRELEVANT_WATCH_POINT_RATIO = 50
+SMALL_IRRELEVANT_WATCH_POINT_RATIO = 10
 
 def count_point_in_bp_trace(target, bp_trace):
     count = 0
@@ -383,16 +384,20 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     #watchpoint_not_taken_indices = range(4, 8)
     addr_to_def_to_ignore = {}
     pos_pass = True
-    print("Total iters: " + str(iter))
+    do_breakpoints = read_point_count < SMALL_READ_POINT_COUNT \
+                     or (read_point_count < LARGE_READ_POINT_COUNT and reg.lower() == 'rsp')
+    print("[rr] Do breakpoints? " + str(do_breakpoints))
+    print("[rr] Total iters: " + str(iter))
     for i in range(iter):
         # Second pass
         print("[rr] Running second step for {} times".format(i + 1), flush=True)
-        if read_point_count > LARGE_READ_POINT_COUNT:
+        if do_breakpoints is False:
             run_watchpoint(watchpoints)
             watchpoint_trace, watchpoint_count = parse_watchpoint()
         else:
             run_watchpoint(watchpoints, [read], [reg], [offset_reg] if offset_reg is not None else [''], [int(offset, 16)], [int(shift, 16)])
             watchpoint_trace, watchpoint_count = parse_watchpoint(reads=set([read]), addr_to_def_to_ignore=addr_to_def_to_ignore)
+            watchpoint_count = watchpoint_count - read_point_count
         print("[rr] Parsed " + str(len(watchpoint_trace)) + " watchpoint hits")
         #("[tmp] " + str(watchpoint_trace))
         print("[rr] Second step finished")
@@ -412,7 +417,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
         new_unique_writes = []
         for line in watchpoint_trace:
             addr = line[0]
-            insn = int(line[1].strip('*'), 16)
+            insn = int(line[1], 16)
             func = line[2]
             if insn in all_unique_writes:
                 continue
@@ -464,10 +469,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                     pending_addrs.add(addr)
                     addr_to_def_to_ignore[addr] = hex(insn)
 
-            irrelevant_watch_point_count = watchpoint_count - def_point_count - read_point_count
-
-            irrelevant_watch_point_ratio = irrelevant_watch_point_count if def_point_count == 0 else irrelevant_watch_point_count/def_point_count
-            print("[rr] irrelevant watchpoint count: " + str(irrelevant_watch_point_count) + " def point count: " + str(def_point_count))
+            print("[rr] watchpoint count: " + str(watchpoint_count) + " def point count: " + str(def_point_count))
             print("[rr] all insns found " + str(reg_points))
             print("[rr] all registers found " + str(regs))
             print()
@@ -480,9 +482,6 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
             #for instruction in negative:
             #    regs.append(get_written_reg(instruction))
             #    reg_points.append(instruction)
-            do_breakpoints = True
-            if read_point_count > LARGE_READ_POINT_COUNT: do_breakpoints = False
-            if irrelevant_watch_point_ratio < SMALL_IRRELEVANT_WATCH_POINT_RATIO: do_breakpoints = False
             print("[rr] do breakpoint? " + str(do_breakpoints))
             if do_breakpoints is True:
                 print("[rr] Running breakpoints for third step")
@@ -524,6 +523,10 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                 explained_addrs = explained_addrs.union(current_explained_addrs)
                 pending_addrs = pending_addrs.difference(explained_addrs)
                 print("[rr] Addresses that might have undergone unknown writes: " + str(len(pending_addrs)))
+            else:
+                watchpoint_to_def_ratio = watchpoint_count if def_point_count == 0 else watchpoint_count/def_point_count
+                if (watchpoint_count > read_point_count) and (watchpoint_to_def_ratio > SMALL_IRRELEVANT_WATCH_POINT_RATIO):
+                    do_breakpoints = True
 
         addrs = set()
         for a in pending_addrs:
