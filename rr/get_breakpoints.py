@@ -77,6 +77,17 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
         rr_process.communicate(('source' + os.path.join(rr_dir, 'breakpoints.py')).encode())
     except subprocess.TimeoutExpired:
         success = False
+
+    # RR process may not produce the output file immediately, wait a max of 10s for it
+    trace_file = os.path.join(rr_dir, 'breakpoints.log')
+    i = 0
+    while os.path.exists(trace_file) is False:
+        time.sleep(1)
+        i += 1
+        if i > 10: break
+
+    # Killing "rr_process" only kills the shell process that spawned RR, and not any of the RR processes
+    # kill them separately here
     for child_id in children:
         print("Trying to kill child " + str(child_id), flush=True)
         os.system("sudo kill -9 " + str(child_id))

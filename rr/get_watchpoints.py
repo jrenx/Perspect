@@ -58,6 +58,17 @@ def run_watchpoint(watchpoints, breakpoints=[], regs=[], off_regs=[], offsets=[]
     except subprocess.TimeoutExpired:
         rr_process.kill()
         success = False
+
+    # RR process may not produce the output file immediately, wait a max of 10s for it
+    trace_file = os.path.join(rr_dir, 'watchpoints.log')
+    i = 0
+    while os.path.exists(trace_file) is False:
+        time.sleep(1)
+        i += 1
+        if i > 10: break
+
+    # Killing "rr_process" only kills the shell process that spawned RR, and not any of the RR processes
+    # kill them separately here
     for child_id in children:
         print("Trying to kill child " + str(child_id), flush=True)
         os.system("sudo kill -9 " + str(child_id))
