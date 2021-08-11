@@ -412,7 +412,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
         new_unique_writes = []
         for line in watchpoint_trace:
             addr = line[0]
-            insn = int(line[1], 16)
+            insn = int(line[1].strip('*'), 16)
             func = line[2]
             if insn in all_unique_writes:
                 continue
