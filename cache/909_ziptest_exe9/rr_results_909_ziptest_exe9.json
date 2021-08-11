@@ -38229,5 +38229,3164 @@
             "runtime.memmove",
             ""
         ]
-    ]
+    ],
+    "909_ziptest_exe9_None_None_*0x42e329_rsp_0x0_0x54_None": [
+        [
+            [
+                "RSP",
+                0,
+                36,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4249722,
+            "runtime.stoptheworld",
+            "eax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                56,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4234964,
+            "cachestats",
+            "rcx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                32,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4234003,
+            "mark",
+            "rcx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                200,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4232094,
+            "scanblock",
+            "rax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                12,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4270851,
+            "futexlock",
+            "ecx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4233673,
+            "markfin",
+            "rcx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                12,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4271094,
+            "futexunlock",
+            "ecx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                128,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4234164,
+            "sweep",
+            "rsi"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                24,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4234861,
+            "stealcache",
+            "rcx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                16,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4227315,
+            "ReleaseN",
+            "rsi"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                40,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4227920,
+            "runtime.MCentral_AllocList",
+            "rax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4271218,
+            "runtime.lock",
+            "rax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                64,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4226890,
+            "runtime.MCache_Alloc",
+            "rax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                44,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4220908,
+            "runtime.assertE2T2",
+            "eax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                16,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4219648,
+            "copyout",
+            "rbx"
+        ],
+        [
+            [
+                "RAX",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4228001,
+            "runtime.MCentral_AllocList",
+            "rcx"
+        ],
+        [
+            [
+                "RBP",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4347078,
+            "io.ReadAtLeast",
+            "r8"
+        ],
+        [
+            [
+                "RBX",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4287114,
+            "bytes.*Buffer\u00b7Read",
+            "rbp"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                112,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4374084,
+            "encoding/binary.Read",
+            "rbx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                16,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4223487,
+            "runtime.mallocgc",
+            "rax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                36,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4271043,
+            "futexunlock",
+            "edx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                32,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4228932,
+            "MCentral_Grow",
+            "rax"
+        ],
+        [
+            [
+                "RBX",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4379202,
+            "encoding/binary.intDestSize",
+            "rcx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                16,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4220995,
+            "runtime.assertE2T2",
+            "rdx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                12,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4225911,
+            "runtime.mal",
+            "ecx"
+        ],
+        [
+            [
+                "RBX",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4347247,
+            "io.ReadFull",
+            "rbp"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4346970,
+            "io.ReadAtLeast",
+            "rbp"
+        ],
+        [
+            [
+                "RBX",
+                0,
+                12,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4350228,
+            "bufio.*Reader\u00b7fill",
+            "eax"
+        ],
+        [
+            [
+                "RBX",
+                0,
+                12,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4348447,
+            "io.*SectionReader\u00b7Read",
+            "ecx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                84,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4383856,
+            "os.*File\u00b7ReadAt",
+            "ebp"
+        ],
+        [
+            [
+                "RBP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4347040,
+            "io.ReadAtLeast",
+            "r8"
+        ],
+        [
+            [
+                "RBX",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4379669,
+            "encoding/binary.intDestSize",
+            "rcx"
+        ],
+        [
+            [
+                "RBX",
+                0,
+                12,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4391297,
+            "os.*File\u00b7pread",
+            "ebp"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                44,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4383563,
+            "os.*File\u00b7ReadAt",
+            "eax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4227814,
+            "runtime.MCentral_AllocList",
+            "rax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4228783,
+            "MCentral_Grow",
+            "rax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4271078,
+            "futexunlock",
+            "rcx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4229018,
+            "MCentral_Grow",
+            "rax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4229093,
+            "MCentral_Grow",
+            "rax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                16,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4263013,
+            "runtime.makeslice",
+            "rax"
+        ],
+        [
+            [
+                "RBP",
+                0,
+                12,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4263265,
+            "makeslice1",
+            "edi"
+        ],
+        [
+            [
+                "RDI",
+                0,
+                16,
+                "ES",
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4350121,
+            "bufio.*Reader\u00b7fill",
+            ""
+        ],
+        [
+            [
+                "RBX",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4350222,
+            "bufio.*Reader\u00b7fill",
+            "rdx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4552810,
+            "syscall.Syscall6",
+            ""
+        ],
+        [
+            [
+                "RSP",
+                0,
+                80,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4552902,
+            "syscall.Syscall6",
+            ""
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4260037,
+            "cansemacquire",
+            "rcx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4233438,
+            "scanstack",
+            "rax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4234731,
+            "sweep",
+            "r8"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                72,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4241252,
+            "MHeap_FreeLocked",
+            "r8"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                24,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4550873,
+            "syscall.Pread",
+            "rbx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4251182,
+            "runtime.entersyscall",
+            "rax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4251610,
+            "runtime.entersyscall",
+            "rcx"
+        ],
+        [
+            [
+                "RBX",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4391283,
+            "os.*File\u00b7pread",
+            "rbp"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                12,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4251618,
+            "runtime.entersyscall",
+            "ebx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                12,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4251843,
+            "runtime.exitsyscall",
+            "ebx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                40,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4228120,
+            "MCentral_Alloc",
+            "rdx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                40,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4242195,
+            "stkbucket",
+            "rcx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                56,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4239147,
+            "MHeap_AllocLocked",
+            "rcx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4271309,
+            "runtime.unlock",
+            "rax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                104,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4383415,
+            "os.*File\u00b7ReadAt",
+            ""
+        ],
+        [
+            [
+                "RBX",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4383519,
+            "os.*File\u00b7ReadAt",
+            "rbp"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4218864,
+            "itab",
+            "rcx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                112,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4219336,
+            "itab",
+            "rbx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                28,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4229614,
+            "runtime.SysMap",
+            ""
+        ],
+        [
+            [
+                "RSP",
+                0,
+                40,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4242314,
+            "stkbucket",
+            "rdx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4234453,
+            "sweep",
+            "rdi"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4234624,
+            "sweep",
+            "rax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4234585,
+            "sweep",
+            "rax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                56,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4241305,
+            "MHeap_FreeLocked",
+            "rdi"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                64,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4348431,
+            "io.*SectionReader\u00b7Read",
+            "rbp"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                84,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4391327,
+            "os.*File\u00b7pread",
+            "eax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                56,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4241126,
+            "MHeap_FreeLocked",
+            "rdi"
+        ],
+        [
+            [
+                "RBX",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4350103,
+            "bufio.*Reader\u00b7fill",
+            "rsi"
+        ],
+        [
+            [
+                "RBX",
+                0,
+                12,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4383533,
+            "os.*File\u00b7ReadAt",
+            "ebp"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4550841,
+            "syscall.Pread",
+            ""
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4351576,
+            "bufio.*Reader\u00b7ReadByte",
+            "rax"
+        ],
+        [
+            [
+                "RDI",
+                0,
+                16,
+                "ES",
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4350119,
+            "bufio.*Reader\u00b7fill",
+            ""
+        ],
+        [
+            [
+                "RBX",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4348441,
+            "io.*SectionReader\u00b7Read",
+            "rsi"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                124,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4550925,
+            "syscall.Pread",
+            "eax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4383505,
+            "os.*File\u00b7ReadAt",
+            "rbx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                48,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4550897,
+            "syscall.Pread",
+            ""
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4228060,
+            "MCentral_Alloc",
+            "rcx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4228125,
+            "MCentral_Alloc",
+            "rdx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4228143,
+            "MCentral_Alloc",
+            "rax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                84,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4223474,
+            "runtime.mallocgc",
+            "edx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                16,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4226949,
+            "runtime.MCache_Alloc",
+            "rcx"
+        ],
+        [
+            [
+                "RBX",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4315420,
+            "fmt.*pp\u00b7printField",
+            "rax"
+        ],
+        [
+            [
+                "RBX",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4324338,
+            "fmt.*pp\u00b7printField",
+            "rdx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4241034,
+            "MHeap_FreeLocked",
+            "rbx"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x408301_rsp_0x0_0x40_None": [
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4226926,
+            "runtime.MCache_Alloc",
+            "rcx"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x408314_rsp_0x0_0x40_None": [
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4226926,
+            "runtime.MCache_Alloc",
+            "rcx"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x408343_rsp_0x0_0x40_None": [
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4226926,
+            "runtime.MCache_Alloc",
+            "rcx"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x415b56_rsp_0x0_0x70_None": [],
+    "909_ziptest_exe9_None_None_*0x430415_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x430442_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x43046f_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x430471_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x42fe0c_rsi_0x0_0x0_": [
+        [
+            [
+                "RBX",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4389244,
+            "os.NewFile",
+            "rbp"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x42fe0e_rsi_0x0_0x0_": [
+        [
+            [
+                "RBX",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4389251,
+            "os.NewFile",
+            "ebp"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x41151c_rsp_0x0_0x50_None": [
+        [
+            [
+                "RSP",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4268216,
+            "dosrcline",
+            "rax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4268431,
+            "dosrcline",
+            "rax"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x45658a_rsp_0x0_0x48_None": [
+        [
+            [
+                "RBP",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4548062,
+            "syscall.StringBytePtr",
+            "r8d"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x456582_rsp_0x0_0x40_None": [
+        [
+            [
+                "RBP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4548053,
+            "syscall.StringBytePtr",
+            "r8"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x413e03_rsp_0x0_0x88_None": [
+        [
+            [
+                "RDI",
+                0,
+                16,
+                "ES",
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4275286,
+            "archive/zip.OpenReader",
+            ""
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x40759e_rsp_0x0_0x60_None": [
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4211125,
+            "hash_grow",
+            "rax"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4226325,
+            "runtime.stackfree",
+            "rcx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4253785,
+            "runtime.deferreturn",
+            "rdx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4254740,
+            "recovery",
+            "rdx"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x407607_rsp_0x0_0x60_None": [],
+    "909_ziptest_exe9_None_None_*0x40765a_rsp_0x0_0x60_None": [
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4225706,
+            "runtime.mallocinit",
+            "rax"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x415531_rsp_0x0_0xc8_None": [
+        [
+            [
+                "RSP",
+                0,
+                184,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4281586,
+            "archive/zip.readDirectoryEnd",
+            "ebp"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x41536d_rsp_0x0_0x18_None": [],
+    "909_ziptest_exe9_None_None_*0x4154be_rsp_0x0_0x128_None": [
+        [
+            [
+                "RSP",
+                0,
+                16,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4275513,
+            "archive/zip.*Reader\u00b7init",
+            "rbx"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x425766_rsp_0x0_0x18_None": [],
+    "909_ziptest_exe9_*0x40467a_*0x4046df_*0x404741_rsp_0x0_0xa8_None": [
+        [
+            [
+                "RSP",
+                0,
+                168,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4212271,
+            "hash_insert_internal",
+            "r9"
+        ]
+    ],
+    "909_ziptest_exe9_*0x40467a_*0x4046df_*0x4045b3_rsp_0x0_0xa8_None": [
+        [
+            [
+                "RSP",
+                0,
+                16,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4213308,
+            "hash_insert",
+            "rcx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                16,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4210973,
+            "hash_grow",
+            "rcx"
+        ]
+    ],
+    "909_ziptest_exe9_*0x404932_*0x4049c2_*0x404925_rsp_0x0_0xa0_None": [],
+    "909_ziptest_exe9_*0x40467a_*0x4046df_*0x4045c7_rsp_0x0_0xa0_None": [
+        [
+            [
+                "RSP",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4213295,
+            "hash_insert",
+            ""
+        ],
+        [
+            [
+                "RSP",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4210850,
+            "hash_grow",
+            "ecx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4210966,
+            "hash_grow",
+            "ecx"
+        ]
+    ],
+    "909_ziptest_exe9_*0x40467a_*0x4046df_*0x404739_rsp_0x0_0x8c_None": [
+        [
+            [
+                "RSP",
+                0,
+                140,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4212300,
+            "hash_insert_internal",
+            "r11d"
+        ]
+    ],
+    "909_ziptest_exe9_*0x40467a_*0x4046df_*0x4045bb_r12_0x0_0x4_None": [
+        [
+            [
+                "RDX",
+                0,
+                6,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4208840,
+            "hash_init",
+            ""
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x404757_rsp_0x0_0xa0_None": [],
+    "909_ziptest_exe9_None_None_*0x41e384_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41fd47_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41eb87_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41e62c_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41efed_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41d5f0_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41eaf5_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41e877_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41e91d_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41f91d_rsp_0x0_0x280_None": [],
+    "909_ziptest_exe9_None_None_*0x41f684_rsp_0x0_0x280_None": [],
+    "909_ziptest_exe9_None_None_*0x41d985_rsp_0x0_0x280_None": [],
+    "909_ziptest_exe9_None_None_*0x41faa9_rsp_0x0_0x280_None": [],
+    "909_ziptest_exe9_None_None_*0x41fb4e_rsp_0x0_0x280_None": [],
+    "909_ziptest_exe9_None_None_*0x41f2f6_rsp_0x0_0x280_None": [],
+    "909_ziptest_exe9_None_None_*0x41f462_rsp_0x0_0x280_None": [],
+    "909_ziptest_exe9_None_None_*0x41f7ce_rsp_0x0_0x280_None": [],
+    "909_ziptest_exe9_None_None_*0x41f509_rsp_0x0_0x280_None": [],
+    "909_ziptest_exe9_None_None_*0x41f145_rsp_0x0_0x280_None": [],
+    "909_ziptest_exe9_None_None_*0x41f3da_rsp_0x0_0x338_None": [
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4326578,
+            "fmt.*pp\u00b7doPrintf",
+            "rcx"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x41fc17_rsp_0x0_0x338_None": [
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4326578,
+            "fmt.*pp\u00b7doPrintf",
+            "rcx"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x41e386_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41fd49_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41eb89_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41f14d_rsp_0x0_0x288_None": [],
+    "909_ziptest_exe9_None_None_*0x41e62e_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41efef_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41d5f2_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41eaf7_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41e879_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41e91f_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41f925_rsp_0x0_0x288_None": [],
+    "909_ziptest_exe9_None_None_*0x41d98d_rsp_0x0_0x288_None": [],
+    "909_ziptest_exe9_None_None_*0x41f511_rsp_0x0_0x288_None": [],
+    "909_ziptest_exe9_None_None_*0x41f46a_rsp_0x0_0x288_None": [],
+    "909_ziptest_exe9_None_None_*0x41f68c_rsp_0x0_0x288_None": [],
+    "909_ziptest_exe9_None_None_*0x41f7d6_rsp_0x0_0x288_None": [],
+    "909_ziptest_exe9_None_None_*0x41fab1_rsp_0x0_0x288_None": [],
+    "909_ziptest_exe9_None_None_*0x41f1c1_rsp_0x0_0x350_None": [],
+    "909_ziptest_exe9_None_None_*0x41e1ae_rsp_0x0_0x350_None": [],
+    "909_ziptest_exe9_None_None_*0x41faf1_rsp_0x0_0x350_None": [],
+    "909_ziptest_exe9_None_None_*0x41f813_rsp_0x0_0x350_None": [],
+    "909_ziptest_exe9_None_None_*0x41f6ce_rsp_0x0_0x350_None": [],
+    "909_ziptest_exe9_None_None_*0x41f4ac_rsp_0x0_0x350_None": [],
+    "909_ziptest_exe9_None_None_*0x41dbc4_rsp_0x0_0x350_None": [],
+    "909_ziptest_exe9_None_None_*0x41fad7_rsp_0x0_0x338_None": [],
+    "909_ziptest_exe9_None_None_*0x41f7fa_rsp_0x0_0x338_None": [],
+    "909_ziptest_exe9_None_None_*0x41f6b3_rsp_0x0_0x338_None": [],
+    "909_ziptest_exe9_None_None_*0x41f493_rsp_0x0_0x338_None": [],
+    "909_ziptest_exe9_None_None_*0x41dbb8_rsp_0x0_0x338_None": [],
+    "909_ziptest_exe9_None_None_*0x41f966_rsp_0x0_0x350_None": [],
+    "909_ziptest_exe9_None_None_*0x41f8a3_rsp_0x0_0x350_None": [],
+    "909_ziptest_exe9_None_None_*0x41f75f_rsp_0x0_0x350_None": [],
+    "909_ziptest_exe9_None_None_*0x41fb96_rsp_0x0_0x350_None": [],
+    "909_ziptest_exe9_None_None_*0x41f27c_rsp_0x0_0x350_None": [],
+    "909_ziptest_exe9_None_None_*0x41dc9f_rsp_0x0_0x350_None": [],
+    "909_ziptest_exe9_None_None_*0x41f94c_rsp_0x0_0x338_None": [],
+    "909_ziptest_exe9_None_None_*0x41f889_rsp_0x0_0x338_None": [],
+    "909_ziptest_exe9_None_None_*0x41f746_rsp_0x0_0x338_None": [],
+    "909_ziptest_exe9_None_None_*0x41fb7c_rsp_0x0_0x338_None": [],
+    "909_ziptest_exe9_None_None_*0x41f263_rsp_0x0_0x338_None": [],
+    "909_ziptest_exe9_None_None_*0x41dc93_rsp_0x0_0x338_None": [],
+    "909_ziptest_exe9_None_None_*0x41f1e7_rsp_0x0_0x340_None": [],
+    "909_ziptest_exe9_None_None_*0x41e1d4_rsp_0x0_0x340_None": [],
+    "909_ziptest_exe9_None_None_*0x41f372_rsp_0x0_0x340_None": [],
+    "909_ziptest_exe9_None_None_*0x41df27_rsp_0x0_0x340_None": [],
+    "909_ziptest_exe9_None_None_*0x41de24_rsp_0x0_0x340_None": [],
+    "909_ziptest_exe9_None_None_*0x41da66_rsp_0x0_0x340_None": [],
+    "909_ziptest_exe9_None_None_*0x41fa37_rsp_0x0_0x340_None": [],
+    "909_ziptest_exe9_None_None_*0x41edf7_rsp_0x0_0x340_None": [],
+    "909_ziptest_exe9_None_None_*0x41d8cc_rsp_0x0_0x340_None": [],
+    "909_ziptest_exe9_None_None_*0x41f567_rsp_0x0_0x340_None": [],
+    "909_ziptest_exe9_None_None_*0x41ddc4_rsp_0x0_0x340_None": [],
+    "909_ziptest_exe9_None_None_*0x41db67_rsp_0x0_0x340_None": [],
+    "909_ziptest_exe9_None_None_*0x41d9d5_rsp_0x0_0x340_None": [],
+    "909_ziptest_exe9_None_None_*0x41f61a_rsp_0x0_0x340_None": [],
+    "909_ziptest_exe9_None_None_*0x41df97_rsp_0x0_0x340_None": [],
+    "909_ziptest_exe9_None_None_*0x41e9db_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41ecba_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41e316_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41ef63_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41ed37_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41e5d8_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41d53c_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41ec91_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41f0de_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41e3f4_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41f0c6_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41e993_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41e40c_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41e3d7_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41f0f6_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41e42c_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41e712_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41e9c3_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41e8c6_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41ebe1_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41f1f2_rsp_0x0_0x348_None": [],
+    "909_ziptest_exe9_None_None_*0x41e1df_rsp_0x0_0x348_None": [],
+    "909_ziptest_exe9_None_None_*0x41d8ac_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41edce_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41d8aa_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41edcc_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x4276fd_rsp_0x0_0x38_None": [
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4355938,
+            "compress/flate.generateFixedLiteralEncoding",
+            ""
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4356287,
+            "compress/flate.generateFixedOffsetEncoding",
+            ""
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x42772c_rsp_0x0_0x28_None": [
+        [
+            [
+                "RSP",
+                0,
+                40,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4355803,
+            "compress/flate.newHuffmanEncoder",
+            "rbx"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x425f20_rsp_0x0_0x48_None": [
+        [
+            [
+                "RSP",
+                0,
+                16,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4349898,
+            "bufio.NewReader",
+            ""
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x425f4b_rsp_0x0_0x28_None": [
+        [
+            [
+                "RSP",
+                0,
+                40,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4349737,
+            "bufio.NewReaderSize",
+            "rbx"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x40e787_rsp_0x0_0x28_None": [],
+    "909_ziptest_exe9_None_None_*0x408fa1_rsp_0x0_0x38_None": [],
+    "909_ziptest_exe9_None_None_*0x408f97_rsp_0x0_0x78_None": [
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4226459,
+            "runtime.SetFinalizer",
+            "rcx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4203442,
+            "runtime.makechan_c",
+            "rax"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x4018d5_rsp_0x0_0x68_None": [],
+    "909_ziptest_exe9_None_None_*0x401972_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x40195d_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x401848_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x40192b_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x4017d7_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x401846_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x4017d5_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x401929_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x40195b_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x401970_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x4242ab_rsp_0x0_0x188_None": [],
+    "909_ziptest_exe9_None_None_*0x42419f_rsp_0x0_0x188_None": [],
+    "909_ziptest_exe9_None_None_*0x4243ba_rsp_0x0_0x188_None": [],
+    "909_ziptest_exe9_None_None_*0x423f5e_rsp_0x0_0x188_None": [],
+    "909_ziptest_exe9_None_None_*0x423da6_rsp_0x0_0x188_None": [],
+    "909_ziptest_exe9_None_None_*0x423ad8_rsp_0x0_0x188_None": [],
+    "909_ziptest_exe9_None_None_*0x423e28_rsp_0x0_0x188_None": [],
+    "909_ziptest_exe9_None_None_*0x42405a_rsp_0x0_0x188_None": [],
+    "909_ziptest_exe9_None_None_*0x423c95_rsp_0x0_0x188_None": [],
+    "909_ziptest_exe9_None_None_*0x423104_rsp_0x0_0x188_None": [],
+    "909_ziptest_exe9_None_None_*0x423f0e_rsp_0x0_0x228_None": [],
+    "909_ziptest_exe9_None_None_*0x423dea_rsp_0x0_0x228_None": [],
+    "909_ziptest_exe9_None_None_*0x4232dc_rsp_0x0_0x228_None": [],
+    "909_ziptest_exe9_None_None_*0x4238e4_rsp_0x0_0x228_None": [],
+    "909_ziptest_exe9_None_None_*0x422e77_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x4238c3_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x42346f_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x42327e_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x4232e3_rsp_0x0_0x220_None": [],
+    "909_ziptest_exe9_None_None_*0x423b9c_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x424371_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x423b35_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x42430a_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41c30c_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41c30a_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_*0x445740_*0x4457d0_*0x445658_rsp_0x0_0x20_None": [],
+    "909_ziptest_exe9_None_None_*0x445653_rsp_0x0_0x18_None": [],
+    "909_ziptest_exe9_*0x445740_*0x4457d0_*0x44572c_rsp_0x0_0x3c_None": [],
+    "909_ziptest_exe9_None_None_*0x4456ca_rax_0x0_0x7d4_None": [],
+    "909_ziptest_exe9_None_None_*0x445aaf_rax_0x0_0x7d0_None": [],
+    "909_ziptest_exe9_None_None_*0x4169a2_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x456946_rsp_0x0_0x90_None": [],
+    "909_ziptest_exe9_None_None_*0x45684f_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x406a53_rsp_0x0_0x70_None": [],
+    "909_ziptest_exe9_*0x406b69_*0x406b69_*0x406b5f_rsp_0x0_0x38_None": [],
+    "909_ziptest_exe9_None_None_*0x406959_rsp_0x0_0x48_None": [
+        [
+            [
+                "RBX",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4347407,
+            "io.Copy",
+            "rbp"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x4244cb_rsp_0x0_0x30_None": [],
+    "909_ziptest_exe9_None_None_*0x4244d3_rsp_0x0_0x38_None": [],
+    "909_ziptest_exe9_None_None_*0x41fe15_rsp_0x0_0x3c_None": [],
+    "909_ziptest_exe9_None_None_*0x407ee9_rsp_0x0_0x80_None": [
+        [
+            [
+                "RAX",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4258643,
+            "memwordcopy",
+            "rcx"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x407ee0_rsp_0x0_0x70_None": [
+        [
+            [
+                "RBX",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4389351,
+            "os.NewFile",
+            "rbp"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x41386f_rsp_0x0_0x68_None": [],
+    "909_ziptest_exe9_None_None_*0x413879_rsp_0x0_0x70_None": [],
+    "909_ziptest_exe9_*0x413232_*0x41321c_*0x413425_r8_0x0_0x18_None": [],
+    "909_ziptest_exe9_*0x413232_*0x41321c_*0x413665_rsp_0x0_0x50_None": [],
+    "909_ziptest_exe9_*0x4130ef_*0x41321c_*0x4137a9_rdi_0x0_0x58_None": [],
+    "909_ziptest_exe9_*0x413232_*0x41321c_*0x41348a_rax_0x0_0x8_None": [],
+    "909_ziptest_exe9_*0x413232_*0x41321c_*0x41376a_rdx_0x0_0x0_None": [],
+    "909_ziptest_exe9_*0x413232_*0x41321c_*0x4130f1_rdx_0x0_0x0_None": [],
+    "909_ziptest_exe9_*0x413232_*0x41321c_*0x4136b4_rsi_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x4101e2_rsp_0x0_0x28_None": [],
+    "909_ziptest_exe9_None_None_*0x4101f5_rsp_0x0_0x58_None": [],
+    "909_ziptest_exe9_None_None_*0x40e55f_rsp_0x0_0x28_None": [
+        [
+            [
+                "RSP",
+                0,
+                40,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4252907,
+            "runtime.malg",
+            "rax"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x40bee6_rsp_0x0_0x134_None": [],
+    "909_ziptest_exe9_None_None_*0x42f9f0_rsp_0x0_0x20_None": [
+        [
+            [
+                "RSP",
+                0,
+                32,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4389262,
+            "os.NewFile",
+            "rdx"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x41bb44_rsp_0x0_0x68_None": [
+        [
+            [
+                "RDI",
+                0,
+                16,
+                "ES",
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4229887,
+            "runtime.memmove",
+            ""
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x41bb4b_rsp_0x0_0x6c_None": [
+        [
+            [
+                "RDI",
+                0,
+                16,
+                "ES",
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4229887,
+            "runtime.memmove",
+            ""
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x41805d_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41805f_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x418b7d_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x418b7f_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x416728_rsp_0x0_0x20_None": [
+        [
+            [
+                "RBP",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4263262,
+            "makeslice1",
+            "ecx"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x416508_rax_0x0_0x10_None": [],
+    "909_ziptest_exe9_None_None_*0x422899_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x42ec6a_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x42ec46_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x42ec22_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x42ec68_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x44db17_rsp_0x0_0x1d0_None": [],
+    "909_ziptest_exe9_None_None_*0x44e115_rsp_0x0_0x9c_None": [],
+    "909_ziptest_exe9_None_None_*0x44da85_rsp_0x0_0xa4_None": [],
+    "909_ziptest_exe9_None_None_*0x44db0c_rsp_0x0_0x1c8_None": [],
+    "909_ziptest_exe9_None_None_*0x44d3e9_rsp_0x0_0x2f8_None": [],
+    "909_ziptest_exe9_None_None_*0x44df72_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x426f96_rsp_0x0_0x20_None": [],
+    "909_ziptest_exe9_*0x42700f_*0x4270a4_*0x426f89_rsp_0x0_0x18_None": [],
+    "909_ziptest_exe9_None_None_*0x416234_rax_0x0_0xc_None": [],
+    "909_ziptest_exe9_None_None_*0x416f3a_rdx_0x0_0x10_None": [],
+    "909_ziptest_exe9_None_None_*0x416f7d_rsp_0x0_0x18_None": [],
+    "909_ziptest_exe9_None_None_*0x402d5c_rsp_0x0_0x48_None": [],
+    "909_ziptest_exe9_None_None_*0x402962_rsp_0x0_0x48_None": [
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4206255,
+            "runtime.selectnbrecv",
+            "rax"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x402a7b_rsp_0x0_0x48_None": [],
+    "909_ziptest_exe9_None_None_*0x402a8d_rsp_0x0_0x48_None": [],
+    "909_ziptest_exe9_None_None_*0x402d6e_rsp_0x0_0x48_None": [],
+    "909_ziptest_exe9_None_None_*0x402c9c_rsp_0x0_0x48_None": [],
+    "909_ziptest_exe9_None_None_*0x402e19_rsp_0x0_0x48_None": [],
+    "909_ziptest_exe9_None_None_*0x402d45_rsp_0x0_0x48_None": [],
+    "909_ziptest_exe9_None_None_*0x402a64_rsp_0x0_0x48_None": [],
+    "909_ziptest_exe9_None_None_*0x402c10_rsp_0x0_0x48_None": [],
+    "909_ziptest_exe9_None_None_*0x402b74_rsp_0x0_0x48_None": [
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4206255,
+            "runtime.selectnbrecv",
+            "rax"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x402b98_rsp_0x0_0x48_None": [],
+    "909_ziptest_exe9_None_None_*0x4029c5_rsp_0x0_0x48_None": [],
+    "909_ziptest_exe9_None_None_*0x413cd5_rsp_0x0_0x40_None": [
+        [
+            [
+                "RSP",
+                0,
+                64,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4275239,
+            "archive/zip.OpenReader",
+            "rbx"
+        ]
+    ],
+    "909_ziptest_exe9_*0x413c9a_*0x413cfe_*0x413c96_rbx_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x413c9c_rsp_0x0_0x38_None": [],
+    "909_ziptest_exe9_None_None_*0x406570_rsp_0x0_0x88_None": [],
+    "909_ziptest_exe9_None_None_*0x403ea6_rsp_0x0_0xd0_None": [],
+    "909_ziptest_exe9_*0x403c6c_*0x403f4f_*0x403f21_rsp_0x0_0x94_None": [],
+    "909_ziptest_exe9_*0x403c53_*0x403f4f_*0x403c23_r8_0x0_0x4_None": [],
+    "909_ziptest_exe9_None_None_*0x403f31_rsp_0x0_0x80_None": [],
+    "909_ziptest_exe9_None_None_*0x403f19_rsp_0x0_0xb8_None": [],
+    "909_ziptest_exe9_None_None_*0x403f9c_rsp_0x0_0xa4_None": [],
+    "909_ziptest_exe9_None_None_*0x403e49_rsp_0x0_0xa4_None": [],
+    "909_ziptest_exe9_None_None_*0x411615_rsp_0x0_0x48_None": [],
+    "909_ziptest_exe9_None_None_*0x411640_rsp_0x0_0x58_None": [],
+    "909_ziptest_exe9_None_None_*0x411633_rsp_0x0_0x28_None": [],
+    "909_ziptest_exe9_None_None_*0x41162c_rsp_0x0_0x50_None": [],
+    "909_ziptest_exe9_None_None_*0x41164a_rsp_0x0_0x60_None": [],
+    "909_ziptest_exe9_None_None_*0x41161f_rsp_0x0_0x50_None": [],
+    "909_ziptest_exe9_None_None_*0x4115ff_rsp_0x0_0x60_None": [],
+    "909_ziptest_exe9_None_None_*0x411704_rsp_0x0_0x50_None": [],
+    "909_ziptest_exe9_None_None_*0x410f4a_rsp_0x0_0x40_None": [
+        [
+            [
+                "RSP",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4263480,
+            "runtime.growslice",
+            "rax"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x410f23_rsp_0x0_0x48_None": [
+        [
+            [
+                "RSP",
+                0,
+                16,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4263490,
+            "runtime.growslice",
+            "rax"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x410f0b_rsp_0x0_0x50_None": [
+        [
+            [
+                "RSP",
+                0,
+                24,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4263498,
+            "runtime.growslice",
+            "eax"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x403416_rsp_0x0_0x58_None": [
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4345799,
+            "fmt.init",
+            ""
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4346246,
+            "fmt.init",
+            ""
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4299440,
+            "flag.init",
+            ""
+        ],
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4299259,
+            "flag.NewFlagSet",
+            ""
+        ]
+    ],
+    "909_ziptest_exe9_*0x403a2a_*0x403b5d_*0x4039a8_rbx_0x0_0x2_None": [],
+    "909_ziptest_exe9_*0x403b74_*0x403b5d_*0x403ac6_rcx_0x0_0x0_None": [],
+    "909_ziptest_exe9_*0x403b74_*0x403b5d_*0x403ab6_rsp_0x0_0x48_None": [],
+    "909_ziptest_exe9_None_None_*0x41b74d_rsi_0x0_0x0_": [
+        [
+            [
+                "RSP",
+                0,
+                80,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4306604,
+            "fmt.*cache\u00b7get",
+            "rbx"
+        ],
+        [
+            [
+                "RSP",
+                0,
+                80,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4306569,
+            "fmt.*cache\u00b7get",
+            "rbx"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x405725_rsp_0x0_0x50_None": [
+        [
+            [
+                "RSP",
+                0,
+                8,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4217087,
+            "runtime.mapassign1",
+            "rdx"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x402365_rsp_0x0_0x60_None": [],
+    "909_ziptest_exe9_None_None_*0x40232e_rsp_0x0_0x60_None": [],
+    "909_ziptest_exe9_None_None_*0x40238f_rbp_0x0_0x10_None": [],
+    "909_ziptest_exe9_None_None_*0x4023d2_rsp_0x0_0x48_None": [
+        [
+            [
+                "RSP",
+                0,
+                72,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4203437,
+            "runtime.makechan_c",
+            "rax"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x402443_rsp_0x0_0x48_None": [],
+    "909_ziptest_exe9_None_None_*0x403003_rsp_0x0_0x48_None": [],
+    "909_ziptest_exe9_None_None_*0x42fc86_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x42fc84_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x44b0b1_rsp_0x0_0x10_None": [],
+    "909_ziptest_exe9_None_None_*0x44b330_rsp_0x0_0x40_None": [],
+    "909_ziptest_exe9_None_None_*0x44b254_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_*0x444ca7_*0x444bdf_*0x444c9c_rbx_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x4248f1_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x424aa7_rsp_0x0_0x3c_None": [],
+    "909_ziptest_exe9_None_None_*0x424b0a_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x4249e3_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x424984_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x42493b_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x417948_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x4193e7_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x419354_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x4194e9_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x4191d4_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x419669_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41974b_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x417a91_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x41731c_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x417462_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x432e34_rsp_0x0_0x58_None": [],
+    "909_ziptest_exe9_None_None_*0x433960_rsp_0x0_0x30_None": [],
+    "909_ziptest_exe9_None_None_*0x433ce0_rbx_0x0_0x8_None": [],
+    "909_ziptest_exe9_None_None_*0x433cc4_rbx_0x0_0x8_None": [],
+    "909_ziptest_exe9_None_None_*0x432e2d_rbx_0x0_0x8_None": [],
+    "909_ziptest_exe9_None_None_*0x4337f0_rbx_0x0_0x8_None": [],
+    "909_ziptest_exe9_None_None_*0x433b31_rbx_0x0_0x8_None": [],
+    "909_ziptest_exe9_None_None_*0x433ab2_rbx_0x0_0x8_None": [],
+    "909_ziptest_exe9_None_None_*0x432ff0_rsp_0x0_0x30_None": [],
+    "909_ziptest_exe9_None_None_*0x433774_rbx_0x0_0x8_None": [],
+    "909_ziptest_exe9_None_None_*0x433b15_rbx_0x0_0x8_None": [],
+    "909_ziptest_exe9_None_None_*0x433a36_rbx_0x0_0x8_None": [],
+    "909_ziptest_exe9_None_None_*0x433859_rbx_0x0_0x8_None": [],
+    "909_ziptest_exe9_None_None_*0x432e25_rbx_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x432fe6_rsp_0x0_0x28_None": [],
+    "909_ziptest_exe9_None_None_*0x4337e8_rbx_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x433b29_rbx_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x433aaa_rbx_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x43376c_rbx_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x433b0d_rbx_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x433a2e_rbx_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x433851_rbx_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x433956_rsp_0x0_0x28_None": [],
+    "909_ziptest_exe9_None_None_*0x433cd8_rbx_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x433cbc_rbx_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x4335f1_rbp_0x0_0x10_None": [],
+    "909_ziptest_exe9_None_None_*0x4331b5_rbp_0x0_0x10_None": [],
+    "909_ziptest_exe9_None_None_*0x427ef3_rsp_0x0_0x78_None": [],
+    "909_ziptest_exe9_None_None_*0x4524f3_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x44a4b5_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x4175ad_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x433dc1_rsi_0x0_0x0_": [
+        [
+            [
+                "RAX",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4219900,
+            "runtime.convT2E",
+            "rbx"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x433dc3_rsi_0x0_0x0_": [
+        [
+            [
+                "RAX",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4258643,
+            "memwordcopy",
+            "rcx"
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x42469a_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x4176f3_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x42ef3d_rsp_0x0_0x58_None": [],
+    "909_ziptest_exe9_None_None_*0x42f0f6_rsp_0x0_0x58_None": [],
+    "909_ziptest_exe9_*0x42f0db_*0x42f119_*0x42f0c5_rax_0x0_0x10_None": [],
+    "909_ziptest_exe9_*0x42f0db_*0x42f119_*0x42f0bf_rax_0x0_0x14_None": [],
+    "909_ziptest_exe9_*0x42f0d1_*0x42f119_*0x42f0bc_rax_0x0_0xc_None": [],
+    "909_ziptest_exe9_None_None_*0x42efc8_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x452652_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_*0x447811_*0x44797c_*0x447802_rax_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41783e_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x4488de_rsp_0x0_0x58_None": [],
+    "909_ziptest_exe9_None_None_*0x448723_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x44ce55_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x44ce53_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x420df4_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x420e2b_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x45103b_rsp_0x0_0xe8_None": [],
+    "909_ziptest_exe9_None_None_*0x44ec98_rsp_0x0_0x50_None": [],
+    "909_ziptest_exe9_None_None_*0x41ce90_rsp_0x0_0x88_None": [],
+    "909_ziptest_exe9_*0x41ceb1_*0x41cea7_*0x41ce27_rsp_0x0_0x78_None": [],
+    "909_ziptest_exe9_None_None_*0x41ce9b_rsp_0x0_0x90_None": [],
+    "909_ziptest_exe9_None_None_*0x41cf00_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41d062_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41d08f_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41d077_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41d04a_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41b7b2_rsp_0x0_0x0_None": [
+        [
+            [
+                "RSP",
+                0,
+                96,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4383911,
+            "os.*File\u00b7Write",
+            ""
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x41b7da_rsp_0x0_0x0_None": [
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4306866,
+            "fmt.*pp\u00b7free",
+            ""
+        ]
+    ],
+    "909_ziptest_exe9_None_None_*0x456061_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x44a982_rsp_0x0_0x130_None": [],
+    "909_ziptest_exe9_None_None_*0x44a8cb_rsp_0x0_0x130_None": [],
+    "909_ziptest_exe9_None_None_*0x44abad_rsp_0x0_0x130_None": [],
+    "909_ziptest_exe9_None_None_*0x44ac6f_rsp_0x0_0x130_None": [],
+    "909_ziptest_exe9_None_None_*0x44abf6_rsp_0x0_0x130_None": [],
+    "909_ziptest_exe9_*0x44ac0b_*0x44aa2c_*0x44aba1_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_*0x44abd4_*0x44aa2c_*0x44abcb_rsp_0x0_0x198_None": [],
+    "909_ziptest_exe9_None_None_*0x43002d_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x43002f_rsi_0x0_0x0_": [],
+    "909_ziptest_exe9_None_None_*0x4030c4_rsp_0x0_0x38_None": [],
+    "909_ziptest_exe9_*0x4026c9_*0x4026e5_*0x402576_rsp_0x0_0x40_None": [
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4206217,
+            "runtime.selectnbsend",
+            "rax"
+        ]
+    ],
+    "909_ziptest_exe9_*0x4026c9_*0x4026e5_*0x4028b1_rsp_0x0_0x40_None": [],
+    "909_ziptest_exe9_None_None_*0x40270e_rsp_0x0_0x40_None": [],
+    "909_ziptest_exe9_None_None_*0x4028ed_rsp_0x0_0x40_None": [],
+    "909_ziptest_exe9_*0x4026c9_*0x40271b_*0x40265a_rsp_0x0_0x40_None": [],
+    "909_ziptest_exe9_*0x4026c9_*0x40271b_*0x4028c3_rsp_0x0_0x40_None": [],
+    "909_ziptest_exe9_*0x4026c9_*0x40271b_*0x402631_rsp_0x0_0x40_None": [],
+    "909_ziptest_exe9_None_None_*0x4026ea_rsp_0x0_0x40_None": [
+        [
+            [
+                "RSP",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false
+            ],
+            4206217,
+            "runtime.selectnbsend",
+            "rax"
+        ]
+    ],
+    "909_ziptest_exe9_*0x4026c9_*0x40271b_*0x40289a_rsp_0x0_0x40_None": [],
+    "909_ziptest_exe9_*0x4026c9_*0x40271b_*0x40276a_rsp_0x0_0x40_None": [],
+    "909_ziptest_exe9_None_None_*0x4027ac_rsp_0x0_0x40_None": [],
+    "909_ziptest_exe9_None_None_*0x41d390_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x41d3e9_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x4206e9_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x420764_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_*0x41fe9f_*0x4200cb_*0x4203b7_rsp_0x0_0x34_None": [],
+    "909_ziptest_exe9_None_None_*0x42041d_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x4203c8_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x42033b_rsp_0x0_0x0_None": [],
+    "909_ziptest_exe9_None_None_*0x4201e5_rsp_0x0_0x0_None": []
 }
