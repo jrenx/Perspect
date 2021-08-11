@@ -7,6 +7,35 @@ import datetime
 
 rr_dir = os.path.dirname(os.path.realpath(__file__))
 DEBUG = True
+
+def get_child_processes(parent_pid):
+    children = set()
+    # https://superuser.com/questions/363169/ps-how-can-i-recursively-get-all-child-process-for-a-given-pid
+    for line in os.popen("ps --forest -o pid=,tty=,stat=,time=,cmd= -g $(ps -o sid= -p " + str(parent_pid) + ")"):
+        fields = line.split()
+        children.add(int(fields[0]))
+    """
+    if parent_pid in children:
+        children.remove(parent_pid)
+    curr_pid = os.getpid()
+    if curr_pid in children:
+        children.remove(curr_pid)
+    """
+
+    rr_processes = set()
+    for line in os.popen("ps ax | grep \"sudo rr replay\" | grep -v grep"):
+        fields = line.split()
+        pid = int(fields[0])
+        rr_processes.add(pid)
+    for line in os.popen("ps ax | grep \"gdb -l 10000 -ex set sysroot\" | grep -v grep"):
+        fields = line.split()
+        pid = int(fields[0])
+        rr_processes.add(pid)
+
+    children = children.intersection(rr_processes)
+    print("[rr] Children processes of " + str(pid) + " are " + str(children))
+    return children
+
 def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, step, deref,
                    do_timeout=True):
     """
@@ -42,15 +71,18 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
     success = True
     a = datetime.datetime.now()
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, shell=True)
+    children = get_child_processes(rr_process.pid)
     try:
         print("Timeout is: " + str(timeout), flush=True)
         rr_process.communicate(('source' + os.path.join(rr_dir, 'breakpoints.py')).encode())
     except subprocess.TimeoutExpired:
         success = False
+    for child_id in children:
+        print("Trying to kill child " + str(child_id), flush=True)
+        #os.system("sudo kill -9 " + str(child_id))
     b = datetime.datetime.now()
     print("Running breakpoints took: " + str(b - a))
     return success
-
 
 def parse_breakpoint(breakpoints, reg_points, deref):
     """

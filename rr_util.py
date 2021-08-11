@@ -69,9 +69,11 @@ def rr_backslice(prog, branch, target, insn, reg, shift, off, off_reg, rr_result
             + " reg: " + str(reg_str) + " shift: " + str(shift_str) + " off_reg: " + str(off_reg_str) + " off: " + str(off_str)\
             + " @ " + str(insn_str) + " branch @" + str(branch_str) + " target @" + str(target_str)\
             + " program: " +str(prog), flush=True)
-
+        a = datetime.datetime.now()
         rr_result_defs = get_def(prog, branch_str, target_str, insn_str, reg_str, shift_str, off_str, off_reg_str)
+        b = datetime.datetime.now()
         print("[main] Result from RR: " + str(len(rr_result_defs)) + " def points: " + str(rr_result_defs))
+        print("Running RR took: " + str(b - a))
         if len(rr_result_defs) > 0:
             break
         retry_count -= 1
