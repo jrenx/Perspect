@@ -58,8 +58,6 @@ def run_watchpoint(watchpoints, breakpoints=[], regs=[], off_regs=[], offsets=[]
     for child_id in children:
         print("Trying to kill child " + str(child_id), flush=True)
         os.system("sudo kill -9 " + str(child_id))
-    print("Trying to kill " + str(rr_process.pid))
-    os.system("sudo kill -9 " + str(rr_process.pid))
     b = datetime.datetime.now()
     print("Running watchpoints took: " + str(b - a))
     return success
