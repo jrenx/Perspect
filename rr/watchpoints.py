@@ -11,6 +11,8 @@ with open(os.path.join(rr_dir, 'config.json')) as config_file:
 
 breakpoints = config['breakpoints']
 watchpoints = config['watchpoints']
+timeout = config['timeout']
+start_time = time.time()
 
 for wp in watchpoints:
     print("watch " + str(wp))
@@ -26,8 +28,13 @@ for br in breakpoints:
     gdb.execute("br {}".format(br))
 
 trace = []
+not_exit = True
 
 def wp_handler(event):
+    if time.time() - start_time > timeout:
+        global not_exit
+        not_exit = False
+        return
     if not isinstance(event, gdb.BreakpointEvent):
         return
     frame = gdb.newest_frame()
@@ -67,8 +74,6 @@ def calculate_addr(br_num, frame):
     return (addr_hex, breakpoints[br_num], None)
 
 gdb.events.stop.connect(wp_handler)
-
-not_exit = True
 
 def exit_handler(event):
     global not_exit

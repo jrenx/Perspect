@@ -36,14 +36,16 @@ def get_child_processes(parent_pid):
     print("[rr] Children processes of " + str(pid) + " are " + str(children))
     return children
 
-def run_watchpoint(watchpoints, breakpoints=[], regs=[], off_regs=[], offsets=[], shifts=[]):
+def run_watchpoint(watchpoints, breakpoints=[], regs=[], off_regs=[], offsets=[], shifts=[], do_timeout=True):
+    timeout = 60
     config = {'watchpoints': watchpoints,
               'rwatchpoints': watchpoints,
               'breakpoints': breakpoints,
               'regs': regs,
               'off_regs': off_regs,
               'offsets': offsets,
-              'shifts': shifts}
+              'shifts': shifts,
+              'timeout': timeout}
     print("Passing in config to watchpoint pass: " + str(config))
     json.dump(config, open(os.path.join(rr_dir, 'config.json'), 'w'))
 
@@ -52,7 +54,7 @@ def run_watchpoint(watchpoints, breakpoints=[], regs=[], off_regs=[], offsets=[]
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, shell=True)
     children = get_child_processes(rr_process.pid)
     try:
-        rr_process.communicate(('source' + os.path.join(rr_dir, 'watchpoints.py')).encode(), timeout=60)
+        rr_process.communicate(('source' + os.path.join(rr_dir, 'watchpoints.py')).encode(), timeout=timeout)
     except subprocess.TimeoutExpired:
         rr_process.kill()
         success = False
