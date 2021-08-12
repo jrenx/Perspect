@@ -280,6 +280,18 @@ def parse_mem_write_expr(write):
     off_reg = write[4].strip().lower() if write[4] is not None else ''
     return reg, shift, offset, off_reg
 
+def pick_watch_points(pending_addrs):
+    watchpoints = set()
+    for a in pending_addrs:
+        watchpoints.add(a)
+        if len(watchpoints) == MAX_WP_COUNT:
+            break
+    print("[rr] Total number of unknown addresses: " + str(len(pending_addrs)))
+    print("[rr] Picking " + str(MAX_WP_COUNT) + " addresses: " + str(watchpoints))
+    # watchpoints = [offset_reg(addr, offset) for addr in addrs]
+    #print("[rr] Picked watchpoints: " + str(watchpoints))
+    return watchpoints
+
 #TODO, shift should be shift to the right
 def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_reg = None, iter=30):
     print("[rr] In get_def, branch: " + str(branch) + " target: " + str(target))
@@ -310,7 +322,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     branch_target = []
     if branch is not None and target is not None:
         branch_target = [branch, target]
-    run_breakpoint(branch_target, reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, False, False,
+    success, bp_pass_duration = run_breakpoint(branch_target, reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, False, False,
                    do_timeout=False)
     breakpoint_trace = parse_breakpoint(branch_target, reg_points, False)
     print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoint hits")
@@ -319,7 +331,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     read_point_count = count_point_in_bp_trace(read, breakpoint_trace)
     print("[rr] Parsed " + str(len(taken_indices)) + " taken indices")
     print("[rr] Parsed " + str(len(not_taken_indices)) + " not taken indices")
-    print("[rr] Total number of read points " + str(read_point_count))
+    print("[rr] COUNT Total number of read points " + str(read_point_count))
 
     print("[rr] First step finished")
     pending_addrs = set()
@@ -336,7 +348,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
         pending_addrs.add(breakpoint_trace[def_insn_index][1])
     #all_addrs = set([breakpoint_trace[get_def_insn_index_for_branch(index, [read], breakpoint_trace)][1]
     #                for index in taken_indices])
-    print("[rr] Total number of unique addresses read when branch outcome was positive: " + str(len(pending_addrs)))
+    print("[rr] COUNT Total number of unique addresses read when branch outcome was positive: " + str(len(pending_addrs)))
     if len(pending_addrs) > 1000:
         print("[warn][rr] Too many unique addresses to investigate...")
         return results
@@ -355,27 +367,13 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     print("[rr] current results count: " + str(len(results)))
     print("[rr] current results: " + str(results))
 
-    addrs_to_watch = set()
     print("[rr] Addresses that have unknown writes: " + str(len(pending_addrs)))
     pending_addrs = pending_addrs.difference(explained_addrs)
     print("[rr] Addresses that have unknown writes after removing known addrs: " + str(len(pending_addrs)))
     #if len(pending_addrs) < SMALL_ADDR_COUNT:
     #    print("Very few addresses, watching might be faster")
     #    skip_breakpoints = True
-        
-    for a in pending_addrs:
-        addrs_to_watch.add(a)
-        if len(addrs_to_watch) == MAX_WP_COUNT:
-            break
-    print("[rr] Picking " + str(MAX_WP_COUNT) + " addresses: " + str(addrs_to_watch))
-    #watchpoints = [offset_reg(addr, offset) for addr in addrs]
-    watchpoints = [addr for addr in addrs_to_watch]
-    print("[rr] Picked watchpoints: " + str(watchpoints))
-    if len(watchpoints) == 0:
-        print("[warn] Analysis is not done, but no more watchpoints to watch... Returning now...")
-        return results
-    pending_addrs = pending_addrs.difference(addrs_to_watch)
-    explained_addrs = explained_addrs.union(addrs_to_watch)
+
 
     #branch_indices = random.sample(taken_indices, 4) + random.sample(not_taken_indices, 4)
     #watchpoints = [offset_reg(get_reg_from_branch(index, [reg_point], breakpoint_trace)[reg_point], offset)
@@ -388,6 +386,15 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                      or (read_point_count < LARGE_READ_POINT_COUNT and reg.lower() == 'rsp')
     print("[rr] Do breakpoints? " + str(do_breakpoints))
     print("[rr] Total iters: " + str(iter))
+
+    watchpoints = pick_watch_points(pending_addrs)
+    explained_addrs = explained_addrs.union(watchpoints)
+    pending_addrs = pending_addrs.difference(watchpoints)
+    watchpoints = list(watchpoints)
+    if len(watchpoints) == 0:
+        print("[warn] No more watchpoints to watch... Returning now...")
+        return results
+
     for i in range(iter):
         # Second pass
         print("[rr] Running second step for {} times".format(i + 1), flush=True)
@@ -395,10 +402,13 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
             run_watchpoint(watchpoints)
             watchpoint_trace, watchpoint_count = parse_watchpoint()
         else:
-            run_watchpoint(watchpoints, [read], [reg], [offset_reg] if offset_reg is not None else [''], [int(offset, 16)], [int(shift, 16)])
+            run_watchpoint(watchpoints,
+                           [read], [reg], [offset_reg] if offset_reg is not None else [''], [int(offset, 16)], [int(shift, 16)],
+                           additional_timeout = bp_pass_duration)
             watchpoint_trace, watchpoint_count = parse_watchpoint(reads=set([read]), addr_to_def_to_ignore=addr_to_def_to_ignore)
-            watchpoint_count = watchpoint_count - read_point_count
-        print("[rr] Parsed " + str(len(watchpoint_trace)) + " watchpoint hits")
+            print("[rr] COUNT Parsed " + str(watchpoint_count) + " raw watchpoint hits")
+            watchpoint_count = watchpoint_count -  count_point_in_wp_trace(read, watchpoint_trace)
+        print("[rr] COUNT Parsed " + str(len(watchpoint_trace)) + " watchpoint hits")
         #("[tmp] " + str(watchpoint_trace))
         print("[rr] Second step finished")
         #taken_watchpoint_traces = [
@@ -428,7 +438,6 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
             print("[rr] No additional writes are found, keep watching more addresses.")
 
         if len(new_unique_writes) > 0:
-            def_point_count = 0
             insn_to_func = []
             insn_to_addr = {}
             for write in new_unique_writes:
@@ -438,6 +447,23 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                 insn_to_addr[insn] = write[2]
             insn_to_writes = get_mem_writes(insn_to_func, prog)
             print("[rr] returned from get_mem_writes " + str(insn_to_writes))
+
+            def_point_count = 0
+            for line in insn_to_writes:
+                insn = line[0]
+                def_point_count = def_point_count + count_point_in_wp_trace(hex(insn), watchpoint_trace)
+            print("[rr] COUNT watchpoint count: " + str(watchpoint_count) + " static def point count: " + str(len(insn_to_writes))
+                  + " def point count: " + str(def_point_count))
+            if do_breakpoints is False:
+                if len(insn_to_writes) >= 50 or def_point_count >= 5000:
+                    do_breakpoints = True
+                    pending_addrs = pending_addrs.union(watchpoints)
+                    for write in new_unique_writes:
+                        insn = write[0]
+                        all_unique_writes.remove(insn)
+                    print("[rr] Retrying with read points enabled in watchpoints")
+                    continue
+
             for line in insn_to_writes:
                 #print("[tmp] " + str(line))
                 insn = line[0]
@@ -459,22 +485,24 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                               off_regs, curr_off_reg, src_regs, curr_src_reg, loop_insn_flags, line[5])
 
                 results.append([curr_expr[1:], true_insn_addr, func, curr_src_reg])
-                def_point_count = def_point_count + count_point_in_wp_trace(hex(insn), watchpoint_trace)
                 curr_src_reg_size = 0
                 if curr_src_reg in reg_size_map:
                     curr_src_reg_size = reg_size_map[curr_src_reg]
                 if curr_src_reg_size != 8: #TODO, change this for 32 bit
                     print("[warn] write has a partial length: " + hex(insn))
-                    addr = insn_to_addr[insn]
-                    pending_addrs.add(addr)
-                    addr_to_def_to_ignore[addr] = hex(insn)
+                    curr_addr = insn_to_addr[insn]
+                    pending_addrs.add(curr_addr)
+                    addr_to_def_to_ignore[curr_addr] = hex(insn)
 
-            print("[rr] watchpoint count: " + str(watchpoint_count) + " def point count: " + str(def_point_count))
             print("[rr] all insns found " + str(reg_points))
             print("[rr] all registers found " + str(regs))
             print()
             print("[rr] current results count: " + str(len(results)))
             print("[rr] current results: " + str(results))
+
+            if len(pending_addrs) == 0:
+                print("[warn] No more watchpoints to watch... Returning now...")
+                return results
 
             #for instruction in positive:
             #    regs.append(get_written_reg(instruction))
@@ -523,27 +551,13 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                 explained_addrs = explained_addrs.union(current_explained_addrs)
                 pending_addrs = pending_addrs.difference(explained_addrs)
                 print("[rr] Addresses that might have undergone unknown writes: " + str(len(pending_addrs)))
-            else:
-                watchpoint_to_def_ratio = watchpoint_count if def_point_count == 0 else watchpoint_count/def_point_count
-                if (watchpoint_count > read_point_count) and (watchpoint_to_def_ratio > SMALL_IRRELEVANT_WATCH_POINT_RATIO):
-                    do_breakpoints = True
-
-        addrs = set()
-        for a in pending_addrs:
-            addrs.add(a)
-            if len(addrs) == MAX_WP_COUNT:
-                break
-        pending_addrs = pending_addrs.difference(addrs)
-        explained_addrs = explained_addrs.union(addrs)
-        print("[rr] Total number of unknown addresses: " + str(len(pending_addrs)))
-        print("[rr] Picking " + str(MAX_WP_COUNT) + " addresses: " + str(addrs))
-        #watchpoints = [offset_reg(addr, offset) for addr in addrs]
-        watchpoints = [addr for addr in addrs]
-        print("[rr] Picked watchpoints: " + str(watchpoints))
+        watchpoints = pick_watch_points(pending_addrs)
+        explained_addrs = explained_addrs.union(watchpoints)
+        pending_addrs = pending_addrs.difference(watchpoints)
+        watchpoints = list(watchpoints)
         if len(watchpoints) == 0:
-            print("[warn] Analysis is not done, but no more watchpoints to watch... Returning now...")
+            print("[warn] No more watchpoints to watch... Returning now...")
             return results
-      
         #TODO populate the watchpoints again
         #branch_indices = random.sample(taken_indices, 4) + random.sample(not_taken_indices, 4)
 

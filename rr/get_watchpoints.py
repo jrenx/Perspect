@@ -36,8 +36,8 @@ def get_child_processes(parent_pid):
     print("[rr] Children processes of " + str(pid) + " are " + str(children))
     return children
 
-def run_watchpoint(watchpoints, breakpoints=[], regs=[], off_regs=[], offsets=[], shifts=[], do_timeout=True):
-    timeout = 60
+def run_watchpoint(watchpoints, breakpoints=[], regs=[], off_regs=[], offsets=[], shifts=[], additional_timeout=0):
+    timeout = 60 + additional_timeout
     config = {'watchpoints': watchpoints,
               'rwatchpoints': watchpoints,
               'breakpoints': breakpoints,
@@ -46,7 +46,7 @@ def run_watchpoint(watchpoints, breakpoints=[], regs=[], off_regs=[], offsets=[]
               'offsets': offsets,
               'shifts': shifts,
               'timeout': timeout}
-    print("Passing in config to watchpoint pass: " + str(config))
+    print("[rr] Running watchpoint with timeout:" + str(timeout) + " with config " + str(config))
     json.dump(config, open(os.path.join(rr_dir, 'config.json'), 'w'))
 
     success = True
@@ -70,10 +70,10 @@ def run_watchpoint(watchpoints, breakpoints=[], regs=[], off_regs=[], offsets=[]
     # Killing "rr_process" only kills the shell process that spawned RR, and not any of the RR processes
     # kill them separately here
     for child_id in children:
-        print("Trying to kill child " + str(child_id), flush=True)
+        print("[rr] Trying to kill child " + str(child_id), flush=True)
         os.system("sudo kill -9 " + str(child_id))
     b = datetime.datetime.now()
-    print("Running watchpoints took: " + str(b - a))
+    print("[rr] Running watchpoints took: " + str(b - a))
     return success
 
 def parse_watchpoint(reads=None, addr_to_def_to_ignore=None):

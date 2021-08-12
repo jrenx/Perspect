@@ -54,8 +54,9 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
     #print("[tmp] indice_map: " + str(indice_map))
     timeout = 120
     if do_timeout:
-        count = len(breakpoints) + len(reg_points)
-        timeout = max(300, count * 15)
+        timeout  = 60+120
+        #count = len(breakpoints) + len(reg_points)
+        #timeout = max(300, count * 15)
     config = {'breakpoints': breakpoints,
               'reg_points': reg_points,
               'regs': regs,
@@ -68,12 +69,12 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
               'deref': deref,
               'timeout': timeout}
     json.dump(config, open(os.path.join(rr_dir, 'config.json'), 'w'))
+    print("Timeout is: " + str(timeout), flush=True)
     success = True
     a = datetime.datetime.now()
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, shell=True)
     children = get_child_processes(rr_process.pid)
     try:
-        print("Timeout is: " + str(timeout), flush=True)
         rr_process.communicate(('source' + os.path.join(rr_dir, 'breakpoints.py')).encode())
     except subprocess.TimeoutExpired:
         success = False
@@ -89,11 +90,12 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
     # Killing "rr_process" only kills the shell process that spawned RR, and not any of the RR processes
     # kill them separately here
     for child_id in children:
-        print("Trying to kill child " + str(child_id), flush=True)
+        print("[rr] Trying to kill child " + str(child_id), flush=True)
         os.system("sudo kill -9 " + str(child_id))
     b = datetime.datetime.now()
-    print("Running breakpoints took: " + str(b - a))
-    return success
+    duration = b - a
+    print("[rr] Running breakpoints took: " + str(duration))
+    return success, duration.total_seconds()
 
 def parse_breakpoint(breakpoints, reg_points, deref):
     """
