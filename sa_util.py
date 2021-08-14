@@ -35,6 +35,24 @@ reg_map = dict(al='rax',   ah='rax',   ax='rax',   eax='rax',  rax='rax',
                r13b='r13', r13w='r13',             r13d='r13', r13='r13',
                r14b='r14', r14w='r14',             r14d='r14', r14='r14',
                r15b='r15', r15w='r15',             r15d='r15', r15='r15' )
+
+reg_size_map = dict(al=1,   ah=1, ax=2,   eax=4,  rax=8,
+					bl=1,   bh=1, bx=2,   ebx=4,  rbx=8,
+					cl=1,   ch=1, cx=2,   ecx=4,  rcx=8,
+					dl=1,   dh=1, dx=2,   edx=4,  rdx=8,
+					sil=1,        si=2,   esi=4,  rsi=8,
+					dil=1,        di=2,   edi=4,  rdi=8,
+					bpl=1,        bp=2,   ebp=4,  rbp=8,
+					spl=1,        sp=2,   esp=4,  rsp=8,
+					r8b=1,        r8w=2,  r8d=4,  r8=8,
+					r9b=1,        r9w=2,  r9d=4,  r9=8,
+					r10b=1,       r10w=2, r10d=4, r10=8,
+					r11b=1,       r11w=2, r11d=4, r11=8,
+					r12b=1,       r12w=2, r12d=4, r12=8,
+					r13b=1,       r13w=2, r13d=4, r13=8,
+					r14b=1,       r14w=2, r14d=4, r14=8,
+					r15b=1,       r15w=2, r15d=4, r15=8)
+
 ################################################################
 #### C function declarations for accessing Dyninst analysis ####
 ################################################################

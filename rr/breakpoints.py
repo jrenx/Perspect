@@ -42,7 +42,7 @@ def br_handler(event):
             read_breakpoint(br_num, frame)
         else:
             gdb.events.stop.disconnect(br_handler)
-            loop_pc = int(reg_points[br_num].strip('*'))
+            loop_pc = int(reg_points[br_num].strip('*'), 16)
             gdb.execute('si')
             pc = int(frame.pc())
             while pc == loop_pc:
@@ -78,22 +78,35 @@ def read_breakpoint(br_num, frame):
         reg_value = int(frame.read_register(reg))
     if off_reg != '':
         off_reg_value = int(frame.read_register(off_reg))
-    addr = hex(reg_value << shift + off_reg_value * offset)
+    addr = hex((reg_value << shift) + (off_reg_value * offset)).strip('L')
 
     if not config['deref']:
-        trace.append((reg_points[br_num], hex(reg_value), None))
+        trace.append((reg_points[br_num], addr, None))
     else:
+        value = None
         if '(' in src_reg or ',' in src_reg or '%' in src_reg:
             cmd = 'p/x *(' + addr + ')'
+            ret = gdb.execute(cmd, False, True)
+            value = ret.split()[2].strip()
         elif src_reg != '':
             if br_num == 0:
                 gdb.execute('si')
             cmd = 'p/x ${}'.format(src_reg)
+            ret = gdb.execute(cmd, False, True)
+            value = ret.split()[2].strip()
         else:
             print("SPECIAL")
             cmd = 'x/32b ' + addr
-        value = hex(int(gdb.execute(cmd, False, True)))
-        trace.append((reg_points[br_num], hex(addr), value))
+            ret = gdb.execute(cmd, False, True)
+            ret = ret.splitlines()[0]
+            segs = ret.split()
+            number = 0
+            for j, seg in enumerate(segs):
+                if j == 0:
+                    continue
+                number += int(seg, 16) << (j - 1) * 8
+            value = hex(number)
+        trace.append((reg_points[br_num], addr, value))
 
 gdb.events.stop.connect(br_handler)
 

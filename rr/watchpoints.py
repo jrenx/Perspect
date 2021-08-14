@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import time
 
 import gdb
 
@@ -11,6 +12,8 @@ with open(os.path.join(rr_dir, 'config.json')) as config_file:
 
 breakpoints = config['breakpoints']
 watchpoints = config['watchpoints']
+timeout = config['timeout']
+start_time = time.time()
 
 for wp in watchpoints:
     print("watch " + str(wp))
@@ -26,17 +29,52 @@ for br in breakpoints:
     gdb.execute("br {}".format(br))
 
 trace = []
+not_exit = True
 
 def wp_handler(event):
+    if time.time() - start_time > timeout:
+        global not_exit
+        not_exit = False
+        return
     if not isinstance(event, gdb.BreakpointEvent):
         return
     frame = gdb.newest_frame()
     br = event.breakpoints[-1]
-    trace.append((watchpoints[int(br.number) - 1], hex(frame.pc()).strip('L'), frame.name()))
+    br_num = int(br.number) - 1
+    num_watchpoints = len(watchpoints)
+    if br_num < num_watchpoints:
+        trace.append((watchpoints[br_num], hex(frame.pc()).strip('L'), frame.name()))
+    else:
+        br_num = br_num - num_watchpoints
+        trace.append(calculate_addr(br_num, frame))
+
+
+def calculate_addr(br_num, frame):
+    reg = config['regs'][br_num]
+    shift = int(config['shifts'][br_num])
+    off_reg = config['off_regs'][br_num]
+    offset = int(config['offsets'][br_num])
+    #if '0x' in shift:
+    #    shift = int(shift, 16)
+    #else:
+    #    shift = int(shift)
+    #if '0x' in offset:
+    #    offset = int(offset, 16)
+    #else:
+    #    offset = int(offset)
+
+    reg_value = 0
+    if reg != '':
+        reg_value = int(frame.read_register(reg))
+
+    off_reg_value = 1
+    if off_reg != '':
+        off_reg_value = int(frame.read_register(off_reg))
+    addr_hex = hex((reg_value << shift) + (off_reg_value * offset)).strip('L')
+
+    return (addr_hex, breakpoints[br_num], None)
 
 gdb.events.stop.connect(wp_handler)
-
-not_exit = True
 
 def exit_handler(event):
     global not_exit

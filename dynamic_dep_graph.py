@@ -19,23 +19,6 @@ time_record = {}
 DEBUG_POST_ORDER = False
 DEBUG = False
 
-reg_size_map = dict(al=1,   ah=1, ax=2,   eax=4,  rax=8,
-					bl=1,   bh=1, bx=2,   ebx=4,  rbx=8,
-					cl=1,   ch=1, cx=2,   ecx=4,  rcx=8,
-					dl=1,   dh=1, dx=2,   edx=4,  rdx=8,
-					sil=1,        si=2,   esi=4,  rsi=8,
-					dil=1,        di=2,   edi=4,  rdi=8,
-					bpl=1,        bp=2,   ebp=4,  rbp=8,
-					spl=1,        sp=2,   esp=4,  rsp=8,
-					r8b=1,        r8w=2,  r8d=4,  r8=8,
-					r9b=1,        r9w=2,  r9d=4,  r9=8,
-					r10b=1,       r10w=2, r10d=4, r10=8,
-					r11b=1,       r11w=2, r11d=4, r11=8,
-					r12b=1,       r12w=2, r12d=4, r12=8,
-					r13b=1,       r13w=2, r13d=4, r13=8,
-					r14b=1,       r14w=2, r14d=4, r14=8,
-					r15b=1,       r15w=2, r15d=4, r15=8)
-
 class DynamicNode(JSONEncoder):
     id = 0
 
@@ -65,6 +48,7 @@ class DynamicNode(JSONEncoder):
         self.weight = -1
         self.weight_origins = set()
         self.weight_paths = set()
+        self.forward_weight_paths = []
         self.is_valid_weight = False
         self.is_aggregate_weight = False
 
@@ -154,6 +138,7 @@ class DynamicNode(JSONEncoder):
             data["store_bit_mask_binary"] = "{:64b}".format(self.store_bit_mask)
         data["weight_origins"] = list(self.weight_origins)
         data["weight_paths"] = list(self.weight_paths)
+        data["forward_weight_paths"] = list(self.forward_weight_paths)
         return data
 
     @staticmethod
@@ -184,6 +169,8 @@ class DynamicNode(JSONEncoder):
         dn.weight = data["weight"]
         dn.weight_origins = set(data["weight_origins"])
         dn.weight_paths = set(data["weight_paths"])
+        #if "forward_weight_paths" in data:
+        #    dn.forward_weight_paths = set(data["forward_weight_paths"])
         dn.is_valid_weight = data["is_valid_weight"]
         dn.is_aggregate_weight = data["is_aggregate_weight"]
         return dn
@@ -605,10 +592,10 @@ class DynamicDependence:
             dynamic_graph.verify_initail_graph_weight()
             #dynamic_graph.propogate_initial_graph_weight()
         else:
-            dynamic_graph.propogate_weight(self.init_graph)
+            #dynamic_graph.propogate_weight(self.init_graph)
             dynamic_graph.verify_weight(self.init_graph)
-            with open(result_file, 'w') as f:
-                json.dump(dynamic_graph.toJSON(), f, indent=4, ensure_ascii=False)
+            #with open(result_file, 'w') as f:
+            #    json.dump(dynamic_graph.toJSON(), f, indent=4, ensure_ascii=False)
 
         print("[dyn_dep] total number of dynamic nodes: " + str(len(dynamic_graph.dynamic_nodes)))
         return dynamic_graph
@@ -1109,7 +1096,7 @@ class DynamicGraph:
                 if insn in insns_with_regs:
                     index += 8
                 if insn in bit_insn_to_node:
-                    del bit_insn_to_node[bit_insn]
+                    del bit_insn_to_node[insn]
 
                 if insn in load_insn_to_bit_ops:
                     for bit_insn in load_insn_to_bit_ops[insn]:
@@ -1342,20 +1329,24 @@ class DynamicGraph:
                 if mem_store_addr in addr_to_df_succe_node:
                     to_remove = set()
                     for succe in addr_to_df_succe_node[mem_store_addr]:
-                        succe.df_predes.append(dynamic_node)
-                        dynamic_node.df_succes.append(succe)
-                        if succe.load_bit_mask is not None:
-                            continue
-
                         # HACK: if the src reg is smaller than the dst reg, keep looking for more writes
+                        reg_width_match = False
                         dst_reg = succe.static_node.reg_store
                         src_reg = dynamic_node.static_node.reg_load
                         if dst_reg is not None and dst_reg != '' \
                                 and src_reg is not None and src_reg != '':
                             dst_reg_size = reg_size_map[dst_reg.lower()]
                             src_reg_size = reg_size_map[src_reg.lower()]
-                            if src_reg_size < dst_reg_size:
-                                continue
+                            if src_reg_size == dst_reg_size:
+                                reg_width_match = True
+                        if reg_width_match is False:
+                            continue
+
+                        succe.df_predes.append(dynamic_node)
+                        dynamic_node.df_succes.append(succe)
+                        if succe.load_bit_mask is not None:
+                            continue
+
                         to_remove.add(succe)
                     for succe in to_remove:
                         addr_to_df_succe_node[mem_store_addr].remove(succe)
@@ -1577,6 +1568,7 @@ class DynamicGraph:
     def verify_initail_graph_weight(self):
         bad_count = 0
         good_count = 0
+        bad_nodes = set()
         for node in self.insn_to_dyn_nodes[0x407240]:
             target = node
             for prede in target.cf_predes:
@@ -1591,14 +1583,49 @@ class DynamicGraph:
                 if prede.static_node.insn == 0x4071c9:
                     target = prede
             assert target.static_node.insn == 0x4071c9
-            if target.weight != node.weight:
-                print("---------------------------------------------")
-                print("---------------------------------------------")
-                print(str(target) + "\n" + str(node))
+            """
+            if target.weight == -1:
                 bad_count += 1
+                bad_nodes.add(target.id)
             else:
                 good_count += 1
-        print("GRAPH SUMMARY0 initial graph good: " + str(good_count) + " bad: " + str(bad_count))
+            """
+            if target.weight != node.weight:
+                #print("---------------------------------------------")
+                #print("---------------------------------------------")
+                #print(str(target) + "\n" + str(node))
+                bad_count += 1
+                bad_nodes.add(target.id)
+            else:
+                good_count += 1
+        print("GRAPH SUMMARY0 initial 0x407240 weight propogated OK: " + str(good_count) + " bad: " + str(bad_count) + " " + str(bad_nodes))
+
+        bad_count = 0
+        good_count = 0
+        bad_nodes = set()
+        for node in self.insn_to_dyn_nodes[0x40742b]:
+            target = node
+            for prede in target.cf_predes:
+                if prede.static_node.insn == 0x4073f4:
+                    target = prede
+
+            assert target.static_node.insn == 0x4073f4
+            """
+            if target.weight == -1:
+                bad_count += 1
+                bad_nodes.add(target.id)
+            else:
+                good_count += 1
+            """
+            if target.weight != node.weight:
+                #print("---------------------------------------------")
+                #print("---------------------------------------------")
+                #print(str(target) + "\n" + str(node))
+                bad_count += 1
+                bad_nodes.add(target.id)
+            else:
+                good_count += 1
+        print("GRAPH SUMMARY0 initial 0x40742b weight propogated OK: " + str(good_count) + " bad: " + str(bad_count) + " " + str(bad_nodes))
 
     def propogate_initial_graph_weight(self):
         assert(len(self.postorder_list) > 0)
@@ -1677,18 +1704,22 @@ class DynamicGraph:
     def verify_weight(self, reference):
         good_count = 0
         bad_count = 0
+        nodes_not_equal = set()
         for node in self.insn_to_dyn_nodes[0x4071c9]:
             ref_node = reference.id_to_node[node.id]
             if node.weight == ref_node.weight:
                 good_count += 1
             else:
                 bad_count += 1
-        print("GRAPH SUMMARY1 subsequent graph good: " + str(good_count) + " bad: " + str(bad_count))
+                nodes_not_equal.add(node.id)
+        #print("GRAPH SUMMARY1 subsequent 0x4071c9 equal to initial graph: " + str(good_count) + " bad: " + str(bad_count) + " " + str(nodes_not_equal))
 
         good_count = 0
         bad_count = 0
         broken_count = 0
         connected_count = 0
+        disconnected_nodes = set()
+        not_equal_nodes = {}
         for node in self.insn_to_dyn_nodes[0x40a6aa]:
             target = node
             for prede in target.cf_predes:
@@ -1706,20 +1737,31 @@ class DynamicGraph:
             for prede in target.cf_predes:
                 if prede.static_node.insn == 0x407271:
                     target = prede
+            found = False
             for prede in target.cf_predes:
                 if prede.static_node.insn == 0x4071c9:
                     target = prede
-            if target.static_node.insn != 0x4071c9:
+                    found = True
+            if found is False:
+                for prede in target.cf_predes:
+                    if prede.static_node.insn == 0x40745d:
+                        target = prede
+                for prede in target.cf_predes:
+                    if prede.static_node.insn == 0x4073f4:
+                        target = prede
+            if target.static_node.insn != 0x4071c9 and target.static_node.insn != 0x4073f4:
                 print("Broken0 at " + target.static_node.hex_insn)
                 broken_count += 1
+                disconnected_nodes.add(node.id)
             else:
                 connected_count += 1
                 if node.weight == target.weight:
                     good_count += 1
                 else:
                     bad_count += 1
-        print("GRAPH SUMMARY2 subsequent  connected: " + str(connected_count) + " bad: " + str(broken_count))
-        print("GRAPH SUMMARY3 mrkallocated weightOK: " + str(good_count) + " bad: " + str(bad_count))
+                    not_equal_nodes[target.id] = node.id
+        print("GRAPH SUMMARY2      0x40a6aa connected to 0x4071c9 or 0x4073f4: " + str(connected_count) + " bad: " + str(broken_count) + " " + str(disconnected_nodes))
+        print("GRAPH SUMMARY3    0x40a6aa weight same as 0x4071c9 or 0x4073f4: " + str(good_count) + " bad: " + str(bad_count) + " " + str(not_equal_nodes))
 
         good_count = 0
         bad_count = 0
@@ -1730,7 +1772,20 @@ class DynamicGraph:
         bit_weight_same_as_ptr = 0
         bit_weight_diff_than_ptr = 0
         bad_addrs = {}
-        for node in self.insn_to_dyn_nodes[0x4093c6]:
+        x4093c6_not_collected = {}
+
+        bit_weight_same_as_ptr_ignore_invalid = 0
+        bit_weight_diff_than_ptr_ignore_invalid = 0
+        bad_addrs_ignore_invalid = {}
+        for succe_node in self.insn_to_dyn_nodes[0x4093f0]:
+            node = None
+            for prede in succe_node.df_predes:
+                if prede.static_node.insn == 0x4096d4:
+                    node = prede
+            if node is None:
+                for prede in succe_node.df_predes:
+                    if prede.static_node.insn == 0x4093c6:
+                        node = prede
             target = node
             for prede in target.df_predes:
                 if prede.static_node.insn == 0x40a6aa:
@@ -1744,6 +1799,9 @@ class DynamicGraph:
             if target.static_node.insn != 0x40a6aa:
                 print("Broken1 at " + target.static_node.hex_insn)
                 broken_count += 1
+                if hex(node.mem_load_addr) not in x4093c6_not_collected:
+                    x4093c6_not_collected[hex(node.mem_load_addr)] = []
+                x4093c6_not_collected[hex(node.mem_load_addr)].append(node.id)
             else:
                 connected_count += 1
                 if node.weight == target.weight:
@@ -1764,7 +1822,12 @@ class DynamicGraph:
                     mark_allocated_weighted += 1
                     if target.weight == cf_target.weight:
                         bit_weight_same_as_ptr += 1
+                        bit_weight_same_as_ptr_ignore_invalid += 1
                     else:
+                        if cf_target.weight == -1:
+                            bit_weight_same_as_ptr_ignore_invalid += 1
+                        else:
+                            bit_weight_diff_than_ptr_ignore_invalid += 1
                         bit_weight_diff_than_ptr += 1
                         pointer_def = node
                         for prede in pointer_def.cf_predes:
@@ -1777,20 +1840,26 @@ class DynamicGraph:
                             if prede.static_node.insn == 0x409379:
                                 pointer_def = prede
                         if len(pointer_def.df_predes) != 1:
-                            print("SUMMARY warn: " + str(pointer_def.id))
+                            pass
+                            #print("SUMMARY warn: " + str(pointer_def.id))
                         else:
                             pointer_def = pointer_def.df_predes[0]
                             key = pointer_def.static_node.hex_insn + "@" + pointer_def.static_node.function
                             if key not in bad_addrs:
                                 bad_addrs[key] = 0
                             bad_addrs[key] = bad_addrs[key] + 1
+                            if cf_target.weight != -1:
+                                if key not in bad_addrs_ignore_invalid:
+                                    bad_addrs_ignore_invalid[key] = 0
+                                bad_addrs_ignore_invalid[key] = bad_addrs_ignore_invalid[key] + 1
 
-        print("GRAPH SUMMARY4 subsequent  connected: " + str(connected_count) + " bad: " + str(broken_count))
-        print("GRAPH SUMMARY5    get bits weight OK: " + str(good_count) + " bad: " + str(bad_count))
-        print("GRAPH SUMMARY5.1  set bits  weighted: " + str(mark_allocated_weighted) + " bad: " + str(mark_allocated_not_weighted))
-        print("GRAPH SUMMARY5.2 bits wt same as ptr: " + str(bit_weight_same_as_ptr) + " bad: " + str(bit_weight_diff_than_ptr))
+        print("GRAPH SUMMARY4  0x4093c6 connected to   0x40a6aa: " + str(connected_count) + " bad: " + str(broken_count) + " " + str(x4093c6_not_collected))
+        print("GRAPH SUMMARY5  0x4093c6 weight same as 0x40a6aa: " + str(good_count) + " bad: " + str(bad_count))
+        print("GRAPH SUMMARY5.1  0x40a6aa has valid weight     : " + str(mark_allocated_weighted) + " bad: " + str(mark_allocated_not_weighted))
+        print("GRAPH SUMMARY5.2  0x40a6aa wt same as ptr       : " + str(bit_weight_same_as_ptr) + " bad: " + str(bit_weight_diff_than_ptr))
         print("GRAPH SUMMARY5.2 " + str(len(bad_addrs)) + " " + str(bad_addrs))
-
+        print("GRAPH SUMMARY5.2  0x40a6aa wt same as ptr ignore: " + str(bit_weight_same_as_ptr_ignore_invalid) + " bad: " + str(bit_weight_diff_than_ptr_ignore_invalid))
+        print("GRAPH SUMMARY5.2 " + str(len(bad_addrs_ignore_invalid)) + " " + str(bad_addrs_ignore_invalid))
         good_count = 0
         bad_count = 0
         for node in self.insn_to_dyn_nodes[0x4093c6]:
@@ -1823,7 +1892,9 @@ class DynamicGraph:
         weights = set()
         weight_origins = set()
         weight_paths = set()
+        forward_weight_paths = None
         nodes = set()
+        nodes.add(node)
         if succes is True:
             nodes = nodes.union(node.df_succes)
             if ignore_cf is False or node.static_node.is_df is False:
@@ -1850,7 +1921,12 @@ class DynamicGraph:
             weights.add(succe_or_prede.weight)
             weight_origins = weight_origins.union(succe_or_prede.weight_origins)
             weight_paths = weight_paths.union(succe_or_prede.weight_paths)
-        return weights, weight_origins, weight_paths
+            if forward_weight_paths is None:
+                forward_weight_paths = list(succe_or_prede.forward_weight_paths)
+            elif len(succe_or_prede.forward_weight_paths) < len(forward_weight_paths):
+                forward_weight_paths = list(succe_or_prede.forward_weight_paths)
+            #forward_weight_paths = forward_weight_paths.union(succe_or_prede.forward_weight_paths)
+        return weights, weight_origins, weight_paths, forward_weight_paths
 
     def propogate_weight(self, reference):
         assert(len(self.postorder_list) > 0)
@@ -1874,15 +1950,16 @@ class DynamicGraph:
                 node.weight = ref_node.weight
                 node.weight_origins = set(ref_node.weight_origins)
                 node.weight_paths = set(ref_node.weight_paths)
+                node.forward_weight_paths.append(node.static_node.hex_insn + "@" + node.static_node.function + "_" + str(node.id))
                 node.is_valid_weight = True
                 assert node.weight != -1
 
         aggregate_static_node_ids = set()
         for i in range(0,1):
             for node in self.postorder_list:  # a node will be visited only if its successors have all been visited
-                weights, weight_origins, weight_paths = self.propogate_weight_at_node(node, True)
+                weights, weight_origins, weight_paths, forward_weight_paths = self.propogate_weight_at_node(node, True)
                 if len(weights) > 1:
-                    weights, weight_origins, weight_paths = self.propogate_weight_at_node(node, True, ignore_cycle=True)
+                    weights, weight_origins, weight_paths, forward_weight_paths = self.propogate_weight_at_node(node, True, ignore_cycle=True)
                 assert -1 not in weights
                 is_aggregate_weight = False
                 if len(weights) > 1:
@@ -1899,21 +1976,30 @@ class DynamicGraph:
                 #        node.is_valid_weight = True
                 #        node.weight_origins = weight_origins
                 #        break
-            for node in self.insn_to_dyn_nodes[0x4071c9]:
+            for node in self.insn_to_dyn_nodes[0x4071c9]: #TODO, remove this hack!
                 node.is_aggregate_weight = False
                 if node.static_node.id in aggregate_static_node_ids:
                     aggregate_static_node_ids.remove(node.static_node.id)
+
             for node in self.reverse_postorder_list:  # a node will be visited only if its predecessors have all been visited
-                weights, weight_origins, weight_paths = self.propogate_weight_at_node(node, False,
+                #if node.is_valid_weight is True:
+                #    assert node.weight != -1
+                #    continue
+                weights, weight_origins, weight_paths, forward_weight_paths = self.propogate_weight_at_node(node, False,
                                                                                       check_aggregation=True, aggregate_static_node_ids=aggregate_static_node_ids)
                 if len(weights) > 1:
-                    weights, weight_origins, weight_paths = self.propogate_weight_at_node(node, False,
+                    weights, weight_origins, weight_paths, forward_weight_paths = self.propogate_weight_at_node(node, False,
                                                                                           check_aggregation=True, aggregate_static_node_ids=aggregate_static_node_ids,
                                                                                           ignore_cycle=True)
                 if len(weights) > 1:
-                    weights, weight_origins, weight_paths = self.propogate_weight_at_node(node, False,
+                    weights, weight_origins, weight_paths, forward_weight_paths = self.propogate_weight_at_node(node, False,
                                                                                           check_aggregation=True, aggregate_static_node_ids=aggregate_static_node_ids,
                                                                                           ignore_cycle=True, ignore_cf=True)
+                #if len(weights) == 0:
+                #    if node.static_node.is_df is True:
+                #        weights, weight_origins, weight_paths = self.propogate_weight_at_node(node, False,
+                #                                                                              ignore_cycle=True,
+                #                                                                              ignore_cf=True)
                 if len(weights) > 1:
                     node.weight = -1
                     node.is_valid_weight = False
@@ -1922,8 +2008,10 @@ class DynamicGraph:
                     continue
                 if len(weights) > 0:
                     #weight_paths.add(node.static_node.hex_insn + "@" + node.static_node.function)
+                    forward_weight_paths.append(node.static_node.hex_insn + "@" + node.static_node.function + "_" + str(node.id))
                     node.weight_origins = weight_origins
                     node.weight_paths = weight_paths
+                    node.forward_weight_paths = forward_weight_paths
                 for w in weights:
                     assert w != -1  # TODO remove
                     node.weight = w
@@ -1957,7 +2045,7 @@ if __name__ == '__main__':
     dd = DynamicDependence(starting_events, "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
     dd.prepare_to_build_dynamic_dependencies(10000)
 
-    dg = dd.build_dyanmic_dependencies(0x409418)
+    dg = dd.build_dyanmic_dependencies(0x409418) #0x409418
 
     sizes = {}
     with open("weight", "r") as f:
