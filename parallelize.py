@@ -60,6 +60,7 @@ def main():
     for i in range(5):
         print("In iteration {}".format(i))
         start_time = time.time()
+        os.symtem('rm rr_inputs')
         os.system('python3 static_dep_graph.py >> out')
         lines = open('rr_inputs', 'r').readlines()
         print("Static dep graph produces {} inputs".format(len(lines)))
