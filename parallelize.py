@@ -4,7 +4,7 @@ import shutil
 import multiprocessing as mp
 import threading
 import json
-import time
+import datetime
 
 
 
@@ -22,8 +22,10 @@ def run_task(id, pipe):
         str_args = '_'.join(map(lambda arg : "None" if arg is None else arg, [prog, a1, a2, a3, a4, a5, a6, a7]))
         print("Process {} recive task {}".format(id, str_args))
         rr_result_cache = {}
+        start_time = datetime.datetime.now()
         rr_util.rr_backslice2(prog, a1, a2, a3, a4, a5, a6, a7, rr_result_cache)
-        print("Process {} finish task {}".format(id, str_args))
+        duraton = datetime.time.now() - start_time
+        print("Process {} finish task {} in {}".format(id, str_args, duraton))
         pipe.send(rr_result_cache)
     pipe.send("Shutdown")
 
@@ -59,10 +61,11 @@ def main():
     print("Starting execution")
     for i in range(5):
         print("In iteration {}".format(i))
-        start_time = time.time()
+        start_time = datetime.datetime.now()
         os.system('rm rr_inputs')
         os.system('python3 static_dep_graph.py >> out')
         lines = open('rr_inputs', 'r').readlines()
+        print("Stdtic dep graph took: {}".format(datetime.datetime.now() - start_time()))
         print("Static dep graph produces {} inputs".format(len(lines)))
 
 
@@ -94,7 +97,7 @@ def main():
             while pipe.recv() != "Shutdown":
                 pipe.send("Shutdown")
 
-
+        start_time = datetime.datetime.now()
         processes = []
         threads = []
         mp.set_start_method('spawn')
@@ -112,7 +115,7 @@ def main():
             threads[i].join()
         json.dump(rr_result_cache, open(os.path.join(curr_dir, 'cache', 'rr_results_{}.json'.format(prog))))
 
-        duration = time.time() - time
+        duration = datetime.datetime.now() - start_time
     print("Running iteration {} uses {} seconds".format(i, duration))
 
 if __name__ == '__main__':
