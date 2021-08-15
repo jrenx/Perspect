@@ -23,7 +23,7 @@ def run_task(id, pipe):
         rr_result_cache = {}
         start_time = datetime.datetime.now()
         rr_util.rr_backslice2(prog, a1, a2, a3, a4, a5, a6, a7, rr_result_cache)
-        duraton = datetime.time.now() - start_time
+        duraton = datetime.datetime.now() - start_time
         print("Process {} finish task {} in {}".format(id, str_args, duraton))
         pipe.send(rr_result_cache)
     pipe.send("Shutdown")
