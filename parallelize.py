@@ -8,7 +8,6 @@ import datetime
 
 
 
-
 def run_task(id, pipe):
     os.chdir('run_{}'.format(id))
     sys.path.insert(0, os.getcwd())
@@ -98,6 +97,7 @@ def main():
                 pipe.send("Shutdown")
 
         start_time = datetime.datetime.now()
+        print("Exeuction of itertaion {} starts at {}".format(i, datetime.datetime.strftime(start_time, "%Y/%m/%d, %H:%M:%S")))
         processes = []
         threads = []
         mp.set_start_method('spawn')
