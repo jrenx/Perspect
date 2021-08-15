@@ -113,10 +113,10 @@ def main():
         for i in range(num_processor):
             processes[i].join()
             threads[i].join()
-        json.dump(rr_result_cache, open(os.path.join(curr_dir, 'cache', 'rr_results_{}.json'.format(prog))))
+        json.dump(rr_result_cache, open(os.path.join(curr_dir, 'cache', 'rr_results_{}.json'.format(prog)), 'w'))
 
         duration = datetime.datetime.now() - start_time
-    print("Running iteration {} uses {} seconds".format(i, duration))
+        print("Running iteration {} uses {} seconds".format(i, duration))
 
 if __name__ == '__main__':
     main()
