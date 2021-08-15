@@ -54,9 +54,8 @@ def run_watchpoint(watchpoints, breakpoints=[], regs=[], off_regs=[], offsets=[]
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, shell=True)
     children = get_child_processes(rr_process.pid)
     try:
-        rr_process.communicate(('source' + os.path.join(rr_dir, 'watchpoints.py')).encode(), timeout=timeout)
+        rr_process.communicate(('source' + os.path.join(rr_dir, 'watchpoints.py')).encode())
     except subprocess.TimeoutExpired:
-        rr_process.kill()
         success = False
 
     # RR process may not produce the output file immediately, wait a max of 10s for it
