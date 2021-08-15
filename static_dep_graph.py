@@ -7,6 +7,7 @@ from pin_util import *
 from collections import deque
 from collections import OrderedDict
 import itertools
+import sys, traceback
 
 DEBUG_CFG = False
 DEBUG_SIMPLIFY = False
@@ -530,8 +531,8 @@ class CFG:
         worklist = deque()
 
         #if DEBUG_SLICE:
-        print("Slicing for function: " + self.func)
-        print("Targets for slicing: " + str([bb.id for bb in self.target_bbs]))
+        print("[static_dep] Slicing for function: " + self.func)
+        print("[static_dep] Targets for slicing: " + str([bb.id for bb in self.target_bbs]))
         for bb in self.target_bbs:
             worklist.append(bb)
         visited = set()
@@ -1397,7 +1398,7 @@ class StaticDepGraph:
                 new_nodes = StaticDepGraph.build_dependencies_in_function(curr_insn, curr_func, curr_prog, curr_node)
                 for new_node in new_nodes:
                     worklist.append([new_node.insn, new_node.function, prog, new_node]) #FIMXE, ensure there is no duplicate work
-
+            print("[static_dep] No more events to analyze.")
             for func in StaticDepGraph.func_to_graph:
                 graph = StaticDepGraph.func_to_graph[func]
                 if graph.changed is False:
@@ -1544,12 +1545,10 @@ class StaticDepGraph:
                 #target_bbs = target_bbs.union(new_bbs)
                 graph.build_control_flow_dependencies(target_bbs)
                 new_local_defs_found = True
-            else: #TODO remove
-                for d in df_nodes: #TODO remove
-                    d.explained = True #TODO remove
             for df_node in df_nodes:
-                if df_node.is_cf is False:
-                    if df_node.bb is not None:
+                if df_node.explained is False: #TODO, an explained df node always used to have a BB
+                    df_node.explained = True
+                if df_node.is_cf is False and df_node.bb is not None:
                         continue
                     #assert df_node.bb is None, df_node
                 defs_in_same_func.add(df_node)
@@ -1638,8 +1637,17 @@ class StaticDepGraph:
             is_bit_var = True
         type = load[7]
         curr_func = load[8]
-        dst_reg = load[9]
-        bit_ops = load[10]
+        if len(load) >= 10:
+            dst_reg = load[9]
+        else:
+            insn_to_func = []
+            insn_to_func.append([str(prede_insn), curr_func])
+            results1 = get_reg_read_or_written(insn_to_func, "909_ziptest_exe9", False)
+            dst_reg = results1[0][2].lower()
+
+        bit_ops = None
+        if len(load) >= 11:
+            bit_ops = load[10]
 
         assert shift != '', str(load)
         assert off != '', str(load)
@@ -1703,7 +1711,7 @@ class StaticDepGraph:
             if succe.mem_load is not None:
                 succe.mem_load = None
         if prede.explained is False:
-            if load[11] is True: # and prede != succe:
+            if len(load) >= 12 and load[11] is True: # and prede != succe:
                 intermediate_defs_in_same_func.add(prede)
                 prede.is_intermediate_node = True
             elif curr_func != func:
@@ -1822,6 +1830,10 @@ class StaticDepGraph:
             except Exception as e:
                 print("Calling RR failed")
                 print(str(e))
+                print("-" * 60)
+                traceback.print_exc(file=sys.stdout)
+                print("-" * 60)
+                #raise e
                 continue
             print("[static_dep] found " + str(len(results)) + " dataflow dependencies non-local to function")
             node.explained = True
@@ -1832,7 +1844,13 @@ class StaticDepGraph:
                 load = result[0]
                 prede_insn = result[1]
                 curr_func = result[2]
-                src_reg = result[3]
+                if len(result) <= 3:
+                    insn_to_func = []
+                    insn_to_func.append([str(prede_insn), curr_func])
+                    results1 = get_reg_read_or_written(insn_to_func, prog, True)
+                    src_reg = results1[0][2].lower()
+                else:
+                    src_reg = result[3].lower()
 
                 if load is None: #TODO why?
                     continue
@@ -1852,6 +1870,7 @@ class StaticDepGraph:
                 else:
                     off = load[2]
 
+                off_reg = None
                 if len(load) >=4:
                     #print("Found offset reg")
                     if load[3] == '':
@@ -1863,7 +1882,7 @@ class StaticDepGraph:
                 prede = self.make_or_get_df_node(prede_insn, None, curr_func)
                 if prede.explained is False:
                     prede.mem_store = MemoryAccess(prede_reg, shift, off, off_reg, node.mem_load.is_bit_var)
-                    prede.reg_load = src_reg.lower()  # TODO put actual register name here
+                    prede.reg_load = src_reg  # TODO put actual register name here
                     if curr_func != func:
                         defs_in_diff_func.add(prede)
                     else:
@@ -2056,6 +2075,7 @@ class StaticDepGraph:
 
     @staticmethod
     def find_entry_and_exit_nodes():
+        print("[static_dep] Finding the entry and exit nodes.")
         assert len(StaticDepGraph.entry_nodes) == 0
         assert len(StaticDepGraph.exit_nodes) == 0
         for f in StaticDepGraph.func_to_graph:
@@ -2092,6 +2112,7 @@ class StaticDepGraph:
 
     @staticmethod
     def build_reverse_postorder_list_helper(node, visited):
+        print("[static_dep] Building reverse postorder list.")
         if node in visited:
             return
         visited.add(node)
@@ -2104,13 +2125,46 @@ class StaticDepGraph:
 
     # a node can be visited if all its predecessors are visited
     @staticmethod
-    def build_reverse_postorder_list(): #TODO, save the postorder list too #FIXME: as a potential of stack overflow
+    def build_reverse_postorder_list_old(): #TODO, save the postorder list too #FIXME: as a potential of stack overflow
         StaticDepGraph.reverse_postorder_list = []
         visited = set()
         for node in StaticDepGraph.entry_nodes:
             StaticDepGraph.build_reverse_postorder_list_helper(node, visited)
         print("[static_dep] total number of nodes in the reverse postorder list: "
               + str(len(StaticDepGraph.reverse_postorder_list)))
+
+    @staticmethod
+    def build_reverse_and_none_reverse_postorder_list_helper(reverse):
+        q = deque()
+        visited = set()
+        for node in reversed(list(StaticDepGraph.entry_nodes if reverse is True else StaticDepGraph.starting_nodes)):
+            q.appendleft([node, None])
+        while len(q) > 0:
+            (node, parent) = q.popleft()
+            if node in visited:
+                if parent is not None:
+                    StaticDepGraph.reverse_postorder_list.append(parent)
+                continue
+            visited.add(node)
+            nodes = []
+            for n in (node.cf_succes if reverse is True else node.cf_predes):
+                nodes.append([n, None])
+            for n in (node.df_succes if reverse is True else node.df_predes):
+                nodes.append([n, None])
+            if len(nodes) > 0:
+                nodes[-1][1] = node
+                for n in reversed(nodes):
+                    q.appendleft(n)
+            else:
+                StaticDepGraph.reverse_postorder_list.append(node)
+
+    @staticmethod
+    def build_reverse_postorder_list():
+        StaticDepGraph.build_reverse_and_none_reverse_postorder_list_helper(True)
+
+    @staticmethod
+    def build_postorder_list():
+        StaticDepGraph.build_reverse_and_none_reverse_postorder_list_helper(False)
 
     @staticmethod
     def build_postorder_list_helper(node, visited):
@@ -2138,7 +2192,8 @@ class StaticDepGraph:
     """
 
     @staticmethod
-    def build_postorder_list(): #TODO, save the postorder list too #FIXME: as a potential of stack overflow
+    def build_postorder_list_old(): #TODO, save the postorder list too #FIXME: as a potential of stack overflow
+        print("[static_dep] Building postorder list.")
         StaticDepGraph.postorder_list = []
         visited = set()
         for node in StaticDepGraph.starting_nodes:
@@ -2173,6 +2228,7 @@ class StaticDepGraph:
 
     @staticmethod
     def detect_df_backedges(): #TODO, save the postorder list too #FIXME: as a potential of stack overflow
+        print("[static_dep] Detecting dataflow backedges.")
         visited_cf_nodes = set()
         visited_df_nodes = set()
         visited_funcs = set()
@@ -2201,6 +2257,7 @@ class StaticDepGraph:
 
     @staticmethod
     def sanity_check():
+        print("[static_dep] Performing sanity check.")
         bad_count = 0
         for func in StaticDepGraph.func_to_graph:
             graph = StaticDepGraph.func_to_graph[func]

@@ -517,6 +517,18 @@ class TestStaticSlicing(unittest.TestCase):
         slice_starts.append(['rbp', 0x425650, "io.Copy", False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
+
+    def test_tmp6(self):
+        slice_starts = []
+        slice_starts.append(['SPECIAL', 4208706, "init_sizes", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
+
+    def test_tmp7(self):
+        slice_starts = []
+        slice_starts.append(['SPECIAL', 4234213, "sweep", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
     """
     def test_sa_TODO16(self):
         slice_starts = []
