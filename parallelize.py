@@ -39,8 +39,8 @@ def main():
         prog = sys.argv[1]
 
     print("Setting up parallel environment")
-    for i in range(num_processor):
-        process_dir = os.path.join(curr_dir, 'run_{}'.format(i))
+    for iter in range(num_processor):
+        process_dir = os.path.join(curr_dir, 'run_{}'.format(iter))
         if not os.path.exists(process_dir):
             os.mkdir(process_dir)
         rr_dir = os.path.join(process_dir, 'rr')
@@ -116,7 +116,7 @@ def main():
         json.dump(rr_result_cache, open(os.path.join(curr_dir, 'cache', 'rr_results_{}.json'.format(prog)), 'w'))
 
         duration = datetime.datetime.now() - start_time
-        print("Running iteration {} uses {} seconds".format(i, duration))
+        print("Running iteration {} uses {} seconds".format(iter, duration))
 
 if __name__ == '__main__':
     main()
