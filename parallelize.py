@@ -61,11 +61,11 @@ def main():
     for i in range(5):
         print("In iteration {}".format(i))
         start_time = datetime.datetime.now()
-        os.system('rm rr_inputs')
         os.system('python3 static_dep_graph.py >> out')
         lines = open('rr_inputs', 'r').readlines()
         print("Stdtic dep graph took: {}".format(datetime.datetime.now() - start_time))
         print("Static dep graph produces {} inputs".format(len(lines)))
+        os.system('rm rr_inputs')
 
 
         def send_task(pipe):
