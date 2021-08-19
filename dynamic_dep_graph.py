@@ -1330,6 +1330,12 @@ class DynamicGraph:
                     to_remove = set()
                     for succe in addr_to_df_succe_node[mem_store_addr]:
                         # HACK: if the src reg is smaller than the dst reg, keep looking for more writes
+                        if succe.load_bit_mask is None and succe.static_node.mem_load.read_same_as_write is False:
+                            if dynamic_node.static_node not in succe.static_node.df_predes:
+                                print("[dyn_dep][warn] Address matched but is not a real predecessor "
+                                      + str(succe.static_node.id) + " " + str(dynamic_node.static_node.id))
+                                to_remove.add(succe)
+                                continue
                         reg_width_match = False
                         dst_reg = succe.static_node.reg_store
                         src_reg = dynamic_node.static_node.reg_load
@@ -1339,7 +1345,12 @@ class DynamicGraph:
                             src_reg_size = reg_size_map[src_reg.lower()]
                             if src_reg_size == dst_reg_size:
                                 reg_width_match = True
+                        else:
+                            reg_width_match = True
                         if reg_width_match is False:
+                            print("[dyn_dep][warn] one or two nodes do not have a valid register load or store "
+                                  + str(succe.static_node.id) + " " + str(succe.static_node.reg_store)
+                                  + str(dynamic_node.static_node.id) + " " + str(dynamic_node.static_node.reg_load))
                             continue
 
                         succe.df_predes.append(dynamic_node)
@@ -1598,7 +1609,7 @@ class DynamicGraph:
                 bad_nodes.add(target.id)
             else:
                 good_count += 1
-        print("GRAPH SUMMARY0 initial 0x407240 weight propogated OK: " + str(good_count) + " bad: " + str(bad_count) + " " + str(bad_nodes))
+        print("GRAPH SUMMARY0 initial 0x407240 weight propogated to 0x4071c9 correctly: " + str(good_count) + " bad: " + str(bad_count) + " " + str(bad_nodes))
 
         bad_count = 0
         good_count = 0
@@ -1625,7 +1636,7 @@ class DynamicGraph:
                 bad_nodes.add(target.id)
             else:
                 good_count += 1
-        print("GRAPH SUMMARY0 initial 0x40742b weight propogated OK: " + str(good_count) + " bad: " + str(bad_count) + " " + str(bad_nodes))
+        print("GRAPH SUMMARY0 initial 0x40742b weight propogated to 0x4073f4 correctly: " + str(good_count) + " bad: " + str(bad_count) + " " + str(bad_nodes))
 
     def propogate_initial_graph_weight(self):
         assert(len(self.postorder_list) > 0)
@@ -1808,14 +1819,6 @@ class DynamicGraph:
                     good_count += 1
                 else:
                     bad_count += 1
-                if node.id == 3788971047:
-                    print("SUMMARY " + str(node.id))
-                    print("SUMMARY " + str(target.id))
-                    print("SUMMARY " + target.static_node.hex_insn)
-                    print("SUMMARY " + str(target.weight))
-                    print("SUMMARY " + str(cf_target.id))
-                    print("SUMMARY " + cf_target.static_node.hex_insn)
-                    print("SUMMARY " + str(cf_target.weight))
                 if target.weight == -1:
                     mark_allocated_not_weighted += 1
                 else:
