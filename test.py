@@ -21,6 +21,27 @@ class TestPIN(unittest.TestCase):
 
 
 class TestRR(unittest.TestCase):
+    def test_rr_slice7(self):
+        a = datetime.datetime.now()
+        result = rr_backslice('909_ziptest_exe9', None, None, 0x40220c, 'RBX', 0, 0, None, {})
+        b = datetime.datetime.now()
+        print(result)
+        print("Took: " + str(b - a))
+
+    def test_rr_slice6(self):
+        a = datetime.datetime.now()
+        result = rr_backslice('909_ziptest_exe9', None, None, 0x40fb50, 'RDX', 0, 0, None, {})
+        b = datetime.datetime.now()
+        print(result)
+        print("Took: " + str(b - a))
+
+    def test_rr_slice5(self): #17000 unique addrs, maybe not worth investigating
+        a = datetime.datetime.now()
+        result = rr_backslice('909_ziptest_exe9', None, None, 0x408b05, 'RSI', 0, 0, None, {})
+        b = datetime.datetime.now()
+        print(result)
+        print("Took: " + str(b - a))
+
     def test_rr_slice4(self):
         a = datetime.datetime.now()
         result = rr_backslice('909_ziptest_exe9', None, None, 0x40613f, 'RSP', 0, 112, None, {})
