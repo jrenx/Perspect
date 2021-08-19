@@ -901,10 +901,15 @@ class StaticNode:
         if isinstance(sn.mem_load, dict):
             sn.mem_load = MemoryAccess.fromJSON(sn.mem_load)
         sn.reg_load = data["reg_load"]
+        if sn.reg_load is not None and '::' in sn.reg_load:
+            sn.reg_load = sn.reg_load.split("::")[1]
+
         sn.mem_store = data["mem_store"]
         if isinstance(sn.mem_store, dict):
             sn.mem_store = MemoryAccess.fromJSON(sn.mem_store)
         sn.reg_store = data["reg_store"]
+        if sn.reg_store is not None and '::' in sn.reg_store:
+            sn.reg_store = sn.reg_store.split("::")[1]
 
         sn.df_predes = data['df_predes']
         sn.df_succes = data['df_succes']
@@ -1637,7 +1642,7 @@ class StaticDepGraph:
             is_bit_var = True
         type = load[7]
         curr_func = load[8]
-        if len(load) >= 10:
+        if len(load) >= 10 and load[9] is not None and load[9] != '':
             dst_reg = load[9]
         else:
             insn_to_func = []
@@ -1844,13 +1849,13 @@ class StaticDepGraph:
                 load = result[0]
                 prede_insn = result[1]
                 curr_func = result[2]
-                if len(result) <= 3:
+                if len(result) > 3 and result[3] is not None and result[3] != '':
+                    src_reg = result[3].lower()
+                else:
                     insn_to_func = []
                     insn_to_func.append([str(prede_insn), curr_func])
                     results1 = get_reg_read_or_written(insn_to_func, prog, True)
                     src_reg = results1[0][2].lower()
-                else:
-                    src_reg = result[3].lower()
 
                 if load is None: #TODO why?
                     continue
