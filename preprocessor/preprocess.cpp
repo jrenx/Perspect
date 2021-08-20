@@ -80,6 +80,7 @@ public:
   int dst_reg_size;
 };
 
+bool DEBUG = false;
 int CodeCount = -1;
 int CodeCountWithStaticNode = -1;
 long *CodeToInsn;
@@ -133,6 +134,8 @@ unordered_set<long> PendingAddrs;
 
 StaticNode **CodeToStaticNode;
 unordered_map<int, long> StaticNodeIdToInsn;
+
+long *OccurrencesPerCode;
 
 char *traceFile;
 
@@ -362,6 +365,8 @@ void initData() {
     CodeToInsn[(*it).first] = (*it).second;
     InsnToCode.insert({(*it).second, (unsigned short)(*it).first});
   }
+  OccurrencesPerCode = new long[CodeCount];
+  for (int i = 0; i < CodeCount; i++) OccurrencesPerCode[i] = 0;
 
   cJSON *json_startInsns = cJSON_GetObjectItem(data, "starting_insns");
   if (json_startInsns != NULL) {
@@ -606,7 +611,7 @@ int main()
         int count = LaterBitOpCodeToCodeCount[code];
         for (int j = 0; j < count; j++) {
           if (CodeWithLaterBitOpsExecuted[parentOfBitOps[j]]) {
-            cout << "[store]  " << code << " " << parentOfBitOps[j] << " " << std::bitset<64>(regValue) << endl;
+            if (DEBUG) cout << "[store]  " << code << " " << parentOfBitOps[j] << " " << std::bitset<64>(regValue) << endl;
             os.write((char *) &code, sizeof(unsigned short));
             os.write((char *) &uid, sizeof(long));
             os.write((char *) &regValue, sizeof(long));
@@ -700,7 +705,7 @@ int main()
       for (int j = 0; j < count; j++) {
         short bitOpCode = bitOps[j];
         if (codeToBitOperandIsValid[bitOpCode]) {
-          cout << "[load] " << bitOpCode << " " << count << " " << std::bitset<64>(codeToBitOperand[bitOpCode]) << endl;
+          if (DEBUG) cout << "[load] " << bitOpCode << " " << count << " " << std::bitset<64>(codeToBitOperand[bitOpCode]) << endl;
           os.write((char *) &bitOpCode, sizeof(unsigned short));
           os.write((char *) &uid, sizeof(long));
           os.write((char *) &codeToBitOperand[bitOpCode], sizeof(long));
@@ -710,36 +715,37 @@ int main()
     }
 
     if (regCount2 > 1) {
-      cout << "Persisting1 " << code << endl;
+      if (DEBUG) cout << "Persisting1 " << code << endl;
       os.write((char*)&code, sizeof(unsigned short));
       os.write((char*)&uid, sizeof(long));
       os.write((char*)&prevOffRegValue, sizeof(long));
     }
     if (regCount2 > 0) {
-      cout << "Persisting2 " << code << endl;
+      if (DEBUG) cout << "Persisting2 " << code << endl;
       os.write((char*)&code, sizeof(unsigned short));
       os.write((char*)&uid, sizeof(long));
       os.write((char*)&prevRegValue, sizeof(long));
     }
 
     if (CodeToRegCount[code] > 1) {
-      cout << "Persisting3 " << code << endl;
+      if (DEBUG) cout << "Persisting3 " << code << endl;
       os.write((char*)&code, sizeof(unsigned short));
       os.write((char*)&uid, sizeof(long));
       os.write((char*)&offRegValue, sizeof(long));
     }
 
-    cout << "Persisting4 " << code << endl;
+    if (DEBUG) cout << "Persisting4 " << code << endl;
     os.write((char*)&code, sizeof(unsigned short));
     os.write((char*)&uid, sizeof(long));
     if (CodesWithRegs[code]) {
-      cout << "Persisting5 " << code << endl;
+      if (DEBUG) cout << "Persisting5 " << code << endl;
       os.write((char*)&regValue, sizeof(long));
     }
 
     //cout << "====" << nodeCount << "\n";
     //cout << "curr code" << code << " index: "<< i <<endl;
     //cout << std::hex << CodeToInsn[code] << std::dec << "\n";
+    OccurrencesPerCode[code] = OccurrencesPerCode[code] + 1;
 
     nodeCount ++;
     
@@ -838,5 +844,16 @@ int main()
   std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
   std::cout << "Parsing took = " << std::chrono::duration_cast<std::chrono::seconds>(t4 - t3).count() << "[s]" << std::endl;
 
+  string outLargeFile(traceFile);
+  outLargeFile += ".large";
+  ofstream osl;
+  osl.open(outLargeFile.c_str());
+  for (int i = 0; i < CodeCount; i++) {
+    long count = OccurrencesPerCode[i];
+    if (count <= 50000) continue;
+    //cout << "LARGE " << i << "\n";
+    osl << std::hex << CodeToInsn[i] << std::dec << " " << i << " occurrences: " << count << "\n";
+  }
+  osl.close();
   cout << "total nodes: " << nodeCount << endl;
 }

@@ -529,11 +529,17 @@ class DynamicDependence:
             with open(self.trace_path + ".parsed", 'rb') as f:
                 byte_seq = f.read() #more than twice faster than readlines!
 
+            with open(self.trace_path + ".large", 'rb') as f:
+                large = f.readlines() #more than twice faster than readlines!
+                codes_to_ignore = set()
+                for l in large:
+                    codes_to_ignore.add(int(l.split()[1]))
+            print("[dyn_graph] Codes to ignore are: " + str(codes_to_ignore))
             time_record["read_preparse"] = time.time()
             print("[TIME] Loading preparsed trace took: ", str(time_record["read_preparse"] - time_record["preparse"]), flush=True)
 
             dynamic_graph = DynamicGraph(self.starting_events)
-            dynamic_graph.build_dynamic_graph(byte_seq, self.starting_insns if insn is None else set([insn]),
+            dynamic_graph.build_dynamic_graph(byte_seq, codes_to_ignore, self.starting_insns if insn is None else set([insn]),
                                               self.code_to_insn, self.insns_with_regs, self.insn_to_static_node,
                                               set(self.insn_of_cf_nodes), set(self.insn_of_df_nodes),
                                               set(self.insn_of_local_df_nodes), set(self.insn_of_remote_df_nodes),
@@ -1022,7 +1028,7 @@ class DynamicGraph:
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
         """
 
-    def build_dynamic_graph(self, byte_seq, starting_insns, code_to_insn, insns_with_regs, insn_to_static_node,
+    def build_dynamic_graph(self, byte_seq, codes_to_ignore, starting_insns, code_to_insn, insns_with_regs, insn_to_static_node,
                             insn_of_cf_nodes, insn_of_df_nodes, insn_of_local_df_nodes, insn_of_remote_df_nodes,
                             insn_to_reg_count, insn_to_reg_count2, load_insn_to_bit_ops, store_insn_to_bit_ops):
         # reverse the executetable, and remove insns beyond the start insn
@@ -1088,6 +1094,8 @@ class DynamicGraph:
                     or insn in local_df_prede_insn_to_succe_node \
                     or insn in remote_df_prede_insn_to_succe_node: #TODO, could optiimze
                 ok = True
+            if code in codes_to_ignore:
+                ok = False
 
             contains_bit_op = insn in load_bit_insns or insn in store_bit_insns
 
