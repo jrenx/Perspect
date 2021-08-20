@@ -21,6 +21,13 @@ class TestPIN(unittest.TestCase):
 
 
 class TestRR(unittest.TestCase):
+    def test_rr_slice8(self):
+        a = datetime.datetime.now()
+        result = rr_backslice('909_ziptest_exe9', None, None, 0x4274e7, 'RSP', 0, 24, None, {})
+        b = datetime.datetime.now()
+        print(result)
+        print("Took: " + str(b - a))
+
     def test_rr_slice7(self):
         a = datetime.datetime.now()
         result = rr_backslice('909_ziptest_exe9', None, None, 0x40220c, 'RBX', 0, 0, None, {})
@@ -550,6 +557,18 @@ class TestStaticSlicing(unittest.TestCase):
         slice_starts.append(['SPECIAL', 4234213, "sweep", False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
+
+    def test_tmp8(self):
+        slice_starts = []
+        slice_starts.append(['rax', 0x40220c, "runtime.atomicstorep", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
+
+    def test_tmp9(self):
+        insn_to_func = []
+        insn_to_func.append([str(0x40220c), "runtime.atomicstorep"])
+        results = get_reg_read_or_written(insn_to_func, "909_ziptest_exe9", True)
+        print(results[0][2])
     """
     def test_sa_TODO16(self):
         slice_starts = []
