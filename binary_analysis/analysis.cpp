@@ -786,12 +786,20 @@ void getRegsReadOrWritten(char *addrToFuncNames, char *progName, bool isRead) {
     // TODO is this good enough?
     MachRegister reg;
     for (auto oit = ops.rbegin(); oit != ops.rend(); oit++) {
+      //cout << "OP" << (*oit).format(insn.getArch()) << endl;
       if (isRead) {
-        bool isRegReadOnly = (*oit).isRead() && !(*oit).isWritten() && !(*oit).readsMemory() && !(*oit).writesMemory();
+        //bool isRegReadOnly = (*oit).isRead() && !(*oit).isWritten() && !(*oit).readsMemory() && !(*oit).writesMemory();
+        bool isRegReadOnly = (*oit).isRead() && !(*oit).readsMemory() && !(*oit).writesMemory();
         if (!isRegReadOnly) continue;
+        if ((*oit).isWritten()) {
+          cout << "[sa][warn] register is both read and written: " << (*oit).format(insn.getArch()) << endl;
+        }
       } else {
-        bool isRegWrittenOnly = !(*oit).isRead() && (*oit).isWritten() && !(*oit).readsMemory() && !(*oit).writesMemory();
+        bool isRegWrittenOnly = (*oit).isWritten() && !(*oit).readsMemory() && !(*oit).writesMemory();
         if (!isRegWrittenOnly) continue;
+        if ((*oit).isRead()) {
+          cout << "[sa][warn] register is both read and written: " << (*oit).format(insn.getArch()) << endl;
+        }
       }
       std::vector<MachRegister> regs;
       long off = 0;

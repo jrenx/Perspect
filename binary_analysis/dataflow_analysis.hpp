@@ -73,9 +73,12 @@ public:
         MachRegister machReg; long off=0;
         getRegAndOff(*memReads.begin(), &machReg, &off); //TODO, sometimes, even non mem reads can have an offset?
         if (machReg == InvalidReg) {
-          cout << "[sa]Compare with constant do not load memory right? continue slicing." << endl;
+          cout << "[sa] Compare with constant do not load memory right? continue slicing." << endl;
           return false;
         }
+      } else if (id == e_xchg) {
+        cout << "[sa] Special case of atomic exchange instruction, continue slicing." << endl;
+        return false;
       }
 
       std::string readStr = (*memReads.begin())->format();
