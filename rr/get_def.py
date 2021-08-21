@@ -258,7 +258,7 @@ def get_addrs(breakpoint_trace, shift, offset, offset_reg):
     return all_addrs
 """
 
-def append_result(reg_points, reg_point,
+def update_breakpoints(reg_points, reg_point,
                   regs, reg,
                   shifts, shift,
                   offsets, offset,
@@ -348,17 +348,19 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
         pending_addrs.add(breakpoint_trace[def_insn_index][1])
     #all_addrs = set([breakpoint_trace[get_def_insn_index_for_branch(index, [read], breakpoint_trace)][1]
     #                for index in taken_indices])
+    if '0x0' in pending_addrs:
+        print("[rr] parsed write to invalid address ...")
+        pending_addrs.remove('0x0')
     print("[rr] COUNT Total number of unique addresses read when branch outcome was positive: " + str(len(pending_addrs)))
+
     if len(pending_addrs) > 1000:
-        print("[warn][rr] Too many unique addresses to investigate...")
-        return results
+        raise Exception("[warn][rr] Too many unique addresses to investigate... " + str(len(pending_addrs)))
 
     for static_addr in pending_addrs.intersection(all_static_addr_writes.keys()):
         for insn, func in all_static_addr_writes[static_addr]:
-            append_result(reg_points, '*' + hex(insn), regs, '', shifts, '', offsets, static_addr,
-                          off_regs, '', src_regs, '', loop_insn_flags, '0')
-
             if insn not in all_unique_writes:
+                #append_result(reg_points, '*' + hex(insn), regs, '', shifts, '', offsets, static_addr,
+                #              off_regs, '', src_regs, '', loop_insn_flags, '0')
                 results.append([['', 0, int(static_addr, 16)], insn, func, ''])
                 all_unique_writes.add(insn)
                 explained_addrs.add(static_addr)
@@ -384,6 +386,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     pos_pass = True
     do_breakpoints = read_point_count < SMALL_READ_POINT_COUNT \
                      or (read_point_count < LARGE_READ_POINT_COUNT and reg.lower() == 'rsp')
+    do_thirdpass = True
     print("[rr] Do breakpoints? " + str(do_breakpoints))
     print("[rr] Total iters: " + str(iter))
 
@@ -481,7 +484,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                 # print('[tmp] ' + str(curr_expr))
                 curr_reg, curr_shift, curr_offset, curr_off_reg = parse_mem_write_expr(curr_expr)
                 curr_src_reg = line[4].strip().lower()
-                append_result(reg_points, '*' + hex(true_insn_addr), regs, curr_reg, shifts, curr_shift, offsets, curr_offset,
+                update_breakpoints(reg_points, '*' + hex(true_insn_addr), regs, curr_reg, shifts, curr_shift, offsets, curr_offset,
                               off_regs, curr_off_reg, src_regs, curr_src_reg, loop_insn_flags, line[5])
 
                 results.append([curr_expr[1:], true_insn_addr, func, curr_src_reg])
@@ -494,8 +497,8 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                     pending_addrs.add(curr_addr)
                     addr_to_def_to_ignore[curr_addr] = hex(insn)
 
-            print("[rr] all insns found " + str(reg_points))
-            print("[rr] all registers found " + str(regs))
+            #print("[rr] all insns found " + str(reg_points))
+            #print("[rr] all registers found " + str(regs))
             print()
             print("[rr] current results count: " + str(len(results)))
             print("[rr] current results: " + str(results))
@@ -511,14 +514,27 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
             #    regs.append(get_written_reg(instruction))
             #    reg_points.append(instruction)
             print("[rr] do breakpoint? " + str(do_breakpoints))
-            if do_breakpoints is True:
+            if do_breakpoints is True and do_thirdpass is True:
                 print("[rr] Running breakpoints for third step")
                 print("[rr] Breakpoints: " + str(reg_points))
-                print("[rr] Registers: " + str(regs), flush=True)
+                print("[rr] Registers: " + str(regs))
+                print("[rr] Offset registers: " + str(off_regs))
+                print("[rr] Offsets: " + str(offsets))
+                print("[rr] Shifts: " + str(shifts))
+                print("[rr] Source registers: " + str(src_regs))
+                print("[rr] Is a loop insn: " + str(loop_insn_flags), flush=True)
                 #TODO, how to distinguish diff insn and regs? looks like it's according to order
-                run_breakpoint(branch_target, reg_points, regs, off_regs, offsets, shifts, src_regs,
+                success, bp_pass_duration2 = run_breakpoint(branch_target, reg_points, regs, off_regs, offsets, shifts, src_regs,
                                loop_insn_flags, True, True)
                 breakpoint_trace = parse_breakpoint(branch_target, reg_points, True)
+                reg_points = [reg_points[0]]
+                regs = [regs[0]]
+                off_regs = [off_regs[0]]
+                offsets = [offsets[0]]
+                shifts = [shifts[0]]
+                src_regs = [src_regs[0]]
+                loop_insn_flags = [loop_insn_flags[0]]
+
                 print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoint hits")
                 print("[rr] Third step finished")
 
@@ -550,7 +566,17 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                 print("[rr] Newly explained addresses: " + str(len(current_explained_addrs)))
                 explained_addrs = explained_addrs.union(current_explained_addrs)
                 pending_addrs = pending_addrs.difference(explained_addrs)
+                print("[rr] Number of explained addresses: " + str(len(explained_addrs)))
                 print("[rr] Addresses that might have undergone unknown writes: " + str(len(pending_addrs)))
+                # estimate if rewatching the addrs is actually faster than running the breakpoint pass
+                # TODO: to optimize for performance, could just only include the latest found definitions
+                #       currently will accumulate all of them ... so once this third breakpoint pass gets slow
+                #       it only gets slower.
+                #TODO: instead of using the static 30s, could track average watchpoint duration too
+                #if len(current_explained_addrs)/2*30 < bp_pass_duration2:
+                #    print("[rr] Disabling the third breakpoint pass, which took " + str(bp_pass_duration2)
+                #          + " seconds in the previous run, but only removed " + str(len(explained_addrs)) + " addrs.")
+                #    do_thirdpass = False
         watchpoints = pick_watch_points(pending_addrs)
         explained_addrs = explained_addrs.union(watchpoints)
         pending_addrs = pending_addrs.difference(watchpoints)
