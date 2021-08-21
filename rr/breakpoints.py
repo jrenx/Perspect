@@ -36,19 +36,27 @@ def br_handler(event):
     if br_num < len(reg_points):
         is_loop_insn = int(config['loop_insn_flags'][br_num])
 
-        if is_loop_insn != 1 or not config['step']:
+        if is_loop_insn != 1:
             if config['step'] and br_num != 0:#first reg point is always a read
                 gdb.execute('si')
             read_breakpoint(br_num, frame)
         else:
             gdb.events.stop.disconnect(br_handler)
             loop_pc = int(reg_points[br_num].strip('*'), 16)
-            gdb.execute('si')
-            pc = int(frame.pc())
-            while pc == loop_pc:
+            if not config['step']:
                 read_breakpoint(br_num, frame)
-                gdb.execute('si')
+            gdb.execute('si')
+
+            try:
                 pc = int(frame.pc())
+                while pc == loop_pc:
+                    read_breakpoint(br_num, frame)
+                    gdb.execute('si')
+                    pc = int(frame.pc())
+                if config['step']:
+                    read_breakpoint(br_num, frame)
+            except gdb.error as e:
+                print("Encountered gdb error, frame is likely invalid: " + str(e))
             gdb.events.stop.connect(br_handler)
 
     elif br_num < len(reg_points) + len(breakpoints):
@@ -82,7 +90,7 @@ def read_breakpoint(br_num, frame):
 
     if not config['deref']:
         trace.append((reg_points[br_num], addr, None))
-    else:
+    elif addr != '0x0':
         value = None
         if '(' in src_reg or ',' in src_reg or '%' in src_reg:
             cmd = 'p/x *(' + addr + ')'
