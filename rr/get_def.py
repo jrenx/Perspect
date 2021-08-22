@@ -504,7 +504,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
             print("[rr] current results: " + str(results))
 
             if len(pending_addrs) == 0:
-                print("[warn] No more watchpoints to watch... Returning now...")
+                print("[ERROR][rr] No more watchpoints to watch... Returning now...")
                 return results
 
             #for instruction in positive:
@@ -591,6 +591,8 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
         #           for index in branch_indices]
         #watchpoint_taken_indices = range(0, 4)
         #watchpoint_not_taken_indices = range(4, 8)
+    if len(results) == 0 and len(pending_addrs) > 0:
+        raise Exception("[ERROR][rr] No results found because exceeded itertaion, but still has more addresses to watch...")
 
     #return positive, negative
     return results
