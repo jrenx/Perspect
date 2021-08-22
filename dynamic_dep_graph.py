@@ -1224,11 +1224,17 @@ class DynamicGraph:
                 mem_store_addr = 0
                 if static_node.mem_store is not None:
                     if hasPrevValues is True:
+                        hasPrevValues = False
                         mem_store_addr = self.calculate_mem_addr(prev_reg_value, static_node.mem_store,
                                                                  None if prev_pending_regs is None else prev_pending_regs[0])
+                        #This is a ugly solution for rep mov when the length is zero, therefore load addr can be zero
+                        if reg_value == 0:
+                            print("[warn] a rep mov %ds:(%rsi),%es:(%rdi) with dst addr of 0x0? ignore insn " + hex(insn))
+                            continue
                     else:
                         mem_store_addr = self.calculate_mem_addr(reg_value, static_node.mem_store,
                                                          None if pending_regs is None else pending_regs[0])
+                hasPrevValues = False
                 #print("[build] Store " + hex(insn) + " to " + hex(mem_store_addr))
                 if (insn not in starting_insns) and (mem_store_addr not in addr_to_df_succe_node):
                     if insn not in local_df_prede_insn_to_succe_node:
@@ -1239,7 +1245,6 @@ class DynamicGraph:
                                 if bit_insn in bit_insn_to_operand:
                                     del bit_insn_to_operand[bit_insn]
                         continue
-            hasPrevValues = False
 
             if insn not in self.insn_to_id:
                 self.insn_to_id[insn] = insn_id
