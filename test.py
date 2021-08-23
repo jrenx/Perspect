@@ -21,6 +21,24 @@ class TestPIN(unittest.TestCase):
 
 
 class TestRR(unittest.TestCase):
+    def test_rr_slice10(self):
+        a = datetime.datetime.now()
+        result = rr_backslice('909_ziptest_exe9', None, None, 0x42b575, 'RSP', 0, 0x38, None, {})
+        b = datetime.datetime.now()
+        print(result)
+        print("Took: " + str(b - a))
+
+    def test_rr_slice9(self): #17000 unique addrs, maybe not worth investigating
+        rr_cache = {}
+        a = datetime.datetime.now()
+        result = rr_backslice('909_ziptest_exe9', None, None, 0x408aff, 'RSI', 0, 0, None, rr_cache)
+        b = datetime.datetime.now()
+        print(result)
+        print("Took: " + str(b - a))
+        print("Persisting rr result file")
+        with open("test_rr_slice9.json", 'w') as f:
+            json.dump(rr_cache, f, indent=4)
+
     def test_rr_slice8(self):
         a = datetime.datetime.now()
         result = rr_backslice('909_ziptest_exe9', None, None, 0x4274e7, 'RSP', 0, 24, None, {})
@@ -43,11 +61,15 @@ class TestRR(unittest.TestCase):
         print("Took: " + str(b - a))
 
     def test_rr_slice5(self): #17000 unique addrs, maybe not worth investigating
+        rr_cache = {}
         a = datetime.datetime.now()
-        result = rr_backslice('909_ziptest_exe9', None, None, 0x408b05, 'RSI', 0, 0, None, {})
+        result = rr_backslice('909_ziptest_exe9', None, None, 0x408b05, 'RSI', 0, 0, None, rr_cache)
         b = datetime.datetime.now()
         print(result)
         print("Took: " + str(b - a))
+        print("Persisting rr result file")
+        with open("test_rr_slice5.json", 'w') as f:
+            json.dump(rr_cache, f, indent=4)
 
     def test_rr_slice4(self):
         a = datetime.datetime.now()
@@ -129,6 +151,12 @@ class TestStaticSlicing(unittest.TestCase):
         #self.assertEqual(len(results[0][2]), 1)
         self.assertTrue([4232916, 'R9', 0, 0, None, False, True, 'memread', 'scanblock', '', [[[4232191, 'RCX', 'and'], [4232922, 'CL', 'shr']]]] in results[0][2])
         self.assertTrue([4232134, 'R9', 0, 0, None, False, True, 'memread', 'scanblock', '', [[[4232191, 'RCX', 'and'], [4232732, 'CL', 'shr']], [[4232191, 'RCX', 'and'], [4232143, 'CL', 'shr']]]] in results[0][2])
+
+    def test_bit_var_extra(self):
+        slice_starts = []
+        slice_starts.append(['', 0x4021db, 'runtime.casp', False])
+        #slice_starts.append(['rcx', 0x4021e0, 'runtime.casp', False]) # mark unallocated
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
 
     def test_bit_var(self):
         slice_starts = []
@@ -569,6 +597,13 @@ class TestStaticSlicing(unittest.TestCase):
         insn_to_func.append([str(0x40220c), "runtime.atomicstorep"])
         results = get_reg_read_or_written(insn_to_func, "909_ziptest_exe9", True)
         print(results[0][2])
+
+
+    def test_tmp10(self):
+        slice_starts = []
+        slice_starts.append(['SPECIAL', 0x40be22, "getaddrbucket", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
     """
     def test_sa_TODO16(self):
         slice_starts = []

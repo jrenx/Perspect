@@ -76,7 +76,7 @@ public:
           cout << "[sa] Compare with constant do not load memory right? continue slicing." << endl;
           return false;
         }
-      } else if (id == e_xchg) {
+      } else if (id == e_xchg || id == e_cmpxch) {
         cout << "[sa] Special case of atomic exchange instruction, continue slicing." << endl;
         return false;
       }
