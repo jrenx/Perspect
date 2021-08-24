@@ -1957,11 +1957,11 @@ class DynamicGraph:
             if node.id in reference.id_to_node:
                 assert node.is_valid_weight is False
                 assert node.is_aggregate_weight is False
-                print("in reference graph")
+                #print("in reference graph")
                 if reference.id_to_node[node.id].is_valid_weight is False:
                     assert reference.id_to_node[node.id].weight == -1
                     continue
-                print("has valid weight")
+                #print("has valid weight")
                 ref_node = reference.id_to_node[node.id]
                 node.weight = ref_node.weight
                 node.weight_origins = set(ref_node.weight_origins)
@@ -1992,10 +1992,10 @@ class DynamicGraph:
                 #        node.is_valid_weight = True
                 #        node.weight_origins = weight_origins
                 #        break
-            for node in self.insn_to_dyn_nodes[0x4071c9]: #TODO, remove this hack!
-                node.is_aggregate_weight = False
-                if node.static_node.id in aggregate_static_node_ids:
-                    aggregate_static_node_ids.remove(node.static_node.id)
+            #for node in self.insn_to_dyn_nodes[0x4071c9]: #TODO, remove this hack!
+            #    node.is_aggregate_weight = False
+            #    if node.static_node.id in aggregate_static_node_ids:
+            #        aggregate_static_node_ids.remove(node.static_node.id)
 
             for node in self.reverse_postorder_list:  # a node will be visited only if its predecessors have all been visited
                 #if node.is_valid_weight is True:
