@@ -921,6 +921,8 @@ class StaticNode:
         sn.group_insns = data["group_insns"]
         if sn.group_ids is not None:
             for group_id in sn.group_ids:
+                if group_id > StaticNode.group_id:
+                    StaticNode.group_id = group_id + 1
                 if group_id not in StaticDepGraph.group_to_nodes:
                     StaticDepGraph.group_to_nodes[group_id] = set()
                 StaticDepGraph.group_to_nodes[group_id].add(sn)
@@ -1972,6 +1974,9 @@ class StaticDepGraph:
                 bb.predes = []
                 bb.succes = []
             # print("=====================================================")
+            if len(self.cfg.ordered_bbs) == 0:
+                print("[warn] function " + self.func + " has no BBs.")
+                return
             cfg = CFG(self.func, self.prog)
             cfg.build(self.cfg.ordered_bbs[0].start_insn)
             # new_start_insn_to_bb = {}
@@ -2004,6 +2009,7 @@ class StaticDepGraph:
             bb = self.cfg.id_to_bb[bb_id]
             node_id = self.bb_id_to_node_id[bb_id]
             node = self.id_to_node[node_id]
+
             #print("BB id: " + str(bb_id) + " node insn: " + hex(node.insn))
             #if final is True:
             #    node.cf_predes = []
@@ -2238,6 +2244,10 @@ class StaticDepGraph:
         visited_df_nodes = set()
         visited_funcs = set()
         worklist = deque()
+        for graph in StaticDepGraph.func_to_graph.values():
+            for node in graph.id_to_node.values():
+                node.backedge_targets = set()
+                node.backedge_sources = set()
         for node in StaticDepGraph.starting_nodes:
             worklist.append(node.function)
         while len(worklist) > 0:
