@@ -577,11 +577,7 @@ int main()
     //  cout << "HERE " <<uid << endl;
     //}
 
-    bool parse = false;
-    if (CodeOfStartInsns[code] || PendingCodes[code]) {
-    //if ((code > 0 && code <= MaxStartCode) || PendingCodes[code]) {
-      parse = true;
-    }
+    bool parse = true;
 
     bool isBitOp = isBitOpCode[code];
     bool containsReg = CodesWithRegs[code];
@@ -630,9 +626,6 @@ int main()
       continue;
     }
 
-    if (!parse) {
-      goto DONT_PARSE;
-    }
     //cout << code << endl;
 
     // A bit hacky, but essentially if an instruction both loads and stores
@@ -643,7 +636,7 @@ int main()
         if (pendingRegCount == 0) {
           pendingRegCount = 1;
           offRegValue = regValue;
-          goto DONT_PARSE;
+          continue;
         }
         pendingRegCount = 0;
       } else {
@@ -652,14 +645,14 @@ int main()
       prevRegValue = regValue;
       prevOffRegValue = offRegValue;
       hasPrevValues = true;
-      goto DONT_PARSE;
+      continue;
     } else {
       int regCount1 =  CodeToRegCount[code];
       if (regCount1 > 1) { // large than zero only if has more than one reg!
         if (pendingRegCount == 0) {
           pendingRegCount = 1;
           offRegValue = regValue;
-          goto DONT_PARSE;
+          continue;
         }
         pendingRegCount = 0;
       } else {
@@ -668,191 +661,25 @@ int main()
     }
     if (isBitOp) otherRegsParsed = true;
     sn = CodeToStaticNode[code];
-    if (PendingRemoteDefCodes[code]) {
-      long addr = 0;
-      if (sn->mem_store == NULL) {
-        //cout << "[warn] " << sn->id << " does not store to memory? " << endl;
-        hasPrevValues = false;
-      } else {
-        //assert(sn->mem_store != NULL);
-        if (hasPrevValues) {
-          addr = sn->mem_store->calc_addr(prevRegValue, prevOffRegValue);
-          hasPrevValues = false;
-        } else {
-          addr = sn->mem_store->calc_addr(regValue, offRegValue);
-        }
-      }
-      assert(hasPrevValues == false);
-      //long addr = sn->mem_store->calc_addr(regValue, offRegValue);
-      //if (PendingAddrs.find(addr) == PendingAddrs.end() && (code > 0 && code > MaxStartCode)) {
-      if (PendingAddrs.find(addr) == PendingAddrs.end() && !CodeOfStartInsns[code]) {
-        if (!PendingLocalDefCodes[code]) goto DONT_PARSE; // FIXME: unfortuanately, could be a local def dep too, need to make logic less messy if have more time ...
-      } else {
-        //cout << "  mem addr matched " << endl;
-        // Approximation
-
-        if (sn->src_reg_size == 8 && !containsBitOpCode[code])
-          PendingAddrs.erase(addr);
-      }
-    } else {
-      hasPrevValues = false;
-      assert(hasPrevValues == false);
-    }
-
-    bitOps = CodeToPriorBitOpCodes[code];
-    if (bitOps != NULL) {
-      int count = CodeToPriorBitOpCodeCount[code];
-      for (int j = 0; j < count; j++) {
-        short bitOpCode = bitOps[j];
-        if (codeToBitOperandIsValid[bitOpCode]) {
-          if (DEBUG) cout << "[load] " << bitOpCode << " " << count << " " << std::bitset<64>(codeToBitOperand[bitOpCode]) << endl;
-          os.write((char *) &bitOpCode, sizeof(unsigned short));
-          os.write((char *) &uid, sizeof(long));
-          os.write((char *) &codeToBitOperand[bitOpCode], sizeof(long));
-          codeToBitOperandIsValid[bitOpCode] = false;
-        }
-      }
-    }
-
-    if (regCount2 > 1) {
-      if (DEBUG) cout << "Persisting1 " << code << endl;
-      os.write((char*)&code, sizeof(unsigned short));
-      os.write((char*)&uid, sizeof(long));
-      os.write((char*)&prevOffRegValue, sizeof(long));
-    }
-    if (regCount2 > 0) {
-      if (DEBUG) cout << "Persisting2 " << code << endl;
-      os.write((char*)&code, sizeof(unsigned short));
-      os.write((char*)&uid, sizeof(long));
-      os.write((char*)&prevRegValue, sizeof(long));
-    }
-
-    if (CodeToRegCount[code] > 1) {
-      if (DEBUG) cout << "Persisting3 " << code << endl;
-      os.write((char*)&code, sizeof(unsigned short));
-      os.write((char*)&uid, sizeof(long));
-      os.write((char*)&offRegValue, sizeof(long));
-    }
-
-    if (DEBUG) cout << "Persisting4 " << code << endl;
-    os.write((char*)&code, sizeof(unsigned short));
-    os.write((char*)&uid, sizeof(long));
-    if (CodesWithRegs[code]) {
-      if (DEBUG) cout << "Persisting5 " << code << endl;
-      os.write((char*)&regValue, sizeof(long));
-    }
 
     //cout << "====" << nodeCount << "\n";
     //cout << "curr code" << code << " index: "<< i <<endl;
     //cout << std::hex << CodeToInsn[code] << std::dec << "\n";
     OccurrencesPerCode[code] = OccurrencesPerCode[code] + 1;
-
-    nodeCount ++;
-    
-    if (PendingCfPredeCodes[code]) {
-      std::vector<unsigned short> toRemove;
-      for(auto it = CfPredeCodeToSucceNodes[code].begin(); it != CfPredeCodeToSucceNodes[code].end(); it++) {
-        StaticNode * succeNode = *it;
-        for (auto iit = succeNode->cf_prede_codes.begin();
-                  iit != succeNode->cf_prede_codes.end(); iit ++) {
-          toRemove.push_back(*iit);
-        }
-      }
-      for(auto it = toRemove.begin(); it != toRemove.end(); it++) {
-        unsigned short removeCode = *it;
-        CfPredeCodeToSucceNodes[removeCode].clear();
-        PendingCfPredeCodes[removeCode] = false;
-        if (!PendingLocalDefCodes[removeCode]) PendingCodes[removeCode] = false;
-      }
-    }
-
-    if (PendingLocalDefCodes[code]) {//} && !CodesOfMemStoreNodes[code]) {
-      std::vector<unsigned short> toRemove;
-      for(auto it = DfPredeCodeToSucceNodes[code].begin(); it != DfPredeCodeToSucceNodes[code].end(); it++) {
-        StaticNode * succeNode = *it;
-        assert (succeNode->mem_load == NULL);
-        for (auto iit = succeNode->df_prede_codes.begin();
-             iit != succeNode->df_prede_codes.end(); iit++) {
-          toRemove.push_back(*iit);
-        }
-      }
-      for(auto it = toRemove.begin(); it != toRemove.end(); it++) {
-        unsigned short removeCode = *it;
-        DfPredeCodeToSucceNodes[removeCode].clear();
-        PendingLocalDefCodes[removeCode] = false;
-        if (!PendingCfPredeCodes[removeCode]) PendingCodes[removeCode] = false;
-      }
-    }
-
-    loadsMemory = sn->mem_load != NULL;
-    if (sn->df_prede_codes.size() > 0) {
-      for (auto it = sn->df_prede_codes.begin(); it != sn->df_prede_codes.end(); it++) {
-        unsigned short currCode = *it;
-        if (!CodesOfCFNodes[currCode] && !CodesOfDFNodes[currCode]) {
-          continue;
-        }
-        // technically, for remote nodes, can remove when the list is empty!
-        // but need to match on address... too complicated for now
-        if (!loadsMemory) {
-          PendingLocalDefCodes[currCode] = true;
-          PendingCodes[currCode] = true;
-          DfPredeCodeToSucceNodes[currCode].push_back(sn);
-        } else {
-          PendingRemoteDefCodes[currCode] = true;
-          PendingCodes[currCode] = true;
-        }
-      }
-      if (loadsMemory) {
-        long addr = sn->mem_load->calc_addr(regValue, offRegValue);
-        PendingAddrs.insert(addr);
-      }
-    } else {
-      if (loadsMemory && sn->mem_load->read_same_as_write) {
-        long addr = sn->mem_load->calc_addr(regValue, offRegValue);
-        PendingAddrs.insert(addr);
-      }
-    }
-    if (sn->cf_prede_codes.size() > 0) {
-      for (auto it = sn->cf_prede_codes.begin(); it != sn->cf_prede_codes.end(); it++) {
-        unsigned short currCode = *it;
-        if (!CodesOfCFNodes[currCode] && !CodesOfDFNodes[currCode]) {
-          continue;
-        }
-        CfPredeCodeToSucceNodes[currCode].push_back(sn);
-        PendingCfPredeCodes[currCode] = true;
-        PendingCodes[currCode] = true;
-      }
-    }
-    CodeWithLaterBitOpsExecuted[code] = true;
-    continue;
-
-    DONT_PARSE:
-    if (LaterBitOpCodeToCodes[code] != NULL) {
-      CodeWithLaterBitOpsExecuted[code] = false;
-    }
-
-    bitOps = CodeToPriorBitOpCodes[code];
-    if (bitOps != NULL) {
-      int count = CodeToPriorBitOpCodeCount[code];
-      for (int j = 0; j < count; j++) {
-        short bitOpCode = bitOps[j];
-        codeToBitOperandIsValid[bitOpCode] = false;
-      }
-    }
   }
   os.close();
   std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
   std::cout << "Parsing took = " << std::chrono::duration_cast<std::chrono::seconds>(t4 - t3).count() << "[s]" << std::endl;
 
   string outLargeFile(traceFile);
-  outLargeFile += ".large";
+  outLargeFile += ".count";
   ofstream osl;
   osl.open(outLargeFile.c_str());
   for (int i = 1; i < CodeCount; i++) {
     long count = OccurrencesPerCode[i];
-    if (count <= 50000) continue;
+    //if (count <= 50000) continue;
     //cout << "LARGE " << i << "\n";
-    osl << std::hex << CodeToInsn[i] << std::dec << " " << i << " occurrences: " << count << "\n";
+    osl << std::hex << CodeToInsn[i] << std::dec << " " << count << "\n";
   }
   osl.close();
   cout << "total nodes: " << nodeCount << endl;

@@ -278,20 +278,30 @@ class DynamicDependence:
         self.load_insn_to_bit_ops = {} #bit op follows the load
         self.bit_op_to_store_insns = {} #bit op precedes store
         self.store_insn_to_bit_ops = {}
-        self.trace_path = None
 
         # phase out this eventually and just use one unified list to represent every starting event
         self.starting_insns = set()
         for p in starting_events:
             self.starting_insns.add(p[1]) #FIXME: change start to starting?
         self.starting_events = list(starting_events)
-        print(self.starting_events)
+        print("[dg] Starting events are: " + str(self.starting_events))
+
+        key = ""
+        for i in range(len(self.starting_events)):
+            event = self.starting_events[i]
+            reg = event[0]
+            insn = event[1]
+            key += reg + "_" + hex(insn)
+            if i + 1 < len(self.starting_events):
+                key += "_"
+        self.key = key
+
+        self.trace_name = self.key + "_" + 'instruction_trace.out'
+        self.trace_path = os.path.join(curr_dir, 'pin', self.trace_name)
+
         self.init_graph = None
 
-    def get_dynamic_trace(self, prog, arg, path, trace_name=""):
-        trace_name = trace_name + 'instruction_trace.out'
-        trace_path = os.path.join(curr_dir, 'pin', trace_name)
-        
+    def get_dynamic_trace(self, prog, arg, path, trace_name, trace_path):
         instructions = []
         unique_insns = set()
         i = 0
@@ -439,7 +449,7 @@ class DynamicDependence:
             #self.insn_to_reg_count[insn] = 1
 
         if os.path.isfile(trace_path):
-            return trace_path
+            return
 
         # invoke PIN. get output of a sequence of insn
         trace = InsRegTrace(path + prog + ' ' + path + arg,
@@ -447,7 +457,7 @@ class DynamicDependence:
         print("[dyn_dep] Total number of instructions watched: " + str(len(instructions)))
         print(instructions)
         trace.run_function_trace(instructions)
-        return trace_path
+        return
 
     def build_static_dependencies(self, starting_events, prog, sa_steps=10000):
 
@@ -593,15 +603,15 @@ class DynamicDependence:
                   str(time_record["save_dynamic_graph_as_json"] - time_record["propogate_weight"]), flush=True)
 
 
-        if self.init_graph is None:
-            #pass
-            dynamic_graph.verify_initail_graph_weight()
-            #dynamic_graph.propogate_initial_graph_weight()
-        else:
-            #dynamic_graph.propogate_weight(self.init_graph)
-            dynamic_graph.verify_weight(self.init_graph)
-            #with open(result_file, 'w') as f:
-            #    json.dump(dynamic_graph.toJSON(), f, indent=4, ensure_ascii=False)
+        #if self.init_graph is None:
+        #    #pass
+        #    dynamic_graph.verify_initail_graph_weight()
+        #    #dynamic_graph.propogate_initial_graph_weight()
+        #else:
+        #    #dynamic_graph.propogate_weight(self.init_graph)
+        #    dynamic_graph.verify_weight(self.init_graph)
+        #    #with open(result_file, 'w') as f:
+        #    #    json.dump(dynamic_graph.toJSON(), f, indent=4, ensure_ascii=False)
 
         print("[dyn_dep] total number of dynamic nodes: " + str(len(dynamic_graph.dynamic_nodes)))
         return dynamic_graph
@@ -609,16 +619,6 @@ class DynamicDependence:
     def prepare_to_build_dynamic_dependencies(self, sa_steps=10000):
         # Get static dep, then invoke pin to get execution results, and build CFG
         #FIXME: convert start instruction to hex
-        key = ""
-        for i in range(len(self.starting_events)):
-            event = self.starting_events[i]
-            reg = event[0]
-            insn = event[1]
-            key += reg + "_" + hex(insn)
-            if i + 1 < len(self.starting_events):
-                key += "_"
-        self.key = key
-
         time_record["before_static_slice"] = time.time()
         used_cached_result = \
             self.build_static_dependencies(self.starting_events, self.prog, sa_steps)
@@ -626,7 +626,7 @@ class DynamicDependence:
         print("[TIME] Getting static slice: ",
               str(time_record["static_slice"] - time_record["before_static_slice"]), flush=True)
 
-        self.trace_path = self.get_dynamic_trace(self.prog, self.arg, self.path, self.key + "_")
+        self.get_dynamic_trace(self.prog, self.arg, self.path, self.trace_name, self.trace_path)
         time_record["invoke_pin"] = time.time()
         print("[TIME] Invoking PIN took: ",
               str(time_record["invoke_pin"] - time_record["static_slice"]), flush=True)
