@@ -47,10 +47,10 @@ class Invariance:
 
 class Proportion:
     def __init__(self, distribution, weighted_distribution):
-        print(distribution)
+        #print(distribution)
         self.distribution = distribution
         self.mu, self.std = norm.fit(distribution)
-        print(weighted_distribution)
+        #print(weighted_distribution)
         if len(weighted_distribution) > 0:
             self.weighted_distribution = weighted_distribution
             self.w_mu, self.w_std = norm.fit(weighted_distribution)
@@ -402,15 +402,24 @@ class RelationAnalysis:
             if node in dgraph.target_nodes:
                 continue
             node_insn = node.static_node.insn
-            #print("[ra] Forward propogating for node: " + hex(node_insn))
-            backedge_sources = node.static_node.backedge_sources
+            #print("[ra] Forward propogating for node: " + hex(node_insn) + " " + str(node.id))
+            #backedge_sources = node.static_node.backedge_sources
             for cf_succe in node.cf_succes:
-                #cf_succe_insn = cf_succe.static_node.insn
-                #if cf_succe_insn in backedge_sources:
+                cf_succe_insn = cf_succe.static_node.insn
+
+                if cf_succe_insn in node.static_node.backedge_sources:
+                    for output_node in cf_succe.output_set:
+                        if node_insn in output_node.input_sets and len(output_node.input_sets[node_insn]) > 0:
+                            #print("[ra] Node already attributed to the input of some output node: " + str(output_node.id))
+                            node.output_exclude_set.add(output_node)
                 #    wavefront.add(cf_succe.static_node)
                 #    print("[ra] insn: " + cf_succe.static_node.hex_insn + " added to pending list because of cycles...")
                 #    continue
                 node.output_set = node.output_set.union(cf_succe.output_set)
+                node.output_exclude_set = node.output_exclude_set.union(cf_succe.output_exclude_set)
+            #if len(node.output_exclude_set) > 0:
+            #    print("[ra] include outputs: " + str([n.id for n in node.output_set]))
+            #    print("[ra] exclude outputs: " + str([n.id for n in node.output_exclude_set]))
 
             for df_succe in node.df_succes:
                 #df_succe_insn = df_succe.static_node.insn
@@ -419,8 +428,12 @@ class RelationAnalysis:
                 #    print("[ra] insn: " + df_succe.static_node.hex_insn + " added to pending list because of cycles...")
                 #    continue
                 node.output_set = node.output_set.union(df_succe.output_set)
+                if df_succe.static_node.is_df is False:
+                    node.output_exclude_set = node.output_exclude_set.union(df_succe.output_exclude_set) #TODO, never referenced?
 
             for output_node in node.output_set:
+                if output_node in node.output_exclude_set:
+                    continue
                 if node_insn not in output_node.input_sets:
                     output_node.input_sets[node_insn] = set()
                 output_node.input_sets[node_insn].add(node)
@@ -449,6 +462,12 @@ class RelationAnalysis:
             #            if group_id not in output_node.input_sets:
             #                output_node.input_sets[group_id] = set()
             #            output_node.input_sets[group_id].add(virtual_node)
+
+        for node in dgraph.postorder_list: #a node will be visited only if its successors have all been visited
+            if node in dgraph.target_nodes:
+                continue
+            #node_insn = node.static_node.insn
+            node.output_set = node.output_set.difference(node.output_exclude_set)
 
     def do_backward_propogation(self, dgraph, starting_node):
         # all the starting nodes
@@ -501,9 +520,14 @@ class RelationAnalysis:
         output_set_count_list = []
         weighted_output_set_count_list = []
         reachable_output_events = set()
+        output_set_count_to_nodes = {} #for debugging
         for node in dgraph.insn_to_dyn_nodes[prede_node.insn]:
-            output_set_counts.add(len(node.output_set))
-            output_set_count_list.append(len(node.output_set))
+            output_set_count = len(node.output_set)
+            output_set_counts.add(output_set_count)
+            output_set_count_list.append(output_set_count)
+            if output_set_count not in output_set_count_to_nodes:
+                output_set_count_to_nodes[output_set_count] = []
+            output_set_count_to_nodes[output_set_count].append(node)
             reachable_output_events = reachable_output_events.union(node.output_set)
             if use_weight is True:
                 output_weight = 0
@@ -552,7 +576,8 @@ class RelationAnalysis:
               + " cf successors are: " + str([s.hex_insn for s in prede_node.cf_succes]))
         """
         node_count = len(dgraph.insn_to_dyn_nodes[prede_node.insn])
-        if DEBUG: print("[ra] insn: " + prede_node.hex_insn
+        if DEBUG:
+            print("[ra] insn: " + prede_node.hex_insn
                         + "@" + prede_node.function
                         + " lines "
                         + (str(prede_node.bb.lines) if isinstance(prede_node.bb, BasicBlock) else str(prede_node.bb))
@@ -563,7 +588,11 @@ class RelationAnalysis:
                         + " output set counts: " + str(output_set_counts)
                         + " " + str(output_set_count_list))
 
-        if DEBUG: print("[ra] insn: " + prede_node.hex_insn
+            for output_set_count in output_set_count_to_nodes:
+                print("[ra]  nodes with output count " + str(output_set_count)
+                      + " are: " + str([node.id for node in output_set_count_to_nodes[output_set_count]]))
+
+            print("[ra] insn: " + prede_node.hex_insn
                         + "@" + prede_node.function
                         + " lines "
                         + (str(prede_node.bb.lines) if isinstance(prede_node.bb, BasicBlock) else str(prede_node.bb))

@@ -43,7 +43,8 @@ class DynamicNode(JSONEncoder):
         self.load_bit_mask = None
         self.store_bit_mask = None
         self.output_set = set() #TODO, persist these two as well?
-        self.output_set1 = set()
+        self.output_exclude_set = set()
+        #self.output_set1 = set()
         self.input_sets = {}
         self.weight = -1
         self.weight_origins = set()
@@ -1377,8 +1378,18 @@ class DynamicGraph:
                     if len(addr_to_df_succe_node[mem_store_addr]) == 0:
                         del addr_to_df_succe_node[mem_store_addr]
 
+            # If a static node has both dataflow and control-flow successors, then it is probably not a branch
+            # if so, and if the node has not dataflow successor, and only control flow successor,
+            # then there is not need to further examine and dataflow predecessors.
+            has_df_succes = True
+            if len(static_node.df_succes) > 0 and len(static_node.cf_succes) > 0 and len(dynamic_node.df_succes) == 0:
+                has_df_succes = False
+
+            # If a node has the read_same_as_write flag set, then it may have a dataflow predecessor that is not examined
+            # then we just use the store address as the load addresses and further look for datalfow predecessors.
             loads_memory = True if static_node.mem_load is not None else False
-            if static_node.df_predes or (loads_memory and static_node.mem_load.read_same_as_write):  # and insn not in insn_of_df_nodes:
+            #FIXME: df_predes can never be None
+            if has_df_succes and static_node.df_predes or (loads_memory and static_node.mem_load.read_same_as_write):  # and insn not in insn_of_df_nodes:
                 for prede in static_node.df_predes:
                     node_insn = prede.insn
                     if node_insn not in insn_of_df_nodes and node_insn not in insn_of_cf_nodes:  # Slice is not always complete
@@ -1407,6 +1418,7 @@ class DynamicGraph:
                     addr_to_df_succe_node[mem_load_addr].append(dynamic_node)
                     #print("[build] Load " + hex(insn) + " to " + hex(mem_load_addr) + " adding to pending nodes")
 
+            # FIXME: cf_predes can never be None, no need for the test
             if static_node.cf_predes:  # and insn not in insn_of_df_nodes:
                 for prede in static_node.cf_predes:
                     node_insn = prede.insn
@@ -2051,33 +2063,22 @@ def print_path(curr_node, end_id):
             return found
     return False
 
-if __name__ == '__main__':
-    starting_events = []
-    starting_events.append(["rdi", 0x409daa, "sweep"])
-    starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
-    starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
-    starting_events.append(["rcx", 0x40764c, "runtime.free"])
-
-    dd = DynamicDependence(starting_events, "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
-    dd.prepare_to_build_dynamic_dependencies(10000)
-
-    dg = dd.build_dyanmic_dependencies(0x409418) #0x409418
-
-    sizes = {}
-    with open("weight", "r") as f:
-        lines = f.readlines()
-        for l in lines:
-            segs = l.split()
-            addr = int(segs[0], 16)
-            if addr in sizes:
-                if sizes[addr] != segs[1]:
-                    print(segs[1])
-                    print(sizes[addr])
-            #print("HERE1 " + hex(addr))
-            sizes[addr] = segs[1]
+def verify_0x409418_result(dg):
+        # sizes = {}
+    # with open("weight", "r") as f:
+    #    lines = f.readlines()
+    #    for l in lines:
+    #        segs = l.split()
+    #        addr = int(segs[0], 16)
+    #        if addr in sizes:
+    #            if sizes[addr] != segs[1]:
+    #                print(segs[1])
+    #                print(sizes[addr])
+    #        #print("HERE1 " + hex(addr))
+    #        sizes[addr] = segs[1]
 
     total_weight = 0
-    #for addr in sizes:
+    # for addr in sizes:
     #    total_weight+= int(sizes[addr])
 
     addr_not_explained = set()
@@ -2091,7 +2092,7 @@ if __name__ == '__main__':
     addr_from_malloc = set()
     node_to_weight = {}
     connected_count = 0
-    for n in dg.insn_to_dyn_nodes[4232057]:
+    for n in dg.insn_to_dyn_nodes[0x409379]:
         sw = deque()
         sw.append(n)
         visited = set()
@@ -2108,13 +2109,13 @@ if __name__ == '__main__':
                 else:
                     node_to_weight[n] = 0
                 """
-                #print("FOUND SUCCE")
+                # print("FOUND SUCCE")
                 break
             for scs in sc.df_succes:
                 sw.append(scs)
             for scs in sc.cf_succes:
                 sw.append(scs)
-        
+
         total_weight += int(node_to_weight[n])
         if len(n.df_predes) == 0:
             prede_not_found += 1
@@ -2128,7 +2129,7 @@ if __name__ == '__main__':
                 if p.static_node not in connected_predes:
                     connected_predes[p.static_node] = 0
                 connected_predes[p.static_node] += \
-                        connected_predes[p.static_node] + int(node_to_weight[n])
+                    connected_predes[p.static_node] + int(node_to_weight[n])
             wl = deque()
             wl.append(n)
             visited = set()
@@ -2137,14 +2138,14 @@ if __name__ == '__main__':
                 if c in visited:
                     continue
                 visited.add(c)
-                #0x408038
-                if c.static_node.insn == 0x4072e5:# or c.static_node.insn == 0x408447: # or c.static_node.insn ==  0x4072e5:
+                # 0x408038
+                if c.static_node.insn == 0x4072e5:  # or c.static_node.insn == 0x408447: # or c.static_node.insn ==  0x4072e5:
                     addr_from_malloc.add(hex(n.mem_load_addr))
                     if len(malloc_nodes) == 0:
                         from_malloc += 1
                     malloc_nodes.add(c.id)
                     connected_to_malloc = True
-                    #break TODO
+                    # break TODO
                 for pp in c.df_predes:
                     wl.append(pp)
             """
@@ -2161,12 +2162,11 @@ if __name__ == '__main__':
                 if p.static_node not in connected_predes_not_connected_to_malloc:
                     connected_predes_not_connected_to_malloc[p.static_node] = 0
                     connected_predes_not_connected_to_malloc1[p.static_node] = []
-                connected_predes_not_connected_to_malloc[p.static_node] =\
-                connected_predes_not_connected_to_malloc[p.static_node] + int(node_to_weight[n])#+ 1
+                connected_predes_not_connected_to_malloc[p.static_node] = \
+                    connected_predes_not_connected_to_malloc[p.static_node] + int(node_to_weight[n])  # + 1
                 connected_predes_not_connected_to_malloc1[p.static_node].append(hex(n.mem_load_addr))
             else:
                 connected_count += int(node_to_weight[n])
-
 
     print("Total weight " + str(total_weight))
     print(" Total count " + str(len(dg.insn_to_dyn_nodes[4232057])))
@@ -2177,7 +2177,6 @@ if __name__ == '__main__':
         print("FOUND: " + addr)
     for addr in addr_not_explained:
         print("MISSING: " + addr)
-
 
     print("==============================")
     sn = StaticDepGraph.func_to_graph['scanblock'].insn_to_node[4232057]
@@ -2191,33 +2190,46 @@ if __name__ == '__main__':
         p.print_node(" all predes: ")
     print("==============================")
     """
-    #total_not_connected = 0
+    # total_not_connected = 0
     for p in connected_predes:
         print(p.mem_store)
         p.print_node(" connected:  ")
-        #print(" count: " + str(connected_predes[p]))
-        #total_not_connected += connected_predes[p]
-    #print( " TOTAL COUNT: " + str(total_not_connected))
-    #print( " % " + str(total_not_connected/total_weight))
+        # print(" count: " + str(connected_predes[p]))
+        # total_not_connected += connected_predes[p]
+    # print( " TOTAL COUNT: " + str(total_not_connected))
+    # print( " % " + str(total_not_connected/total_weight))
     print("==============================")
     total_not_connected = 0
     for p in connected_predes_not_connected_to_malloc:
         print(p.mem_store)
         p.print_node(" connected but not to malloc:  ")
         print(" count: " + str(connected_predes_not_connected_to_malloc[p]))
-        print(" % : " + str(connected_predes_not_connected_to_malloc[p]/total_weight*100))
+        print(" % : " + str(connected_predes_not_connected_to_malloc[p] / total_weight * 100))
         print(" addrs : " + str(connected_predes_not_connected_to_malloc1[p]))
         total_not_connected += connected_predes_not_connected_to_malloc[p]
-    print( " TOTAL COUNT: " + str(total_not_connected))
-    print( " TOTAL WEIGHT: " + str(total_not_connected))
-    print( " % " + str(total_not_connected/total_weight*100))
-    print( " TOTAL COUNT: " + str(connected_count))
-    print( " % " + str(connected_count/total_weight*100))
+    print(" TOTAL COUNT: " + str(total_not_connected))
+    print(" TOTAL WEIGHT: " + str(total_not_connected))
+    print(" % " + str(total_not_connected / total_weight * 100))
+    print(" TOTAL COUNT: " + str(connected_count))
+    print(" % " + str(connected_count / total_weight * 100))
     print("==============================")
     for p in sn.df_predes:
         if p in connected_predes:
             continue
         print(p.mem_store)
         p.print_node(" not found:  ")
-    #with open(os.path.join(curr_dir, 'predes'), 'w') as f:
+    # with open(os.path.join(curr_dir, 'predes'), 'w') as f:
     #    json.dump(predes, f, indent=4, ensure_ascii=False)
+
+if __name__ == '__main__':
+    starting_events = []
+    starting_events.append(["rdi", 0x409daa, "sweep"])
+    starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
+    starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
+    starting_events.append(["rcx", 0x40764c, "runtime.free"])
+
+    dd = DynamicDependence(starting_events, "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
+    dd.prepare_to_build_dynamic_dependencies(10000)
+
+    dg = dd.build_dyanmic_dependencies(0x409418) #0x409418
+    #verify_0x409418_result(dg)
