@@ -21,6 +21,13 @@ class TestPIN(unittest.TestCase):
 
 
 class TestRR(unittest.TestCase):
+    def test_rr_slice11(self):
+        a = datetime.datetime.now()
+        result = rr_backslice('909_ziptest_exe9', None, None, 0x4072e5, 'RSP', 0, 0x30, None, {})
+        b = datetime.datetime.now()
+        print(result)
+        print("Took: " + str(b - a))
+
     def test_rr_slice10(self):
         a = datetime.datetime.now()
         result = rr_backslice('909_ziptest_exe9', None, None, 0x42b575, 'RSP', 0, 0x38, None, {})
@@ -602,6 +609,12 @@ class TestStaticSlicing(unittest.TestCase):
     def test_tmp10(self):
         slice_starts = []
         slice_starts.append(['SPECIAL', 0x40be22, "getaddrbucket", False])
+        results = static_backslices(slice_starts, '909_ziptest_exe9', {})
+        print(results)
+
+    def test_tmp11(self):
+        slice_starts = []
+        slice_starts.append(['SPECIAL', 0x4072e5, "runtime.mallocgc", False])
         results = static_backslices(slice_starts, '909_ziptest_exe9', {})
         print(results)
     """
