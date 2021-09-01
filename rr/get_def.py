@@ -169,6 +169,8 @@ def find_unknown_writes(reg_point, trace, filter=None, ignore_default=False):
     equals = 0
     zeros = 0
     read_insns = set()
+    j = -1
+    read_point_trace = []
     for i, (read_insn, var_addr, value) in enumerate(trace):
         #print("[tmp] " + str(read_insn) + " " + str(var_addr) + " " + str(value))
         #if reg is None and addr == branch_point:
@@ -183,19 +185,21 @@ def find_unknown_writes(reg_point, trace, filter=None, ignore_default=False):
             if filter is not None and i not in filter:
                 #print("[tmp] ignoring read point because did not lead to positive branch outcome")
                 continue
+            read_point_trace.append([read_insn, var_addr, value])
+            j += 1
             #print("[tmp] Address is being read at: " + str(read_insn))
             if not ignore_default and var_addr not in addr_to_value:
                 if value == '0x0':
                     zeros += 1
                 else:
                     #unknown_write = True
-                    unknown_writes.append(i)
+                    unknown_writes.append(j)
                     #print("[tmp] register has not been seen before: " + str(var_addr))
                     #if var_addr in watched_addrs:
                         #print("[tmp] Address already watched: " + str(var_addr))
 
             elif addr_to_value[var_addr] != value:
-                unknown_writes.append(i)
+                unknown_writes.append(j)
                 #print("[tmp] register has been seen before: " + str(var_addr))
                 #print("[tmp] but values differ from last written: " + str(addr_to_value[var_addr]) + " " + str(value))
                 #if var_addr in watched_addrs:
@@ -206,7 +210,7 @@ def find_unknown_writes(reg_point, trace, filter=None, ignore_default=False):
                 #print("[tmp] and values are equal: " + str(addr_to_value[var_addr]) + " " + str(value))
                 read_insns.add(int(addr_to_insn[var_addr].strip('*'), 16))
                 equals += 1
-                known_writes.append(i)
+                known_writes.append(j)
         else: # Is a write point.
             addr_to_value[var_addr] = value
             addr_to_insn[var_addr] = read_insn
@@ -216,7 +220,7 @@ def find_unknown_writes(reg_point, trace, filter=None, ignore_default=False):
     print("[rr] number of reads whose writes are all seen: " + str(equals))
     print("[rr] number of reads whose writes are not all seen: " + str(len(unknown_writes)))
     #return taken, not_taken
-    return unknown_writes, known_writes, read_insns
+    return unknown_writes, known_writes, read_insns, read_point_trace
 
 """
 def get_unique_addrs(breakpoint_trace):
@@ -398,6 +402,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
         print("[warn] No more watchpoints to watch... Returning now...")
         return results
 
+    known_writes_indices_set = set()
     for i in range(iter):
         # Second pass
         print("[rr] Running second step for {} times".format(i + 1), flush=True)
@@ -544,7 +549,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                 known_writes_indices = None
                 if pos_pass:
                     read_filter = set([get_def_insn_index_for_branch(index, [read], breakpoint_trace) for index in taken_indices])
-                    unknown_writes_indices, known_writes_indices, read_insns = find_unknown_writes(read, breakpoint_trace, read_filter)
+                    unknown_writes_indices, known_writes_indices, read_insns, breakpoint_trace = find_unknown_writes(read, breakpoint_trace, read_filter)
 
                     if len(unknown_writes_indices) == 0:
                         print("Only found the writes that lead to positive branch outcome, looking for other writes now...")
@@ -553,19 +558,33 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
 
                 if not pos_pass:
                     read_filter = set([get_def_insn_index_for_branch(index, [read], breakpoint_trace) for index in not_taken_indices])
-                    unknown_writes_indices, known_writes_indices, read_insns = find_unknown_writes(read, breakpoint_trace, read_filter, True)
+                    unknown_writes_indices, known_writes_indices, read_insns, breakpoint_trace = find_unknown_writes(read, breakpoint_trace, read_filter, True)
                     if len(unknown_writes_indices) == 0:
                         print("All writes are accounted for. Returning now...")
                         return results
                 # the unknown writes must also have been
                 #partial_breakpoint_trace = [breakpoint_trace[i] for i in unknown_writes_indices]
                 #pending_addrs = set([breakpoint[1] for breakpoint in partial_breakpoint_trace])
+                partial_breakpoint_trace = []
+                for i in unknown_writes_indices:
+                    if i not in known_writes_indices_set:
+                        partial_breakpoint_trace.append(breakpoint_trace[i])
+                current_unexplained_addrs = set([breakpoint[1] for breakpoint in partial_breakpoint_trace])
 
                 partial_breakpoint_trace = [breakpoint_trace[i] for i in known_writes_indices]
                 current_explained_addrs = set([breakpoint[1] for breakpoint in partial_breakpoint_trace])
+
+                known_writes_indices_set = known_writes_indices_set.union(set(known_writes_indices))
+
                 print("[rr] Newly explained addresses: " + str(len(current_explained_addrs)))
                 explained_addrs = explained_addrs.union(current_explained_addrs)
-                pending_addrs = pending_addrs.difference(explained_addrs)
+                pending_addrs = pending_addrs.difference(current_explained_addrs)
+
+                # This is very important, because sometimes on the stack,
+                # the same address is more likely to be used multiple times, and have different definition points
+                # and we might have only explained a subset of the definition points for the same address!
+                explained_addrs = explained_addrs.difference(current_unexplained_addrs)
+                pending_addrs = pending_addrs.union(current_unexplained_addrs)
                 print("[rr] Number of explained addresses: " + str(len(explained_addrs)))
                 print("[rr] Addresses that might have undergone unknown writes: " + str(len(pending_addrs)))
                 # estimate if rewatching the addrs is actually faster than running the breakpoint pass
