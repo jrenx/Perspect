@@ -28,9 +28,7 @@ def run_task(id, pipe):
         print("Process {} finish task {} in {}".format(id, str_args, duraton))
         pipe.send(rr_result_cache)
     pipe.send("Shutdown")
-
-
-
+    
 
 def main():
     curr_dir = os.path.dirname(os.path.realpath(__file__))
@@ -84,7 +82,7 @@ def main():
                 if line.startswith(prog):
                     line = line[len(prog):]
                 segs = line.split('_')
-                a0 = None if segs[0].strip() == "None" else segs[0].strip()
+                a0 = None if segs[0].strip() == "None" else segs[0].strip() #This is expected, a0 is empty string
                 a1 = None if segs[1].strip() == "None" else segs[1].strip() 
                 a2 = None if segs[2].strip() == "None" else segs[2].strip() 
                 a3 = None if segs[3].strip() == "None" else segs[3].strip() 
