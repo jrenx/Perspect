@@ -6,6 +6,7 @@ import time
 import datetime
 
 rr_dir = os.path.dirname(os.path.realpath(__file__))
+pid = str(os.getpid())
 DEBUG = True
 
 def get_child_processes(parent_pid):
@@ -33,7 +34,7 @@ def get_child_processes(parent_pid):
         rr_processes.add(pid)
 
     children = children.intersection(rr_processes)
-    print("[rr] Children processes of " + str(pid) + " are " + str(children))
+    print("[rr][" + pid + "] Children processes of " + str(pid) + " are " + str(children))
     return children
 
 def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, step, deref,
@@ -54,7 +55,7 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
     #print("[tmp] indice_map: " + str(indice_map))
     timeout = 120
     if do_timeout:
-        timeout  = 60+120
+        timeout = 300
         #count = len(breakpoints) + len(reg_points)
         #timeout = max(300, count * 15)
     config = {'breakpoints': breakpoints,
@@ -73,7 +74,7 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
     success = True
     a = datetime.datetime.now()
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, shell=True)
-    children = get_child_processes(rr_process.pid)
+    #children = get_child_processes(rr_process.pid)
     try:
         rr_process.communicate(('source' + os.path.join(rr_dir, 'breakpoints.py')).encode())
     except subprocess.TimeoutExpired:
@@ -81,7 +82,7 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
 
     b = datetime.datetime.now()
     duration = b - a
-    print("[rr] Running breakpoints took: " + str(duration))
+    print("[rr][" + pid + "] Running breakpoints took: " + str(duration))
     return success, duration.total_seconds()
 
 def parse_breakpoint(breakpoints, reg_points, deref):
@@ -96,7 +97,7 @@ def parse_breakpoint(breakpoints, reg_points, deref):
 
     if DEBUG is True:
         timestamp = str(time.time())
-        print("[rr] renaming to " + str(os.path.join(rr_dir, 'breakpoints.log' + '.' + timestamp)))
+        print("[rr][" + pid + "] renaming to " + str(os.path.join(rr_dir, 'breakpoints.log' + '.' + timestamp)))
         os.rename(os.path.join(rr_dir, 'breakpoints.log'), os.path.join(rr_dir, 'breakpoints.log' + '.' + timestamp))
 
     return trace

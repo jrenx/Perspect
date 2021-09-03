@@ -6,6 +6,7 @@ import time
 import datetime
 
 rr_dir = os.path.dirname(os.path.realpath(__file__))
+pid = str(os.getpid())
 DEBUG = True
 
 def get_child_processes(parent_pid):
@@ -33,7 +34,7 @@ def get_child_processes(parent_pid):
         rr_processes.add(pid)
 
     children = children.intersection(rr_processes)
-    print("[rr] Children processes of " + str(pid) + " are " + str(children))
+    print("[rr][" + pid + "] Children processes of " + str(pid) + " are " + str(children))
     return children
 
 def run_watchpoint(watchpoints, breakpoints=[], regs=[], off_regs=[], offsets=[], shifts=[], additional_timeout=0):
@@ -46,20 +47,20 @@ def run_watchpoint(watchpoints, breakpoints=[], regs=[], off_regs=[], offsets=[]
               'offsets': offsets,
               'shifts': shifts,
               'timeout': timeout}
-    print("[rr] Running watchpoint with timeout:" + str(timeout) + " with config " + str(config))
+    print("[rr][" + pid + "] Running watchpoint with timeout:" + str(timeout) + " with config " + str(config))
     json.dump(config, open(os.path.join(rr_dir, 'config.json'), 'w'))
 
     success = True
     a = datetime.datetime.now()
     rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, shell=True)
-    children = get_child_processes(rr_process.pid)
+    #children = get_child_processes(rr_process.pid)
     try:
         rr_process.communicate(('source' + os.path.join(rr_dir, 'watchpoints.py')).encode())
     except subprocess.TimeoutExpired:
         success = False
 
     b = datetime.datetime.now()
-    print("[rr] Running watchpoints took: " + str(b - a))
+    print("[rr][" + pid + "] Running watchpoints took: " + str(b - a))
     return success
 
 def parse_watchpoint(reads=None, addr_to_def_to_ignore=None):
@@ -87,7 +88,7 @@ def parse_watchpoint(reads=None, addr_to_def_to_ignore=None):
 
     if DEBUG is True:
         timestamp = str(time.time())
-        print("[rr] renaming to " + str(os.path.join(rr_dir, 'watchpoints.log' + '.' + timestamp)))
+        print("[rr][" + pid + "] renaming to " + str(os.path.join(rr_dir, 'watchpoints.log' + '.' + timestamp)))
         os.rename(os.path.join(rr_dir, 'watchpoints.log'), os.path.join(rr_dir, 'watchpoints.log' + '.' + timestamp))
 
     return ret, len(trace)

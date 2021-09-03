@@ -1,6 +1,6 @@
 import random
 import sys
-
+import os
 from get_breakpoints import *
 from get_watchpoints import *
 #sys.path.append(os.path.abspath('./..'))
@@ -11,6 +11,7 @@ SMALL_READ_POINT_COUNT = 2000
 LARGE_READ_POINT_COUNT = 10000
 SMALL_ADDR_COUNT = 250
 SMALL_IRRELEVANT_WATCH_POINT_RATIO = 10
+pid = str(os.getpid())
 
 def count_point_in_bp_trace(target, bp_trace):
     count = 0
@@ -216,9 +217,9 @@ def find_unknown_writes(reg_point, trace, filter=None, ignore_default=False):
             addr_to_insn[var_addr] = read_insn
             #unknown_write = False
 
-    print("[rr] number of reads whose values are zeros: " + str(zeros))
-    print("[rr] number of reads whose writes are all seen: " + str(equals))
-    print("[rr] number of reads whose writes are not all seen: " + str(len(unknown_writes)))
+    print("[rr][" + pid + "] number of reads whose values are zeros: " + str(zeros))
+    print("[rr][" + pid + "] number of reads whose writes are all seen: " + str(equals))
+    print("[rr][" + pid + "] number of reads whose writes are not all seen: " + str(len(unknown_writes)))
     #return taken, not_taken
     return unknown_writes, known_writes, read_insns, read_point_trace
 
@@ -290,15 +291,15 @@ def pick_watch_points(pending_addrs):
         watchpoints.add(a)
         if len(watchpoints) == MAX_WP_COUNT:
             break
-    print("[rr] Total number of unknown addresses: " + str(len(pending_addrs)))
-    print("[rr] Picking " + str(MAX_WP_COUNT) + " addresses: " + str(watchpoints))
+    print("[rr][" + pid + "] Total number of unknown addresses: " + str(len(pending_addrs)))
+    print("[rr][" + pid + "] Picking " + str(MAX_WP_COUNT) + " addresses: " + str(watchpoints))
     # watchpoints = [offset_reg(addr, offset) for addr in addrs]
-    #print("[rr] Picked watchpoints: " + str(watchpoints))
+    #print("[rr][" + pid + "] Picked watchpoints: " + str(watchpoints))
     return watchpoints
 
 #TODO, shift should be shift to the right
 def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_reg = None, iter=30):
-    print("[rr] In get_def, branch: " + str(branch) + " target: " + str(target))
+    print("[rr][" + pid + "] In get_def, branch: " + str(branch) + " target: " + str(target))
     #positive = set()
     #negative = set()
 
@@ -317,9 +318,9 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     all_static_addr_writes, all_nested_static_addr_writes = get_mem_writes_to_static_addrs(prog)
 
     # First pass
-    print("[rr] Running breakpoints for first step")
-    print("[rr] Breakpoints: " + str(reg_points))
-    print("[rr] Registers: " + str(regs), flush=True)
+    print("[rr][" + pid + "] Running breakpoints for first step")
+    print("[rr][" + pid + "] Breakpoints: " + str(reg_points))
+    print("[rr][" + pid + "] Registers: " + str(regs), flush=True)
     if branch is None or target is None:
         assert branch is None and target is None
 
@@ -329,22 +330,22 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     success, bp_pass_duration = run_breakpoint(branch_target, reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, False, False,
                    do_timeout=False)
     breakpoint_trace = parse_breakpoint(branch_target, reg_points, False)
-    print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoint hits")
+    print("[rr][" + pid + "] Parsed " + str(len(breakpoint_trace)) + " breakpoint hits")
 
     taken_indices, not_taken_indices = filter_branch(branch, target, breakpoint_trace)
     read_point_count = count_point_in_bp_trace(read, breakpoint_trace)
-    print("[rr] Parsed " + str(len(taken_indices)) + " taken indices")
-    print("[rr] Parsed " + str(len(not_taken_indices)) + " not taken indices")
-    print("[rr] COUNT Total number of read points " + str(read_point_count))
+    print("[rr][" + pid + "] Parsed " + str(len(taken_indices)) + " taken indices")
+    print("[rr][" + pid + "] Parsed " + str(len(not_taken_indices)) + " not taken indices")
+    print("[rr][" + pid + "] COUNT Total number of read points " + str(read_point_count))
 
-    print("[rr] First step finished")
+    print("[rr][" + pid + "] First step finished")
     pending_addrs = set()
     explained_addrs = set()
     for index in taken_indices:
         #print("[tmp] index: " + str(index))
         def_insn_index = get_def_insn_index_for_branch(index, [read], breakpoint_trace)
         if def_insn_index is None:
-            print("[rr][warn] No def point found, "
+            print("[rr][" + pid + "][warn] No def point found, "
                   "this branch could use a variable that has more than one local definitions,"
                   "ignore for now as we will watch the other one.")
             continue
@@ -353,12 +354,12 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     #all_addrs = set([breakpoint_trace[get_def_insn_index_for_branch(index, [read], breakpoint_trace)][1]
     #                for index in taken_indices])
     if '0x0' in pending_addrs:
-        print("[rr] parsed write to invalid address ...")
+        print("[rr][" + pid + "] parsed write to invalid address ...")
         pending_addrs.remove('0x0')
-    print("[rr] COUNT Total number of unique addresses read when branch outcome was positive: " + str(len(pending_addrs)))
+    print("[rr][" + pid + "] COUNT Total number of unique addresses read when branch outcome was positive: " + str(len(pending_addrs)))
 
     if len(pending_addrs) > 1000:
-        raise Exception("[warn][rr] Too many unique addresses to investigate... " + str(len(pending_addrs)))
+        raise Exception("[warn][rr][" + pid + "] Too many unique addresses to investigate... " + str(len(pending_addrs)))
 
     for static_addr in pending_addrs.intersection(all_static_addr_writes.keys()):
         for insn, func in all_static_addr_writes[static_addr]:
@@ -370,12 +371,12 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                 explained_addrs.add(static_addr)
 
     print()
-    print("[rr] current results count: " + str(len(results)))
-    print("[rr] current results: " + str(results))
+    print("[rr][" + pid + "] current results count: " + str(len(results)))
+    print("[rr][" + pid + "] current results: " + str(results))
 
-    print("[rr] Addresses that have unknown writes: " + str(len(pending_addrs)))
+    print("[rr][" + pid + "] Addresses that have unknown writes: " + str(len(pending_addrs)))
     pending_addrs = pending_addrs.difference(explained_addrs)
-    print("[rr] Addresses that have unknown writes after removing known addrs: " + str(len(pending_addrs)))
+    print("[rr][" + pid + "] Addresses that have unknown writes after removing known addrs: " + str(len(pending_addrs)))
     #if len(pending_addrs) < SMALL_ADDR_COUNT:
     #    print("Very few addresses, watching might be faster")
     #    skip_breakpoints = True
@@ -391,8 +392,8 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     do_breakpoints = read_point_count < SMALL_READ_POINT_COUNT \
                      or (read_point_count < LARGE_READ_POINT_COUNT and reg.lower() == 'rsp')
     do_thirdpass = True
-    print("[rr] Do breakpoints? " + str(do_breakpoints))
-    print("[rr] Total iters: " + str(iter))
+    print("[rr][" + pid + "] Do breakpoints? " + str(do_breakpoints))
+    print("[rr][" + pid + "] Total iters: " + str(iter))
 
     watchpoints = pick_watch_points(pending_addrs)
     explained_addrs = explained_addrs.union(watchpoints)
@@ -405,7 +406,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     known_writes_indices_set = set()
     for i in range(iter):
         # Second pass
-        print("[rr] Running second step for {} times".format(i + 1), flush=True)
+        print("[rr][" + pid + "] Running second step for {} times".format(i + 1), flush=True)
         if do_breakpoints is False:
             run_watchpoint(watchpoints)
             watchpoint_trace, watchpoint_count = parse_watchpoint()
@@ -414,11 +415,11 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                            [read], [reg], [offset_reg] if offset_reg is not None else [''], [int(offset, 16)], [int(shift, 16)],
                            additional_timeout = bp_pass_duration)
             watchpoint_trace, watchpoint_count = parse_watchpoint(reads=set([read]), addr_to_def_to_ignore=addr_to_def_to_ignore)
-            print("[rr] COUNT Parsed " + str(watchpoint_count) + " raw watchpoint hits")
+            print("[rr][" + pid + "] COUNT Parsed " + str(watchpoint_count) + " raw watchpoint hits")
             watchpoint_count = watchpoint_count -  count_point_in_wp_trace(read, watchpoint_trace)
-        print("[rr] COUNT Parsed " + str(len(watchpoint_trace)) + " watchpoint hits")
+        print("[rr][" + pid + "] COUNT Parsed " + str(len(watchpoint_trace)) + " watchpoint hits")
         #("[tmp] " + str(watchpoint_trace))
-        print("[rr] Second step finished")
+        print("[rr][" + pid + "] Second step finished")
         #taken_watchpoint_traces = [
         #    get_watchpoint_trace(watchpoints[index], get_num_from_index(index, breakpoint_trace), watchpoint_trace)
         #    for index in watchpoint_taken_indices]
@@ -431,7 +432,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
         #negative.union(watchpoint_result[1])
 
         # Third pass
-        print("[rr] Running third step for {} times".format(i + 1))
+        print("[rr][" + pid + "] Running third step for {} times".format(i + 1))
         new_unique_writes = []
         for line in watchpoint_trace:
             addr = line[0]
@@ -441,9 +442,9 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                 continue
             all_unique_writes.add(insn)
             new_unique_writes.append([insn, func, addr])
-        print("[rr] Found " + str(len(new_unique_writes)) + " new unique writes: " + str(new_unique_writes))
+        print("[rr][" + pid + "] Found " + str(len(new_unique_writes)) + " new unique writes: " + str(new_unique_writes))
         if len(new_unique_writes) == 0:
-            print("[rr] No additional writes are found, keep watching more addresses.")
+            print("[rr][" + pid + "] No additional writes are found, keep watching more addresses.")
 
         if len(new_unique_writes) > 0:
             insn_to_func = []
@@ -454,13 +455,13 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                 insn_to_func.append([str(insn), func]) #TODO, in the future just pass int ...
                 insn_to_addr[insn] = write[2]
             insn_to_writes = get_mem_writes(insn_to_func, prog)
-            print("[rr] returned from get_mem_writes " + str(insn_to_writes))
+            print("[rr][" + pid + "] returned from get_mem_writes " + str(insn_to_writes))
 
             def_point_count = 0
             for line in insn_to_writes:
                 insn = line[0]
                 def_point_count = def_point_count + count_point_in_wp_trace(hex(insn), watchpoint_trace)
-            print("[rr] COUNT watchpoint count: " + str(watchpoint_count) + " static def point count: " + str(len(insn_to_writes))
+            print("[rr][" + pid + "] COUNT watchpoint count: " + str(watchpoint_count) + " static def point count: " + str(len(insn_to_writes))
                   + " def point count: " + str(def_point_count))
             if do_breakpoints is False:
                 if len(insn_to_writes) >= 50 or def_point_count >= 5000:
@@ -469,7 +470,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                     for write in new_unique_writes:
                         insn = write[0]
                         all_unique_writes.remove(insn)
-                    print("[rr] Retrying with read points enabled in watchpoints")
+                    print("[rr][" + pid + "] Retrying with read points enabled in watchpoints")
                     continue
 
             for line in insn_to_writes:
@@ -479,10 +480,10 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                 func = line[1]
 
                 if len(line[2]) == 0:
-                    print("[rr][error] insn " + str(insn) + " writes to no reg! ignoring ...")
+                    print("[rr][" + pid + "][error] insn " + str(insn) + " writes to no reg! ignoring ...")
                     continue
                 elif len(line[2]) > 1:
-                    print("[rr][error] insn " + str(insn) + " writes to multiple regs! Not handled ...")
+                    print("[rr][" + pid + "][error] insn " + str(insn) + " writes to multiple regs! Not handled ...")
                     raise Exception
 
                 curr_expr = line[2][0]
@@ -502,14 +503,14 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                     pending_addrs.add(curr_addr)
                     addr_to_def_to_ignore[curr_addr] = hex(insn)
 
-            #print("[rr] all insns found " + str(reg_points))
-            #print("[rr] all registers found " + str(regs))
+            #print("[rr][" + pid + "] all insns found " + str(reg_points))
+            #print("[rr][" + pid + "] all registers found " + str(regs))
             print()
-            print("[rr] current results count: " + str(len(results)))
-            print("[rr] current results: " + str(results))
+            print("[rr][" + pid + "] current results count: " + str(len(results)))
+            print("[rr][" + pid + "] current results: " + str(results))
 
             if len(pending_addrs) == 0:
-                print("[ERROR][rr] No more watchpoints to watch... Returning now...")
+                print("[ERROR][rr][" + pid + "] No more watchpoints to watch... Returning now...")
                 return results
 
             #for instruction in positive:
@@ -518,16 +519,16 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
             #for instruction in negative:
             #    regs.append(get_written_reg(instruction))
             #    reg_points.append(instruction)
-            print("[rr] do breakpoint? " + str(do_breakpoints))
+            print("[rr][" + pid + "] do breakpoint? " + str(do_breakpoints))
             if do_breakpoints is True and do_thirdpass is True:
-                print("[rr] Running breakpoints for third step")
-                print("[rr] Breakpoints: " + str(reg_points))
-                print("[rr] Registers: " + str(regs))
-                print("[rr] Offset registers: " + str(off_regs))
-                print("[rr] Offsets: " + str(offsets))
-                print("[rr] Shifts: " + str(shifts))
-                print("[rr] Source registers: " + str(src_regs))
-                print("[rr] Is a loop insn: " + str(loop_insn_flags), flush=True)
+                print("[rr][" + pid + "] Running breakpoints for third step")
+                print("[rr][" + pid + "] Breakpoints: " + str(reg_points))
+                print("[rr][" + pid + "] Registers: " + str(regs))
+                print("[rr][" + pid + "] Offset registers: " + str(off_regs))
+                print("[rr][" + pid + "] Offsets: " + str(offsets))
+                print("[rr][" + pid + "] Shifts: " + str(shifts))
+                print("[rr][" + pid + "] Source registers: " + str(src_regs))
+                print("[rr][" + pid + "] Is a loop insn: " + str(loop_insn_flags), flush=True)
                 #TODO, how to distinguish diff insn and regs? looks like it's according to order
                 success, bp_pass_duration2 = run_breakpoint(branch_target, reg_points, regs, off_regs, offsets, shifts, src_regs,
                                loop_insn_flags, True, True)
@@ -540,12 +541,12 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                 src_regs = [src_regs[0]]
                 loop_insn_flags = [loop_insn_flags[0]]
 
-                print("[rr] Parsed " + str(len(breakpoint_trace)) + " breakpoint hits")
-                print("[rr] Third step finished")
+                print("[rr][" + pid + "] Parsed " + str(len(breakpoint_trace)) + " breakpoint hits")
+                print("[rr][" + pid + "] Third step finished")
 
                 taken_indices, not_taken_indices = filter_branch(branch, target, breakpoint_trace)
-                print("[rr] Parsed " + str(len(taken_indices)) + " taken indices")
-                print("[rr] Parsed " + str(len(not_taken_indices)) + " not taken indices")
+                print("[rr][" + pid + "] Parsed " + str(len(taken_indices)) + " taken indices")
+                print("[rr][" + pid + "] Parsed " + str(len(not_taken_indices)) + " not taken indices")
                 known_writes_indices = None
                 if pos_pass:
                     read_filter = set([get_def_insn_index_for_branch(index, [read], breakpoint_trace) for index in taken_indices])
@@ -576,24 +577,26 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
 
                 known_writes_indices_set = known_writes_indices_set.union(set(known_writes_indices))
 
-                print("[rr] Newly explained addresses: " + str(len(current_explained_addrs)))
-                explained_addrs = explained_addrs.union(current_explained_addrs)
-                pending_addrs = pending_addrs.difference(current_explained_addrs)
-
                 # This is very important, because sometimes on the stack,
                 # the same address is more likely to be used multiple times, and have different definition points
                 # and we might have only explained a subset of the definition points for the same address!
+                current_explained_addrs = current_explained_addrs.difference(current_unexplained_addrs)
+                print("[rr][" + pid + "] Newly explained addresses: " + str(len(current_explained_addrs)))
+                explained_addrs = explained_addrs.union(current_explained_addrs)
+                pending_addrs = pending_addrs.difference(current_explained_addrs)
+
+
                 explained_addrs = explained_addrs.difference(current_unexplained_addrs)
                 pending_addrs = pending_addrs.union(current_unexplained_addrs)
-                print("[rr] Number of explained addresses: " + str(len(explained_addrs)))
-                print("[rr] Addresses that might have undergone unknown writes: " + str(len(pending_addrs)))
+                print("[rr][" + pid + "] Number of explained addresses: " + str(len(explained_addrs)))
+                print("[rr][" + pid + "] Addresses that might have undergone unknown writes: " + str(len(pending_addrs)))
                 # estimate if rewatching the addrs is actually faster than running the breakpoint pass
                 # TODO: to optimize for performance, could just only include the latest found definitions
                 #       currently will accumulate all of them ... so once this third breakpoint pass gets slow
                 #       it only gets slower.
                 #TODO: instead of using the static 30s, could track average watchpoint duration too
                 #if len(current_explained_addrs)/2*30 < bp_pass_duration2:
-                #    print("[rr] Disabling the third breakpoint pass, which took " + str(bp_pass_duration2)
+                #    print("[rr][" + pid + "] Disabling the third breakpoint pass, which took " + str(bp_pass_duration2)
                 #          + " seconds in the previous run, but only removed " + str(len(explained_addrs)) + " addrs.")
                 #    do_thirdpass = False
         watchpoints = pick_watch_points(pending_addrs)
@@ -611,7 +614,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
         #watchpoint_taken_indices = range(0, 4)
         #watchpoint_not_taken_indices = range(4, 8)
     if len(results) == 0 and len(pending_addrs) > 0:
-        raise Exception("[ERROR][rr] No results found because exceeded itertaion, but still has more addresses to watch...")
+        raise Exception("[rr][" + pid + "][ERROR] No results found because exceeded itertaion, but still has more addresses to watch...")
 
     #return positive, negative
     return results
