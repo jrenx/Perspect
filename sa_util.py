@@ -352,6 +352,8 @@ def static_backslices(slice_starts, prog, sa_result_cache):
         else:
             if reg in reg_map:
                 reg = reg_map[reg]
+            else:
+                print("[BUG] unknown reg? " + str(reg))
             reg_name = "[x86_64::" + reg + "]"
         regname_to_reg[reg_name] = reg
 

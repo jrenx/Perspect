@@ -260,19 +260,27 @@ int main (INT32 argc, CHAR *argv[])
 
     // Initialize reg_map
     reg_map["rax"] = REG_RAX;
+    reg_map["eax"] = REG_EAX;
     reg_map["rbp"] = REG_RBP;
     reg_map["ebp"] = REG_EBP;
     reg_map["rsp"] = REG_RSP;
+    reg_map["esp"] = REG_ESP;
     reg_map["rdx"] = REG_RDX;
+    reg_map["edx"] = REG_EDX;
     reg_map["rbx"] = REG_RBX;
+    reg_map["ebx"] = REG_EBX;
     reg_map["rsi"] = REG_RSI;
+    reg_map["esi"] = REG_ESI;
     reg_map["rdi"] = REG_RDI;
+    reg_map["edi"] = REG_EDI;
     reg_map["rcx"] = REG_RCX;
+    reg_map["ecx"] = REG_ECX;
     reg_map["cl"] = REG_CL;
     //https://www.eecg.utoronto.ca/~amza/www.mindsec.com/files/x86regs.html
     //DS:ESI EDI SI
     //ES:EDI EDI DI
-    reg_map["es"] = REG_ESI;
+    reg_map["es"] = REG_ES;
+    reg_map["ds"] = REG_DS;
     //reg_map["es"] = REG_DI;
     //reg_map["r1"] = REG_R1;
     //reg_map["r2"] = REG_R2;
