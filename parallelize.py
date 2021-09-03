@@ -6,7 +6,8 @@ import threading
 import json
 import datetime
 
-
+rr_dir = os.path.dirname(os.path.realpath(__file__))
+DEBUG = True
 
 def run_task(id, pipe):
     os.chdir('run_{}'.format(id))
@@ -66,7 +67,11 @@ def main():
         print("Stdtic dep graph took: {}".format(datetime.datetime.now() - start_time))
         print("Static dep graph produces {} inputs".format(len(lines)))
         os.system('rm rr_inputs')
-
+        if DEBUG is True:
+            timestamp = str(time.time())
+            print("[rr] renaming to " + str(os.path.join(rr_dir, 'rr_inputs' + '.' + timestamp)))
+            os.rename(os.path.join(rr_dir, 'rr_inputs'),
+                      os.path.join(rr_dir, 'rr_inputs' + '.' + timestamp))
 
         def send_task(pipe):
             while True:
@@ -113,7 +118,7 @@ def main():
         for i in range(num_processor):
             processes[i].join()
             threads[i].join()
-        json.dump(rr_result_cache, open(os.path.join(curr_dir, 'cache', 'rr_results_{}.json'.format(prog)), 'w'))
+        json.dump(rr_result_cache, open(os.path.join(curr_dir, 'cache', 'rr_results_{}.json'.format(prog)), 'w'), indent=4)
 
         duration = datetime.datetime.now() - start_time
         print("Running iteration {} uses {} seconds".format(iter, duration))
