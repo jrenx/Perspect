@@ -1332,7 +1332,7 @@ class StaticDepGraph:
         return self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
     @staticmethod
-    def build_dependencies(starting_events, prog, limit=10000, use_cache=True):
+    def build_dependencies(starting_events, prog, limit=10000, use_cached_static_graph=True):
         start = time.time()
         result_dir = os.path.join(curr_dir, 'cache', prog)
         if not os.path.exists(result_dir):
@@ -1348,7 +1348,7 @@ class StaticDepGraph:
                 key += "_"
         result_file = os.path.join(result_dir, 'static_graph_' + str(limit) + "_" + key)
         StaticDepGraph.result_file = result_file
-        if use_cache and os.path.isfile(result_file):
+        if use_cached_static_graph and os.path.isfile(result_file):
             StaticDepGraph.loadJSON(result_file)
             StaticDepGraph.print_graph_info()
             return True
@@ -2331,7 +2331,7 @@ if __name__ == "__main__":
     starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
     starting_events.append(["rcx", 0x40764c, "runtime.free"])
     StaticDepGraph.build_dependencies(starting_events, "909_ziptest_exe9",
-                                      limit=10000, use_cache=True)
+                                      limit=10000, use_cache=False)
 
     """
     print("HERERERE")
