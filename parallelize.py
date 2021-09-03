@@ -7,7 +7,6 @@ import json
 import datetime
 import time
 
-rr_dir = os.path.dirname(os.path.realpath(__file__))
 DEBUG = True
 
 def run_task(id, pipe):
@@ -68,9 +67,8 @@ def main():
 
         if DEBUG is True:
             timestamp = str(time.time())
-            print("[rr] renaming to " + str(os.path.join(rr_dir, 'rr_inputs' + '.' + timestamp)))
-            os.rename(os.path.join(rr_dir, 'rr_inputs'),
-                      os.path.join(rr_dir, 'rr_inputs' + '.' + timestamp))
+            print("[rr] renaming to " + 'rr_inputs' + '.' + timestamp)
+            os.rename('rr_inputs', 'rr_inputs' + '.' + timestamp)
         else:
             os.system('rm rr_inputs')
 
@@ -103,22 +101,30 @@ def main():
                 pipe.send("Shutdown")
 
         start_time = datetime.datetime.now()
-        print("Exeuction of itertaion {} starts at {}".format(i, datetime.datetime.strftime(start_time, "%Y/%m/%d, %H:%M:%S")))
+        print("Execution of iteration {} starts at {}".format(i, datetime.datetime.strftime(start_time, "%Y/%m/%d, %H:%M:%S")))
         processes = []
         threads = []
-        mp.set_start_method('spawn')
-        for i in range(num_processor):
-            parent_conn, child_conn = mp.Pipe(duplex=True)
-            p = mp.Process(target = run_task, args=(i, child_conn))
-            p.start()
-            processes.append(p)
-            t = threading.Thread(target=send_task, args=(parent_conn, ))
-            t.start()
-            threads.append(t)
+        try:
+            mp.set_start_method('spawn')
+            for i in range(num_processor):
+                parent_conn, child_conn = mp.Pipe(duplex=True)
+                p = mp.Process(target = run_task, args=(i, child_conn))
+                p.start()
+                processes.append(p)
+                t = threading.Thread(target=send_task, args=(parent_conn, ))
+                t.start()
+                threads.append(t)
 
-        for i in range(num_processor):
-            processes[i].join()
-            threads[i].join()
+            for i in range(num_processor):
+                processes[i].join()
+                threads[i].join()
+        except Exception as e:
+            print("Running parallelized RR failed")
+            print(str(e))
+            print("-" * 60)
+            traceback.print_exc(file=sys.stdout)
+            print("-" * 60)
+
         json.dump(rr_result_cache, open(os.path.join(curr_dir, 'cache', 'rr_results_{}.json'.format(prog)), 'w'), indent=4)
 
         duration = datetime.datetime.now() - start_time
