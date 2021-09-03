@@ -279,8 +279,8 @@ int main (INT32 argc, CHAR *argv[])
     //https://www.eecg.utoronto.ca/~amza/www.mindsec.com/files/x86regs.html
     //DS:ESI EDI SI
     //ES:EDI EDI DI
-    reg_map["es"] = REG_ES;
-    reg_map["ds"] = REG_DS;
+    reg_map["es"] = REG_ESI;
+    //reg_map["ds"] = REG_DS;
     //reg_map["es"] = REG_DI;
     //reg_map["r1"] = REG_R1;
     //reg_map["r2"] = REG_R2;
