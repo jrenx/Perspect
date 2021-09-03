@@ -66,12 +66,14 @@ def main():
         lines = open('rr_inputs', 'r').readlines()
         print("Stdtic dep graph took: {}".format(datetime.datetime.now() - start_time))
         print("Static dep graph produces {} inputs".format(len(lines)))
-        os.system('rm rr_inputs')
+
         if DEBUG is True:
             timestamp = str(time.time())
             print("[rr] renaming to " + str(os.path.join(rr_dir, 'rr_inputs' + '.' + timestamp)))
             os.rename(os.path.join(rr_dir, 'rr_inputs'),
                       os.path.join(rr_dir, 'rr_inputs' + '.' + timestamp))
+        else:
+            os.system('rm rr_inputs')
 
         def send_task(pipe):
             while True:
