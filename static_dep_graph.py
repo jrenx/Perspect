@@ -1615,7 +1615,9 @@ class StaticDepGraph:
                     node.cf_succes.append(self.id_to_node[succe_node_id])
             """
 
-    def build_local_data_flow_dependencies(self, loads, succe, func, defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func):
+    def build_local_data_flow_dependencies(self, loads, succe, func,
+                                           defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func,
+                                           prog):
         if loads is None or len(loads) == 0:
             return
 
@@ -1623,7 +1625,9 @@ class StaticDepGraph:
         group_size = 0
         nodes = []
         for load in loads:
-            prede, group_size = self.build_single_local_data_flow_dependency(load, succe, func, group, group_size, defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func)
+            prede, group_size = self.build_single_local_data_flow_dependency(load, succe, func, group, group_size,
+                                                                             defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func,
+                                                                             prog)
             nodes.append(prede)
         if group is True:
             print("Creating new group id: " + str(StaticNode.group_id) + " size " + str(group_size) + " parent " + hex(
@@ -1632,7 +1636,8 @@ class StaticDepGraph:
         return nodes
 
     def build_single_local_data_flow_dependency(self, load, succe, func, group, group_size,
-                                                defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func):
+                                                defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func,
+                                                prog):
         prede_insn = load[0]
         prede_reg = load[1]
         shift = load[2]
@@ -1649,7 +1654,7 @@ class StaticDepGraph:
         else:
             insn_to_func = []
             insn_to_func.append([str(prede_insn), curr_func])
-            results1 = get_reg_read_or_written(insn_to_func, "909_ziptest_exe9", False)
+            results1 = get_reg_read_or_written(insn_to_func, prog, False)
             dst_reg = results1[0][2].lower()
 
         bit_ops = None
@@ -1794,7 +1799,9 @@ class StaticDepGraph:
             insn = result[1]
             loads = result[2]
             succe = addr_to_node[insn]
-            self.build_local_data_flow_dependencies(loads, succe, func, defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func)
+            self.build_local_data_flow_dependencies(loads, succe, func,
+                                                    defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func,
+                                                    prog)
         print("[static_dep] Found " + str(len(defs_in_same_func)) + " dataflow nodes local in function ")
 
 
@@ -2334,7 +2341,7 @@ if __name__ == "__main__":
             if node.mem_load is not None and len(node.df_predes) == 0:
                 print(node)
     """
-    #StaticDepGraph.build_dependencies(0x409418, "scanblock", "909_ziptest_exe9")
+    # StaticDepGraph.build_dependencies(0x409418, "scanblock", "909_ziptest_exe9")
     """
     json_file = os.path.join(curr_dir, 'static_graph_result')
     StaticDepGraph.writeJSON(json_file)
