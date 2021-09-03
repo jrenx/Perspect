@@ -27,6 +27,7 @@ extern bool DEBUG;
 extern bool DEBUG_SLICE;
 extern bool DEBUG_BIT;
 extern bool DEBUG_STACK;
+extern bool CRASH_ON_ERROR;
 
 namespace boost {
   class StackStore;

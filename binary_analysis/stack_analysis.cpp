@@ -808,13 +808,16 @@ void getAllInvokes(Function *f, Function *callee, boost::unordered_set<Address> 
 }
 
 Function *getFunction(std::vector<Function *> &funcs) {
-  if (funcs.size() > 1) {
-    for (auto fit = funcs.begin(); fit != funcs.end(); fit++) {
-      cout << "[stack] function: " << (*fit)->name() << endl;
-    }
-  } else if (funcs.size() == 0) {
+  if (funcs.size() == 0) {
+    cout << "[BUG] [stack] no functions found." << endl;
     return NULL;
   }
-  assert(funcs.size() == 1);
+  if (funcs.size() > 1) {
+    cout << "[BUG] [stack] found multiple functions with the same name ";
+    for (auto fit = funcs.begin(); fit != funcs.end(); fit++)
+      cout << " " << (*fit)->name();
+    cout << endl;
+  }
+  if (CRASH_ON_ERROR) assert(funcs.size() == 1);
   return *funcs.begin();
 }
