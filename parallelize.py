@@ -5,6 +5,7 @@ import multiprocessing as mp
 import threading
 import json
 import datetime
+import time
 
 rr_dir = os.path.dirname(os.path.realpath(__file__))
 DEBUG = True
@@ -28,7 +29,7 @@ def run_task(id, pipe):
         print("Process {} finish task {} in {}".format(id, str_args, duraton))
         pipe.send(rr_result_cache)
     pipe.send("Shutdown")
-    
+
 
 def main():
     curr_dir = os.path.dirname(os.path.realpath(__file__))
@@ -62,8 +63,8 @@ def main():
         start_time = datetime.datetime.now()
         os.system('python3 static_dep_graph.py >> out')
         lines = open('rr_inputs', 'r').readlines()
-        print("Stdtic dep graph took: {}".format(datetime.datetime.now() - start_time))
-        print("Static dep graph produces {} inputs".format(len(lines)))
+        print("Static dep graph took: {}".format(datetime.datetime.now() - start_time))
+        print("Static dep graph produced {} inputs".format(len(lines)))
 
         if DEBUG is True:
             timestamp = str(time.time())
