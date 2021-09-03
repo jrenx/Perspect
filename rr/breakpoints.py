@@ -112,7 +112,7 @@ def read_breakpoint(br_num, frame):
             for j, seg in enumerate(segs):
                 if j == 0:
                     continue
-                number += int(seg, 16) << (j - 1) * 8
+                number += (int(seg, 16) if seg.startswith('0x') else int(seg)) << (j - 1) * 8
             value = hex(number)
         trace.append((reg_points[br_num], addr, value))
 
