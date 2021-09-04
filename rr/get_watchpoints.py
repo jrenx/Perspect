@@ -48,7 +48,8 @@ def run_watchpoint(watchpoints, breakpoints=[], regs=[], off_regs=[], offsets=[]
               'shifts': shifts,
               'timeout': timeout}
     print("[rr][" + pid + "] Running watchpoint with timeout:" + str(timeout) + " with config " + str(config))
-    json.dump(config, open(os.path.join(rr_dir, 'config.json'), 'w'))
+    with open(os.path.join(rr_dir, 'config.json'), 'w') as f:
+        json.dump(config, f)
 
     success = True
     a = datetime.datetime.now()
@@ -68,7 +69,8 @@ def parse_watchpoint(reads=None, addr_to_def_to_ignore=None):
     :return: list of pair (watchpoint, addr, value). value is the location where watchpoint is triggered, None if addr is from
     breakpoints.
     """
-    trace = json.load(open(os.path.join(rr_dir, 'watchpoints.log'), 'r'))
+    with open(os.path.join(rr_dir, 'watchpoints.log'), 'r') as f:
+        trace = json.load(f)
     if reads is None:
         ret = trace
     else:

@@ -69,7 +69,8 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
               'step': step,
               'deref': deref,
               'timeout': timeout}
-    json.dump(config, open(os.path.join(rr_dir, 'config.json'), 'w'))
+    with open(os.path.join(rr_dir, 'config.json'), 'w') as f:
+        json.dump(config, f)
     print("Timeout is: " + str(timeout), flush=True)
     success = True
     a = datetime.datetime.now()
@@ -93,7 +94,8 @@ def parse_breakpoint(breakpoints, reg_points, deref):
     :return: list of pair (breakpoint_addr, reg_vale, deref_value). reg_value and deref_value is None
     if info not available.
     """
-    trace = json.load(open(os.path.join(rr_dir, 'breakpoints.log'), 'r'))
+    with open(os.path.join(rr_dir, 'breakpoints.log'), 'r') as f:
+        trace = json.load(f)
 
     if DEBUG is True:
         timestamp = str(time.time())
