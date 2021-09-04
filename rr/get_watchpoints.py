@@ -53,7 +53,7 @@ def run_watchpoint(watchpoints, breakpoints=[], regs=[], off_regs=[], offsets=[]
 
     success = True
     a = datetime.datetime.now()
-    rr_process = subprocess.Popen('sudo rr replay', stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, shell=True)
+    rr_process = subprocess.Popen('sudo rr replay --cpu-unbound', stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, shell=True)
     #children = get_child_processes(rr_process.pid)
     try:
         rr_process.communicate(('source' + os.path.join(rr_dir, 'watchpoints.py')).encode())
