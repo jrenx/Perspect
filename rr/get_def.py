@@ -400,7 +400,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     pending_addrs = pending_addrs.difference(watchpoints)
     watchpoints = list(watchpoints)
     if len(watchpoints) == 0:
-        print("[warn] No more watchpoints to watch... Returning now...")
+        print("[rr][warn][" + pid + "] No more watchpoints to watch... Returning now...")
         return results
 
     known_writes_indices_set = set()
@@ -498,7 +498,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                 if curr_src_reg in reg_size_map:
                     curr_src_reg_size = reg_size_map[curr_src_reg]
                 if curr_src_reg_size != 8: #TODO, change this for 32 bit
-                    print("[warn] write has a partial length: " + hex(insn))
+                    print("[rr][warn][" + pid + "] write has a partial length: " + hex(insn))
                     curr_addr = insn_to_addr[insn]
                     pending_addrs.add(curr_addr)
                     addr_to_def_to_ignore[curr_addr] = hex(insn)
@@ -510,7 +510,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
             print("[rr][" + pid + "] current results: " + str(results))
 
             if len(pending_addrs) == 0:
-                print("[ERROR][rr][" + pid + "] No more watchpoints to watch... Returning now...")
+                print("[rr][ERROR][" + pid + "] No more watchpoints to watch... Returning now...")
                 return results
 
             #for instruction in positive:
@@ -553,7 +553,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                     unknown_writes_indices, known_writes_indices, read_insns, breakpoint_trace = find_unknown_writes(read, breakpoint_trace, read_filter)
 
                     if len(unknown_writes_indices) == 0:
-                        print("Only found the writes that lead to positive branch outcome, looking for other writes now...")
+                        print("[rr][" + pid + "] Only found the writes that lead to positive branch outcome, looking for other writes now...")
                         pos_pass = False
                         return results #TODO remove this
 
@@ -561,7 +561,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                     read_filter = set([get_def_insn_index_for_branch(index, [read], breakpoint_trace) for index in not_taken_indices])
                     unknown_writes_indices, known_writes_indices, read_insns, breakpoint_trace = find_unknown_writes(read, breakpoint_trace, read_filter, True)
                     if len(unknown_writes_indices) == 0:
-                        print("All writes are accounted for. Returning now...")
+                        print("[rr][" + pid + "] All writes are accounted for. Returning now...")
                         return results
                 # the unknown writes must also have been
                 #partial_breakpoint_trace = [breakpoint_trace[i] for i in unknown_writes_indices]
@@ -604,7 +604,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
         pending_addrs = pending_addrs.difference(watchpoints)
         watchpoints = list(watchpoints)
         if len(watchpoints) == 0:
-            print("[warn] No more watchpoints to watch... Returning now...")
+            print("[rr][warn][" + pid + "] No more watchpoints to watch... Returning now...")
             return results
         #TODO populate the watchpoints again
         #branch_indices = random.sample(taken_indices, 4) + random.sample(not_taken_indices, 4)
@@ -614,7 +614,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
         #watchpoint_taken_indices = range(0, 4)
         #watchpoint_not_taken_indices = range(4, 8)
     if len(results) == 0 and len(pending_addrs) > 0:
-        raise Exception("[rr][" + pid + "][ERROR] No results found because exceeded itertaion, but still has more addresses to watch...")
+        raise Exception("[rr][ERROR][" + pid + "] No results found because exceeded itertaion, but still has more addresses to watch...")
 
     #return positive, negative
     return results
