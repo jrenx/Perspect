@@ -132,6 +132,34 @@ class RelationGroup:
 
     def finish_invariant_group(self):
         RelationGroup.relation_groups.append(self)
+
+        to_remove = set()
+        for prede in self.relations:
+            if not isinstance(self.relations[prede].forward, Proportion):
+                continue
+            if not isinstance(self.relations[prede].backward, Proportion):
+                continue
+            has_only_proportion_succe = True
+            for n in itertools.chain(prede.cf_succes, prede.df_succes):
+                if n == self.starting_node:
+                    has_only_proportion_succe = False
+                    break
+                if n not in self.relations:
+                    continue
+                if not isinstance(self.relations[n].forward, Proportion):
+                    has_only_proportion_succe = False
+                    break
+                if not isinstance(self.relations[n].backward, Proportion):
+                    has_only_proportion_succe = False
+                    break
+            if has_only_proportion_succe is False:
+                continue
+            to_remove.add(prede)
+        for prede in to_remove:
+            print("[ra] Removing a variable relation whose successors all have variable relations: ")
+            print(self.relations[prede])
+            del self.relations[prede]
+
         for rel in self.relations.values():
             if isinstance(rel.forward, Invariance) and \
                 isinstance(rel.backward, Invariance):
