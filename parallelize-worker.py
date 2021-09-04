@@ -92,7 +92,7 @@ def main():
 
         def connect_bridge(socket, pipe):
             while True:
-                line = socket.recv().decode()
+                line = socket.recv(4096).decode()
                 if line == "":
                     pipes.append(pipe)
                     return

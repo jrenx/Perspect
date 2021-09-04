@@ -10,7 +10,7 @@ import socketserver
 import queue
 import _thread
 
-worker_addresses = [("127.0.0.1", 12000)]
+worker_addresses = [("10.1.0.21", 12000), ("10.1.0.24", 12000)]
 
 HOST, PORT = "localhost", 9999
 q = queue.Queue()
@@ -42,7 +42,7 @@ def main():
     handled = set()
 
     print("Starting execution")
-    for i in range(5):
+    for i in range(1):
         print("In iteration {}".format(i))
         start_time = datetime.datetime.now()
         os.system('python3 static_dep_graph.py >> out' + str(i) + ' &')
@@ -51,12 +51,12 @@ def main():
                 rr_result_cache = json.load(file)
              print("Execution of iteration {} starts at {}".format(i, datetime.datetime.strftime(start_time, "%Y/%m/%d, %H:%M:%S")))
  
-
         start_time = datetime.datetime.now()
         print("Execution of itertaion {} starts at {}".format(i, datetime.datetime.strftime(start_time, "%Y/%m/%d, %H:%M:%S")))
 
         sockets = []
         for addr in worker_addresses:
+            print(addr)
             for _ in range(16):
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.connect(addr)
@@ -86,7 +86,7 @@ def main():
 
             for s in read_sockets:
                 # Parse results
-                ret = s.recv().decode()
+                ret = s.recv(4096).decode()
                 if ret == "": # Server should not close the socket. Only for precaution
                     s.close()
                     sockets.remove(s)
