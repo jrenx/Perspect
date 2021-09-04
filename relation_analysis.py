@@ -122,12 +122,13 @@ class RelationGroup:
 
     def __str__(self):
         assert(self.finished)
-        s =  "================ Relation =================\n"
+        s =  "================ Relation Group =================\n"
         s += "Starting event: " + self.starting_node.hex_insn + "@" + self.starting_node.function
-        s += " weight: " + str(self.weight)
+        s += " weight: " + str(self.weight) + "\n"
+        s += " Total number of relations: " + str(len(self.sorted_relations)) + "\n"
         for rel in reversed(self.sorted_relations):
             s += str(rel)
-        s += "===========================================\n"
+        s += "=================================================\n"
         return s
 
     def finish_invariant_group(self):
@@ -401,8 +402,13 @@ class RelationAnalysis:
             else:
                 break
         RelationGroup.relation_groups = sorted(RelationGroup.relation_groups, key=lambda rg: rg.weight)
+        num_rels = 0
         for relation_group in reversed(RelationGroup.relation_groups):
+            num_rels += len(relation_group.relations)
+            assert len(relation_group.relations) == len(relation_group.sorted_relations)
             print(relation_group)
+        print("[ra] Total number of relations groups: " + str(len(RelationGroup.relation_groups)))
+        print("[ra] Total number of relations: " + str(num_rels))
 
     def calculate_base_weight(self, dgraph, starting_weight):
         base_weight = 0
