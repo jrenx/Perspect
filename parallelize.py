@@ -6,6 +6,7 @@ import threading
 import json
 import datetime
 import time
+import traceback
 
 DEBUG = True
 
@@ -13,6 +14,7 @@ def run_task(id, pipe):
     os.chdir('run_{}'.format(id))
     sys.path.insert(0, os.getcwd())
     sys.path.insert(2, os.path.join(os.getcwd(), 'rr'))
+    pid = str(os.getpid())
     import rr_util
     while True:
         obj = pipe.recv()
@@ -23,7 +25,14 @@ def run_task(id, pipe):
         print("Process {} recive task {}".format(id, str_args))
         rr_result_cache = {}
         start_time = datetime.datetime.now()
-        rr_util.rr_backslice2(prog, a1, a2, a3, a4, a5, a6, a7, rr_result_cache)
+        try:
+            rr_util.rr_backslice2(prog, a1, a2, a3, a4, a5, a6, a7, rr_result_cache)
+        except Exception as e:
+            print("[rr][" + pid + "][ERROR] Calling RR failed for input: " + str(str_args))
+            print(str(e))
+            print("-" * 60)
+            traceback.print_exc(file=sys.stdout)
+            print("-" * 60)
         duraton = datetime.datetime.now() - start_time
         print("Process {} finish task {} in {}".format(id, str_args, duraton))
         pipe.send(rr_result_cache)
@@ -36,7 +45,7 @@ def main():
     prog = '909_ziptest_exe9'
     if len(sys.argv) > 1:
         prog = sys.argv[1]
-
+    rr_result_file = os.path.join(curr_dir, 'cache', prog, 'rr_results_{}.json'.format(prog))
     print("Setting up parallel environment")
     for iter in range(num_processor):
         process_dir = os.path.join(curr_dir, 'run_{}'.format(iter))
@@ -57,25 +66,34 @@ def main():
     rr_result_cache = {}
 
     print("Starting execution")
+    exit = False
     for i in range(5):
         print("In iteration {}".format(i))
         start_time = datetime.datetime.now()
-        os.system('python3 static_dep_graph.py >> out')
-        lines = open('rr_inputs', 'r').readlines()
-        print("Static dep graph took: {}".format(datetime.datetime.now() - start_time))
-        print("Static dep graph produced {} inputs".format(len(lines)))
-
-        if DEBUG is True:
-            timestamp = str(time.time())
-            print("[rr] renaming to " + 'rr_inputs' + '.' + timestamp)
-            os.rename('rr_inputs', 'rr_inputs' + '.' + timestamp)
-        else:
-            os.system('rm rr_inputs')
+        if not os.path.exists("rr_inputs"):
+            os.system('python3 static_dep_graph.py >> out')
+        existing_rr_result_cache = None
+        if os.path.exists(rr_result_file):
+            with open(rr_result_file) as file:
+                existing_rr_result_cache = json.load(file)
+        inputs = set()
+        for line in open('rr_inputs', 'r').readlines():
+            if existing_rr_result_cache is not None:
+                if line.strip() in existing_rr_result_cache:
+                    print("[rr] Ignore input already explained: " + line)
+                    continue
+            if line in inputs:
+                print("[rr] Ignore duplicate input: " + line)
+                continue
+            inputs.add(line)
+        inputs = list(inputs) #Remove duplicates
+        print("Static dep graph took: {}".format(datetime.datetime.now() - start_time), flush=True)
+        print("Static dep graph produced {} non-duplicate inputs".format(len(inputs)), flush=True)
 
         def send_task(pipe):
             while True:
                 try:
-                    line = lines.pop()
+                    line = inputs.pop()
                 except IndexError:
                     break
                 if line.startswith(prog):
@@ -124,11 +142,29 @@ def main():
             print("-" * 60)
             traceback.print_exc(file=sys.stdout)
             print("-" * 60)
+        except KeyboardInterrupt:
+            print('Interrupted')
+            exit = True
 
-        json.dump(rr_result_cache, open(os.path.join(curr_dir, 'cache', 'rr_results_{}.json'.format(prog)), 'w'), indent=4)
+        json.dump(rr_result_cache, open(rr_result_file, 'w'), indent=4)
+
+        if DEBUG is True:
+            timestamp = str(time.time())
+            print("[rr] renaming to " + 'rr_inputs' + '.' + timestamp)
+            os.rename('rr_inputs', 'rr_inputs' + '.' + timestamp)
+        else:
+            os.system('rm rr_inputs')
+
+        if len(inputs) > 0:
+            print("[rr] Did not finish processing all inputs, writing back: " + str(len(inputs)))
+            with open('rr_inputs', 'w') as f:
+                for line in inputs:
+                    f.write(line)
 
         duration = datetime.datetime.now() - start_time
         print("Running iteration {} uses {} seconds".format(iter, duration))
+        if exit is True:
+            break
 
 if __name__ == '__main__':
     main()
