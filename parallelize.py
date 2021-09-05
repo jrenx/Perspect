@@ -87,6 +87,7 @@ def main():
                 continue
             inputs.add(line)
         inputs = list(inputs) #Remove duplicates
+        pending_inputs = set(inputs)
         print("Static dep graph took: {}".format(datetime.datetime.now() - start_time), flush=True)
         print("Static dep graph produced {} non-duplicate inputs".format(len(inputs)), flush=True)
 
@@ -111,6 +112,7 @@ def main():
                 print("Send task {}".format(line))
                 result_cache = pipe.recv()
                 print("Receiving result for task {}".format(line))
+                pending_inputs.remove(line)
                 for key, value in result_cache.items():
                     rr_result_cache[key] = value
                 
@@ -155,10 +157,10 @@ def main():
         else:
             os.system('rm rr_inputs')
 
-        if len(inputs) > 0:
+        if len(pending_inputs) > 0:
             print("[rr] Did not finish processing all inputs, writing back: " + str(len(inputs)))
             with open('rr_inputs', 'w') as f:
-                for line in inputs:
+                for line in pending_inputs:
                     f.write(line)
 
         duration = datetime.datetime.now() - start_time
