@@ -8,6 +8,7 @@ from collections import deque
 from collections import OrderedDict
 import itertools
 import sys, traceback
+import socket
 
 DEBUG_CFG = False
 DEBUG_SIMPLIFY = False
@@ -15,6 +16,7 @@ DEBUG_SLICE = False
 VERBOSE = False
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 TRACKS_DIRECT_CALLER = True
+HOST, PORT = "localhost", 9999
 
 class BasicBlock:
     def __init__(self, id, ends_in_branch, is_entry, lines):
@@ -1458,6 +1460,11 @@ class StaticDepGraph:
                 json.dump(StaticDepGraph.sa_result_cache, f, indent=4)
         print("Persisting static graph result file")
         StaticDepGraph.writeJSON(result_file)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            # Connect to server and send data
+            sock.connect((HOST, PORT))
+            sock.sendall(bytes("FIN" + "\n", "utf-8"))
+            print("[main] sending to socket: FIN")
         end = time.time()
         print("[static_dep] static analysis took a total time of: " + str(end - start))
         return False

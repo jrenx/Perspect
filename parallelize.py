@@ -7,8 +7,26 @@ import json
 import datetime
 import time
 import traceback
+import socketserver
+import queue
+import _thread
 
+HOST, PORT = "localhost", 9999
+q = queue.Queue()
 DEBUG = True
+
+class MyTCPHandler(socketserver.StreamRequestHandler):
+    def handle(self):
+        # self.rfile is a file-like object created by the handler;
+        # we can now use e.g. readline() instead of raw recv() calls
+        self.data = self.rfile.readline().strip().decode("utf-8")
+        q.put(self.data)
+        print("{} wrote:".format(self.client_address[0]))
+        print(self.data)
+
+def server_thread():
+    with socketserver.TCPServer((HOST, PORT), MyTCPHandler) as server:
+        server.serve_forever()
 
 def run_task(id, pipe):
     os.chdir('run_{}'.format(id))
@@ -64,37 +82,53 @@ def main():
         shutil.copytree('binary_analysis', binary_dir, ignore=shutil.ignore_patterns('.*', '_*'))
 
     rr_result_cache = {}
-
+    try:
+        _thread.start_new_thread(server_thread, ())
+    except:
+        print("Error: unable to start thread")
+    handled = set()
     print("Starting execution")
     exit = False
     for i in range(5):
         print("In iteration {}".format(i))
         start_time = datetime.datetime.now()
-        if not os.path.exists("rr_inputs"):
-            os.system('python3 static_dep_graph.py >> out')
+        #if not os.path.exists("rr_inputs"):
+        os.system('python3 static_dep_graph.py >> out &')
         existing_rr_result_cache = None
         if os.path.exists(rr_result_file):
             with open(rr_result_file) as file:
                 existing_rr_result_cache = json.load(file)
-        inputs = set()
-        for line in open('rr_inputs', 'r').readlines():
-            if existing_rr_result_cache is not None:
-                if line.strip() in existing_rr_result_cache:
-                    print("[rr] Ignore input already explained: " + line)
-                    continue
-            if line in inputs:
-                print("[rr] Ignore duplicate input: " + line)
-                continue
-            inputs.add(line)
-        inputs = list(inputs) #Remove duplicates
-        pending_inputs = set(inputs)
-        print("Static dep graph took: {}".format(datetime.datetime.now() - start_time), flush=True)
-        print("Static dep graph produced {} non-duplicate inputs".format(len(inputs)), flush=True)
-
+        #inputs = set()
+        #for line in open('rr_inputs', 'r').readlines():
+        #    if existing_rr_result_cache is not None:
+        #        if line.strip() in existing_rr_result_cache:
+        #            print("[rr] Ignore input already explained: " + line)
+        #            continue
+        #    if line in inputs:
+        #        print("[rr] Ignore duplicate input: " + line)
+        #        continue
+        #    inputs.add(line)
+        #inputs = list(inputs) #Remove duplicates
+        #pending_inputs = set(inputs)
+        #print("Static dep graph took: {}".format(datetime.datetime.now() - start_time), flush=True)
+        #print("Static dep graph produced {} non-duplicate inputs".format(len(inputs)), flush=True)
         def send_task(pipe):
             while True:
                 try:
-                    line = inputs.pop()
+                    if q.empty():
+                        continue
+                    #line = inputs.pop()
+                    line = q.get()
+                    print("Getting key " + line)
+                    if line.strip() == "FIN":
+                        break
+                    if line in handled:
+                        continue
+                    handled.add(line)
+
+                    if line.strip() in existing_rr_result_cache:
+                        print("[rr] Ignore input already explained: " + line)
+                        continue
                 except IndexError:
                     break
                 if line.startswith(prog):
@@ -112,7 +146,7 @@ def main():
                 print("Send task {}".format(line))
                 result_cache = pipe.recv()
                 print("Receiving result for task {}".format(line))
-                pending_inputs.remove(line)
+                #pending_inputs.remove(line)
                 for key, value in result_cache.items():
                     rr_result_cache[key] = value
                 
@@ -150,18 +184,18 @@ def main():
 
         json.dump(rr_result_cache, open(rr_result_file, 'w'), indent=4)
 
-        if DEBUG is True:
-            timestamp = str(time.time())
-            print("[rr] renaming to " + 'rr_inputs' + '.' + timestamp)
-            os.rename('rr_inputs', 'rr_inputs' + '.' + timestamp)
-        else:
-            os.system('rm rr_inputs')
-
-        if len(pending_inputs) > 0:
-            print("[rr] Did not finish processing all inputs, writing back: " + str(len(inputs)))
-            with open('rr_inputs', 'w') as f:
-                for line in pending_inputs:
-                    f.write(line)
+        #if DEBUG is True:
+        #    timestamp = str(time.time())
+        #    print("[rr] renaming to " + 'rr_inputs' + '.' + timestamp)
+        #    os.rename('rr_inputs', 'rr_inputs' + '.' + timestamp)
+        #else:
+        #    os.system('rm rr_inputs')
+        #
+        #if len(pending_inputs) > 0:
+        #    print("[rr] Did not finish processing all inputs, writing back: " + str(len(inputs)))
+        #    with open('rr_inputs', 'w') as f:
+        #        for line in pending_inputs:
+        #            f.write(line)
 
         duration = datetime.datetime.now() - start_time
         print("Running iteration {} uses {} seconds".format(iter, duration))

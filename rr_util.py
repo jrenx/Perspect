@@ -4,6 +4,8 @@ import os.path
 import sys
 import subprocess
 from subprocess import call
+import socket
+import sys
 sys.path.append(os.path.abspath('./rr'))
 from sat_def import *
 from get_def import *
@@ -13,7 +15,7 @@ lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 DEBUG_CTYPE = True
 DEBUG = True
-
+HOST, PORT = "localhost", 9999
 ################################################################
 #### Helper functions that interact with RR functionalities ####
 ################################################################
@@ -83,8 +85,15 @@ def rr_backslice(prog, branch, target, insn, reg, shift, off, off_reg, rr_result
           + insn_str + "_" + reg_str + "_" + shift_str + "_" + off_str + "_" + str(off_reg_str)
     if key in rr_result_cache:
         return rr_result_cache[key]
-    with open("rr_inputs", "a") as f:
-        f.write(key+"\n")
+    #if conn is None:
+    #    print("[main] writing to file: " + key)
+    #    with open("rr_inputs", "a") as f:
+    #        f.write(key+"\n")
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        # Connect to server and send data
+        sock.connect((HOST, PORT))
+        sock.sendall(bytes(key + "\n", "utf-8"))
+        print("[main] sending to socket: " + key)
     raise Exception()
 
     print("[main] Inputting to RR: " \
