@@ -119,7 +119,7 @@ def main():
                         continue
                     #line = inputs.pop()
                     line = q.get()
-                    print("Getting key " + line)
+                    print("Getting key " + line,flush=True)
                     if line.strip() == "FIN":
                         break
                     if line in handled:
@@ -143,9 +143,9 @@ def main():
                 a6 = None if segs[6].strip() == "None" else segs[6].strip() 
                 a7 = None if segs[7].strip() == "None" else segs[7].strip() 
                 pipe.send((prog, a1, a2, a3, a4, a5, a6, a7))
-                print("Send task {}".format(line))
+                print("Send task {}".format(line), flush=True)
                 result_cache = pipe.recv()
-                print("Receiving result for task {}".format(line))
+                print("Receiving result for task {}".format(line), flush=True)
                 #pending_inputs.remove(line)
                 for key, value in result_cache.items():
                     rr_result_cache[key] = value
