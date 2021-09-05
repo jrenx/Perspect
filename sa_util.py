@@ -204,13 +204,14 @@ def get_mem_writes_to_static_addrs(prog):
     # https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
     # https://bugs.python.org/issue1701409
 
-    prog_name = c_char_p(str.encode(prog))
+    if not os.path.exists(os.path.join(curr_dir, 'writesToStaticAddr_result')):
+        prog_name = c_char_p(str.encode(prog))
 
-    if DEBUG_CTYPE: print( "[main] prog: " + prog)
-    if DEBUG_CTYPE: print( "[main] : " + "Calling C", flush=True)
+        if DEBUG_CTYPE: print( "[main] prog: " + prog)
+        if DEBUG_CTYPE: print( "[main] : " + "Calling C", flush=True)
 
-    lib.getMemWritesToStaticAddresses(prog_name)
-    if DEBUG_CTYPE: print( "[main] : Back from C")
+        lib.getMemWritesToStaticAddresses(prog_name)
+        if DEBUG_CTYPE: print( "[main] : Back from C")
 
     f = open(os.path.join(curr_dir, 'writesToStaticAddr_result'))
     json_insn_to_writes = json.load(f)
