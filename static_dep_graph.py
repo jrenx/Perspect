@@ -1850,7 +1850,7 @@ class StaticDepGraph:
                 #raise e
                 continue
             print("[static_dep] found " + str(len(results)) + " dataflow dependencies non-local to function")
-            node.explained = True
+
             print(str(results))
             if VERBOSE: print(results)
             for result in results:
@@ -1912,7 +1912,8 @@ class StaticDepGraph:
                 else:
                     node.mem_load.read_same_as_write = True
                     node.mem_store.read_same_as_write = True
-
+            node.explained = True
+            
         print("[static_dep] Total number of      new     nodes in local dataflow slice: " + str(len(defs_in_same_func)) + " " + \
               str([hex(node.insn) for node in defs_in_same_func]))
         if VERBOSE:
