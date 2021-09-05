@@ -349,6 +349,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
             if len(branch_target) != 0:
                 branch_target = []
                 timeout = 90
+                branch = None
                 target = None
                 continue
             #if i < 3 and timeout is not None:
