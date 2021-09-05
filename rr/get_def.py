@@ -327,16 +327,37 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     branch_target = []
     if branch is not None and target is not None:
         branch_target = [branch, target]
-    success, bp_pass_duration = run_breakpoint(branch_target, reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, False, False,
-                   do_timeout=False)
-    breakpoint_trace = parse_breakpoint(branch_target, reg_points, False)
-    print("[rr][" + pid + "] Parsed " + str(len(breakpoint_trace)) + " breakpoint hits")
+    timeout = None
+    if reg.lower() == 'rsp' or reg.lower() == 'esp':
+        timeout = 150
+    for i in range(0,2):
+        success, bp_pass_duration = run_breakpoint(branch_target, reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, False, False,
+                       timeout=timeout, target=target)
+        breakpoint_trace = parse_breakpoint(branch_target, reg_points, False)
+        print("[rr][" + pid + "] Parsed " + str(len(breakpoint_trace)) + " breakpoint hits")
 
-    taken_indices, not_taken_indices = filter_branch(branch, target, breakpoint_trace)
-    read_point_count = count_point_in_bp_trace(read, breakpoint_trace)
-    print("[rr][" + pid + "] Parsed " + str(len(taken_indices)) + " taken indices")
-    print("[rr][" + pid + "] Parsed " + str(len(not_taken_indices)) + " not taken indices")
-    print("[rr][" + pid + "] COUNT Total number of read points " + str(read_point_count))
+        taken_indices, not_taken_indices = filter_branch(branch, target, breakpoint_trace)
+        read_point_count = count_point_in_bp_trace(read, breakpoint_trace)
+        print("[rr][" + pid + "] Parsed " + str(len(taken_indices)) + " taken indices")
+        print("[rr][" + pid + "] Parsed " + str(len(not_taken_indices)) + " not taken indices")
+        print("[rr][" + pid + "] COUNT Total number of read points " + str(read_point_count))
+
+        if len(taken_indices) == 0:
+            if reg.lower() == 'rsp' or reg.lower() == 'esp':
+                timeout += 150
+                continue
+            if len(branch_target) != 0:
+                branch_target = []
+                timeout = 90
+                target = None
+                continue
+            #if i < 3 and timeout is not None:
+            #    timeout += 300
+            #    continue
+            print("[rr][warn][" + pid + "] Returning because it takes too long to observe taken branches.")
+            return results
+        else:
+            break
 
     print("[rr][" + pid + "] First step finished")
     pending_addrs = set()
@@ -390,7 +411,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     addr_to_def_to_ignore = {}
     pos_pass = True
     do_breakpoints = read_point_count < SMALL_READ_POINT_COUNT \
-                     or (read_point_count < LARGE_READ_POINT_COUNT and reg.lower() == 'rsp')
+                     or (read_point_count < LARGE_READ_POINT_COUNT and (reg.lower() == 'rsp' or reg.lower() == 'esp'))
     do_thirdpass = True
     print("[rr][" + pid + "] Do breakpoints? " + str(do_breakpoints))
     print("[rr][" + pid + "] Total iters: " + str(iter))
@@ -408,15 +429,15 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
         # Second pass
         print("[rr][" + pid + "] Running second step for {} times".format(i + 1), flush=True)
         if do_breakpoints is False:
-            run_watchpoint(watchpoints)
+            success, wp_pass_duration = run_watchpoint(watchpoints)
             watchpoint_trace, watchpoint_count = parse_watchpoint()
         else:
-            run_watchpoint(watchpoints,
+            success, wp_pass_duration = run_watchpoint(watchpoints,
                            [read], [reg], [offset_reg] if offset_reg is not None else [''], [int(offset, 16)], [int(shift, 16)],
                            additional_timeout = bp_pass_duration)
             watchpoint_trace, watchpoint_count = parse_watchpoint(reads=set([read]), addr_to_def_to_ignore=addr_to_def_to_ignore)
-            print("[rr][" + pid + "] COUNT Parsed " + str(watchpoint_count) + " raw watchpoint hits")
-            watchpoint_count = watchpoint_count -  count_point_in_wp_trace(read, watchpoint_trace)
+            pure_watchpoint_count = watchpoint_count -  count_point_in_wp_trace(read, watchpoint_trace)
+            print("[rr][" + pid + "] COUNT Parsed " + str(pure_watchpoint_count) + " raw watchpoint hits")
         print("[rr][" + pid + "] COUNT Parsed " + str(len(watchpoint_trace)) + " watchpoint hits")
         #("[tmp] " + str(watchpoint_trace))
         print("[rr][" + pid + "] Second step finished")
@@ -531,7 +552,8 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                 print("[rr][" + pid + "] Is a loop insn: " + str(loop_insn_flags), flush=True)
                 #TODO, how to distinguish diff insn and regs? looks like it's according to order
                 success, bp_pass_duration2 = run_breakpoint(branch_target, reg_points, regs, off_regs, offsets, shifts, src_regs,
-                               loop_insn_flags, True, True)
+                               loop_insn_flags, True, True,
+                               (timeout + wp_pass_duration*def_point_count/watchpoint_count) if timeout is not None else timeout)
                 breakpoint_trace = parse_breakpoint(branch_target, reg_points, True)
                 reg_points = [reg_points[0]]
                 regs = [regs[0]]

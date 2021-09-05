@@ -61,8 +61,9 @@ def run_watchpoint(watchpoints, breakpoints=[], regs=[], off_regs=[], offsets=[]
         success = False
 
     b = datetime.datetime.now()
-    print("[rr][" + pid + "] Running watchpoints took: " + str(b - a))
-    return success
+    duration = b - a
+    print("[rr][" + pid + "] Running watchpoints took: " + str(duration), flush=True)
+    return success, duration.total_seconds()
 
 def parse_watchpoint(reads=None, addr_to_def_to_ignore=None):
     """

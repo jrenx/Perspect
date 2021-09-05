@@ -12,6 +12,7 @@ with open(os.path.join(rr_dir, 'config.json')) as configFile:
 breakpoints = config['breakpoints']
 reg_points = config['reg_points']
 timeout = config['timeout']
+target = config['target']
 start_time = time.time()
 
 for br in reg_points:
@@ -22,6 +23,7 @@ for br in breakpoints:
 
 trace = []
 not_exit = True
+target_seen = False
 
 def br_handler(event):
     if time.time() - start_time > timeout:
@@ -30,6 +32,13 @@ def br_handler(event):
         return
     if not isinstance(event, gdb.BreakpointEvent):
         return
+    global target_seen
+    if target is not None and target_seen is False:
+        if time.time() - start_time > 150:
+            print("[rr] Exit the execution because no target has been seen but 5min has past.")
+            not_exit = False
+            return
+
     frame = gdb.newest_frame()
     br = event.breakpoints[-1]
     br_num = int(br.number) - 1
@@ -61,7 +70,11 @@ def br_handler(event):
 
     elif br_num < len(reg_points) + len(breakpoints):
         br_num -= len(reg_points)
-        trace.append((breakpoints[br_num], None, None))
+        bp = breakpoints[br_num]
+        if target is not None:
+            if bp == target:
+                target_seen = True
+        trace.append((bp, None, None))
     else:
         raise RuntimeError("Unknown breakpoint number: {}".format(br_num + 1))
 

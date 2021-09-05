@@ -38,7 +38,7 @@ def get_child_processes(parent_pid):
     return children
 
 def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, step, deref,
-                   do_timeout=True):
+                   timeout=None, target=None):
     """
     print("[tmp] reg_point_to_regs: " + str(reg_point_to_regs))
     reg_points = list(reg_point_to_regs.keys())
@@ -53,11 +53,11 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
     #print("[tmp] reg_points: " + str(reg_points))
     #print("[tmp] regs: " + str(regs))
     #print("[tmp] indice_map: " + str(indice_map))
-    timeout = 120
-    if do_timeout:
-        timeout = 300
-        #count = len(breakpoints) + len(reg_points)
-        #timeout = max(300, count * 15)
+    #timeout = None
+    #if do_timeout:
+    #   timeout = 300
+    #   count = len(breakpoints) + len(reg_points)
+    #   timeout = max(300, count * 15)
     config = {'breakpoints': breakpoints,
               'reg_points': reg_points,
               'regs': regs,
@@ -68,7 +68,8 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
               'loop_insn_flags' : loop_insn_flags,
               'step': step,
               'deref': deref,
-              'timeout': timeout}
+              'timeout': timeout,
+              'target': target}
     with open(os.path.join(rr_dir, 'config.json'), 'w') as f:
         json.dump(config, f)
     print("Timeout is: " + str(timeout), flush=True)
@@ -83,7 +84,7 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
 
     b = datetime.datetime.now()
     duration = b - a
-    print("[rr][" + pid + "] Running breakpoints took: " + str(duration))
+    print("[rr][" + pid + "] Running breakpoints took: " + str(duration), flush=True)
     return success, duration.total_seconds()
 
 def parse_breakpoint(breakpoints, reg_points, deref):
