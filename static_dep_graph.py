@@ -9,6 +9,7 @@ from collections import OrderedDict
 import itertools
 import sys, traceback
 import socket
+import time
 
 DEBUG_CFG = False
 DEBUG_SIMPLIFY = False
@@ -577,7 +578,7 @@ class CFG:
               str([bb.id for bb in self.ordered_bbs_in_slice]))
 
     def build(self, insn):
-        for i in range(0,2):
+        for i in range(0,5):
             try:
                 self.built = True
                 json_bbs = getAllBBs(insn, self.func, self.prog)
@@ -652,6 +653,7 @@ class CFG:
                 print("-" * 60)
                 traceback.print_exc(file=sys.stdout)
                 print("-" * 60)
+                time.sleep(5)
                 continue
         raise Exception("Building CFG failed twice.")
 
@@ -1862,10 +1864,10 @@ class StaticDepGraph:
                                    node.mem_load.off_reg, StaticDepGraph.rr_result_cache) #, StaticDepGraph.rr_result_cache)
             except Exception as e:
                 print("Calling RR failed")
-                print(str(e))
-                print("-" * 60)
-                traceback.print_exc(file=sys.stdout)
-                print("-" * 60)
+                #print(str(e))
+                #print("-" * 60)
+                #traceback.print_exc(file=sys.stdout)
+                #print("-" * 60)
                 #raise e
                 continue
             print("[static_dep] found " + str(len(results)) + " dataflow dependencies non-local to function")
