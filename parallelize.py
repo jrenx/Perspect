@@ -14,33 +14,44 @@ import _thread
 HOST, PORT = "localhost", 9999
 q = queue.Queue()
 DEBUG = True
+num_processor = 16
 
 class MyTCPHandler(socketserver.StreamRequestHandler):
     def handle(self):
         # self.rfile is a file-like object created by the handler;
         # we can now use e.g. readline() instead of raw recv() calls
         self.data = self.rfile.readline().strip().decode("utf-8")
-        q.put(self.data)
-        print("{} wrote:".format(self.client_address[0]))
-        print(self.data)
+        if self.data == "FIN":
+            print("Received FIN.")
+            global num_processor
+            for i in range(0, num_processor):
+                q.put(self.data)
+        else:
+            q.put(self.data)
+            print("{} wrote:".format(self.client_address[0]))
+            print(self.data)
 
 def server_thread():
     with socketserver.TCPServer((HOST, PORT), MyTCPHandler) as server:
         server.serve_forever()
 
-def run_task(id, pipe):
+def run_task(id, pipe, prog):
     os.chdir('run_{}'.format(id))
     sys.path.insert(0, os.getcwd())
     sys.path.insert(2, os.path.join(os.getcwd(), 'rr'))
     pid = str(os.getpid())
     import rr_util
     while True:
-        obj = pipe.recv()
+        try:
+            obj = pipe.recv()
+        except EOFError:
+            #print("Received EOFError, retry...")
+            continue
         if obj == "Shutdown":
             break
         (prog, a1, a2, a3, a4, a5, a6, a7) = obj
         str_args = '_'.join(map(lambda arg : "None" if arg is None else arg, [prog, a1, a2, a3, a4, a5, a6, a7]))
-        print("Process {} recive task {}".format(id, str_args))
+        print("[worker][{}] recive task {}".format(id, str_args),flush=True)
         rr_result_cache = {}
         start_time = datetime.datetime.now()
         try:
@@ -52,19 +63,73 @@ def run_task(id, pipe):
             traceback.print_exc(file=sys.stdout)
             print("-" * 60)
         duraton = datetime.datetime.now() - start_time
-        print("Process {} finish task {} in {}".format(id, str_args, duraton))
+        print("[worker][{}] finish task {} in {}".format(id, str_args, duraton),flush=True)
         pipe.send(rr_result_cache)
+    print("[worker][{}] finished execution.".format(id),flush=True)
     pipe.send("Shutdown")
 
+def send_task(id, pipe, prog, rr_result_cache, handled, lock):
+    while True:
+        try:
+            if q.empty():
+                continue
+
+            # line = inputs.pop()
+            line = q.get()
+            print("[sender][" + str(id) + "] Getting key " + line, flush=True)
+            if line.strip().startswith("FIN"):
+                break
+
+            lock.acquire()
+            seen = line in handled
+            if seen is False:
+                handled.add(line)
+            lock.release()
+            if seen is True:
+                print("[sender][" + str(id) + "] Ignore input already explored in this iteration: " + line, flush=True)
+                continue
+
+            # lock.acquire()
+            # seen = line.strip() in existing_rr_result_cache
+            # lock.release()
+            # if seen is True:
+            #    print("[rr] Ignore input already explored in prev iteration: " + line, flush=True)
+            #    continue
+        except IndexError:
+            break
+        if line.startswith(prog):
+            line = line[len(prog):]
+        segs = line.split('_')
+        a0 = None if segs[0].strip() == "None" else segs[0].strip()  # This is expected, a0 is empty string
+        a1 = None if segs[1].strip() == "None" else segs[1].strip()
+        a2 = None if segs[2].strip() == "None" else segs[2].strip()
+        a3 = None if segs[3].strip() == "None" else segs[3].strip()
+        a4 = None if segs[4].strip() == "None" else segs[4].strip()
+        a5 = None if segs[5].strip() == "None" else segs[5].strip()
+        a6 = None if segs[6].strip() == "None" else segs[6].strip()
+        a7 = None if segs[7].strip() == "None" else segs[7].strip()
+        print("[sender][" + str(id) + "] Sending task {}".format(line), flush=True)
+        pipe.send((prog, a1, a2, a3, a4, a5, a6, a7))
+        print("[sender][" + str(id) + "] Sent task {}".format(line), flush=True)
+        result_cache = pipe.recv()
+        print("[sender][" + str(id) + "] Receiving result for task {}".format(line), flush=True)
+        # pending_inputs.remove(line)
+        for key, value in result_cache.items():
+            rr_result_cache[key] = value
+    print("[sender][" + str(id) + "] Thread finishing execution.", flush=True)
+    pipe.send("Shutdown")
+    while pipe.recv() != "Shutdown":
+        pipe.send("Shutdown")
+    print("[sender][" + str(id) + "] Thread finished execution.", flush=True)
 
 def main():
     curr_dir = os.path.dirname(os.path.realpath(__file__))
-    num_processor = 16
     prog = '909_ziptest_exe9'
     if len(sys.argv) > 1:
         prog = sys.argv[1]
     rr_result_file = os.path.join(curr_dir, 'cache', prog, 'rr_results_{}.json'.format(prog))
     print("Setting up parallel environment")
+    global num_processor
     for iter in range(num_processor):
         process_dir = os.path.join(curr_dir, 'run_{}'.format(iter))
         if not os.path.exists(process_dir):
@@ -81,23 +146,26 @@ def main():
             shutil.rmtree(binary_dir)
         shutil.copytree('binary_analysis', binary_dir, ignore=shutil.ignore_patterns('.*', '_*'))
 
-    rr_result_cache = {}
     try:
         _thread.start_new_thread(server_thread, ())
     except:
         print("Error: unable to start thread")
-    handled = set()
+
     print("Starting execution")
+    rr_result_cache = {}
+    handled = set()
+    lock = threading.Lock()
+    mp.set_start_method('spawn')
     exit = False
     for i in range(5):
-        print("In iteration {}".format(i))
+        print("In iteration {}".format(i), flush=True)
         start_time = datetime.datetime.now()
         #if not os.path.exists("rr_inputs"):
-        os.system('python3 static_dep_graph.py >> out &')
-        existing_rr_result_cache = None
-        if os.path.exists(rr_result_file):
-            with open(rr_result_file) as file:
-                existing_rr_result_cache = json.load(file)
+        os.system('python3 static_dep_graph.py >> out' + str(i) + ' &')
+        #existing_rr_result_cache = None
+        #if os.path.exists(rr_result_file):
+        #    with open(rr_result_file) as file:
+        #        existing_rr_result_cache = json.load(file)
         #inputs = set()
         #for line in open('rr_inputs', 'r').readlines():
         #    if existing_rr_result_cache is not None:
@@ -112,60 +180,19 @@ def main():
         #pending_inputs = set(inputs)
         #print("Static dep graph took: {}".format(datetime.datetime.now() - start_time), flush=True)
         #print("Static dep graph produced {} non-duplicate inputs".format(len(inputs)), flush=True)
-        def send_task(pipe):
-            while True:
-                try:
-                    if q.empty():
-                        continue
-                    #line = inputs.pop()
-                    line = q.get()
-                    print("Getting key " + line,flush=True)
-                    if line.strip() == "FIN":
-                        break
-                    if line in handled:
-                        continue
-                    handled.add(line)
 
-                    if line.strip() in existing_rr_result_cache:
-                        print("[rr] Ignore input already explained: " + line)
-                        continue
-                except IndexError:
-                    break
-                if line.startswith(prog):
-                    line = line[len(prog):]
-                segs = line.split('_')
-                a0 = None if segs[0].strip() == "None" else segs[0].strip() #This is expected, a0 is empty string
-                a1 = None if segs[1].strip() == "None" else segs[1].strip() 
-                a2 = None if segs[2].strip() == "None" else segs[2].strip() 
-                a3 = None if segs[3].strip() == "None" else segs[3].strip() 
-                a4 = None if segs[4].strip() == "None" else segs[4].strip() 
-                a5 = None if segs[5].strip() == "None" else segs[5].strip() 
-                a6 = None if segs[6].strip() == "None" else segs[6].strip() 
-                a7 = None if segs[7].strip() == "None" else segs[7].strip() 
-                pipe.send((prog, a1, a2, a3, a4, a5, a6, a7))
-                print("Send task {}".format(line), flush=True)
-                result_cache = pipe.recv()
-                print("Receiving result for task {}".format(line), flush=True)
-                #pending_inputs.remove(line)
-                for key, value in result_cache.items():
-                    rr_result_cache[key] = value
-                
-            pipe.send("Shutdown")
-            while pipe.recv() != "Shutdown":
-                pipe.send("Shutdown")
-
-        start_time = datetime.datetime.now()
+        #start_time = datetime.datetime.now()
         print("Execution of iteration {} starts at {}".format(i, datetime.datetime.strftime(start_time, "%Y/%m/%d, %H:%M:%S")))
         processes = []
         threads = []
         try:
-            mp.set_start_method('spawn')
+
             for i in range(num_processor):
                 parent_conn, child_conn = mp.Pipe(duplex=True)
-                p = mp.Process(target = run_task, args=(i, child_conn))
+                p = mp.Process(target = run_task, args=(i, child_conn, prog))
                 p.start()
                 processes.append(p)
-                t = threading.Thread(target=send_task, args=(parent_conn, ))
+                t = threading.Thread(target=send_task, args=(i, parent_conn, prog, rr_result_cache, handled, lock))
                 t.start()
                 threads.append(t)
 
@@ -198,7 +225,7 @@ def main():
         #            f.write(line)
 
         duration = datetime.datetime.now() - start_time
-        print("Running iteration {} uses {} seconds".format(iter, duration))
+        print("Running iteration {} uses {} seconds".format(i, duration))
         if exit is True:
             break
 
