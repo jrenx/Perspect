@@ -575,72 +575,84 @@ class CFG:
               str([bb.id for bb in self.ordered_bbs_in_slice]))
 
     def build(self, insn):
-        self.built = True
-        json_bbs = getAllBBs(insn, self.func, self.prog)
+        for i in range(0,2):
+            try:
+                self.built = True
+                json_bbs = getAllBBs(insn, self.func, self.prog)
 
-        for json_bb in json_bbs:
-            bb_id = int(json_bb['id'])
+                for json_bb in json_bbs:
+                    bb_id = int(json_bb['id'])
 
-            ends_in_branch = False
-            if int(json_bb['ends_in_branch']) == 1:
-                ends_in_branch = True
+                    ends_in_branch = False
+                    if int(json_bb['ends_in_branch']) == 1:
+                        ends_in_branch = True
 
-            is_entry = False
-            if int(json_bb['is_entry']) == 1:
-                is_entry = True
+                    is_entry = False
+                    if int(json_bb['is_entry']) == 1:
+                        is_entry = True
 
-            lines = []
-            for json_line in json_bb['lines']:
-                lines.append(int(json_line['line']))
+                    lines = []
+                    for json_line in json_bb['lines']:
+                        lines.append(int(json_line['line']))
 
-            bb = BasicBlock(bb_id, ends_in_branch, is_entry, lines)
-            #if self.target_bb is None:
-            #    self.target_bb = bb
-            if is_entry:
-                self.entry_bbs.add(bb)
+                    bb = BasicBlock(bb_id, ends_in_branch, is_entry, lines)
+                    #if self.target_bb is None:
+                    #    self.target_bb = bb
+                    if is_entry:
+                        self.entry_bbs.add(bb)
 
-            start_insn = int(json_bb['start_insn'])
-            bb.add_start_insn(start_insn)
-            last_insn = int(json_bb['end_insn'])
-            bb.add_last_insn(last_insn)
+                    start_insn = int(json_bb['start_insn'])
+                    bb.add_start_insn(start_insn)
+                    last_insn = int(json_bb['end_insn'])
+                    bb.add_last_insn(last_insn)
 
-            self.id_to_bb[bb_id] = bb
-            self.ordered_bbs.append(bb)
+                    self.id_to_bb[bb_id] = bb
+                    self.ordered_bbs.append(bb)
 
-        for json_bb in json_bbs:
-            bb_id = int(json_bb['id'])
+                for json_bb in json_bbs:
+                    bb_id = int(json_bb['id'])
 
-            immed_dom_id = None
-            if 'immed_dom' in json_bb:
-                immed_dom_id = int(json_bb['immed_dom'])
-                bb.immed_dom = self.id_to_bb[immed_dom_id]
+                    immed_dom_id = None
+                    if 'immed_dom' in json_bb:
+                        immed_dom_id = int(json_bb['immed_dom'])
+                        bb.immed_dom = self.id_to_bb[immed_dom_id]
 
-            json_predes = json_bb['predes']
-            predes = []
-            for json_prede in json_predes:
-                prede_id = int(json_prede['id'])
-                predes.append(self.id_to_bb[prede_id])
-            self.id_to_bb[bb_id].predes = predes
+                    json_predes = json_bb['predes']
+                    predes = []
+                    for json_prede in json_predes:
+                        prede_id = int(json_prede['id'])
+                        predes.append(self.id_to_bb[prede_id])
+                    self.id_to_bb[bb_id].predes = predes
 
-            json_succes = json_bb['succes']
-            succes = []
-            for json_succe in json_succes:
-                succe_id = int(json_succe['id'])
-                succes.append(self.id_to_bb[succe_id])
-            self.id_to_bb[bb_id].succes = succes
+                    json_succes = json_bb['succes']
+                    succes = []
+                    for json_succe in json_succes:
+                        succe_id = int(json_succe['id'])
+                        succes.append(self.id_to_bb[succe_id])
+                    self.id_to_bb[bb_id].succes = succes
 
-            if 'backedge_targets' in json_bb:
-                json_backedge_targets = json_bb['backedge_targets']
-                for json_backedge_target in json_backedge_targets:
-                    backedge_target_id = int(json_backedge_target['id'])
-                    self.id_to_bb[bb_id].backedge_targets.append(self.id_to_bb[backedge_target_id])
-                    self.id_to_bb[backedge_target_id].backedge_sources.append(self.id_to_bb[bb_id])
-        #if DEBUG_CFG:
-        for bb in self.ordered_bbs:
-            print(str(bb))
-        assert len(self.id_to_bb) == len(self.ordered_bbs), \
-            str(len(self.id_to_bb)) + " " + str(len(self.ordered_bbs))
-        print("[static_dep] number of basic blocks in the entire cfg: " + str(len(self.ordered_bbs)))
+                    if 'backedge_targets' in json_bb:
+                        json_backedge_targets = json_bb['backedge_targets']
+                        for json_backedge_target in json_backedge_targets:
+                            backedge_target_id = int(json_backedge_target['id'])
+                            self.id_to_bb[bb_id].backedge_targets.append(self.id_to_bb[backedge_target_id])
+                            self.id_to_bb[backedge_target_id].backedge_sources.append(self.id_to_bb[bb_id])
+                #if DEBUG_CFG:
+                for bb in self.ordered_bbs:
+                    print(str(bb))
+                assert len(self.id_to_bb) == len(self.ordered_bbs), \
+                    str(len(self.id_to_bb)) + " " + str(len(self.ordered_bbs))
+                print("[static_dep] number of basic blocks in the entire cfg: " + str(len(self.ordered_bbs)))
+                return
+            except Exception as e:
+                print("Caught exception: " + str(e))
+                print(str(e))
+                print("-" * 60)
+                traceback.print_exc(file=sys.stdout)
+                print("-" * 60)
+                continue
+        raise Exception("Building CFG failed twice.")
+
 
 class BitOperation:
     def __init__(self, insn, operand, operation):
@@ -1913,7 +1925,7 @@ class StaticDepGraph:
                     node.mem_load.read_same_as_write = True
                     node.mem_store.read_same_as_write = True
             node.explained = True
-            
+
         print("[static_dep] Total number of      new     nodes in local dataflow slice: " + str(len(defs_in_same_func)) + " " + \
               str([hex(node.insn) for node in defs_in_same_func]))
         if VERBOSE:
