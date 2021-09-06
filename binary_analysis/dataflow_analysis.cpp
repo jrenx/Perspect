@@ -256,7 +256,8 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
     insn.getOperands(ops);
     MachRegister reg;
     for (auto oit = ops.rbegin(); oit != ops.rend(); oit++) {
-      bool isRegWrittenOnly = !(*oit).isRead() && (*oit).isWritten() && !(*oit).readsMemory() && !(*oit).writesMemory();
+      //bool isRegWrittenOnly = !(*oit).isRead() && (*oit).isWritten() && !(*oit).readsMemory() && !(*oit).writesMemory();
+      bool isRegWrittenOnly = (*oit).isWritten() && !(*oit).readsMemory() && !(*oit).writesMemory();
       if (!isRegWrittenOnly) continue;
       std::vector<MachRegister> regs;
       long off = 0;
