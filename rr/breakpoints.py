@@ -22,6 +22,8 @@ for br in breakpoints:
         gdb.execute('br {}'.format(br))
 
 trace = []
+addrs = set()
+reads = 0
 not_exit = True
 target_seen = False
 
@@ -38,6 +40,13 @@ def br_handler(event):
             print("[rr] Exit the execution because no target has been seen but 5min has past.")
             not_exit = False
             return
+    if not config['deref']:
+        global reads
+        if reads / len(addrs) > 100:
+            if time.time() - start_time > 150:
+                print("[rr] Exit the execution because there are very few addrs relative to reads.")
+                not_exit = False
+                return
 
     frame = gdb.newest_frame()
     br = event.breakpoints[-1]
@@ -103,6 +112,9 @@ def read_breakpoint(br_num, frame):
 
     if not config['deref']:
         trace.append((reg_points[br_num], addr, None))
+        addrs.add(addr)
+        global reads
+        reads += 1
     elif addr != '0x0':
         value = None
         if '(' in src_reg or ',' in src_reg or '%' in src_reg:

@@ -527,7 +527,7 @@ void getMemWrites(char *addrToFuncNames, char *progName) {
     insn.getOperands(ops);
     MachRegister reg;
     for (auto oit = ops.rbegin(); oit != ops.rend(); oit++) {
-      bool isRegReadOnly = (*oit).isRead() && !(*oit).isWritten() && !(*oit).readsMemory() && !(*oit).writesMemory();
+      bool isRegReadOnly = (*oit).isRead() && !(*oit).readsMemory() && !(*oit).writesMemory();
       if (!isRegReadOnly) continue;
       std::vector<MachRegister> regs;
       long off = 0;
