@@ -12,9 +12,10 @@ DEBUG = True
 def get_child_processes(parent_pid):
     children = set()
     # https://superuser.com/questions/363169/ps-how-can-i-recursively-get-all-child-process-for-a-given-pid
-    for line in os.popen("ps --forest -o pid=,tty=,stat=,time=,cmd= -g $(ps -o sid= -p " + str(parent_pid) + ")"):
-        fields = line.split()
-        children.add(int(fields[0]))
+    with os.popen("ps --forest -o pid=,tty=,stat=,time=,cmd= -g $(ps -o sid= -p " + str(parent_pid) + ")") as p:
+        for line in p.readlines():
+            fields = line.split()
+            children.add(int(fields[0]))
     """
     if parent_pid in children:
         children.remove(parent_pid)
@@ -24,14 +25,18 @@ def get_child_processes(parent_pid):
     """
 
     rr_processes = set()
-    for line in os.popen("ps ax | grep \"sudo rr replay\" | grep -v grep"):
-        fields = line.split()
-        pid = int(fields[0])
-        rr_processes.add(pid)
-    for line in os.popen("ps ax | grep \"gdb -l 10000 -ex set sysroot\" | grep -v grep"):
-        fields = line.split()
-        pid = int(fields[0])
-        rr_processes.add(pid)
+    with os.popen("ps ax | grep \"rr replay\" | grep -v grep") as p:
+        lines = p.readlines()
+        for line in lines:
+            fields = line.split()
+            child_pid = int(fields[0])
+            rr_processes.add(child_pid)
+    with os.popen("ps ax | grep \"gdb -l 10000 -ex set sysroot\" | grep -v grep") as p:
+        lines = p.readlines()
+        for line in lines:
+            fields = line.split()
+            child_pid = int(fields[0])
+            rr_processes.add(child_pid)
 
     children = children.intersection(rr_processes)
     print("[rr][" + pid + "] Children processes of " + str(pid) + " are " + str(children))
@@ -53,12 +58,15 @@ def run_watchpoint(watchpoints, breakpoints=[], regs=[], off_regs=[], offsets=[]
 
     success = True
     a = datetime.datetime.now()
-    rr_process = subprocess.Popen('sudo rr replay --cpu-unbound', stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, shell=True)
-    #children = get_child_processes(rr_process.pid)
+    rr_process = subprocess.Popen('sudo rr replay --cpu-unbound', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    children = get_child_processes(rr_process.pid)
     try:
-        rr_process.communicate(('source' + os.path.join(rr_dir, 'watchpoints.py')).encode())
+        rr_process.communicate(('source' + os.path.join(rr_dir, 'watchpoints.py')).encode(), timeout=timeout*2)
     except subprocess.TimeoutExpired:
         success = False
+        for child_id in children:
+            print("Trying to kill child " + str(child_id), flush=True)
+            os.system("sudo kill -9 " + str(child_id))
 
     b = datetime.datetime.now()
     duration = b - a
