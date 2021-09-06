@@ -309,7 +309,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     offsets = [offset]
     shifts = [shift]
     src_regs = ['']
-    loop_insn_flags = ['0']
+    loop_insn_flags = [0]
 
     all_unique_writes = set()
     results = []
