@@ -38,14 +38,14 @@ def br_handler(event):
     global target_seen
     if target is not None and target_seen is False:
         if now - start_time > 150:
-            print("[rr] Exit the execution because no target has been seen but 5min has past.")
+            #print("[rr] Exit the execution because no target has been seen but 5min has past.")
             not_exit = False
             return
     if not config['deref']:
         global reads
         if reads / (len(addrs) + 1) > 100:
             if now - start_time > 150:
-                print("[rr] Exit the execution because there are very few addrs relative to reads.")
+                #print("[rr] Exit the execution because there are very few addrs relative to reads.")
                 not_exit = False
                 return
 
