@@ -163,9 +163,9 @@ def main():
         #if not os.path.exists("rr_inputs"):
         os.system('python3 static_dep_graph.py >> out' + str(i) + ' &')
         #existing_rr_result_cache = None
-        #if os.path.exists(rr_result_file):
-        #    with open(rr_result_file) as file:
-        #        existing_rr_result_cache = json.load(file)
+        if os.path.exists(rr_result_file):
+            with open(rr_result_file) as file:
+                rr_result_cache = json.load(file)
         #inputs = set()
         #for line in open('rr_inputs', 'r').readlines():
         #    if existing_rr_result_cache is not None:
