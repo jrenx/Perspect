@@ -502,6 +502,11 @@ void getMemWrites(char *addrToFuncNames, char *progName) {
         trueAddr = (*it).first;
         insn = (*it).second;
       }
+      if (insn.getOperation().getPrefixID() == prefix_rep ||
+          insn.getOperation().getPrefixID() == prefix_repnz) {
+        // Is a looped move
+        isLoopInsn = 1;
+      }
     }
     if (INFO) cout << "[sa] insn: " << insn.format() << endl;
     cJSON_AddNumberToObject(json_insn, "true_addr", trueAddr);
