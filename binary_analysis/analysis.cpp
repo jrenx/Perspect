@@ -505,6 +505,9 @@ void getMemWrites(char *addrToFuncNames, char *progName) {
       if (insn.getOperation().getPrefixID() == prefix_rep ||
           insn.getOperation().getPrefixID() == prefix_repnz) {
         // Is a looped move
+        if (INFO) cout << "[sa] special looped move: ID: "
+                       << insn.getOperation().getID()  << " op: "
+                       << insn.getOperation().format() << endl;
         isLoopInsn = 1;
       }
     }
