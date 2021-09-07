@@ -8,6 +8,7 @@ import datetime
 rr_dir = os.path.dirname(os.path.realpath(__file__))
 pid = str(os.getpid())
 DEBUG = True
+VERBOSE = False
 
 def get_child_processes(parent_pid):
     children = set()
@@ -83,6 +84,12 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
     rr_process = subprocess.Popen('sudo rr replay --cpu-unbound', stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, shell=True)
     children = get_child_processes(rr_process.pid)
     try:
+        if VERBOSE is True:
+            rr_process.stdin.write(('set logging file rr/breakpoint_result_' + str(time.time()) + '.log\n').encode())
+            rr_process.stdin.write('set pagination off\n'.encode())
+            rr_process.stdin.write('set logging overwrite on\n'.encode())
+            rr_process.stdin.write('set logging redirect on\n'.encode())
+            rr_process.stdin.write('set logging on\n'.encode())
         if timeout is None:
             rr_process.communicate(('source' + os.path.join(rr_dir, 'breakpoints.py')).encode())
         else:
