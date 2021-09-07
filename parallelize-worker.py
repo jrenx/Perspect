@@ -83,16 +83,18 @@ def main():
     print("Setting up sockets")
     listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     listener.bind((socket.gethostname(), port))
-    listener.listen(1)
+    listener.listen(16)
 
 
 
     while True:
         (client, addr) = listener.accept()
+        print("Getting connection from {}".format(addr))
 
         def connect_bridge(socket, pipe):
             while True:
                 line = socket.recv(4096).decode()
+                print("Receive from socket: {}".format(line), flush=True)
                 if line == "":
                     pipes.append(pipe)
                     return
@@ -109,6 +111,7 @@ def main():
                 a6 = None if segs[6].strip() == "None" else segs[6].strip() 
                 a7 = None if segs[7].strip() == "None" else segs[7].strip() 
                 #print("[sender][" + str(id) + "] Sending task {}".format(line), flush=True)
+                print("Send task {}".format(line), flush=True)
                 pipe.send((prog, a1, a2, a3, a4, a5, a6, a7))
                 #print("[sender][" + str(id) + "] Sent task {}".format(line), flush=True)
 
@@ -119,7 +122,7 @@ def main():
 
         if len(pipes) > 0:
             pipe = pipes.pop()
-            threading.Thread(target=connect_bridge, args=(client, pipe))
+            threading.Thread(target=connect_bridge, args=(client, pipe)).start()
 
 
     for i in range(num_processor):

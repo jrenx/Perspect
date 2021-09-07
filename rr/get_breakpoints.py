@@ -81,7 +81,7 @@ def run_breakpoint(breakpoints, reg_points, regs, off_regs, offsets, shifts, src
     print("Timeout is: " + str(timeout), flush=True)
     success = True
     a = datetime.datetime.now()
-    rr_process = subprocess.Popen('sudo rr replay --cpu-unbound', stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, shell=True)
+    rr_process = subprocess.Popen('rr replay --cpu-unbound', stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, shell=True)
     children = get_child_processes(rr_process.pid)
     try:
         if VERBOSE is True:

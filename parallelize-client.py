@@ -42,7 +42,7 @@ def main():
     handled = set()
 
     print("Starting execution")
-    for i in range(1):
+    for i in range(5):
         print("In iteration {}".format(i))
         start_time = datetime.datetime.now()
         os.system('python3 static_dep_graph.py >> out' + str(i) + ' &')
