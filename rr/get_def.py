@@ -552,9 +552,10 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                 print("[rr][" + pid + "] Source registers: " + str(src_regs))
                 print("[rr][" + pid + "] Is a loop insn: " + str(loop_insn_flags), flush=True)
                 #TODO, how to distinguish diff insn and regs? looks like it's according to order
+                additional_timeout = wp_pass_duration*def_point_count/watchpoint_count
                 success, bp_pass_duration2 = run_breakpoint(branch_target, reg_points, regs, off_regs, offsets, shifts, src_regs,
                                loop_insn_flags, True, True,
-                               (timeout + wp_pass_duration*def_point_count/watchpoint_count) if timeout is not None else timeout)
+                               (timeout + additional_timeout) if timeout is not None else (bp_pass_duration + additional_timeout))
                 breakpoint_trace = parse_breakpoint(branch_target, reg_points, True)
                 reg_points = [reg_points[0]]
                 regs = [regs[0]]
