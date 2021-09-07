@@ -1,3 +1,4 @@
+from __future__ import division
 import gdb
 
 import json
@@ -28,8 +29,8 @@ not_exit = True
 target_seen = False
 
 def br_handler(event):
-    now = time.time()
-    if timeout is not None and now - start_time > timeout:
+    time_passed = time.time() - start_time
+    if timeout is not None and time_passed > timeout:
         global not_exit
         not_exit = False
         return
@@ -37,15 +38,26 @@ def br_handler(event):
         return
     global target_seen
     if target is not None and target_seen is False:
-        if now - start_time > 150:
-            #print("[rr] Exit the execution because no target has been seen but 5min has past.")
+        if time_passed > 150:
+            print("[rr] Exit the execution because no target has been seen but 5min has past.")
             not_exit = False
             return
     if not config['deref']:
         global reads
-        if reads / (len(addrs) + 1) > 100:
-            if now - start_time > 150:
-                #print("[rr] Exit the execution because there are very few addrs relative to reads.")
+        #print("READS " + str(reads))
+        #print("ADDRS " + str((len(addrs) + 1)))
+        #print("[rr] read to addr ratio: " + str(reads / (len(addrs) + 1)))
+        if (reads / (len(addrs) + 1)) > 100.0:
+            if time_passed > 150:
+                print("[rr] Exit the execution because there are very few addrs relative to reads.")
+                not_exit = False
+                return
+        #print("[rr] bp to read ratio: " + str(len(trace) / (reads+1)))
+        if (len(trace) / (reads+1)) > 100.0:
+            if time_passed > 60:
+                global trace
+                trace = []
+                print("[rr] Exit the execution because there are very few reads relative to branch or targets.")
                 not_exit = False
                 return
 
@@ -116,6 +128,7 @@ def read_breakpoint(br_num, frame):
         addrs.add(addr)
         global reads
         reads += 1
+        #print("READ " + str(reads))
     elif addr != '0x0':
         value = None
         if '(' in src_reg or ',' in src_reg or '%' in src_reg:
@@ -129,7 +142,7 @@ def read_breakpoint(br_num, frame):
             ret = gdb.execute(cmd, False, True)
             value = ret.split()[2].strip()
         else:
-            print("SPECIAL")
+            #print("SPECIAL")
             cmd = 'x/32b ' + addr
             ret = gdb.execute(cmd, False, True)
             ret = ret.splitlines()[0]
