@@ -1,7 +1,9 @@
 pin/obj-intel64/*
+pin/obj-ia32/*
 pin/__pycache__/*
 pin/__init__.py
 pin/*.pyc
+pin/*.out*
 binary_analysis/*.o
 binary_analysis/*.so
 binary_analysis/analysis
@@ -10,11 +12,14 @@ binary_analysis/*result
 binary_analysis/*results
 preprocessor/*.o
 preprocessor/preprocess
+preprocessor/count_node
 rr/*.json
 rr/*.log
 rr/__pycache__/*
 rr/__init__.py
 rr/*.pyc
+rr/watchpoints.log.*
+rr/breakpoints.log.*
 __pycache__/*
 __init__.py
 *.pyc
@@ -25,3 +30,6 @@ preprocess_data
 instruction_reg_log_arg
 binary_dump_*
 .vscode/*
+cache/909_ziptest_exe9/dynamic_graph*
+backup/*
+logs/*
