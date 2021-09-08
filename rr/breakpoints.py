@@ -47,9 +47,15 @@ def br_handler(event):
         #print("READS " + str(reads))
         #print("ADDRS " + str((len(addrs) + 1)))
         #print("[rr] read to addr ratio: " + str(reads / (len(addrs) + 1)))
+        if target is None and (len(addrs)) > 1000:
+            print("[rr] Too many addrs to investigate, return ...")
+            global not_exit
+            not_exit = False
+            return
         if (reads / (len(addrs) + 1)) > 100.0:
             if time_passed > 150:
                 print("[rr] Exit the execution because there are very few addrs relative to reads.")
+                global not_exit
                 not_exit = False
                 return
         #print("[rr] bp to read ratio: " + str(len(trace) / (reads+1)))
@@ -58,6 +64,7 @@ def br_handler(event):
                 global trace
                 trace = []
                 print("[rr] Exit the execution because there are very few reads relative to branch or targets.")
+                global not_exit
                 not_exit = False
                 return
 
