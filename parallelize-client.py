@@ -118,7 +118,7 @@ def main():
         json.dump(rr_result_cache, open(rr_result_file, 'w'), indent=4)
 
         duration = datetime.datetime.now() - start_time
-        print("Running iteration {} uses {} seconds".format(iter, duration))
+        print("Running iteration {} uses {} seconds".format(i, duration))
 
 if __name__ == '__main__':
     main()
