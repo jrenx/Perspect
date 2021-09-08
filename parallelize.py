@@ -187,18 +187,18 @@ def main():
         threads = []
         try:
 
-            for i in range(num_processor):
+            for j in range(num_processor):
                 parent_conn, child_conn = mp.Pipe(duplex=True)
-                p = mp.Process(target = run_task, args=(i, child_conn, prog))
+                p = mp.Process(target = run_task, args=(j, child_conn, prog))
                 p.start()
                 processes.append(p)
-                t = threading.Thread(target=send_task, args=(i, parent_conn, prog, rr_result_cache, handled, lock))
+                t = threading.Thread(target=send_task, args=(j, parent_conn, prog, rr_result_cache, handled, lock))
                 t.start()
                 threads.append(t)
 
-            for i in range(num_processor):
-                processes[i].join()
-                threads[i].join()
+            for j in range(num_processor):
+                processes[j].join()
+                threads[j].join()
         except Exception as e:
             print("Running parallelized RR failed")
             print(str(e))
