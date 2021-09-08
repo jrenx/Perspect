@@ -99,7 +99,11 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
             break;
           }
         }
-        assert(targetRegionFound);
+        if (CRASH_ON_ERROR) assert(targetRegionFound);
+        else {
+          cout << "[sa][BUG] target not found, returning...";
+          return;
+        }
         boost::unordered_map < Address, Function * > ret;
         boost::unordered_set <Address> visitedAddrs;
         handlePassByReference(targetRegion, addr, bb, func, ret, visitedAddrs);
