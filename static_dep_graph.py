@@ -1670,13 +1670,13 @@ class StaticDepGraph:
             is_bit_var = True
         type = load[7]
         curr_func = load[8]
-        if len(load) >= 10 and load[9] is not None and load[9] != '':
-            dst_reg = load[9]
-        else:
-            insn_to_func = []
-            insn_to_func.append([str(prede_insn), curr_func])
-            results1 = get_reg_read_or_written(insn_to_func, prog, False)
-            dst_reg = results1[0][2].lower()
+        #if len(load) >= 10 and load[9] is not None and load[9] != '':
+        dst_reg = load[9]
+        #else:
+        #    insn_to_func = []
+        #    insn_to_func.append([str(prede_insn), curr_func])
+        #    results1 = get_reg_read_or_written(insn_to_func, prog, False)
+        #    dst_reg = results1[0][2].lower()
 
         bit_ops = None
         if len(load) >= 11:
@@ -1879,13 +1879,13 @@ class StaticDepGraph:
                 load = result[0]
                 prede_insn = result[1]
                 curr_func = result[2]
-                if len(result) > 3 and result[3] is not None and result[3] != '':
-                    src_reg = result[3].lower()
-                else:
-                    insn_to_func = []
-                    insn_to_func.append([str(prede_insn), curr_func])
-                    results1 = get_reg_read_or_written(insn_to_func, prog, True)
-                    src_reg = results1[0][2].lower()
+                #if len(result) > 3 and result[3] is not None and result[3] != '':
+                src_reg = result[3]
+                #else:
+                #    insn_to_func = []
+                #    insn_to_func.append([str(prede_insn), curr_func])
+                #    results1 = get_reg_read_or_written(insn_to_func, prog, True)
+                #    src_reg = results1[0][2].lower()
 
                 if load is None: #TODO why?
                     continue
