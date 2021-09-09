@@ -148,8 +148,8 @@ public:
   }
 };
 
-void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co, cJSON *json_reads, boost::unordered_set<Address> &visited,
-                         char *progName, char *funcName,
+void backwardSliceHelper(vector<Function *> *allFuncs, cJSON *json_reads, boost::unordered_set<Address> &visited,
+                         char *funcName,
                          long unsigned int addr, char *regName, bool reversedOnce,
                          bool isKnownBitVar=false, bool atEndPoint=false);
 

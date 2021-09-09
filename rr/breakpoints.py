@@ -30,8 +30,8 @@ target_seen = False
 
 def br_handler(event):
     time_passed = time.time() - start_time
+    global not_exit
     if timeout is not None and time_passed > timeout:
-        global not_exit
         not_exit = False
         return
     if not isinstance(event, gdb.BreakpointEvent):
@@ -47,15 +47,19 @@ def br_handler(event):
         #print("READS " + str(reads))
         #print("ADDRS " + str((len(addrs) + 1)))
         #print("[rr] read to addr ratio: " + str(reads / (len(addrs) + 1)))
+        if target is None and (len(addrs)) > 1000:
+            print("[rr] Too many addrs to investigate, return ...")
+            not_exit = False
+            return
         if (reads / (len(addrs) + 1)) > 100.0:
             if time_passed > 150:
                 print("[rr] Exit the execution because there are very few addrs relative to reads.")
                 not_exit = False
                 return
         #print("[rr] bp to read ratio: " + str(len(trace) / (reads+1)))
+        global trace
         if (len(trace) / (reads+1)) > 100.0:
             if time_passed > 60:
-                global trace
                 trace = []
                 print("[rr] Exit the execution because there are very few reads relative to branch or targets.")
                 not_exit = False

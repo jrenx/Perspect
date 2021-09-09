@@ -274,15 +274,13 @@ Block *getImmediateDominator2(Function *f, long unsigned int addr) {
 }
 
 //TODO, in the future, get a batch get function
-Function *getFunction2(SymtabCodeSource *stcs, CodeObject *co, const char *funcName) {
+Function *getFunction2(vector<Function *> *allFuncs, const char *funcName) {
   string funcNameStr(funcName);
-  const CodeObject::funclist &all = co->funcs();
-  if (all.size() == 0) {
+  if (allFuncs->size() == 0) {
     fprintf(stderr, "No function in file.\n");
     return NULL;
   }
-
-  for (auto fit = all.begin(); fit != all.end(); ++fit) {
+  for (auto fit = allFuncs->begin(); fit != allFuncs->end(); ++fit) {
     Function *f = *fit;
     if (f->name().compare(funcNameStr) == 0) {
       return f;

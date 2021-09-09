@@ -10,6 +10,7 @@ import itertools
 import sys, traceback
 import socket
 import time
+import argparse
 
 DEBUG_CFG = False
 DEBUG_SIMPLIFY = False
@@ -581,7 +582,9 @@ class CFG:
         for i in range(0,5):
             try:
                 self.built = True
-                json_bbs = getAllBBs(insn, self.func, self.prog)
+                json_bbs = getAllBBs(StaticDepGraph.binary_ptr, insn, self.func, self.prog, \
+                                     bb_result_cache=StaticDepGraph.bb_result_cache, \
+                                     overwrite_cache=False if i == 0 else True)
 
                 for json_bb in json_bbs:
                     bb_id = int(json_bb['id'])
@@ -1054,6 +1057,7 @@ class StaticDepGraph:
     result_file = None
     rr_result_cache = {}
     sa_result_cache = {}
+    bb_result_cache = {}
 
     func_to_callsites = None
 
@@ -1348,7 +1352,7 @@ class StaticDepGraph:
         return self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
     @staticmethod
-    def build_dependencies(starting_events, prog, limit=10000, use_cached_static_graph=True):
+    def build_dependencies(starting_events, prog, limit=10000, use_cached_static_graph=True, parallelize_rr=False):
         start = time.time()
         result_dir = os.path.join(curr_dir, 'cache', prog)
         if not os.path.exists(result_dir):
@@ -1383,8 +1387,16 @@ class StaticDepGraph:
                 StaticDepGraph.sa_result_cache = json.load(cache_file)
                 sa_result_size = len(StaticDepGraph.sa_result_cache)
 
+        bb_result_size = 0
+        bb_result_file = os.path.join(result_dir, 'bb_results_' + prog + '.json')
+        if os.path.exists(bb_result_file):
+            with open(bb_result_file) as cache_file:
+                StaticDepGraph.bb_result_cache = json.load(cache_file)
+                bb_result_size = len(StaticDepGraph.bb_result_cache)
+
         try:
             StaticDepGraph.func_to_callsites = get_func_to_callsites(prog)
+            StaticDepGraph.binary_ptr = setup(prog)
             #print(StaticDepGraph.func_to_callsites)
             iteration = 0
             worklist = deque()
@@ -1422,26 +1434,27 @@ class StaticDepGraph:
                 for new_node in new_nodes:
                     worklist.append([new_node.insn, new_node.function, prog, new_node]) #FIMXE, ensure there is no duplicate work
             print("[static_dep] No more events to analyze.")
-            for func in StaticDepGraph.func_to_graph:
-                graph = StaticDepGraph.func_to_graph[func]
-                if graph.changed is False:
-                    continue
-                graph.build_control_flow_dependencies(set(), final=True)
-                graph.remove_extra_nodes(set([e[1] for e in starting_events]))
-                graph.merge_nodes(graph.nodes_in_df_slice, True)
-                graph.merge_nodes(graph.none_df_starting_nodes, True)
-                if TRACKS_DIRECT_CALLER: graph.merge_callsite_nodes()
-                for n in graph.nodes_in_cf_slice:
-                    print(str(n))
-                for n in graph.nodes_in_df_slice:
-                    print(str(n))
+            if parallelize_rr is False:
+                for func in StaticDepGraph.func_to_graph:
+                    graph = StaticDepGraph.func_to_graph[func]
+                    if graph.changed is False:
+                        continue
+                    graph.build_control_flow_dependencies(set(), final=True)
+                    graph.remove_extra_nodes(set([e[1] for e in starting_events]))
+                    graph.merge_nodes(graph.nodes_in_df_slice, True)
+                    graph.merge_nodes(graph.none_df_starting_nodes, True)
+                    if TRACKS_DIRECT_CALLER: graph.merge_callsite_nodes()
+                    for n in graph.nodes_in_cf_slice:
+                        print(str(n))
+                    for n in graph.nodes_in_df_slice:
+                        print(str(n))
 
-            StaticDepGraph.sanity_check()
-            StaticDepGraph.find_entry_and_exit_nodes()
-            StaticDepGraph.build_reverse_postorder_list()
-            StaticDepGraph.build_postorder_list()
-            StaticDepGraph.detect_df_backedges()
-            StaticDepGraph.print_graph_info()
+                StaticDepGraph.sanity_check()
+                StaticDepGraph.find_entry_and_exit_nodes()
+                StaticDepGraph.build_reverse_postorder_list()
+                StaticDepGraph.build_postorder_list()
+                StaticDepGraph.detect_df_backedges()
+                StaticDepGraph.print_graph_info()
         except Exception as e:
             print("Caught exception: " + str(e))
             raise e
@@ -1460,13 +1473,21 @@ class StaticDepGraph:
             print("Persisting sa result file")
             with open(sa_result_file, 'w') as f:
                 json.dump(StaticDepGraph.sa_result_cache, f, indent=4)
-        print("Persisting static graph result file")
-        StaticDepGraph.writeJSON(result_file)
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            # Connect to server and send data
-            sock.connect((HOST, PORT))
-            sock.sendall(bytes("FIN" + "\n", "utf-8"))
-            print("[main] sending to socket: FIN")
+
+        if bb_result_size != len(StaticDepGraph.bb_result_cache):
+            print("Persisting bb result file")
+            with open(bb_result_file, 'w') as f:
+                json.dump(StaticDepGraph.bb_result_cache, f, indent=4)
+
+        if parallelize_rr is False:
+            print("Persisting static graph result file")
+            StaticDepGraph.writeJSON(result_file)
+        else:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                # Connect to server and send data
+                sock.connect((HOST, PORT))
+                sock.sendall(bytes("FIN" + "\n", "utf-8"))
+                print("[main] sending to socket: FIN")
         end = time.time()
         print("[static_dep] static analysis took a total time of: " + str(end - start))
         return False
@@ -1670,13 +1691,13 @@ class StaticDepGraph:
             is_bit_var = True
         type = load[7]
         curr_func = load[8]
-        if len(load) >= 10 and load[9] is not None and load[9] != '':
-            dst_reg = load[9]
-        else:
-            insn_to_func = []
-            insn_to_func.append([str(prede_insn), curr_func])
-            results1 = get_reg_read_or_written(insn_to_func, prog, False)
-            dst_reg = results1[0][2].lower()
+        #if len(load) >= 10 and load[9] is not None and load[9] != '':
+        dst_reg = load[9]
+        #else:
+        #    insn_to_func = []
+        #    insn_to_func.append([str(prede_insn), curr_func])
+        #    results1 = get_reg_read_or_written(StaticDepGraph.binary_ptr, insn_to_func, False)
+        #    dst_reg = results1[0][2].lower()
 
         bit_ops = None
         if len(load) >= 11:
@@ -1814,7 +1835,7 @@ class StaticDepGraph:
             assert df_node.insn not in addr_to_node
             addr_to_node[df_node.insn] = df_node
 
-        results = static_backslices(slice_starts, prog, StaticDepGraph.sa_result_cache)
+        results = static_backslices(StaticDepGraph.binary_ptr, slice_starts, prog, StaticDepGraph.sa_result_cache)
         for result in results:
             #reg_name = result[0]
             insn = result[1]
@@ -1859,7 +1880,7 @@ class StaticDepGraph:
                 else:
                     print("[warn] closest dep branch is found but not the farthest target node?")
             try:
-                results = rr_backslice(prog, branch_insn, target_insn, #4234305, 0x409C41 | 4234325, 0x409C55
+                results = rr_backslice(StaticDepGraph.binary_ptr, prog, branch_insn, target_insn, #4234305, 0x409C41 | 4234325, 0x409C55
                                    node.insn, node.mem_load.reg, node.mem_load.shift, node.mem_load.off,
                                    node.mem_load.off_reg, StaticDepGraph.rr_result_cache) #, StaticDepGraph.rr_result_cache)
             except Exception as e:
@@ -1879,13 +1900,13 @@ class StaticDepGraph:
                 load = result[0]
                 prede_insn = result[1]
                 curr_func = result[2]
-                if len(result) > 3 and result[3] is not None and result[3] != '':
-                    src_reg = result[3].lower()
-                else:
-                    insn_to_func = []
-                    insn_to_func.append([str(prede_insn), curr_func])
-                    results1 = get_reg_read_or_written(insn_to_func, prog, True)
-                    src_reg = results1[0][2].lower()
+                #if len(result) > 3 and result[3] is not None and result[3] != '':
+                src_reg = result[3]
+                #else:
+                #    insn_to_func = []
+                #    insn_to_func.append([str(prede_insn), curr_func])
+                #    results1 = get_reg_read_or_written(StaticDepGraph.binary_ptr, insn_to_func, True)
+                #    src_reg = results1[0][2].lower()
 
                 if load is None: #TODO why?
                     continue
@@ -2347,14 +2368,20 @@ class StaticDepGraph:
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
 def main():
+    parser = argparse.ArgumentParser(description='Parallelize RR?')
+    parser.add_argument('--parallelize_rr', dest='parallelize_rr', action='store_true')
+    parser.set_defaults(parallelize_rr=False)
+    args = parser.parse_args()
+    print(args.parallelize_rr)
+
     starting_events = []
     starting_events.append(["rdi", 0x409daa, "sweep"])
     starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
     starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
     starting_events.append(["rcx", 0x40764c, "runtime.free"])
     StaticDepGraph.build_dependencies(starting_events, "909_ziptest_exe9",
-                                      limit=10000, use_cache=False)
-
+                                      limit=10000, use_cached_static_graph=False if args.parallelize_rr is True else True,
+                                      parallelize_rr=args.parallelize_rr)
     """
     print("HERERERE")
     for func in StaticDepGraph.func_to_graph:

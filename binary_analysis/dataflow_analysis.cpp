@@ -30,16 +30,15 @@ using namespace InstructionAPI;
 using namespace ParseAPI;
 using namespace DataflowAPI;
 
-void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
+void backwardSliceHelper(vector<Function *> *allFuncs,
                          cJSON *json_reads, boost::unordered_set<Address> &visited,
-                         char *progName, char *funcName,
+                         char *funcName,
                          long unsigned int addr, char *regName, bool reversedOnce,
                          bool isKnownBitVar, bool atEndPoint) {
 
   if (INFO) cout << endl;
   if (INFO) cout << "[sa] -------------------------------" << endl;
   if (INFO) cout << "[sa] Making a backward slice: " << endl;
-  if (INFO) cout << "[sa] prog: " << progName << endl;
   if (INFO) cout << "[sa] func: " << funcName << endl;
   if (INFO) cout << "[sa] addr:  0x" << std::hex << addr << std::dec << endl;
   if (INFO) cout << "[sa] reversed at least once " << reversedOnce << endl;
@@ -52,7 +51,7 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
   }
   visited.insert(addr);
 
-  Function *func = getFunction2(stcs, co, funcName);
+  Function *func = getFunction2(allFuncs, funcName);
   Block *bb = getBasicBlock2(func, addr);
   Instruction insn = bb->getInsn(addr);
 
@@ -99,7 +98,11 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
             break;
           }
         }
-        assert(targetRegionFound);
+        if (CRASH_ON_ERROR) assert(targetRegionFound);
+        else {
+          cout << "[sa][BUG] target not found, returning...";
+          return;
+        }
         boost::unordered_map < Address, Function * > ret;
         boost::unordered_set <Address> visitedAddrs;
         handlePassByReference(targetRegion, addr, bb, func, ret, visitedAddrs);
@@ -123,7 +126,7 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
           if (foundMemRead) atEndPoint = true;
           char *newRegName = (char *) newRegStr.c_str();
           // TODO, in the future even refactor the signature of the backwardSliceHelper function ...
-          backwardSliceHelper(stcs, co, json_reads, visited, progName, newFuncName, newAddr, newRegName, true, isKnownBitVar, atEndPoint);
+          backwardSliceHelper(allFuncs, json_reads, visited, newFuncName, newAddr, newRegName, true, isKnownBitVar, atEndPoint);
         }
           return;
         } else {
@@ -212,7 +215,7 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
             std::string newRegStr = getLoadRegName(newInsn);
             if (foundMemRead) atEndPoint = true;
             char *newRegName = (char *) newRegStr.c_str();
-            backwardSliceHelper(stcs, co, json_reads, visited, progName, newFuncName, newAddr, newRegName, true,
+            backwardSliceHelper(allFuncs, json_reads, visited, newFuncName, newAddr, newRegName, true,
                                 isKnownBitVar, atEndPoint);
           } else {
             pendingDefInNewFunction = true;
@@ -228,7 +231,7 @@ void backwardSliceHelper(SymtabCodeSource *stcs, CodeObject *co,
         cout << " [sa]  found " << writesToStaticAddrs.size() << " writes to static addresses " << endl;
         const char *empty = "";
         for (auto wit = writesToStaticAddrs.begin(); wit != writesToStaticAddrs.end(); wit++) {
-          backwardSliceHelper(stcs, co, json_reads, visited, progName, funcName, *wit, (char *)empty, true, isKnownBitVar);
+          backwardSliceHelper(allFuncs, json_reads, visited, funcName, *wit, (char *)empty, true, isKnownBitVar);
         }
         continue;
       }
