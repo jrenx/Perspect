@@ -10,6 +10,7 @@ import itertools
 import sys, traceback
 import socket
 import time
+import argparse
 
 DEBUG_CFG = False
 DEBUG_SIMPLIFY = False
@@ -1348,7 +1349,7 @@ class StaticDepGraph:
         return self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
     @staticmethod
-    def build_dependencies(starting_events, prog, limit=10000, use_cached_static_graph=True):
+    def build_dependencies(starting_events, prog, limit=10000, use_cached_static_graph=True, parallelize_rr=False):
         start = time.time()
         result_dir = os.path.join(curr_dir, 'cache', prog)
         if not os.path.exists(result_dir):
@@ -1423,26 +1424,27 @@ class StaticDepGraph:
                 for new_node in new_nodes:
                     worklist.append([new_node.insn, new_node.function, prog, new_node]) #FIMXE, ensure there is no duplicate work
             print("[static_dep] No more events to analyze.")
-            for func in StaticDepGraph.func_to_graph:
-                graph = StaticDepGraph.func_to_graph[func]
-                if graph.changed is False:
-                    continue
-                graph.build_control_flow_dependencies(set(), final=True)
-                graph.remove_extra_nodes(set([e[1] for e in starting_events]))
-                graph.merge_nodes(graph.nodes_in_df_slice, True)
-                graph.merge_nodes(graph.none_df_starting_nodes, True)
-                if TRACKS_DIRECT_CALLER: graph.merge_callsite_nodes()
-                for n in graph.nodes_in_cf_slice:
-                    print(str(n))
-                for n in graph.nodes_in_df_slice:
-                    print(str(n))
+            if parallelize_rr is False:
+                for func in StaticDepGraph.func_to_graph:
+                    graph = StaticDepGraph.func_to_graph[func]
+                    if graph.changed is False:
+                        continue
+                    graph.build_control_flow_dependencies(set(), final=True)
+                    graph.remove_extra_nodes(set([e[1] for e in starting_events]))
+                    graph.merge_nodes(graph.nodes_in_df_slice, True)
+                    graph.merge_nodes(graph.none_df_starting_nodes, True)
+                    if TRACKS_DIRECT_CALLER: graph.merge_callsite_nodes()
+                    for n in graph.nodes_in_cf_slice:
+                        print(str(n))
+                    for n in graph.nodes_in_df_slice:
+                        print(str(n))
 
-            StaticDepGraph.sanity_check()
-            StaticDepGraph.find_entry_and_exit_nodes()
-            StaticDepGraph.build_reverse_postorder_list()
-            StaticDepGraph.build_postorder_list()
-            StaticDepGraph.detect_df_backedges()
-            StaticDepGraph.print_graph_info()
+                StaticDepGraph.sanity_check()
+                StaticDepGraph.find_entry_and_exit_nodes()
+                StaticDepGraph.build_reverse_postorder_list()
+                StaticDepGraph.build_postorder_list()
+                StaticDepGraph.detect_df_backedges()
+                StaticDepGraph.print_graph_info()
         except Exception as e:
             print("Caught exception: " + str(e))
             raise e
@@ -1461,13 +1463,15 @@ class StaticDepGraph:
             print("Persisting sa result file")
             with open(sa_result_file, 'w') as f:
                 json.dump(StaticDepGraph.sa_result_cache, f, indent=4)
-        print("Persisting static graph result file")
-        StaticDepGraph.writeJSON(result_file)
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            # Connect to server and send data
-            sock.connect((HOST, PORT))
-            sock.sendall(bytes("FIN" + "\n", "utf-8"))
-            print("[main] sending to socket: FIN")
+        if parallelize_rr is False:
+            print("Persisting static graph result file")
+            StaticDepGraph.writeJSON(result_file)
+        else:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                # Connect to server and send data
+                sock.connect((HOST, PORT))
+                sock.sendall(bytes("FIN" + "\n", "utf-8"))
+                print("[main] sending to socket: FIN")
         end = time.time()
         print("[static_dep] static analysis took a total time of: " + str(end - start))
         return False
@@ -2348,14 +2352,20 @@ class StaticDepGraph:
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
 def main():
+    parser = argparse.ArgumentParser(description='Parallelize RR?')
+    parser.add_argument('--parallelize_rr', dest='parallelize_rr', action='store_true')
+    parser.set_defaults(parallelize_rr=False)
+    args = parser.parse_args()
+    print(args.parallelize_rr)
+
     starting_events = []
     starting_events.append(["rdi", 0x409daa, "sweep"])
     starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
     starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
     starting_events.append(["rcx", 0x40764c, "runtime.free"])
     StaticDepGraph.build_dependencies(starting_events, "909_ziptest_exe9",
-                                      limit=10000, use_cache=False)
-
+                                      limit=10000, use_cached_static_graph=False if args.parallelize_rr is True else True,
+                                      parallelize_rr=args.parallelize_rr)
     """
     print("HERERERE")
     for func in StaticDepGraph.func_to_graph:
