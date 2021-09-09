@@ -582,7 +582,9 @@ class CFG:
         for i in range(0,5):
             try:
                 self.built = True
-                json_bbs = getAllBBs(StaticDepGraph.binary_ptr, insn, self.func, self.prog)
+                json_bbs = getAllBBs(StaticDepGraph.binary_ptr, insn, self.func, self.prog, \
+                                     bb_result_cache=StaticDepGraph.bb_result_cache, \
+                                     overwrite_cache=False if i == 0 else True)
 
                 for json_bb in json_bbs:
                     bb_id = int(json_bb['id'])
@@ -1055,6 +1057,7 @@ class StaticDepGraph:
     result_file = None
     rr_result_cache = {}
     sa_result_cache = {}
+    bb_result_cache = {}
 
     func_to_callsites = None
 
@@ -1384,6 +1387,13 @@ class StaticDepGraph:
                 StaticDepGraph.sa_result_cache = json.load(cache_file)
                 sa_result_size = len(StaticDepGraph.sa_result_cache)
 
+        bb_result_size = 0
+        bb_result_size = os.path.join(result_dir, 'bb_results_' + prog + '.json')
+        if os.path.exists(bb_result_size):
+            with open(bb_result_size) as cache_file:
+                StaticDepGraph.bb_result_cache = json.load(cache_file)
+                bb_result_size = len(StaticDepGraph.bb_result_cache)
+
         try:
             StaticDepGraph.func_to_callsites = get_func_to_callsites(prog)
             StaticDepGraph.binary_ptr = setup(prog)
@@ -1463,6 +1473,12 @@ class StaticDepGraph:
             print("Persisting sa result file")
             with open(sa_result_file, 'w') as f:
                 json.dump(StaticDepGraph.sa_result_cache, f, indent=4)
+
+        if bb_result_size != len(StaticDepGraph.bb_result_cache):
+            print("Persisting bb result file")
+            with open(bb_result_file, 'w') as f:
+                json.dump(StaticDepGraph.bb_result_cache, f, indent=4)
+
         if parallelize_rr is False:
             print("Persisting static graph result file")
             StaticDepGraph.writeJSON(result_file)

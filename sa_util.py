@@ -3,6 +3,7 @@ import os
 import os.path
 import sys
 import json
+import time
 from ctypes import *
 lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
 #https://stackoverflow.com/questions/145270/calling-c-c-from-python
@@ -364,7 +365,10 @@ def static_backslices(binary_ptr, slice_starts, prog, sa_result_cache):
         if DEBUG_CTYPE: print("[main] : " + "Calling C", flush=True)
 
         slice_starts_str = c_char_p(str.encode(json_str))
+        t1 = time.time()
         lib.backwardSlices(c_ulong(binary_ptr), slice_starts_str)
+        t2 = time.time()
+        print("backwardSlices took: " + str(t2 - t1))
         if DEBUG_CTYPE: print( "[main] : Back from C")
 
         f = open(os.path.join(curr_dir, 'backwardSlices_result'))
@@ -449,19 +453,27 @@ def getAllPredes(insn_addr, func, prog):
     if DEBUG_CTYPE: print( "[main] predes: " + str(json_bbs))
     return json_bbs
 
-def getAllBBs(binary_ptr, insn_addr, func, prog):
+def getAllBBs(binary_ptr, insn_addr, func, prog, bb_result_cache={}, overwrite_cache=False):
     print()
     print( "[main] getting all basic blocks: ")
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] func: " + func)
     if DEBUG_CTYPE: print( "[main] insn_addr: " + hex(insn_addr), flush=True)
+    key = str(insn_addr) + "_" + str(func)
+    if overwrite_cache is False and key in bb_result_cache:
+        return bb_result_cache[key]
+
     func_name = c_char_p(str.encode(func))
     prog_name = c_char_p(str.encode(prog))
+    t1 = time.time()
     lib.getAllBBs(c_ulong(binary_ptr), prog_name, func_name, c_ulong(insn_addr))
+    t2 = time.time()
+    print("getAllBBs took: " + str(t2 - t1))
     f = open(os.path.join(curr_dir, 'getAllBBs_result'))
     json_bbs = json.load(f)
     f.close()
     if DEBUG_CTYPE: print( "[main] bbs: " )#+ str(json_bbs))
+    bb_result_cache[key] = json_bbs
     return json_bbs
 
 def getFirstInstrInBB(binary_ptr, insn_addr, func):
