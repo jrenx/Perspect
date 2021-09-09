@@ -13,6 +13,7 @@ lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
 #https://stackoverflow.com/questions/145270/calling-c-c-from-python
 
 curr_dir = os.path.dirname(os.path.realpath(__file__))
+pid = str(os.getpid())
 DEBUG_CTYPE = True
 DEBUG = True
 HOST, PORT = "localhost", 9999
@@ -22,7 +23,7 @@ HOST, PORT = "localhost", 9999
 
 def rr_backslice2(binary_ptr, prog, branch_str, target_str, insn_str, reg_str, shift_str, off_str, off_reg_str, rr_result_cache): #, rr_result_cache = None):
 
-    print("[main] Inputting to RR: " \
+    print("[main][" + pid + "] Inputting to RR: " \
         + " reg: " + str(reg_str) + " shift: " + str(shift_str) + " off_reg: " + str(off_reg_str) + " off: " + str(off_str)\
         + " @ " + str(insn_str) + " branch @" + str(branch_str) + " target @" + str(target_str)\
         + " program: " +str(prog), flush=True)
@@ -32,7 +33,7 @@ def rr_backslice2(binary_ptr, prog, branch_str, target_str, insn_str, reg_str, s
     # FIXME, prog is redundant
     
     rr_result_defs = get_def(binary_ptr, branch_str, target_str, insn_str, reg_str, shift_str, off_str, off_reg_str)
-    print("[main] Result from RR: " + str(len(rr_result_defs)) + " def points: " + str(rr_result_defs))
+    print("[main][" + pid + "] Result from RR: " + str(len(rr_result_defs)) + " def points: " + str(rr_result_defs))
 
     rr_result_cache[key] = rr_result_defs
 
