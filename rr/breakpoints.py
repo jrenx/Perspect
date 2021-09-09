@@ -40,6 +40,7 @@ def br_handler(event):
     if target is not None and target_seen is False:
         if time_passed > 150:
             print("[rr] Exit the execution because no target has been seen but 5min has past.")
+            global not_exit
             not_exit = False
             return
     if not config['deref']:
@@ -59,9 +60,9 @@ def br_handler(event):
                 not_exit = False
                 return
         #print("[rr] bp to read ratio: " + str(len(trace) / (reads+1)))
+        global trace
         if (len(trace) / (reads+1)) > 100.0:
             if time_passed > 60:
-                global trace
                 trace = []
                 print("[rr] Exit the execution because there are very few reads relative to branch or targets.")
                 global not_exit
