@@ -172,11 +172,10 @@ def get_func_to_callsites(prog):
     # https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
     # https://bugs.python.org/issue1701409
 
-    prog_name = c_char_p(str.encode(prog))
-
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] : " + "Calling C", flush=True)
 
+    prog_name = c_char_p(str.encode(prog))
     lib.getCalleeToCallsites(prog_name)
     if DEBUG_CTYPE: print( "[main] : Back from C")
 
@@ -198,19 +197,16 @@ def get_func_to_callsites(prog):
     return data_points
 
 #FIXME: call instructions insns and not addrs
-def get_mem_writes_to_static_addrs(prog):
+def get_mem_writes_to_static_addrs(binary_ptr):
     print()
     print( "[main] getting the instructions that write to static addresses: ")
     # https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
     # https://bugs.python.org/issue1701409
 
     if not os.path.exists(os.path.join(curr_dir, 'writesToStaticAddr_result')):
-        prog_name = c_char_p(str.encode(prog))
-
-        if DEBUG_CTYPE: print( "[main] prog: " + prog)
         if DEBUG_CTYPE: print( "[main] : " + "Calling C", flush=True)
 
-        lib.getMemWritesToStaticAddresses(prog_name)
+        lib.getMemWritesToStaticAddresses(c_ulong(binary_ptr))
         if DEBUG_CTYPE: print( "[main] : Back from C")
 
     f = open(os.path.join(curr_dir, 'writesToStaticAddr_result'))
@@ -252,26 +248,24 @@ def get_mem_writes_to_static_addrs(prog):
     return data_points, mem_writes_per_static_write
 
 #FIXME: call instructions insns and not addrs
-def get_mem_writes(insn_to_func, prog):
+def get_mem_writes(binary_ptr, insn_addr_to_func):
     print()
     print( "[main] getting the registers written at instructions: ")
     # https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
     # https://bugs.python.org/issue1701409
 
-    insn_to_func_json = []
-    for pair in insn_to_func:
-        insn = pair[0]
+    insn_addr_to_func_json = []
+    for pair in insn_addr_to_func:
+        insn_addr = pair[0]
         func_name = pair[1]
-        insn_to_func_json.append({'addr': insn, 'func_name': func_name})
-    json_str = json.dumps(insn_to_func_json)
-    addr_to_func_str = c_char_p(str.encode(json_str))
-    prog_name = c_char_p(str.encode(prog))
+        insn_addr_to_func_json.append({'addr': insn_addr, 'func_name': func_name})
+    json_str = json.dumps(insn_addr_to_func_json)
+    insn_addr_to_func_str = c_char_p(str.encode(json_str))
 
-    if DEBUG_CTYPE: print( "[main] addr to func: " + json_str)
-    if DEBUG_CTYPE: print( "[main] prog: " + prog)
+    if DEBUG_CTYPE: print( "[main] insn_addr to func: " + json_str)
     if DEBUG_CTYPE: print( "[main] : " + "Calling C", flush=True)
 
-    lib.getMemWrites(addr_to_func_str, prog_name)
+    lib.getMemWrites(c_ulong(binary_ptr), insn_addr_to_func_str)
     if DEBUG_CTYPE: print( "[main] : Back from C")
 
     mem_writes_per_insn = []
@@ -281,40 +275,38 @@ def get_mem_writes(insn_to_func, prog):
     for json_writes in json_writes_per_insn:
         if len(json_writes) == 0:
             continue
-        insn = json_writes['addr']
+        insn_addr = json_writes['addr']
         true_insn_addr = json_writes['true_addr']
         is_loop_insn = json_writes['is_loop_insn']
         func_name = json_writes['func_name']
         src_reg = json_writes['src']
         if "::" in src_reg:
             src_reg = src_reg.split("::")[1]
-        if DEBUG: print("==> For instruction: " + str(insn) + " @ " + func_name)
+        if DEBUG: print("==> For instruction: " + str(insn_addr) + " @ " + func_name)
         data_points = parseLoadsOrStores(json_writes['writes'])
 
-        mem_writes_per_insn.append([insn, func_name, data_points, true_insn_addr, src_reg, is_loop_insn])
+        mem_writes_per_insn.append([insn_addr, func_name, data_points, true_insn_addr, src_reg, is_loop_insn])
     f.close()
 
     if DEBUG_CTYPE: print( "[main] sa returned " + str(mem_writes_per_insn))
     return mem_writes_per_insn
 
-def get_reg_read_or_written(insn_to_func, prog, is_read):
+def get_reg_read_or_written(binary_ptr, insn_addr_to_func, is_read):
     print()
     print( "[main] getting the registers read or written at instructions: ")
 
-    insn_to_func_json = []
-    for pair in insn_to_func:
-        insn = pair[0]
+    insn_addr_to_func_json = []
+    for pair in insn_addr_to_func:
+        insn_addr = pair[0]
         func_name = pair[1]
-        insn_to_func_json.append({'addr': insn, 'func_name': func_name})
-    json_str = json.dumps(insn_to_func_json)
-    addr_to_func_str = c_char_p(str.encode(json_str))
-    prog_name = c_char_p(str.encode(prog))
+        insn_addr_to_func_json.append({'addr': insn_addr, 'func_name': func_name})
+    json_str = json.dumps(insn_addr_to_func_json)
 
-    if DEBUG_CTYPE: print( "[main] addr to func: " + json_str)
-    if DEBUG_CTYPE: print( "[main] prog: " + prog)
+    if DEBUG_CTYPE: print( "[main] insn_addr to func: " + json_str)
     if DEBUG_CTYPE: print( "[main] : " + "Calling C", flush=True)
 
-    lib.getRegsReadOrWritten(addr_to_func_str, prog_name, is_read)
+    insn_addr_to_func_str = c_char_p(str.encode(json_str))
+    lib.getRegsReadOrWritten(c_ulong(binary_ptr), insn_addr_to_func_str, is_read)
     if DEBUG_CTYPE: print( "[main] : Back from C")
 
     reg_read_or_written_per_insn = []
@@ -336,7 +328,7 @@ def get_reg_read_or_written(insn_to_func, prog, is_read):
     if DEBUG_CTYPE: print( "[main] sa returned " + str(reg_read_or_written_per_insn))
     return reg_read_or_written_per_insn
 
-def static_backslices(slice_starts, prog, sa_result_cache):
+def static_backslices(binary_ptr, slice_starts, prog, sa_result_cache):
     print()
     print( "[main] taking static backslices: ")
     # https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
@@ -358,24 +350,21 @@ def static_backslices(slice_starts, prog, sa_result_cache):
             reg_name = "[x86_64::" + reg + "]"
         regname_to_reg[reg_name] = reg
 
-        addr = str(line[1])
+        insn_addr = str(line[1])
         func = line[2]
         is_bit_var = 0 if line[3] is False else 1
-        key = str(reg) + "_" + str(addr) + "_" + str(func) + "_" + str(is_bit_var) + "_" + str(prog)
+        key = str(reg) + "_" + str(insn_addr) + "_" + str(func) + "_" + str(is_bit_var) + "_" + str(prog) #FIXME: prog is not necessary
         if key in sa_result_cache:
             data_points_per_reg.append(sa_result_cache[key])
         else:
-            slice_starts_json.append({'reg_name': reg_name, 'addr': addr, 'func_name': func, 'is_bit_var': is_bit_var})
+            slice_starts_json.append({'reg_name': reg_name, 'addr': insn_addr, 'func_name': func, 'is_bit_var': is_bit_var})
     if len(slice_starts_json) > 0:
         json_str = json.dumps(slice_starts_json)
-        slice_starts_str = c_char_p(str.encode(json_str))
-        prog_name = c_char_p(str.encode(prog))
-
         if DEBUG_CTYPE: print( "[main] slice starts: " + json_str)
-        if DEBUG_CTYPE: print( "[main] prog: " + prog)
-
         if DEBUG_CTYPE: print("[main] : " + "Calling C", flush=True)
-        lib.backwardSlices(slice_starts_str, prog_name)
+
+        slice_starts_str = c_char_p(str.encode(json_str))
+        lib.backwardSlices(c_ulong(binary_ptr), slice_starts_str)
         if DEBUG_CTYPE: print( "[main] : Back from C")
 
         f = open(os.path.join(curr_dir, 'backwardSlices_result'))
@@ -388,13 +377,13 @@ def static_backslices(slice_starts, prog, sa_result_cache):
             if len(json_loads) == 0:
                 continue
             reg = regname_to_reg[json_loads['reg_name']]
-            addr = json_loads['addr']
+            insn_addr = json_loads['addr']
             func = json_loads['func_name']
             is_bit_var = json_loads['is_bit_var']
-            if DEBUG: print("==> For use reg: " + reg + " @ " + str(addr))
+            if DEBUG: print("==> For use reg: " + reg + " @ " + str(insn_addr))
             data_points = parseLoadsOrStores(json_loads['reads'])
-            result = [reg, addr, data_points]
-            key = str(reg) + "_" + str(addr) + "_" + str(func) + "_" + str(is_bit_var) + "_" + str(prog)
+            result = [reg, insn_addr, data_points]
+            key = str(reg) + "_" + str(insn_addr) + "_" + str(func) + "_" + str(is_bit_var) + "_" + str(prog)
             sa_result_cache[key] = result
             data_points_per_reg.append(result)
     #if len(slice_starts_json) > 0:
@@ -408,25 +397,22 @@ def static_backslices(slice_starts, prog, sa_result_cache):
             if DEBUG_CTYPE: print("[main] returned " + str(result))
     return data_points_per_reg
 
-def static_backslice(reg, insn, func, prog):
+def static_backslice(binary_ptr, reg, insn_addr, func):
     print()
     print( "[main] taking a static backslice: ")
+    #https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
+    #https://bugs.python.org/issue1701409
+    if DEBUG_CTYPE: print( "[main] reg: "  + reg)
+    if DEBUG_CTYPE: print( "[main] insn_addr: " + hex(insn_addr))
+    if DEBUG_CTYPE: print( "[main] func: " + func)
+    if DEBUG_CTYPE: print( "[main] : " + "Calling C", flush=True)
 
     if reg == "":
         reg_name = c_char_p(str.encode(reg))
     else:
         reg_name = c_char_p(str.encode("[x86_64::" + reg + "]"))
-    #https://stackoverflow.com/questions/7585435/best-way-to-convert-string-to-bytes-in-python-3
-    #https://bugs.python.org/issue1701409
-    addr = c_ulong(insn)
     func_name = c_char_p(str.encode(func))
-    prog_name = c_char_p(str.encode(prog))
-    if DEBUG_CTYPE: print( "[main] reg: "  + reg)
-    if DEBUG_CTYPE: print( "[main] addr: " + hex(insn))
-    if DEBUG_CTYPE: print( "[main] func: " + func)
-    if DEBUG_CTYPE: print( "[main] prog: " + prog)
-    if DEBUG_CTYPE: print( "[main] : " + "Calling C", flush=True)
-    lib.backwardSlice(prog_name, func_name, addr, reg_name)
+    lib.backwardSlice(c_ulong(binary_ptr), func_name, c_ulong(insn_addr), reg_name)
     if DEBUG_CTYPE: print( "[main] : Back from C")
 
     f = open(os.path.join(curr_dir, 'backwardSlice_result'))
@@ -438,132 +424,84 @@ def static_backslice(reg, insn, func, prog):
     if DEBUG_CTYPE: print( "[main] returned " + str(data_points))
     return data_points
 
-
-'''
-def getImmedDom(sym, prog):
-    addr = c_ulong(sym.insn)
-    func_name = c_char_p(str.encode(sym.func))
-    prog_name = c_char_p(str.encode(prog))
-    if DEBUG_CTYPE: print( "[main] prog: " + str(prog_name))
-    if DEBUG_CTYPE: print( "[main] func: " + str(func_name))
-    if DEBUG_CTYPE: print( "[main] addr: " + hex(addr))
-    dom = lib.getImmedDom(prog_name, func_name, addr)
-    if DEBUG_CTYPE: print( "[main] immed dom: " + str(dom))
-    return dom
-'''
-
-
-def getImmedDom(insn, func, prog):
+def getImmedDom(binary_ptr, insn_addr, func):
     print()
     print( "[main] getting the immediate dominator: ")
-    addr = c_ulong(insn)
-    func_name = c_char_p(str.encode(func))
-    prog_name = c_char_p(str.encode(prog))
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
-    if DEBUG_CTYPE: print( "[main] func: " + func)
-    if DEBUG_CTYPE: print( "[main] addr: " + hex(insn))
-    dom = lib.getImmedDom(prog_name, func_name, addr)
+    if DEBUG_CTYPE: print( "[main] insn_addr: " + hex(insn_addr))
+    func_name = c_char_p(str.encode(func))
+    dom = lib.getImmedDom(c_ulong(binary_ptr), func_name, c_ulong(insn_addr))
     if DEBUG_CTYPE: print( "[main] immed dom: " + str(dom))
     return dom
 
-def getAllPredes(insn, func, prog):
+def getAllPredes(insn_addr, func, prog):
     print()
     print( "[main] getting all predecessors: ")
-    addr = c_ulong(insn)
-    func_name = c_char_p(str.encode(func))
-    prog_name = c_char_p(str.encode(prog))
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] func: " + func)
-    if DEBUG_CTYPE: print( "[main] addr: " + hex(insn), flush=True)
-    lib.getAllPredes(prog_name, func_name, addr)
+    if DEBUG_CTYPE: print( "[main] insn_addr: " + hex(insn_addr), flush=True)
+    func_name = c_char_p(str.encode(func))
+    prog_name = c_char_p(str.encode(prog))
+    lib.getAllPredes(prog_name, func_name, c_ulong(insn_addr))
     f = open(os.path.join(curr_dir, 'getAllPredes_result'))
     json_bbs = json.load(f)
     f.close()
     if DEBUG_CTYPE: print( "[main] predes: " + str(json_bbs))
     return json_bbs
 
-def getAllBBs(insn, func, prog):
+def getAllBBs(binary_ptr, insn_addr, func, prog):
     print()
     print( "[main] getting all basic blocks: ")
-    addr = c_ulong(insn)
-    func_name = c_char_p(str.encode(func))
-    prog_name = c_char_p(str.encode(prog))
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] func: " + func)
-    if DEBUG_CTYPE: print( "[main] addr: " + hex(insn), flush=True)
-    lib.getAllBBs(prog_name, func_name, addr)
+    if DEBUG_CTYPE: print( "[main] insn_addr: " + hex(insn_addr), flush=True)
+    func_name = c_char_p(str.encode(func))
+    prog_name = c_char_p(str.encode(prog))
+    lib.getAllBBs(c_ulong(binary_ptr), prog_name, func_name, c_ulong(insn_addr))
     f = open(os.path.join(curr_dir, 'getAllBBs_result'))
     json_bbs = json.load(f)
     f.close()
     if DEBUG_CTYPE: print( "[main] bbs: " )#+ str(json_bbs))
     return json_bbs
 
-
-'''
-def getFirstInstrInBB(sym, prog):
-    addr = c_ulong(sym.insn)
-    func_name = c_char_p(str.encode(sym.func))
-    prog_name = c_char_p(str.encode(prog))
-    if DEBUG_CTYPE: print( "[main] prog: " + str(prog_name))
-    if DEBUG_CTYPE: print( "[main] func: " + str(func_name))
-    if DEBUG_CTYPE: print( "[main] addr: " + hex(addr))
-    f_insn = lib.getFirstInstrInBB(prog_name, func_name, addr)
-    if DEBUG_CTYPE: print( "[main] first instr: " + str(f_insn))
-    return f_insn
-'''
-
-
-def getFirstInstrInBB(insn, func, prog):
+def getFirstInstrInBB(binary_ptr, insn_addr, func):
     print()
     print( "[main] getting the first instruction in basic block: ")
-    addr = c_ulong(insn)
-    func_name = c_char_p(str.encode(func))
-    prog_name = c_char_p(str.encode(prog))
-    if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] func: " + func)
-    if DEBUG_CTYPE: print( "[main] addr: " + hex(insn))
-    f_insn = lib.getFirstInstrInBB(prog_name, func_name, addr)
-    if DEBUG_CTYPE: print( "[main] first instr: " + str(f_insn))
-    return f_insn
+    if DEBUG_CTYPE: print( "[main] insn_addr: " + hex(insn_addr))
+    func_name = c_char_p(str.encode(func))
+    first_insn_addr = lib.getFirstInstrInBB(c_ulong(binary_ptr), func_name, c_ulong(insn_addr))
+    if DEBUG_CTYPE: print( "[main] first instr: " + str(first_insn_addr))
+    return first_insn_addr
 
-
-def getInstrAfter(insn, func, prog):
+def getInstrAfter(binary_ptr, insn_addr, func):
     print()
     print( "[main] getting the instruction after: ")
-    addr = c_ulong(insn)
-    func_name = c_char_p(str.encode(func))
-    prog_name = c_char_p(str.encode(prog))
-    if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] func: " + func)
-    if DEBUG_CTYPE: print( "[main] addr: " + hex(insn), flush=True)
-    f_insn = lib.getInstrAfter(prog_name, func_name, addr)
-    if DEBUG_CTYPE: print( "[main] first instr: " + str(f_insn))
-    return f_insn
+    if DEBUG_CTYPE: print( "[main] insn_addr: " + hex(insn_addr), flush=True)
+    func_name = c_char_p(str.encode(func))
+    insn_after_addr = lib.getInstrAfter(c_ulong(binary_ptr), func_name, c_ulong(insn_addr))
+    if DEBUG_CTYPE: print( "[main] instr after: " + str(insn_after_addr))
+    return insn_after_addr
 
-
-'''
-def getLastInstrInBB(sym, prog):
-    addr = c_ulong(sym.insn)
-    func_name = c_char_p(str.encode(sym.func))
-    prog_name = c_char_p(str.encode(prog))
-    if DEBUG_CTYPE: print( "[main] prog: " + str(prog_name))
-    if DEBUG_CTYPE: print( "[main] func: " + str(func_name))
-    if DEBUG_CTYPE: print( "[main] addr: " + hex(addr))
-    l_insn = lib.getLastInstrInBB(prog_name, func_name, addr)
-    if DEBUG_CTYPE: print( "[main] first instr: " + str(l_insn))
-    return l_insn
-'''
-
-
-def getLastInstrInBB(insn, func, prog):
+def getLastInstrInBB(binary_ptr, insn_addr, func):
     print()
     print( "[main] getting the last instruction in basic block: ")
-    addr = c_ulong(insn)
+    if DEBUG_CTYPE: print( "[main] func: " + func)
+    if DEBUG_CTYPE: print( "[main] insn_addr: " + hex(insn_addr), flush=True)
     func_name = c_char_p(str.encode(func))
+    last_insn_addr = lib.getLastInstrInBB(c_ulong(binary_ptr), func_name, c_ulong(insn_addr))
+    if DEBUG_CTYPE: print( "[main] last instr: " + str(last_insn_addr))
+    return last_insn_addr
+
+def setup(prog):
+    print()
+    print( "[main] Setting up analysis: ")
     prog_name = c_char_p(str.encode(prog))
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
-    if DEBUG_CTYPE: print( "[main] func: " + func)
-    if DEBUG_CTYPE: print( "[main] addr: " + hex(insn), flush=True)
-    l_insn = lib.getLastInstrInBB(prog_name, func_name, addr)
-    if DEBUG_CTYPE: print( "[main] first instr: " + str(l_insn))
-    return l_insn
+    lib.setup(prog_name)
+    with open('pointers', 'r') as f:
+        lines = f.readlines()
+        binary_ptr = int(lines[0], 16)
+    return binary_ptr
+

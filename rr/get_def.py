@@ -298,7 +298,7 @@ def pick_watch_points(pending_addrs):
     return watchpoints
 
 #TODO, shift should be shift to the right
-def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_reg = None, iter=30):
+def get_def(binary_ptr, branch, target, read, reg, shift='0x0', offset='0x0', offset_reg = None, iter=30):
     print("[rr][" + pid + "] In get_def, branch: " + str(branch) + " target: " + str(target))
     #positive = set()
     #negative = set()
@@ -315,7 +315,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
     results = []
     # = False
 
-    all_static_addr_writes, all_nested_static_addr_writes = get_mem_writes_to_static_addrs(prog)
+    all_static_addr_writes, all_nested_static_addr_writes = get_mem_writes_to_static_addrs(binary_ptr)
 
     # First pass
     print("[rr][" + pid + "] Running breakpoints for first step")
@@ -476,7 +476,7 @@ def get_def(prog, branch, target, read, reg, shift='0x0', offset='0x0', offset_r
                 func = write[1]
                 insn_to_func.append([str(insn), func]) #TODO, in the future just pass int ...
                 insn_to_addr[insn] = write[2]
-            insn_to_writes = get_mem_writes(insn_to_func, prog)
+            insn_to_writes = get_mem_writes(insn_to_func, binary_ptr)
             print("[rr][" + pid + "] returned from get_mem_writes " + str(insn_to_writes))
 
             def_point_count = 0

@@ -20,35 +20,7 @@ HOST, PORT = "localhost", 9999
 #### Helper functions that interact with RR functionalities ####
 ################################################################
 
-def dynamic_backslice_old(reg, off, insn, func, prog):
-    #TODO, can only do this when is in same function?
-    fake_branch, fake_target = get_fake_target_and_branch \
-                (insn, func, prog)
-    insn_str = hex(insn)
-    
-    print( "[main] inputting to RR: "  \
-        + str(fake_target) + " " + str(fake_branch) + " " \
-        + str(insn_str) + " " + str(reg) + " " + str(off))
-
-    rr_result_defs = get_def('*' + fake_target, '*' + fake_branch, \
-                                 insn_str, reg, off)
-    return list(rr_result_defs[0].union(rr_result_defs[1]))
-
-def dynamic_backslice2_old(branch, target, reg, off, insn):
-    #TODO, can only do this when is in same function?
-    insn_str = hex(insn)
-    target_str = hex(target)
-    branch_str = hex(branch)
-
-    print( "[main] inputting to RR2: "  \
-        + str(target_str) + " " + str(branch_str) + " " \
-        + str(insn_str) + " " + str(reg) + " " + str(off))
-
-    rr_result_defs = get_sat_def('*' + target_str, '*' + branch_str, \
-                                 insn_str, reg, off)
-    return list(rr_result_defs[0].union(rr_result_defs[1]))
-
-def rr_backslice2(prog, branch_str, target_str, insn_str, reg_str, shift_str, off_str, off_reg_str, rr_result_cache): #, rr_result_cache = None):
+def rr_backslice2(binary_ptr, prog, branch_str, target_str, insn_str, reg_str, shift_str, off_str, off_reg_str, rr_result_cache): #, rr_result_cache = None):
 
     print("[main] Inputting to RR: " \
         + " reg: " + str(reg_str) + " shift: " + str(shift_str) + " off_reg: " + str(off_reg_str) + " off: " + str(off_str)\
@@ -57,8 +29,9 @@ def rr_backslice2(prog, branch_str, target_str, insn_str, reg_str, shift_str, of
 
     key = prog + "_" + str(branch_str) + "_" + str(target_str) + "_" \
           + insn_str + "_" + reg_str + "_" + shift_str + "_" + off_str + "_" + str(off_reg_str)
+    # FIXME, prog is redundant
     
-    rr_result_defs = get_def(prog, branch_str, target_str, insn_str, reg_str, shift_str, off_str, off_reg_str)
+    rr_result_defs = get_def(binary_ptr, branch_str, target_str, insn_str, reg_str, shift_str, off_str, off_reg_str)
     print("[main] Result from RR: " + str(len(rr_result_defs)) + " def points: " + str(rr_result_defs))
 
     rr_result_cache[key] = rr_result_defs
@@ -70,7 +43,7 @@ def rr_backslice2(prog, branch_str, target_str, insn_str, reg_str, shift_str, of
     return rr_result_defs
 
 #FIXME: just pass in the MemoryAccess struct?
-def rr_backslice(prog, branch, target, insn, reg, shift, off, off_reg, rr_result_cache): #, rr_result_cache = None):
+def rr_backslice(binary_ptr, prog, branch, target, insn, reg, shift, off, off_reg, rr_result_cache): #, rr_result_cache = None):
     #TODO, the offset and shift are stored as decimals,
     # should they be passes dec or hex to RR?
     # Looks like they take hex strings
@@ -101,7 +74,7 @@ def rr_backslice(prog, branch, target, insn, reg, shift, off, off_reg, rr_result
         + " @ " + str(insn_str) + " branch @" + str(branch_str) + " target @" + str(target_str)\
         + " program: " +str(prog), flush=True)
     
-    rr_result_defs = get_def(prog, branch_str, target_str, insn_str, reg_str, shift_str, off_str, off_reg_str)
+    rr_result_defs = get_def(binary_ptr, branch_str, target_str, insn_str, reg_str, shift_str, off_str, off_reg_str)
     print("[main] Result from RR: " + str(len(rr_result_defs)) + " def points: " + str(rr_result_defs))
 
     rr_result_cache[key] = rr_result_defs
@@ -126,9 +99,9 @@ def get_function(insn, prog):
     print("[main] command returned: " + str(func))
     return func
 
-def get_fake_target_and_branch(insn, func, prog):
-    fake_branch = getInstrAfter(insn, func, prog)
-    fake_target = getInstrAfter(fake_branch, func, prog)
+def get_fake_target_and_branch(binary_ptr, insn, func):
+    fake_branch = getInstrAfter(binary_ptr, insn, func)
+    fake_target = getInstrAfter(binary_ptr, fake_branch, func)
     #fake_target = getLastInstrInBB(insn, func, prog)
     if fake_branch >= fake_target:
         print("[main] [warn] BB just have one instr? " + str(fake_branch) + " " + str(fake_target))

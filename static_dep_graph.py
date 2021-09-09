@@ -581,7 +581,7 @@ class CFG:
         for i in range(0,5):
             try:
                 self.built = True
-                json_bbs = getAllBBs(insn, self.func, self.prog)
+                json_bbs = getAllBBs(StaticDepGraph.binary_ptr, insn, self.func)
 
                 for json_bb in json_bbs:
                     bb_id = int(json_bb['id'])
@@ -1385,6 +1385,7 @@ class StaticDepGraph:
 
         try:
             StaticDepGraph.func_to_callsites = get_func_to_callsites(prog)
+            StaticDepGraph.binary_ptr = setup(prog)
             #print(StaticDepGraph.func_to_callsites)
             iteration = 0
             worklist = deque()
@@ -1675,7 +1676,7 @@ class StaticDepGraph:
         #else:
         #    insn_to_func = []
         #    insn_to_func.append([str(prede_insn), curr_func])
-        #    results1 = get_reg_read_or_written(insn_to_func, prog, False)
+        #    results1 = get_reg_read_or_written(StaticDepGraph.binary_ptr, insn_to_func, False)
         #    dst_reg = results1[0][2].lower()
 
         bit_ops = None
@@ -1814,7 +1815,7 @@ class StaticDepGraph:
             assert df_node.insn not in addr_to_node
             addr_to_node[df_node.insn] = df_node
 
-        results = static_backslices(slice_starts, prog, StaticDepGraph.sa_result_cache)
+        results = static_backslices(StaticDepGraph.binary_ptr, slice_starts, prog, StaticDepGraph.sa_result_cache)
         for result in results:
             #reg_name = result[0]
             insn = result[1]
@@ -1859,7 +1860,7 @@ class StaticDepGraph:
                 else:
                     print("[warn] closest dep branch is found but not the farthest target node?")
             try:
-                results = rr_backslice(prog, branch_insn, target_insn, #4234305, 0x409C41 | 4234325, 0x409C55
+                results = rr_backslice(StaticDepGraph.binary_ptr, prog, branch_insn, target_insn, #4234305, 0x409C41 | 4234325, 0x409C55
                                    node.insn, node.mem_load.reg, node.mem_load.shift, node.mem_load.off,
                                    node.mem_load.off_reg, StaticDepGraph.rr_result_cache) #, StaticDepGraph.rr_result_cache)
             except Exception as e:
@@ -1884,7 +1885,7 @@ class StaticDepGraph:
                 #else:
                 #    insn_to_func = []
                 #    insn_to_func.append([str(prede_insn), curr_func])
-                #    results1 = get_reg_read_or_written(insn_to_func, prog, True)
+                #    results1 = get_reg_read_or_written(StaticDepGraph.binary_ptr, insn_to_func, True)
                 #    src_reg = results1[0][2].lower()
 
                 if load is None: #TODO why?

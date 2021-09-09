@@ -70,7 +70,7 @@ BPatch_basicBlock *getBasicBlock(BPatch_flowGraph *fg, long unsigned int addr);
 #endif
 
 Block *getImmediateDominator2(Function *f, long unsigned int addr);
-Function *getFunction2(SymtabCodeSource *stcs, CodeObject *co, const char *funcName);
+Function *getFunction2(vector<Function *> *allFuncs, const char *funcName);
 Instruction getIfCondition2(Block *b);
 Block *getBasicBlock2(Function *f, long unsigned int addr);
 Block *getBasicBlockContainingInsnBeforeAddr(Function *f, long unsigned int addr);
