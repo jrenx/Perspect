@@ -581,7 +581,7 @@ class CFG:
         for i in range(0,5):
             try:
                 self.built = True
-                json_bbs = getAllBBs(StaticDepGraph.binary_ptr, insn, self.func)
+                json_bbs = getAllBBs(StaticDepGraph.binary_ptr, insn, self.func, self.prog)
 
                 for json_bb in json_bbs:
                     bb_id = int(json_bb['id'])
