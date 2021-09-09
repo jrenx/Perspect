@@ -18,16 +18,16 @@ num_processor = 16
 num_new_unique_inputs_received = 0
 handled = set()
 
-lock0 = threading.Lock()
+pending_count_lock = threading.Lock()
 pending_count = 0
 
-lock1 = threading.Lock()
+restart_static_slicing_lock = threading.Lock()
 restart_static_slicing = False
 
-lock2 = threading.Lock()
+rr_result_cache_lock = threading.Lock()
 # for rr_result_cache
 
-lock3 = threading.Lock()
+it_lock = threading.Lock()
 it = 0
 
 class MyTCPHandler(socketserver.StreamRequestHandler):
@@ -39,12 +39,23 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
         if self.data == "FIN":
             print("[main receiver] Received FIN.")
             if num_new_unique_inputs_received > 0:
-                print("[main receiver] Should restart static slicing...")
+                print("[main receiver] Should restart static slicing... "
+                      "number of new inputs received in previous run is: " + str(num_new_unique_inputs_received))
                 num_new_unique_inputs_received = 0
-                lock1.acquire()
+                restart_static_slicing_lock.acquire()
                 global restart_static_slicing
                 restart_static_slicing = True
-                lock1.release()
+                restart_static_slicing_lock.release()
+                if q.empty():
+                    it_lock.acquire()
+                    global it
+                    it += 1
+                    it_local = it
+                    it_lock.release()
+                    os.system('python3 static_dep_graph.py --parallelize_rr >> out{} &'.format(it_local))
+                    print("[main receiver] Execution of static slicing pass {} starts at {}".format(it_local, \
+                            datetime.datetime.strftime(datetime.datetime.now(),"%Y/%m/%d, %H:%M:%S")), flush=True)
+
             else:
                 print("[main receiver] Did not receive any new unique inputs, finish now...")
                 for i in range(0, num_processor):
@@ -58,10 +69,10 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
             handled.add(line)
             q.put(line)
             num_new_unique_inputs_received += 1
-            lock0.acquire()
+            pending_count_lock.acquire()
             global pending_count
             pending_count += 1
-            lock0.release()
+            pending_count_lock.release()
 
 def server_thread():
     with socketserver.TCPServer((HOST, PORT), MyTCPHandler) as server:
@@ -104,42 +115,39 @@ def run_task(id, pipe, prog):
 
 def send_task(id, pipe, prog, rr_result_cache, rr_result_file):
     while True:
-        try:
-            if q.empty():
-                continue
-            line = q.get()
-            print("[sender][" + str(id) + "] Getting key " + line, flush=True)
-            if line.startswith("FIN"):
-                break
-            lock0.acquire()
-            global pending_count
-            pending_count_local = pending_count
-            lock0.release()
-            print("[sender][" + str(id) + "] pending count is: " + str(pending_count_local))
-            if pending_count_local <= num_processor:
-                restart_static_slicing_local = False
-                lock1.acquire()
-                global restart_static_slicing
-                if restart_static_slicing == True:
-                    restart_static_slicing_local = True
-                    restart_static_slicing = False
-                lock1.release()
-                if restart_static_slicing_local is True:
-                    lock2.acquire()
-                    json.dump(rr_result_cache, open(rr_result_file, 'w'), indent=4)
-                    lock2.release()
-
-                    lock3.acquire()
-                    global it
-                    it += 1
-                    it_local = it
-                    lock3.release()
-                    os.system('python3 static_dep_graph.py --parallelize_rr >> out{} &'.format(it_local))
-                    print("[sender][" + str(id) + "] Execution of static slicing pass {} starts at {}".format(it_local,\
-                        datetime.datetime.strftime(datetime.datetime.now(), "%Y/%m/%d, %H:%M:%S")), flush=True)
-
-        except IndexError:
+        if q.empty():
+            continue
+        line = q.get()
+        print("[sender][" + str(id) + "] Getting key " + line, flush=True)
+        if line.startswith("FIN"):
             break
+        pending_count_lock.acquire()
+        global pending_count
+        pending_count_local = pending_count
+        pending_count_lock.release()
+        print("[sender][" + str(id) + "] pending count is: " + str(pending_count_local))
+        if pending_count_local <= num_processor:
+            restart_static_slicing_local = False
+            restart_static_slicing_lock.acquire()
+            global restart_static_slicing
+            if restart_static_slicing == True:
+                restart_static_slicing_local = True
+                restart_static_slicing = False
+            restart_static_slicing_lock.release()
+            if restart_static_slicing_local is True:
+                rr_result_cache_lock.acquire()
+                json.dump(rr_result_cache, open(rr_result_file, 'w'), indent=4)
+                rr_result_cache_lock.release()
+
+                it_lock.acquire()
+                global it
+                it += 1
+                it_local = it
+                it_lock.release()
+                os.system('python3 static_dep_graph.py --parallelize_rr >> out{} &'.format(it_local))
+                print("[sender][" + str(id) + "] Execution of static slicing pass {} starts at {}".format(it_local,\
+                    datetime.datetime.strftime(datetime.datetime.now(), "%Y/%m/%d, %H:%M:%S")), flush=True)
+
         if line.startswith(prog):
             line = line[len(prog):]
         segs = line.split('_')
@@ -156,13 +164,13 @@ def send_task(id, pipe, prog, rr_result_cache, rr_result_file):
         print("[sender][" + str(id) + "] Sent task {}".format(line), flush=True)
         result_cache = pipe.recv()
         print("[sender][" + str(id) + "] Receiving result for task {}".format(line), flush=True)
-        lock2.acquire()
+        rr_result_cache_lock.acquire()
         for key, value in result_cache.items():
             rr_result_cache[key] = value
-        lock2.release()
-        lock0.acquire()
+        rr_result_cache_lock.release()
+        pending_count_lock.acquire()
         pending_count -= 1
-        lock0.release()
+        pending_count_lock.release()
     print("[sender][" + str(id) + "] Thread finishing execution.", flush=True)
     pipe.send("Shutdown")
     while pipe.recv() != "Shutdown":
@@ -236,11 +244,11 @@ def main():
 
     json.dump(rr_result_cache, open(rr_result_file, 'w'), indent=4)
 
-    lock3.acquire()
+    it_lock.acquire()
     global it
     it += 1
     it_local = it
-    lock3.release()
+    it_lock.release()
     os.system('python3 static_dep_graph.py >> out{}'.format(it_local))
     print("Execution of static slicing pass {} starts at {}".format(it_local, \
             datetime.datetime.strftime(datetime.datetime.now(), "%Y/%m/%d, %H:%M:%S")), flush=True)
