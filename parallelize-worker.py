@@ -21,8 +21,7 @@ def run_task(id, pipe, prog):
             break
         (prog, a1, a2, a3, a4, a5, a6, a7) = obj
         str_args = '_'.join(map(lambda arg : "None" if arg is None else arg, [prog, a1, a2, a3, a4, a5, a6, a7]))
-        #print("[worker][{}] recive task {}".format(id, str_args),flush=True)
-        print("Process {} recive task {}".format(id, str_args))
+        print("[worker] Process {} recive task {}".format(id, str_args))
         rr_result_cache = {}
         start_time = datetime.datetime.now()
         try:
@@ -35,10 +34,9 @@ def run_task(id, pipe, prog):
             print("-" * 60)
 
         duraton = datetime.datetime.now() - start_time
-        #print("[worker][{}] finish task {} in {}".format(id, str_args, duraton),flush=True)
-        print("Process {} finish task {} in {}".format(id, str_args, duraton))
+        print("[worker] Process {} finish task {} in {}".format(id, str_args, duraton))
         pipe.send(rr_result_cache)
-    #print("[worker][{}] finished execution.".format(id),flush=True)
+    print("[worker] Process {} finished execution.".format(id),flush=True)
     pipe.send("Shutdown")
 
 
@@ -51,7 +49,7 @@ def main():
     if len(sys.argv) > 1:
         prog = sys.argv[1]
 
-    print("Setting up parallel environment")
+    print("[server] Setting up parallel environment")
     for iter in range(num_processor):
         process_dir = os.path.join(curr_dir, 'run_{}'.format(iter))
         if not os.path.exists(process_dir):
@@ -80,7 +78,7 @@ def main():
         processes.append(p)
         pipes.append(parent_conn)
 
-    print("Setting up sockets")
+    print("[server] Setting up sockets")
     listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     listener.bind((socket.gethostname(), port))
     listener.listen(16)
@@ -89,12 +87,12 @@ def main():
 
     while True:
         (client, addr) = listener.accept()
-        print("Getting connection from {}".format(addr))
+        print("[server] Getting connection from {}".format(addr))
 
         def connect_bridge(socket, pipe):
             while True:
                 line = socket.recv(4096).decode()
-                print("Receive from socket: {}".format(line), flush=True)
+                print("[server] Receive from socket: {}".format(line), flush=True)
                 if line == "":
                     pipes.append(pipe)
                     return
@@ -110,13 +108,12 @@ def main():
                 a5 = None if segs[5].strip() == "None" else segs[5].strip() 
                 a6 = None if segs[6].strip() == "None" else segs[6].strip() 
                 a7 = None if segs[7].strip() == "None" else segs[7].strip() 
-                #print("[sender][" + str(id) + "] Sending task {}".format(line), flush=True)
-                print("Send task {}".format(line), flush=True)
+                print("[server] Sending task {}".format(line), flush=True)
                 pipe.send((prog, a1, a2, a3, a4, a5, a6, a7))
-                #print("[sender][" + str(id) + "] Sent task {}".format(line), flush=True)
+                print("[server] Sent task {}".format(line), flush=True)
 
                 ret = pipe.recv()
-                #print("[sender][" + str(id) + "] Receiving result for task {}".format(line), flush=True)
+                print("[server] Receiving result for task {}".format(line), flush=True)
                 socket.send(json.dumps(ret).encode())
 
 
