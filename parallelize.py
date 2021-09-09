@@ -52,10 +52,9 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
                     it += 1
                     it_local = it
                     it_lock.release()
-                    os.system('python3 static_dep_graph.py --parallelize_rr >> out{} &'.format(it_local))
                     print("[main receiver] Execution of static slicing pass {} starts at {}".format(it_local, \
                             datetime.datetime.strftime(datetime.datetime.now(),"%Y/%m/%d, %H:%M:%S")), flush=True)
-
+                    os.system('python3 static_dep_graph.py --parallelize_rr >> out{} &'.format(it_local))
             else:
                 print("[main receiver] Did not receive any new unique inputs, finish now...")
                 for i in range(0, num_processor):
@@ -74,8 +73,7 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
             pending_count += 1
             pending_count_lock.release()
 
-def server_thread():
-    with socketserver.TCPServer((HOST, PORT), MyTCPHandler) as server:
+def server_thread(server):
         server.serve_forever()
 
 def run_task(id, pipe, prog):
@@ -144,9 +142,9 @@ def send_task(id, pipe, prog, rr_result_cache, rr_result_file):
                 it += 1
                 it_local = it
                 it_lock.release()
-                os.system('python3 static_dep_graph.py --parallelize_rr >> out{} &'.format(it_local))
                 print("[sender][" + str(id) + "] Execution of static slicing pass {} starts at {}".format(it_local,\
                     datetime.datetime.strftime(datetime.datetime.now(), "%Y/%m/%d, %H:%M:%S")), flush=True)
+                os.system('python3 static_dep_graph.py --parallelize_rr >> out{} &'.format(it_local))
 
         if line.startswith(prog):
             line = line[len(prog):]
@@ -200,9 +198,10 @@ def main():
             shutil.rmtree(binary_dir)
         shutil.copytree('binary_analysis', binary_dir, ignore=shutil.ignore_patterns('.*', '_*'))
 
+    server = socketserver.TCPServer((HOST, PORT), MyTCPHandler)
     try:
-        t = threading.Thread(target=server_thread, args=())
-        t.start()
+        server_t = threading.Thread(target=server_thread, args=(server))
+        server_t.start()
     except:
         print("Error: unable to start thread")
 
@@ -210,9 +209,9 @@ def main():
     mp.set_start_method('spawn')
 
     start_time = datetime.datetime.now()
-    os.system('python3 static_dep_graph.py --parallelize_rr >> out0 &')
     print("Execution of static slicing pass 0 starts at {}".format( \
-        datetime.datetime.strftime(datetime.datetime.now(), "%Y/%m/%d, %H:%M:%S")), flush=True)
+        datetime.datetime.strftime(start_time, "%Y/%m/%d, %H:%M:%S")), flush=True)
+    os.system('python3 static_dep_graph.py --parallelize_rr >> out0 &')
     rr_result_cache = {}
     if os.path.exists(rr_result_file):
         with open(rr_result_file) as file:
@@ -249,10 +248,13 @@ def main():
     it += 1
     it_local = it
     it_lock.release()
-    os.system('python3 static_dep_graph.py >> out{}'.format(it_local))
     print("Execution of static slicing pass {} starts at {}".format(it_local, \
             datetime.datetime.strftime(datetime.datetime.now(), "%Y/%m/%d, %H:%M:%S")), flush=True)
+    os.system('python3 static_dep_graph.py >> out{}'.format(it_local))
 
+    server.shutdown()
+    server_t.join()
+    server.server_close()
     duration = datetime.datetime.now() - start_time
     print("Running static slicing with parallized RR took {} ".format(duration))
 
