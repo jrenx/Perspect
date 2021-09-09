@@ -1388,9 +1388,9 @@ class StaticDepGraph:
                 sa_result_size = len(StaticDepGraph.sa_result_cache)
 
         bb_result_size = 0
-        sa_result_file = os.path.join(result_dir, 'bb_results_' + prog + '.json')
-        if os.path.exists(sa_result_file):
-            with open(sa_result_file) as cache_file:
+        bb_result_file = os.path.join(result_dir, 'bb_results_' + prog + '.json')
+        if os.path.exists(bb_result_file):
+            with open(bb_result_file) as cache_file:
                 StaticDepGraph.bb_result_cache = json.load(cache_file)
                 bb_result_size = len(StaticDepGraph.bb_result_cache)
 
