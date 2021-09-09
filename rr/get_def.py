@@ -476,7 +476,7 @@ def get_def(binary_ptr, branch, target, read, reg, shift='0x0', offset='0x0', of
                 func = write[1]
                 insn_to_func.append([str(insn), func]) #TODO, in the future just pass int ...
                 insn_to_addr[insn] = write[2]
-            insn_to_writes = get_mem_writes(insn_to_func, binary_ptr)
+            insn_to_writes = get_mem_writes(binary_ptr, insn_to_func)
             print("[rr][" + pid + "] returned from get_mem_writes " + str(insn_to_writes))
 
             def_point_count = 0
