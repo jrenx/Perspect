@@ -27,7 +27,7 @@ def run_task(id, pipe, prog):
         try:
             rr_util.rr_backslice2(prog, a1, a2, a3, a4, a5, a6, a7, rr_result_cache)
         except Exception as e:
-            print("[rr][" + pid + "][ERROR] Calling RR failed for input: " + str(str_args))
+            print("[rr][ERROR] Process {} Calling RR failed for input: {}".format(id, str(str_args)))
             print(str(e))
             print("-" * 60)
             traceback.print_exc(file=sys.stdout)
