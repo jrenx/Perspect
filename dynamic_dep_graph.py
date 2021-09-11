@@ -274,7 +274,7 @@ class DynamicDependence:
         self.insn_to_reg_count = {}
         self.insn_to_reg_count2 = {}
         self.code_to_insn = {}
-        self.insns_with_regs = set()
+        self.insns_with_regs = []
         self.max_code_with_static_node = -1
         self.load_insn_to_bit_ops = {} #bit op follows the load
         self.bit_op_to_store_insns = {} #bit op precedes store
@@ -303,9 +303,6 @@ class DynamicDependence:
         self.init_graph = None
 
     def get_dynamic_trace(self, prog, arg, path, trace_name, trace_path):
-        instructions = []
-        unique_insns = set()
-        i = 0
 
         insn_to_bit_operand = {}
         for node in self.all_static_df_nodes:
@@ -355,6 +352,10 @@ class DynamicDependence:
                             if bo.insn not in self.load_insn_to_bit_ops[node.insn]:
                                 self.load_insn_to_bit_ops[node.insn].append(bo.insn)
 
+        instructions = []
+        unique_insns = set()
+        i = 0
+
         for start_event in self.starting_events:
             reg = start_event[0]
             insn = start_event[1]
@@ -364,7 +365,7 @@ class DynamicDependence:
             i += 1
             self.code_to_insn[i] = insn
             instructions.append([hex(insn), reg, i])
-            self.insns_with_regs.add(insn)
+            self.insns_with_regs.append(insn)
             self.insn_to_reg_count[insn] = 1
 
         #go through every dataflow node to find the bit vars first
@@ -424,7 +425,7 @@ class DynamicDependence:
                     self.insn_to_reg_count[node.insn] = load_reg_count
                     self.insn_to_reg_count2[node.insn] = store_reg_count
             if reg_count >= 1:
-                self.insns_with_regs.add(node.insn)
+                self.insns_with_regs.append(node.insn)
 
         for insn in insn_to_bit_operand:
             assert insn not in unique_insns
@@ -513,7 +514,7 @@ class DynamicDependence:
                 "static_graph_file": StaticDepGraph.result_file,
                 "starting_insns" : list(self.starting_insns) if insn is None else [insn],
                 "code_to_insn" : self.code_to_insn,
-                "insns_with_regs" : list(self.insns_with_regs),
+                "insns_with_regs" : self.insns_with_regs,
                 "insn_of_cf_nodes" : self.insn_of_cf_nodes,
                 "insn_of_df_nodes" : self.insn_of_df_nodes,
                 "insn_of_local_df_nodes" : self.insn_of_local_df_nodes,
@@ -551,7 +552,7 @@ class DynamicDependence:
 
             dynamic_graph = DynamicGraph(self.starting_events)
             dynamic_graph.build_dynamic_graph(byte_seq, codes_to_ignore, self.starting_insns if insn is None else set([insn]),
-                                              self.code_to_insn, self.insns_with_regs, self.insn_to_static_node,
+                                              self.code_to_insn, set(self.insns_with_regs), self.insn_to_static_node,
                                               set(self.insn_of_cf_nodes), set(self.insn_of_df_nodes),
                                               set(self.insn_of_local_df_nodes), set(self.insn_of_remote_df_nodes),
                                               self.insn_to_reg_count, self.insn_to_reg_count2,
