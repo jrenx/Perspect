@@ -686,10 +686,10 @@ class BitOperation:
 
 class MemoryAccess:
     def __init__(self, reg, shift, off, off_reg, is_bit_var):
-        self.reg = reg
+        self.reg = reg.lower() if reg is not None else reg
         self.shift = shift
         self.off = off
-        self.off_reg = off_reg
+        self.off_reg = off_reg.lower() if off_reg is not None else off_reg
         self.is_bit_var = is_bit_var
         self.bit_operations = None
         self.read_same_as_write = False
@@ -716,19 +716,19 @@ class MemoryAccess:
         # if overwrite is True:
         #    print("AFTER " + str(self.bit_operations))
 
-    def toJSON(self):
-        data = {}
-        data["reg"] = self.reg
-        data["shift"] = self.shift
-        data["off"] = self.off
-        data["off_reg"] = self.off_reg
-        data["is_bit_var"] = self.is_bit_var
-        if self.bit_operations is not None:
-            data["bit_operations"] = []
-            for bit_operation in self.bit_operations:
-                data["bit_operations"].append(bit_operation.toJSON())
-        data["read_same_as_write"] = 0 if self.read_same_as_write is False else 1
-        return data
+    #def toJSON(self):
+    #    data = {}
+    #    data["reg"] = self.reg
+    #    data["shift"] = self.shift
+    #    data["off"] = self.off
+    #    data["off_reg"] = self.off_reg
+    #    data["is_bit_var"] = self.is_bit_var
+    #    if self.bit_operations is not None:
+    #        data["bit_operations"] = []
+    #        for bit_operation in self.bit_operations:
+    #            data["bit_operations"].append(bit_operation.toJSON())
+    #    data["read_same_as_write"] = 0 if self.read_same_as_write is False else 1
+    #    return data
 
     def toJSON(self):
         data = {}
