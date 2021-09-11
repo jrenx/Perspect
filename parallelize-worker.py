@@ -15,6 +15,8 @@ def run_task(id, pipe, prog):
     sys.path.insert(0, os.getcwd())
     sys.path.insert(2, os.path.join(os.getcwd(), 'rr'))
     import rr_util
+    import sa_util
+    binary_ptr = sa_util.setup(prog)
     while True:
         obj = pipe.recv()
         if obj == "Shutdown":
@@ -25,7 +27,7 @@ def run_task(id, pipe, prog):
         rr_result_cache = {}
         start_time = datetime.datetime.now()
         try:
-            rr_util.rr_backslice2(prog, a1, a2, a3, a4, a5, a6, a7, rr_result_cache)
+            rr_util.rr_backslice2(binary_ptr, prog, a1, a2, a3, a4, a5, a6, a7, rr_result_cache)
         except Exception as e:
             print("[rr][ERROR] Process {} Calling RR failed for input: {}".format(id, str(str_args)))
             print(str(e))
