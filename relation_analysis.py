@@ -4,6 +4,7 @@ import itertools
 import heapq
 import numpy as np
 from scipy.stats import norm
+import subprocess
 
 DEBUG = True
 Weight_Threshold = 0
@@ -251,6 +252,12 @@ class RelationAnalysis:
         self.starting_insn = insn
         self.starting_func = func
         self.dd = DynamicDependence(starting_events, prog, arg, path)
+
+        preprocessor_file = os.path.join(curr_dir, 'preprocessor', 'count_node')
+        pp_process = subprocess.Popen([preprocessor_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = pp_process.communicate()
+        print(stdout)
+        print(stderr)
         RelationGroup.load_node_counts(self.dd.trace_path + ".count")
         self.relation_groups = {} #results
 
