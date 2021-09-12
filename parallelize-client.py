@@ -182,7 +182,7 @@ def main():
             if line.startswith("FIN"):
                 print("[client] Received FIN from static dep graph", flush=True)
                 s.close()
-                socekts.remove(s)
+                sockets.remove(s)
                 break
 
             pending_count_lock.acquire()
