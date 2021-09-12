@@ -114,12 +114,9 @@ def main():
     print("[client] Sending initial tasks", flush=True)
     closed_sockets = set()
     for s in sockets:
-        print("[client] Waiting for static dep graph results", flush=True)
         while q.empty():
             continue
-        print("[client] Getting result from static dep graph", flush=True)
         line = q.get()
-        print("[client] Result from static dep graph {}".format(line), flush=True)
 
         if line.startswith("FIN"):
             print("[client] Received FIN from static dep graph", flush=True)
@@ -212,12 +209,10 @@ def main():
                         datetime.datetime.strftime(datetime.datetime.now(), "%Y/%m/%d, %H:%M:%S")), flush=True)
                     os.system('python3 static_dep_graph.py --parallelize_rr >> out{} &'.format(it_local))
 
-
-
-                print("[client] Getting key " + line, flush=True)
-                print("[client] Sending task {}".format(line), flush=True)
-                s.send(line.encode())
-                print("[client] Sent task {}".format(line), flush=True)
+            print("[client] Getting key " + line, flush=True)
+            print("[client] Sending task {}".format(line), flush=True)
+            s.send(line.encode())
+            print("[client] Sent task {}".format(line), flush=True)
 
     json.dump(rr_result_cache, open(rr_result_file, 'w'), indent=4)
     it_lock.acquire()
