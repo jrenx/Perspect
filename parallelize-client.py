@@ -87,7 +87,7 @@ def main():
     rr_result_cache = {}
 
     server = socketserver.TCPServer((HOST, PORT), MyTCPHandler)
-    server_t = threading.Thread(target=server_thread, args=(server))
+    server_t = threading.Thread(target=server_thread, args=(server, ))
     server_t.start()
 
     print("[client] Starting execution", flush=True)
@@ -101,7 +101,7 @@ def main():
             rr_result_cache = json.load(f)
  
     start_time = datetime.datetime.now()
-    print("[client] Execution of itertaion {} starts at {}".format(i, datetime.datetime.strftime(start_time, "%Y/%m/%d, %H:%M:%S")), flush=True)
+    print("[client] Execution of iteration 0 starts at {}".format(datetime.datetime.strftime(start_time, "%Y/%m/%d, %H:%M:%S")), flush=True)
 
     sockets = []
     for addr in worker_addresses:
@@ -189,14 +189,12 @@ def main():
                 break
 
             pending_count_lock.acquire()
-            global pending_count
             pending_count_local = pending_count
             pending_count_lock.release()
             print("[sender][" + str(id) + "] pending count is: " + str(pending_count_local))
             if pending_count_local <= num_processor:
                 restart_static_slicing_local = False
                 restart_static_slicing_lock.acquire()
-                global restart_static_slicing
                 if restart_static_slicing == True:
                     restart_static_slicing_local = True
                     restart_static_slicing = False
@@ -207,13 +205,12 @@ def main():
                     rr_result_cache_lock.release()
         
                     it_lock.acquire()
-                    global it
                     it += 1
                     it_local = it
                     it_lock.release()
                     print("[sender][" + str(id) + "] Execution of static slicing pass {} starts at {}".format(it_local,\
                         datetime.datetime.strftime(datetime.datetime.now(), "%Y/%m/%d, %H:%M:%S")), flush=True)
-                        os.system('python3 static_dep_graph.py --parallelize_rr >> out{} &'.format(it_local))
+                    os.system('python3 static_dep_graph.py --parallelize_rr >> out{} &'.format(it_local))
 
 
 
@@ -224,7 +221,6 @@ def main():
 
     json.dump(rr_result_cache, open(rr_result_file, 'w'), indent=4)
     it_lock.acquire()
-    global it
     it += 1
     it_local = it
     it_lock.release()
