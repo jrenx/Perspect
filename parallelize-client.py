@@ -56,7 +56,7 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
                     it_lock.release()
                     print("[main receiver] Execution of static slicing pass {} starts at {}".format(it_local, \
                             datetime.datetime.strftime(datetime.datetime.now(),"%Y/%m/%d, %H:%M:%S")), flush=True)
-                    os.system('python3 static_dep_graph.py --parallelize_rr &> out{} &'.format(it_local))
+                    os.system('python3 static_dep_graph.py --parallelize_rr > out{} &'.format(it_local))
             else:
                 print("[main receiver] Did not receive any new unique inputs, finish now...")
                 q.put(self.data)
@@ -93,7 +93,7 @@ def main():
     start_time = datetime.datetime.now()
     print("Execution of static slicing pass 0 starts at {}".format( \
         datetime.datetime.strftime(start_time, "%Y/%m/%d, %H:%M:%S")), flush=True)
-    os.system('python3 static_dep_graph.py --parallelize_rr &> out0 &')
+    os.system('python3 static_dep_graph.py --parallelize_rr > out0 &')
     if os.path.exists(rr_result_file):
         with open(rr_result_file) as f:
             rr_result_cache = json.load(f)
@@ -149,7 +149,7 @@ def main():
                 it_lock.release()
                 print("[sender][" + str(id) + "] Execution of static slicing pass {} starts at {}".format(it_local,\
                     datetime.datetime.strftime(datetime.datetime.now(), "%Y/%m/%d, %H:%M:%S")), flush=True)
-                os.system('python3 static_dep_graph.py --parallelize_rr &> out{} &'.format(it_local))
+                os.system('python3 static_dep_graph.py --parallelize_rr > out{} &'.format(it_local))
 
         print("[client] Getting key " + line, flush=True)
         print("[client] Sending task {}".format(line), flush=True)
@@ -209,7 +209,7 @@ def main():
                     it_lock.release()
                     print("[sender][" + str(id) + "] Execution of static slicing pass {} starts at {}".format(it_local,\
                         datetime.datetime.strftime(datetime.datetime.now(), "%Y/%m/%d, %H:%M:%S")), flush=True)
-                    os.system('python3 static_dep_graph.py --parallelize_rr &> out{} &'.format(it_local))
+                    os.system('python3 static_dep_graph.py --parallelize_rr > out{} &'.format(it_local))
 
             print("[client] Getting key " + line, flush=True)
             print("[client] Sending task {}".format(line), flush=True)
@@ -223,7 +223,7 @@ def main():
     it_lock.release()
     print("Execution of static slicing pass {} starts at {}".format(it_local, \
             datetime.datetime.strftime(datetime.datetime.now(), "%Y/%m/%d, %H:%M:%S")), flush=True)
-    os.system('python3 static_dep_graph.py &> out{}'.format(it_local))
+    os.system('python3 static_dep_graph.py > out{}'.format(it_local))
 
     server.shutdown()
     server_t.join()
