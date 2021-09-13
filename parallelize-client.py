@@ -59,8 +59,7 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
                     os.system('python3 static_dep_graph.py --parallelize_rr >> out{} &'.format(it_local))
             else:
                 print("[main receiver] Did not receive any new unique inputs, finish now...")
-                for i in range(0, num_processor):
-                    q.put(self.data)
+                q.put(self.data)
         else:
             print("[main receiver] " + str(self.client_address[0]) + " wrote:" + str(self.data))
             line = self.data.strip()
@@ -121,6 +120,7 @@ def main():
         if line.startswith("FIN"):
             print("[client] Received FIN from static dep graph", flush=True)
             s.close()
+            q.put(line)
             closed_sockets.add(s)
             break
 
@@ -182,6 +182,7 @@ def main():
             if line.startswith("FIN"):
                 print("[client] Received FIN from static dep graph", flush=True)
                 s.close()
+                q.put(line)
                 sockets.remove(s)
                 break
 
