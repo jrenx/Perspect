@@ -25,7 +25,7 @@ restart_static_slicing_lock = threading.Lock()
 restart_static_slicing = False
 
 rr_result_cache_lock = threading.Lock()
-# for rr_result_cache
+rr_result_cache = {}
 
 it_lock = threading.Lock()
 it = 0
@@ -47,6 +47,10 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
                 restart_static_slicing = True
                 restart_static_slicing_lock.release()
                 if q.empty():
+                    rr_result_cache_lock.acquire()
+                    json.dump(rr_result_cache, open(rr_result_file, 'w'), indent=4)
+                    rr_result_cache_lock.release()
+
                     it_lock.acquire()
                     global it
                     it += 1
@@ -212,7 +216,7 @@ def main():
     print("Execution of static slicing pass 0 starts at {}".format( \
         datetime.datetime.strftime(start_time, "%Y/%m/%d, %H:%M:%S")), flush=True)
     os.system('python3 static_dep_graph.py --parallelize_rr >> out0 &')
-    rr_result_cache = {}
+    global rr_result_cache
     if os.path.exists(rr_result_file):
         with open(rr_result_file) as file:
             rr_result_cache = json.load(file)
