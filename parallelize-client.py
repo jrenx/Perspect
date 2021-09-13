@@ -94,6 +94,7 @@ def main():
     print("Execution of static slicing pass 0 starts at {}".format( \
         datetime.datetime.strftime(start_time, "%Y/%m/%d, %H:%M:%S")), flush=True)
     os.system('python3 static_dep_graph.py --parallelize_rr > out0 &')
+    rr_result_cache = {}
     if os.path.exists(rr_result_file):
         with open(rr_result_file) as f:
             rr_result_cache = json.load(f)
@@ -127,7 +128,7 @@ def main():
         global pending_count
         pending_count_local = pending_count
         pending_count_lock.release()
-        print("[sender][" + str(id) + "] pending count is: " + str(pending_count_local))
+        print("[client] pending count is: " + str(pending_count_local))
         if pending_count_local <= num_processor:
             restart_static_slicing_local = False
             restart_static_slicing_lock.acquire()
@@ -146,7 +147,7 @@ def main():
                 it += 1
                 it_local = it
                 it_lock.release()
-                print("[sender][" + str(id) + "] Execution of static slicing pass {} starts at {}".format(it_local,\
+                print("[client] Execution of static slicing pass {} starts at {}".format(it_local,\
                     datetime.datetime.strftime(datetime.datetime.now(), "%Y/%m/%d, %H:%M:%S")), flush=True)
                 os.system('python3 static_dep_graph.py --parallelize_rr > out{} &'.format(it_local))
 
@@ -167,21 +168,29 @@ def main():
                 s.close()
                 sockets.remove(s)
                 continue
-            print("[client] Receiving result for task {}".format(line), flush=True)
+            print("[client] Receiving result for task {}".format(ret), flush=True)
             ret = json.loads(ret)
+            print("[client] Saving result to cache in memory")
             rr_result_cache_lock.acquire()
+            print("[client] Get rr result cache lock")
             for (key, value) in ret.items():
+                print("Putting {} reuslt into rr cache".format(key))
                 rr_result_cache[key] = value
+                print("Put {} result into rr cache".format(key))
+            print("[client] Releasing rr result cache lock")
             rr_result_cache_lock.release()
+            print("[client] Decreasing pending count")
             pending_count_lock.acquire()
-            global pending_count
             pending_count -= 1
             pending_count_lock.release()
+            print("[client] Decreased pending count")
             
             # Send new task if availble
+            print("[client] Waiting for task")
             while q.empty():
                 continue
             line = q.get()
+            print("[client] Get task {}".format(line))
             if line.startswith("FIN"):
                 print("[client] Received FIN from static dep graph", flush=True)
                 s.close()
@@ -192,7 +201,7 @@ def main():
             pending_count_lock.acquire()
             pending_count_local = pending_count
             pending_count_lock.release()
-            print("[sender][" + str(id) + "] pending count is: " + str(pending_count_local))
+            print("[client] pending count is: " + str(pending_count_local))
             if pending_count_local <= num_processor:
                 restart_static_slicing_local = False
                 restart_static_slicing_lock.acquire()
@@ -209,7 +218,7 @@ def main():
                     it += 1
                     it_local = it
                     it_lock.release()
-                    print("[sender][" + str(id) + "] Execution of static slicing pass {} starts at {}".format(it_local,\
+                    print("[client] Execution of static slicing pass {} starts at {}".format(it_local,\
                         datetime.datetime.strftime(datetime.datetime.now(), "%Y/%m/%d, %H:%M:%S")), flush=True)
                     os.system('python3 static_dep_graph.py --parallelize_rr > out{} &'.format(it_local))
 
@@ -223,7 +232,7 @@ def main():
     it += 1
     it_local = it
     it_lock.release()
-    print("Execution of static slicing pass {} starts at {}".format(it_local, \
+    print("[client] Execution of static slicing pass {} starts at {}".format(it_local, \
             datetime.datetime.strftime(datetime.datetime.now(), "%Y/%m/%d, %H:%M:%S")), flush=True)
     os.system('python3 static_dep_graph.py > out{}'.format(it_local))
 
