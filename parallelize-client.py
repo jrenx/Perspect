@@ -83,7 +83,6 @@ def main():
     if len(sys.argv) > 1:
         prog = sys.argv[1]
     rr_result_file = os.path.join(curr_dir, 'cache', prog, 'rr_results_{}.json'.format(prog))
-    rr_result_cache = {}
 
     server = socketserver.TCPServer((HOST, PORT), MyTCPHandler)
     server_t = threading.Thread(target=server_thread, args=(server, ))
@@ -174,6 +173,9 @@ def main():
             for (key, value) in ret.items():
                 rr_result_cache[key] = value
             rr_result_cache_lock.release()
+            pending_count_lock.acquire()
+            pending_count -= 1
+            pending_count_lock.release()
             
             # Send new task if availble
             while q.empty():
