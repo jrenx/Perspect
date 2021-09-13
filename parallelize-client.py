@@ -125,7 +125,6 @@ def main():
 
         pending_count_lock.acquire()
         global pending_count
-        pending_count -= 1
         pending_count_local = pending_count
         pending_count_lock.release()
         print("[sender][" + str(id) + "] pending count is: " + str(pending_count_local))
@@ -174,6 +173,10 @@ def main():
             for (key, value) in ret.items():
                 rr_result_cache[key] = value
             rr_result_cache_lock.release()
+            pending_count_lock.acquire()
+            global pending_count
+            pending_count -= 1
+            pending_count_lock.release()
             
             # Send new task if availble
             while q.empty():
@@ -187,7 +190,6 @@ def main():
                 break
 
             pending_count_lock.acquire()
-            pending_count -= 1
             pending_count_local = pending_count
             pending_count_lock.release()
             print("[sender][" + str(id) + "] pending count is: " + str(pending_count_local))
