@@ -10,13 +10,13 @@ import socketserver
 import queue
 import threading
 
-#worker_addresses = [("10.1.0.21", 12000), ("10.1.0.24", 12000)]
-worker_addresses = [("10.1.0.21", 12000)]
+worker_addresses = [("10.1.0.21", 12000), ("10.1.0.22", 12000), ("10.1.0.23", 12000), ("10.1.0.24", 12000)]
+#worker_addresses = [("10.1.0.21", 12000)]
 
 HOST, PORT = "localhost", 9999
 q = queue.Queue()
 DEBUG = True
-num_processor = 16
+num_processor = 64
 
 num_new_unique_inputs_received = 0
 handled = set()
@@ -51,11 +51,6 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
             if num_new_unique_inputs_received > 0:
                 print("[main receiver] Should restart static slicing... "
                       "number of new inputs received in previous run is: " + str(num_new_unique_inputs_received))
-                num_new_unique_inputs_received = 0
-                restart_static_slicing_lock.acquire()
-                global restart_static_slicing
-                restart_static_slicing = True
-                restart_static_slicing_lock.release()
                 if q.empty():
                     rr_result_cache_lock.acquire()
                     json.dump(rr_result_cache, open(rr_result_file, 'w'), indent=4)
@@ -70,6 +65,13 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
                     print("[main receiver] Execution of static slicing pass {} starts at {}".format(it_local, \
                             datetime.datetime.strftime(datetime.datetime.now(),"%Y/%m/%d, %H:%M:%S")), flush=True)
                     os.system('python3.7 static_dep_graph.py --parallelize_rr > out{} &'.format(it_local))
+                else:
+                    num_new_unique_inputs_received = 0
+                    restart_static_slicing_lock.acquire()
+                    global restart_static_slicing
+                    restart_static_slicing = True
+                    restart_static_slicing_lock.release()
+
             else:
                 print("[main receiver] Did not receive any new unique inputs, finish now...")
                 q.put(self.data)
