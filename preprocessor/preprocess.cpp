@@ -349,7 +349,7 @@ void parseStaticNode(char *filename) {
 
 void initData() {
   long length;
-  char *buffer = readFile("preprocess_data", length);//TODO delete
+  char *buffer = readFile((char *)"preprocess_data", length);//TODO delete
 
   cJSON *data = cJSON_Parse(buffer);
   delete[] buffer;
