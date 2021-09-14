@@ -145,7 +145,13 @@ def main():
 
         for s in read_sockets:
             # Parse results
-            ret = s.recv(4096).decode()
+            chunks = []
+            data = s.recv(4096)
+            chunks.append(data)
+            while not len(data) == 0:
+                data = s.recv(4096)
+                chunks.append(data)
+            ret = b''.join(chunks).decode()
             if ret == "": # Server should not close the socket. Only for precaution
                 s.close()
                 sockets.remove(s)
