@@ -9,8 +9,8 @@ import socketserver
 import queue
 import threading
 
-worker_addresses = [("10.1.0.21", 12000), ("10.1.0.24", 12000)]
-#worker_addresses = [("10.1.0.21", 12000)]
+#worker_addresses = [("10.1.0.21", 12000), ("10.1.0.24", 12000)]
+worker_addresses = [("10.1.0.21", 12000)]
 
 HOST, PORT = "localhost", 9999
 q = queue.Queue()
@@ -68,7 +68,7 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
 
                     print("[main receiver] Execution of static slicing pass {} starts at {}".format(it_local, \
                             datetime.datetime.strftime(datetime.datetime.now(),"%Y/%m/%d, %H:%M:%S")), flush=True)
-                    os.system('python3 static_dep_graph.py --parallelize_rr > out{} &'.format(it_local))
+                    os.system('python3.7 static_dep_graph.py --parallelize_rr > out{} &'.format(it_local))
             else:
                 print("[main receiver] Did not receive any new unique inputs, finish now...")
                 q.put(self.data)
@@ -100,7 +100,7 @@ def main():
     start_time = datetime.datetime.now()
     print("Execution of static slicing pass 0 starts at {}".format( \
         datetime.datetime.strftime(start_time, "%Y/%m/%d, %H:%M:%S")), flush=True)
-    os.system('python3 static_dep_graph.py --parallelize_rr > out0 &')
+    os.system('python3.7 static_dep_graph.py --parallelize_rr > out0 &')
     if os.path.exists(rr_result_file):
         with open(rr_result_file) as f:
             rr_result_cache_lock.acquire()
@@ -113,10 +113,11 @@ def main():
 
     sockets = []
     for addr in worker_addresses:
-        print("[client] Connecting to {}".format(addr), flush=True)
         for _ in range(16):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            print("[client] Connecting to {}".format(addr), flush=True)
             s.connect(addr)
+            print("[client] Connected to {}".format(addr), flush=True)
             sockets.append(s)
 
     print("[client] Sending initial tasks", flush=True)
@@ -200,7 +201,7 @@ def main():
 
                     print("[client] Execution of static slicing pass {} starts at {}".format(it_local,\
                         datetime.datetime.strftime(datetime.datetime.now(), "%Y/%m/%d, %H:%M:%S")), flush=True)
-                    os.system('python3 static_dep_graph.py --parallelize_rr > out{} &'.format(it_local))
+                    os.system('python3.7 static_dep_graph.py --parallelize_rr > out{} &'.format(it_local))
            
             # Send new task if availble
             #print("[client] Waiting for task")
@@ -227,7 +228,7 @@ def main():
     it_lock.release()
     print("[client] Execution of static slicing pass {} starts at {}".format(it_local, \
             datetime.datetime.strftime(datetime.datetime.now(), "%Y/%m/%d, %H:%M:%S")), flush=True)
-    os.system('python3 static_dep_graph.py > out{}'.format(it_local))
+    os.system('python3.7 static_dep_graph.py > out{}'.format(it_local))
 
     server.shutdown()
     server_t.join()
