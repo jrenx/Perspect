@@ -1,3 +1,4 @@
+from json.decoder import JSONDecodeError
 import sys
 import os
 import socket
@@ -146,11 +147,16 @@ def main():
         for s in read_sockets:
             # Parse results
             chunks = []
-            data = s.recv(4096)
-            chunks.append(data)
-            while not len(data) == 0:
-                data = s.recv(4096)
-                chunks.append(data)
+            while True:
+                chunks.append(s.recv(4096))
+                ret = b''.join(chunks).decode()
+                if ret == "":
+                    break
+                try:
+                    json.loads(ret)
+                except JSONDecodeError:
+                    continue
+                break
             ret = b''.join(chunks).decode()
             if ret == "": # Server should not close the socket. Only for precaution
                 s.close()
