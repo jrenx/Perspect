@@ -42,10 +42,6 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
                 print("[main receiver] Should restart static slicing... "
                       "number of new inputs received in previous run is: " + str(num_new_unique_inputs_received))
                 num_new_unique_inputs_received = 0
-                restart_static_slicing_lock.acquire()
-                global restart_static_slicing
-                restart_static_slicing = True
-                restart_static_slicing_lock.release()
                 if q.empty():
                     rr_result_cache_lock.acquire()
                     json.dump(rr_result_cache, open(rr_result_file, 'w'), indent=4)
@@ -59,6 +55,11 @@ class MyTCPHandler(socketserver.StreamRequestHandler):
                     print("[main receiver] Execution of static slicing pass {} starts at {}".format(it_local, \
                             datetime.datetime.strftime(datetime.datetime.now(),"%Y/%m/%d, %H:%M:%S")), flush=True)
                     os.system('python3 static_dep_graph.py --parallelize_rr >> out{} &'.format(it_local))
+                else:
+                    restart_static_slicing_lock.acquire()
+                    global restart_static_slicing
+                    restart_static_slicing = True
+                    restart_static_slicing_lock.release()
             else:
                 print("[main receiver] Did not receive any new unique inputs, finish now...")
                 for i in range(0, num_processor):
