@@ -471,13 +471,13 @@ class DynamicDependence:
             for node in graph.none_df_starting_nodes:
                 self.insn_to_static_node[node.insn] = node
 
-            for node in graph.nodes_in_cf_slice:
+            for node in graph.nodes_in_cf_slice.keys():
                 self.all_static_cf_nodes.append(node)
                 self.insn_to_static_node[node.insn] = node
                 self.insn_of_cf_nodes.append(node.insn)
                 #print(node)
 
-            for node in graph.nodes_in_df_slice:
+            for node in graph.nodes_in_df_slice.keys():
                 # trace local
                 #if node.mem_load != None or node.mem_store != None:
                 #TODO could just be loading a reg
@@ -740,9 +740,9 @@ class DynamicGraph:
         if "insn_to_static_node" in data:
             dg.insn_to_static_node = {}
             for func in func_to_graph:
-                for node in func_to_graph[func].nodes_in_cf_slice:
+                for node in func_to_graph[func].nodes_in_cf_slice.keys():
                     dg.insn_to_static_node[node.insn] = node
-                for node in func_to_graph[func].nodes_in_df_slice:
+                for node in func_to_graph[func].nodes_in_df_slice.keys():
                     dg.insn_to_static_node[node.insn] = node
 
         for id in data["postorder_list"]:

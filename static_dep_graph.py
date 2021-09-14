@@ -671,7 +671,7 @@ class BitOperation:
         s = "BIT OP insn " + hex(self.insn) + " operand " \
             + str(self.operand) + " operation " + str(self.operation)
         return s
-    
+
     def toJSON(self):
         data = {}
         data["insn"] = self.insn
@@ -1085,8 +1085,8 @@ class StaticDepGraph:
 
         self.bb_id_to_node_id = {}
 
-        self.nodes_in_cf_slice = set()
-        self.nodes_in_df_slice = set()
+        self.nodes_in_cf_slice = {}
+        self.nodes_in_df_slice = {}
         self.none_df_starting_nodes = set()
 
         self.pending_callsite_nodes = []
@@ -1111,12 +1111,12 @@ class StaticDepGraph:
         data["bb_id_to_node_id"] = self.bb_id_to_node_id
 
         data["nodes_in_cf_slice"] = []
-        for n in self.nodes_in_cf_slice:
+        for n in self.nodes_in_cf_slice.keys():
             data["nodes_in_cf_slice"].append(n.id)
         data["nodes_in_cf_slice"].sort()
 
         data["nodes_in_df_slice"] = []
-        for n in self.nodes_in_df_slice:
+        for n in self.nodes_in_df_slice.keys():
             data["nodes_in_df_slice"].append(n.id)
         data["nodes_in_df_slice"].sort()
 
@@ -1134,7 +1134,7 @@ class StaticDepGraph:
         sg.changed = False
         if "cfg" in data:
             sg.cfg = CFG.fromJSON(data["cfg"])
-            
+
         sg.bb_id_to_node_id = {}
         for key in data["bb_id_to_node_id"]:
             sg.bb_id_to_node_id[int(key)] = data["bb_id_to_node_id"][key]
@@ -1147,7 +1147,7 @@ class StaticDepGraph:
             sg.insn_to_node[sn.insn] = sn
 
         for n in data["nodes_in_cf_slice"]:
-            sg.nodes_in_cf_slice.add(sg.id_to_node[n])
+            sg.nodes_in_cf_slice[sg.id_to_node[n]] = sg.id_to_node[n]
 
         for n in data["nodes_in_df_slice"]:
             sg.nodes_in_df_slice.add(sg.id_to_node[n])
@@ -1441,10 +1441,10 @@ class StaticDepGraph:
                         continue
                     graph.build_control_flow_dependencies(set(), final=True)
                     graph.remove_extra_nodes(set([e[1] for e in starting_events]))
-                    graph.merge_nodes(graph.nodes_in_df_slice, True)
+                    graph.merge_nodes(graph.nodes_in_df_slice.keys(), True)
                     graph.merge_nodes(graph.none_df_starting_nodes, True)
                     if TRACKS_DIRECT_CALLER: graph.merge_callsite_nodes()
-                    for n in graph.nodes_in_cf_slice:
+                    for n in graph.nodes_in_cf_slice.keys():
                         print(str(n))
                     for n in graph.nodes_in_df_slice:
                         print(str(n))
@@ -1602,7 +1602,7 @@ class StaticDepGraph:
                     #assert df_node.bb is None, df_node
                 defs_in_same_func.add(df_node)
                 if df_node not in graph.nodes_in_df_slice:
-                    graph.nodes_in_df_slice.add(df_node)
+                    graph.nodes_in_df_slice[df_node] = df_node
                 #df_node = None
                 # TODO, also need to do dataflow tracing for this one!!
             graph.merge_nodes(defs_in_same_func)
@@ -1795,7 +1795,7 @@ class StaticDepGraph:
 
         slice_starts = []
         addr_to_node = {}
-        for node in self.nodes_in_cf_slice:
+        for node in self.nodes_in_cf_slice.keys():
             #assert node.is_cf is True, str(node) TODO
             if node in df_nodes: #TODO, sometimes it could be a df node too...
                 continue
@@ -1974,9 +1974,11 @@ class StaticDepGraph:
             for node in defs_in_diff_func:
                 print(str(node))
 
-        self.nodes_in_df_slice = self.nodes_in_df_slice.union(set(defs_in_same_func))
+        for d in defs_in_same_func:
+            if d not in self.nodes_in_df_slice:
+                self.nodes_in_df_slice[d] = d
         print("[static_dep] Total number of nodes in data flow slice: " + str(len(self.nodes_in_df_slice)) + " " + \
-              str([hex(node.insn) for node in self.nodes_in_df_slice]))
+              str([hex(node.insn) for node in self.nodes_in_df_slice.keys()]))
 
         return defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func
 
@@ -1998,7 +2000,7 @@ class StaticDepGraph:
                 continue
             self.bb_id_to_node_id[bb.id] = node.id
             if bb.id in self.cfg.id_to_bb_in_slice:
-                self.nodes_in_cf_slice.add(node)
+                self.nodes_in_cf_slice[node] = node
 
 
         print("[static_dep] Total initial number of nodes in control flow slice: " + str(len(self.nodes_in_cf_slice)) + " " + \
@@ -2082,12 +2084,12 @@ class StaticDepGraph:
                 if self.id_to_node[succe_node_id] not in node.cf_succes:
                     node.cf_succes.append(self.id_to_node[succe_node_id])
             if node not in self.nodes_in_cf_slice:
-                self.nodes_in_cf_slice.add(node)
+                self.nodes_in_cf_slice[node] = node
 
         print("[static_dep] Total number of nodes in control flow slice: " + str(len(self.nodes_in_cf_slice)) + " " + \
-              str([hex(node.insn) for node in self.nodes_in_cf_slice]))
+              str([hex(node.insn) for node in self.nodes_in_cf_slice.keys()]))
         if VERBOSE:
-            for node in self.nodes_in_cf_slice:
+            for node in self.nodes_in_cf_slice.keys():
                 print(str(node))
 
     def remove_extra_nodes(self, targets):
@@ -2114,10 +2116,10 @@ class StaticDepGraph:
                     if curr.insn in targets:
                         continue
                     if curr in graph.nodes_in_cf_slice:
-                        graph.nodes_in_cf_slice.remove(curr)
+                        del graph.nodes_in_cf_slice[curr]
                         curr.print_node("Removing node from cf slice because it has no successors: ")
                     if curr in graph.nodes_in_df_slice:
-                        graph.nodes_in_df_slice.remove(curr)
+                        del graph.nodes_in_df_slice[curr]
                         curr.print_node("Removing node from df slice because it has no successors: ")
                     for p in node.cf_predes:
                         if node in p.cf_succes:
@@ -2129,9 +2131,9 @@ class StaticDepGraph:
                             worklist.append(p)
 
         print("[static_dep] Total number of nodes in control flow slice after trimming: " + str(len(self.nodes_in_cf_slice)) + " " + \
-              str([hex(node.insn) for node in self.nodes_in_cf_slice]))
+              str([hex(node.insn) for node in self.nodes_in_cf_slice.keys()]))
         if VERBOSE:
-            for node in self.nodes_in_cf_slice:
+            for node in self.nodes_in_cf_slice.keys():
                 print(str(node))
 
     @staticmethod
@@ -2329,7 +2331,7 @@ class StaticDepGraph:
             assert (len(graph.insn_to_node) == len(graph.id_to_node)), \
                 str(len(graph.insn_to_node)) + " " \
                 + str(len(graph.id_to_node)) + " " + graph.func
-            for node in itertools.chain(graph.nodes_in_cf_slice, graph.nodes_in_df_slice):
+            for node in itertools.chain(graph.nodes_in_cf_slice.keys(), graph.nodes_in_df_slice.keys()):
                 for p in node.cf_predes:
                     if node not in p.cf_succes:
                         if node.is_df is True:
