@@ -1150,7 +1150,7 @@ class StaticDepGraph:
             sg.nodes_in_cf_slice[sg.id_to_node[n]] = sg.id_to_node[n]
 
         for n in data["nodes_in_df_slice"]:
-            sg.nodes_in_df_slice.add(sg.id_to_node[n])
+            sg.nodes_in_df_slice[sg.id_to_node[n]] = sg.id_to_node[n]
 
         if "none_df_starting_nodes" in data:
             for n in data["none_df_starting_nodes"]:
@@ -1446,7 +1446,7 @@ class StaticDepGraph:
                     if TRACKS_DIRECT_CALLER: graph.merge_callsite_nodes()
                     for n in graph.nodes_in_cf_slice.keys():
                         print(str(n))
-                    for n in graph.nodes_in_df_slice:
+                    for n in graph.nodes_in_df_slice.keys():
                         print(str(n))
 
                 StaticDepGraph.sanity_check()
