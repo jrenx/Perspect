@@ -9,8 +9,8 @@ import socketserver
 import queue
 import threading
 
-#worker_addresses = [("10.1.0.21", 12000), ("10.1.0.24", 12000)]
-worker_addresses = [("10.1.0.21", 12000)]
+worker_addresses = [("10.1.0.21", 12000), ("10.1.0.24", 12000)]
+#worker_addresses = [("10.1.0.21", 12000)]
 
 HOST, PORT = "localhost", 9999
 q = queue.Queue()
@@ -133,33 +133,6 @@ def main():
             closed_sockets.add(s)
             continue
 
-        pending_count_lock.acquire()
-        global pending_count
-        pending_count_local = pending_count
-        pending_count_lock.release()
-        print("[client] pending count is: " + str(pending_count_local))
-        if pending_count_local <= num_processor:
-            restart_static_slicing_local = False
-            restart_static_slicing_lock.acquire()
-            global restart_static_slicing
-            if restart_static_slicing == True:
-                restart_static_slicing_local = True
-                restart_static_slicing = False
-            restart_static_slicing_lock.release()
-            if restart_static_slicing_local is True:
-                rr_result_cache_lock.acquire()
-                json.dump(rr_result_cache, open(rr_result_file, 'w'), indent=4)
-                rr_result_cache_lock.release()
-        
-                it_lock.acquire()
-                global it
-                it += 1
-                it_local = it
-                it_lock.release()
-                print("[client] Execution of static slicing pass {} starts at {}".format(it_local,\
-                    datetime.datetime.strftime(datetime.datetime.now(), "%Y/%m/%d, %H:%M:%S")), flush=True)
-                os.system('python3 static_dep_graph.py --parallelize_rr > out{} &'.format(it_local))
-
         print("[client] Getting key " + line, flush=True)
         print("[client] Sending task {}".format(line), flush=True)
         s.send(line.encode())
@@ -177,25 +150,54 @@ def main():
                 s.close()
                 sockets.remove(s)
                 continue
-            print("[client] Receiving result for task {}".format(ret), flush=True)
             ret = json.loads(ret)
-            print("[client] Saving result to cache in memory")
+            print("[client] Receiving result for task {}".format(list(ret.keys())[0] if (len(ret) > 0) else ""), flush=True)
+            #print("[client] Saving result to cache in memory")
             rr_result_cache_lock.acquire()
-            print("[client] Get rr result cache lock")
+            #print("[client] Get rr result cache lock")
             for (key, value) in ret.items():
-                print("Putting {} reuslt into rr cache".format(key))
+                #print("Putting {} reuslt into rr cache".format(key))
                 rr_result_cache[key] = value
-                print("Put {} result into rr cache".format(key))
-            print("[client] Releasing rr result cache lock")
+                #print("Put {} result into rr cache".format(key))
+            #print("[client] Releasing rr result cache lock")
             rr_result_cache_lock.release()
-            print("[client] Decreasing pending count")
+            #print("[client] Decreasing pending count")
+
             pending_count_lock.acquire()
+            global pending_count
             pending_count -= 1
+            pending_count_local = pending_count
             pending_count_lock.release()
-            print("[client] Decreased pending count")
             
+            #print("[client] Decreased pending count")
+            print("[client] pending count is: " + str(pending_count_local))
+            if pending_count_local <= num_processor:
+
+                restart_static_slicing_local = False
+                restart_static_slicing_lock.acquire()
+                global restart_static_slicing
+                if restart_static_slicing == True:
+                    restart_static_slicing_local = True
+                    restart_static_slicing = False
+                restart_static_slicing_lock.release()
+                
+                if restart_static_slicing_local is True:
+                    rr_result_cache_lock.acquire()
+                    json.dump(rr_result_cache, open(rr_result_file, 'w'), indent=4)
+                    rr_result_cache_lock.release()
+        
+                    it_lock.acquire()
+                    global it
+                    it += 1
+                    it_local = it
+                    it_lock.release()
+
+                    print("[client] Execution of static slicing pass {} starts at {}".format(it_local,\
+                        datetime.datetime.strftime(datetime.datetime.now(), "%Y/%m/%d, %H:%M:%S")), flush=True)
+                    os.system('python3 static_dep_graph.py --parallelize_rr > out{} &'.format(it_local))
+           
             # Send new task if availble
-            print("[client] Waiting for task")
+            #print("[client] Waiting for task")
             while q.empty():
                 continue
             line = q.get()
@@ -206,30 +208,6 @@ def main():
                 q.put(line)
                 sockets.remove(s)
                 break
-
-            pending_count_lock.acquire()
-            pending_count_local = pending_count
-            pending_count_lock.release()
-            print("[client] pending count is: " + str(pending_count_local))
-            if pending_count_local <= num_processor:
-                restart_static_slicing_local = False
-                restart_static_slicing_lock.acquire()
-                if restart_static_slicing == True:
-                    restart_static_slicing_local = True
-                    restart_static_slicing = False
-                restart_static_slicing_lock.release()
-                if restart_static_slicing_local is True:
-                    rr_result_cache_lock.acquire()
-                    json.dump(rr_result_cache, open(rr_result_file, 'w'), indent=4)
-                    rr_result_cache_lock.release()
-        
-                    it_lock.acquire()
-                    it += 1
-                    it_local = it
-                    it_lock.release()
-                    print("[client] Execution of static slicing pass {} starts at {}".format(it_local,\
-                        datetime.datetime.strftime(datetime.datetime.now(), "%Y/%m/%d, %H:%M:%S")), flush=True)
-                    os.system('python3 static_dep_graph.py --parallelize_rr > out{} &'.format(it_local))
 
             print("[client] Getting key " + line, flush=True)
             print("[client] Sending task {}".format(line), flush=True)
