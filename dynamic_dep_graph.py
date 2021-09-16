@@ -666,7 +666,7 @@ class DynamicGraph:
     def toJSON(self):
         data = {}
         data["starting_events"] = self.starting_events
-        data["insn_to_id"] = self.insn_to_id
+        #data["insn_to_id"] = self.insn_to_id
 
         data["dynamic_nodes"] = []
         for n in self.dynamic_nodes.values():
@@ -699,7 +699,7 @@ class DynamicGraph:
     @staticmethod
     def fromJSON(data, static_id_to_node):
         dg = DynamicGraph(data["starting_events"])
-        dg.insn_to_id = data["insn_to_id"]
+        #dg.insn_to_id = data["insn_to_id"]
 
         id_to_node = {}
         for n in data["dynamic_nodes"]:
