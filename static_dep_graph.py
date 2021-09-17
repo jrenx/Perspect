@@ -1735,11 +1735,12 @@ class StaticDepGraph:
             # TODO, need better scheme for checking I guess
         if prede.explained is False or read_same_as_write is True:
             if type == 'memread':
-                if off_reg == 'DS':
+                if off_reg is not None and off_reg.lower() == 'ds':
                     print("[warn] ignoring the offset register DS")
                     off_reg = ''
                     off = 0
-                prede.mem_load = MemoryAccess(prede_reg, shift, off, off_reg, is_bit_var)
+                if prede.mem_load is None:
+                    prede.mem_load = MemoryAccess(prede_reg, shift, off, off_reg, is_bit_var)
                 prede.mem_load.add_bit_operationses(bit_ops)
                 prede.reg_store = dst_reg  # TODO put actual register name here
                 if read_same_as_write is True:

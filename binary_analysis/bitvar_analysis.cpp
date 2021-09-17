@@ -454,7 +454,7 @@ int getBitMaskDigits(Instruction insn, std::vector<AbsRegion> &regions) {
     // for now if we don't find any we just return
     if (off == 0) digits = -1;
     while (off > 0) {
-      digits += off*0x1;
+      digits += off&0x1;
       off = off >> 1;
     }
   }
