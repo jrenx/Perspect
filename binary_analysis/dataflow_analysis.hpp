@@ -151,7 +151,9 @@ public:
 void backwardSliceHelper(vector<Function *> *allFuncs, cJSON *json_reads, boost::unordered_set<Address> &visited,
                          char *funcName,
                          long unsigned int addr, char *regName, bool reversedOnce,
-                         bool isKnownBitVar=false, bool atEndPoint=false);
+                         bool isKnownBitVar=false, bool atEndPoint=false,
+                         boost::unordered_map<Assignment::Ptr, AbsRegion>* prevBitOperands = NULL,
+                         std::vector<std::vector<Assignment::Ptr>>* prevOperationses = NULL);
 
 GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsigned int addr, char *regName, bool *madeProgress,
                             bool atEndPoint = false);

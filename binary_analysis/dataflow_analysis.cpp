@@ -34,7 +34,9 @@ void backwardSliceHelper(vector<Function *> *allFuncs,
                          cJSON *json_reads, boost::unordered_set<Address> &visited,
                          char *funcName,
                          long unsigned int addr, char *regName, bool reversedOnce,
-                         bool isKnownBitVar, bool atEndPoint) {
+                         bool isKnownBitVar, bool atEndPoint,
+                         boost::unordered_map<Assignment::Ptr, AbsRegion>* prevBitOperands,
+                         std::vector<std::vector<Assignment::Ptr>>* prevOperationses) {
 
   if (INFO) cout << endl;
   if (INFO) cout << "[sa] -------------------------------" << endl;
@@ -175,6 +177,7 @@ void backwardSliceHelper(vector<Function *> *allFuncs,
     if(INFO) cout << "addr: " << std::hex << assign->addr() << std::dec << endl;
 
     bool isBitVar = bitVariables.find(assign) != bitVariables.end();
+    if (prevOperationses != NULL) isBitVar = true;
     bool isIgnoredBitVar = bitVariablesToIgnore.find(assign) != bitVariablesToIgnore.end();
 
     if(INFO) cout << "is bit var: " << isBitVar  << " ";
@@ -216,7 +219,8 @@ void backwardSliceHelper(vector<Function *> *allFuncs,
             if (foundMemRead) atEndPoint = true;
             char *newRegName = (char *) newRegStr.c_str();
             backwardSliceHelper(allFuncs, json_reads, visited, newFuncName, newAddr, newRegName, true,
-                                isKnownBitVar, atEndPoint);
+                                isKnownBitVar, atEndPoint,
+                                isBitVar?(&bitOperands):NULL, isBitVar?(&bitOperationses[assign]):NULL);
           } else {
             pendingDefInNewFunction = true;
           }
@@ -273,11 +277,13 @@ void backwardSliceHelper(vector<Function *> *allFuncs,
     if (pendingDefInNewFunction)
       cJSON_AddNumberToObject(json_read, "intermediate_def", 1);
     if (isBitVar) {
-      std::vector<std::vector<Assignment::Ptr>> operationses = bitOperationses[assign];
+      std::vector<std::vector<Assignment::Ptr>> *operationses;
+      if (prevOperationses != NULL) operationses = prevOperationses;
+      else operationses = &(bitOperationses[assign]);
       if (INFO) cout << "[sa] bit operations: " << endl;
       cJSON_AddNumberToObject(json_read, "is_bit_var",  1);
       cJSON *json_bitOpses = cJSON_CreateArray();
-      for (auto osit = operationses.begin(); osit != operationses.end(); ++osit) {
+      for (auto osit = operationses->begin(); osit != operationses->end(); ++osit) {
         cJSON *json_bitOps = cJSON_CreateArray();
         for (auto oit = (*osit).begin(); oit != (*osit).end(); ++oit) {
           cJSON *json_bitOp  = cJSON_CreateObject();
