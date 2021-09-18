@@ -2374,14 +2374,11 @@ class StaticDepGraph:
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
 def main():
-    parser = argparse.ArgumentParser(description='Parallelize RR?')
+    parser = argparse.ArgumentParser()
     parser.add_argument('--parallelize_rr', dest='parallelize_rr', action='store_true')
     parser.set_defaults(parallelize_rr=False)
-    args = parser.parse_args()
-
-    parser = argparse.ArgumentParser(description='Use cached static graph?')
     parser.add_argument('--use_cached_static_graph', dest='use_cached_static_graph', action='store_true')
-    parser.set_defaults(parallelize_rr=False)
+    parser.set_defaults(use_cached_static_graph=False)
     args = parser.parse_args()
 
     print(args.parallelize_rr)
@@ -2392,7 +2389,7 @@ def main():
     starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
     starting_events.append(["rcx", 0x40764c, "runtime.free"])
     StaticDepGraph.build_dependencies(starting_events, "909_ziptest_exe9",
-                                      limit=10000, use_cached_static_graph=False if args.parallelize_rr is True else args.use_cached_static_graph,
+                                      limit=10000, use_cached_static_graph=(False if args.parallelize_rr is True else args.use_cached_static_graph),
                                       parallelize_rr=args.parallelize_rr)
     """
     print("HERERERE")
