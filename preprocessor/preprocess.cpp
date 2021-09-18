@@ -582,6 +582,7 @@ int main()
     //if ((code > 0 && code <= MaxStartCode) || PendingCodes[code]) {
       parse = true;
     }
+    if (OccurrencesPerCode[code] > 50000) parse = false;
 
     bool isBitOp = isBitOpCode[code];
     bool containsReg = CodesWithRegs[code];
