@@ -278,7 +278,10 @@ void backwardSliceHelper(vector<Function *> *allFuncs,
       cJSON_AddNumberToObject(json_read, "intermediate_def", 1);
     if (isBitVar) {
       std::vector<std::vector<Assignment::Ptr>> *operationses;
-      if (prevOperationses != NULL) operationses = prevOperationses;
+      if (prevOperationses != NULL) {
+        operationses = prevOperationses;
+        bitOperands = *prevBitOperands;
+      }
       else operationses = &(bitOperationses[assign]);
       if (INFO) cout << "[sa] bit operations: " << endl;
       cJSON_AddNumberToObject(json_read, "is_bit_var",  1);
@@ -292,6 +295,7 @@ void backwardSliceHelper(vector<Function *> *allFuncs,
           if (bitOperands.find(opAssign) != bitOperands.end()) {
             if (INFO) cout << "	operand: " << bitOperands[opAssign].format();
           } else {
+            cout << "[warn] Bit operand not found? " << endl;		
             continue;
           }
           if (INFO) cout << endl;
