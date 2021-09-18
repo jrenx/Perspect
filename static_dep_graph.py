@@ -1743,10 +1743,13 @@ class StaticDepGraph:
                     prede.mem_load = MemoryAccess(prede_reg, shift, off, off_reg, is_bit_var)
                 prede.mem_load.add_bit_operationses(bit_ops)
                 prede.reg_store = dst_reg  # TODO put actual register name here
-                if read_same_as_write is True:
+                if read_same_as_write is True and succe.mem_store is not None: 
+                    # this is a hack, if there is no mem store then don't worry about the mem load...
                     prede.mem_load.read_same_as_write = True
                     succe.mem_store.read_same_as_write = True
                     succe.mem_store.add_bit_operationses(bit_ops)
+                else:
+                    prede.mem_load.read_same_as_write = False
             elif type == 'regread':
                 prede.reg_load = prede_reg.lower()
             elif type == 'empty':

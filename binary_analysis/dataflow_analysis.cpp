@@ -291,6 +291,8 @@ void backwardSliceHelper(vector<Function *> *allFuncs,
           if (INFO) cout << "	operation: " << opAssign->format() << opAssign->insn().format();
           if (bitOperands.find(opAssign) != bitOperands.end()) {
             if (INFO) cout << "	operand: " << bitOperands[opAssign].format();
+          } else {
+            continue;
           }
           if (INFO) cout << endl;
           cJSON_AddNumberToObject(json_bitOp, "insn_addr", opAssign->addr());
