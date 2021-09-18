@@ -102,8 +102,10 @@ void backwardSliceHelper(vector<Function *> *allFuncs,
         }
         if (CRASH_ON_ERROR) assert(targetRegionFound);
         else {
-          cout << "[sa][BUG] target not found, returning...";
-          return;
+          if (!targetRegionFound) {
+            cout << "[sa][BUG] target not found, returning...";
+            return;
+          }
         }
         boost::unordered_map < Address, Function * > ret;
         boost::unordered_set <Address> visitedAddrs;
