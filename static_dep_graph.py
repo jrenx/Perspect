@@ -309,7 +309,10 @@ class CFG:
         if bb not in self.postorder_list:
             self.postorder_list.append(bb)
 
-    def simplify(self, final=False):
+    def simplify(self, final=False, finalfinal=False):
+        print("[static_dep] Simplifying for function: "
+              + str(self.func) + " is final: " + str(final) + " is finalfinal: " + str(finalfinal)
+              + " target BBs are: " + str([t_bb.id for t_bb in self.target_bbs]))
         for entry in self.entry_bbs:
             visited = set()
             self.postorderTraversal(entry, visited)
@@ -322,76 +325,79 @@ class CFG:
         if DEBUG_SIMPLIFY: print("[Simplify] Postorder list: " + str([bb.id for bb in self.postorder_list]))
         bb_id_to_pdom_ids = {}
 
-        retry = True
-        while retry:
-            retry = False
-            for bb in self.postorder_list:
-                if DEBUG_SIMPLIFY: print("[Simplify] Examining: " + str(bb.id))
-                pdom_ids = None
-                for succe in bb.succes:
-                    if DEBUG_SIMPLIFY: print("[Simplify]      current succe : " + str(succe.id))
-                    if succe.id not in bb_id_to_pdom_ids:
-                        if succe in bb.backedge_targets:
-                            retry = True
-                            if DEBUG_SIMPLIFY: print("[Simplify]      ignoring, is a backedge ")
+        if finalfinal is not True:
+            retry = True
+            while retry:
+                retry = False
+                for bb in self.postorder_list:
+                    if DEBUG_SIMPLIFY: print("[Simplify] Examining: " + str(bb.id))
+                    pdom_ids = None
+                    for succe in bb.succes:
+                        if DEBUG_SIMPLIFY: print("[Simplify]      current succe : " + str(succe.id))
+                        if succe.id not in bb_id_to_pdom_ids:
+                            if succe in bb.backedge_targets:
+                                retry = True
+                                if DEBUG_SIMPLIFY: print("[Simplify]      ignoring, is a backedge ")
+                            else:
+                                pdom_ids = set()
+                            continue
+                        if pdom_ids is None:
+                            pdom_ids = set(bb_id_to_pdom_ids[succe.id])
                         else:
-                            pdom_ids = set()
-                        continue
+                            pdom_ids = pdom_ids.intersection(bb_id_to_pdom_ids[succe.id])
+                        if DEBUG_SIMPLIFY: print("[Simplify]      current pdom : " + str(pdom_ids))
                     if pdom_ids is None:
-                        pdom_ids = set(bb_id_to_pdom_ids[succe.id])
-                    else:
-                        pdom_ids = pdom_ids.intersection(bb_id_to_pdom_ids[succe.id])
-                    if DEBUG_SIMPLIFY: print("[Simplify]      current pdom : " + str(pdom_ids))
-                if pdom_ids is None:
-                    pdom_ids = set()
-                pdom_ids.add(bb.id)
-                bb_id_to_pdom_ids[bb.id] = pdom_ids
-        #for bb_id in bb_id_to_pdom_ids:
-            #print("[Simplify] " + str(bb_id) + " is post dominated by: " + str(bb_id_to_pdom_ids[bb_id]))
+                        pdom_ids = set()
+                    pdom_ids.add(bb.id)
+                    bb_id_to_pdom_ids[bb.id] = pdom_ids
+            #for bb_id in bb_id_to_pdom_ids:
+                #print("[Simplify] " + str(bb_id) + " is post dominated by: " + str(bb_id_to_pdom_ids[bb_id]))
 
-        if DEBUG_SIMPLIFY: print("[Simplify] " + str(postorder_map))
-        for bb in self.postorder_list:
-            pdom_ids = bb_id_to_pdom_ids[bb.id]
-            pdom_ids.remove(bb.id)
-            bb.pdoms = []
-            if len(pdom_ids) == 0:
-                continue
+            if DEBUG_SIMPLIFY: print("[Simplify] " + str(postorder_map))
+            for bb in self.postorder_list:
+                pdom_ids = bb_id_to_pdom_ids[bb.id]
+                pdom_ids.remove(bb.id)
+                bb.pdoms = []
+                if len(pdom_ids) == 0:
+                    continue
 
-            for pdom_id in pdom_ids:
-                bb.pdoms.append(self.id_to_bb[pdom_id])
+                for pdom_id in pdom_ids:
+                    bb.pdoms.append(self.id_to_bb[pdom_id])
 
-            if DEBUG_SIMPLIFY: print("[Simplify] BB " + str(bb.id) + "@" + str(bb.lines) + " " \
-                    " is post dominated by: " + \
-                    str([pdom.lines for pdom in bb.pdoms]))
+                if DEBUG_SIMPLIFY: print("[Simplify] BB " + str(bb.id) + "@" + str(bb.lines) + " " \
+                        " is post dominated by: " + \
+                        str([pdom.lines for pdom in bb.pdoms]))
 
-            bb_id_to_range = {}
-            for pdom_id in pdom_ids:
-                bb_id_to_range[postorder_map[pdom_id]] = pdom_id
-            bb_id_to_range[postorder_map[bb.id]] = bb.id
-            if DEBUG_SIMPLIFY: print("[Simplify] ordered post dominators: " + \
-                    str([self.id_to_bb[bb_id_pair[1]].lines for bb_id_pair in reversed(sorted(bb_id_to_range.items()))]))
+                bb_id_to_range = {}
+                for pdom_id in pdom_ids:
+                    bb_id_to_range[postorder_map[pdom_id]] = pdom_id
+                bb_id_to_range[postorder_map[bb.id]] = bb.id
+                if DEBUG_SIMPLIFY: print("[Simplify] ordered post dominators: " + \
+                        str([self.id_to_bb[bb_id_pair[1]].lines for bb_id_pair in reversed(sorted(bb_id_to_range.items()))]))
 
-            for bb_id_pair in reversed(sorted(bb_id_to_range.items())):
-                bb.immed_pdom = self.id_to_bb[bb_id_pair[1]]
-                break
-
-            found = False
-            for bb_id_pair in reversed(sorted(bb_id_to_range.items())):
-                if found is True:
+                for bb_id_pair in reversed(sorted(bb_id_to_range.items())):
                     bb.immed_pdom = self.id_to_bb[bb_id_pair[1]]
                     break
-                if bb.id == bb_id_pair[1]:
-                    found = True
 
-            if DEBUG_SIMPLIFY: print("[Simplify] BB " + str(bb.id) + "@" + str(bb.lines) + " " \
-                    " is immediately post dominated by: " + \
-                    str(bb.immed_pdom.lines))
+                found = False
+                for bb_id_pair in reversed(sorted(bb_id_to_range.items())):
+                    if found is True:
+                        bb.immed_pdom = self.id_to_bb[bb_id_pair[1]]
+                        break
+                    if bb.id == bb_id_pair[1]:
+                        found = True
+
+                if DEBUG_SIMPLIFY: print("[Simplify] BB " + str(bb.id) + "@" + str(bb.lines) + " " \
+                        " is immediately post dominated by: " + \
+                        str(bb.immed_pdom.lines))
 
         remove_count = 0
-        ignore_set = set() # call it ignore set
+        ignore_set = set()
+        visited_pdom_set = set() #FIXME maybe extra
         updated_set = set()
         for bb in reversed(self.postorder_list):
-            if DEBUG_SIMPLIFY: print("[Simplify] can BB: " + str(bb.id) + " " + str(bb.lines) + " be removed? immed pdom is " \
+            if DEBUG_SIMPLIFY:
+                print("[Simplify] can BB: " + str(bb.id) + " " + str(bb.lines) + " be removed? immed pdom is " \
                   + (str(bb.immed_pdom.id) if bb.immed_pdom is not None else str(bb.immed_pdom)) + " "\
                   + (str(bb.immed_pdom.lines) if bb.immed_pdom is not None else str(bb.immed_pdom)))
             if bb.immed_pdom is None:
@@ -401,6 +407,11 @@ class CFG:
             if bb.immed_pdom.id not in self.id_to_bb_in_slice:
                 if DEBUG_SIMPLIFY: print("[Simplify]   immed pdom not in slice")
                 continue
+            
+            if finalfinal is True:
+                if bb.immed_pdom in visited_pdom_set:
+                    if DEBUG_SIMPLIFY: print("[Simplify]   BB's immed pdom is already encountered")
+                    continue
 
             if bb in ignore_set:
                 if DEBUG_SIMPLIFY: print("[Simplify]   BB is already removed or cannot be removed")
@@ -409,6 +420,7 @@ class CFG:
             worklist = deque()
             worklist.append(bb)
             visited = set()
+            ignore = False
             while len(worklist) > 0:
                 child_bb = worklist.popleft()
                 if child_bb in visited:
@@ -427,11 +439,19 @@ class CFG:
                     if DEBUG_SIMPLIFY: print("[Simplify]   child: " + str(child_bb.id) + \
                           " is the immed pdom: " + str(bb.immed_pdom.id))
                     continue
+                if finalfinal is True:
+                    if bb.immed_pdom not in child_bb.pdoms:
+                        ignore = True
+                        break
                 assert bb.immed_pdom in child_bb.pdoms
                 all_succes_before_immed_pdom.add(child_bb)
                 for succe in child_bb.succes:
                     worklist.append(succe)
 
+            if ignore is True:
+                if DEBUG_SIMPLIFY:
+                    print("[Simplify]   a child BB was a successor of the immed_pdom, possible have been aggressively simplified")
+                continue
             if len(self.target_bbs.intersection(all_succes_before_immed_pdom)) > 0:
                 #or len(self.entry_bbs.intersection(all_succes_before_immed_pdom)) > 0:
                 #ignore_set.union(all_succes_before_immed_pdom) #FIXME, do not assign after union why???
@@ -449,18 +469,41 @@ class CFG:
                     for child_bb in all_succes_before_immed_pdom:
                         if child_bb in bb.immed_pdom.predes:
                             bb.immed_pdom.predes.remove(child_bb)
+                            if DEBUG_SIMPLIFY: print("[simplify]   For bb " + str(bb.immed_pdom.id) + " remove " + str(child_bb.id) + " from predes")
                             assert bb.immed_pdom in child_bb.succes
                             child_bb.succes.remove(bb.immed_pdom)
+                            if DEBUG_SIMPLIFY: print("[simplify]   For bb " + str(child_bb.id) + " remove " + str(
+                                bb.immed_pdom.id) + " from succes")
                         if len(child_bb.backedge_targets) > 0:
                             has_backedge = True
-                    if has_backedge is True:
-                        for prede in bb.predes:
-                            prede.backedge_targets.append(bb.immed_pdom)
-                            bb.immed_pdom.backedge_sources.append(prede)
-                    if bb not in bb.immed_pdom.predes:
-                        bb.immed_pdom.predes.append(bb)
-                    if bb.immed_pdom not in bb.succes:
-                        bb.succes.append(bb.immed_pdom)
+                    if DEBUG_SIMPLIFY: print("[simplify] has backedge? " + str(has_backedge))
+
+                    if finalfinal is False:
+                        if bb not in bb.immed_pdom.predes:
+                            bb.immed_pdom.predes.append(bb)
+                            if DEBUG_SIMPLIFY: print("[simplify]   For bb " + str(bb.immed_pdom.id) + " add " + str(
+                                bb.id) + " to predes")
+                        if bb.immed_pdom not in bb.succes:
+                            bb.succes.append(bb.immed_pdom)
+                            if DEBUG_SIMPLIFY: print("[simplify]   For bb " + str(bb.id) + " add " + str(
+                                bb.immed_pdom.id) + " to succes")
+                        if has_backedge is True:
+                            if bb.immed_pdom not in bb.backedge_targets:
+                                bb.backedge_targets.append(bb.immed_pdom)
+                            if bb not in bb.immed_pdom.backedge_sources:
+                                bb.immed_pdom.backedge_sources.append(bb)
+                    else:
+                        if has_backedge is False:
+                            visited_pdom_set.add(bb.immed_pdom)
+                            for prede in bb.predes:
+                                if prede not in bb.immed_pdom.predes:
+                                    bb.immed_pdom.predes.append(prede)
+                                    if DEBUG_SIMPLIFY: print("[simplify]   For bb " + str(bb.immed_pdom.id) + " add " + str(
+                                        prede.id) + " to predes")
+                                if bb.immed_pdom not in prede.succes:
+                                    prede.succes.append(bb.immed_pdom)
+                                    if DEBUG_SIMPLIFY: print("[simplify]   For bb " + str(prede.id) + " add " + str(
+                                        bb.immed_pdom.id) + " to succes")
                     #for prede in bb.predes:
                     #    if prede not in bb.immed_pdom.predes:
                     #        bb.immed_pdom.predes.append(prede)
@@ -481,7 +524,7 @@ class CFG:
                     assert bb.is_entry or bb.is_new_entry
                     self.entry_bbs.remove(bb)
                     self.entry_bbs.add(bb.immed_pdom)
-                    print("Replacing entry BB " + str(bb.id) + " with " + str(bb.immed_pdom.id))
+                    if DEBUG_SIMPLIFY: print("Replacing entry BB " + str(bb.id) + " with " + str(bb.immed_pdom.id))
                     bb.immed_pdom.is_new_entry = True
 
             #remove_set.add(bb) not really needed
@@ -568,6 +611,11 @@ class CFG:
 
         # Simplify the slice
         self.simplify(final)
+        #for bb in self.ordered_bbs:
+        #    print(str(bb))
+        if final is True: self.simplify(final, finalfinal=True)
+        #for bb in self.ordered_bbs:
+        #    print(str(bb))
 
         if DEBUG_SLICE: print("=======================================================")
         if DEBUG_SLICE:
@@ -1440,14 +1488,14 @@ class StaticDepGraph:
                     if graph.changed is False:
                         continue
                     graph.build_control_flow_dependencies(set(), final=True)
-                    graph.remove_extra_nodes(set([e[1] for e in starting_events]))
-                    graph.merge_nodes(graph.nodes_in_df_slice.keys(), True)
+                    graph.merge_nodes(graph.nodes_in_df_slice, True)
                     graph.merge_nodes(graph.none_df_starting_nodes, True)
                     if TRACKS_DIRECT_CALLER: graph.merge_callsite_nodes()
                     for n in graph.nodes_in_cf_slice.keys():
                         print(str(n))
                     for n in graph.nodes_in_df_slice.keys():
                         print(str(n))
+                    graph.remove_extra_nodes(set([e[1] for e in starting_events]))
 
                 StaticDepGraph.sanity_check()
                 StaticDepGraph.find_entry_and_exit_nodes()
