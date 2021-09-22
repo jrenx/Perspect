@@ -206,6 +206,9 @@ class DynamicNode(JSONEncoder):
                         if load_bit_mask is None:
                             load_bit_mask = self.bit_ops[bit_op.insn]
                             continue
+                        else:
+                            load_bit_mask = load_bit_mask & self.bit_ops[bit_op.insn]
+                            continue
                     elif bit_op.operation == "shr":
                         assert load_bit_mask is not None
                         # do the reverse shift
@@ -252,8 +255,9 @@ class DynamicNode(JSONEncoder):
                     else:
                         self.store_bit_mask = self.store_bit_mask | (self.bit_ops[bit_op.insn])
                     continue
-                print("Unhandled bit op: " + str(bit_op.operation))
-                raise Exception
+                print("[warn] Unhandled bit op: " + str(bit_op.operation))
+                self.store_bit_mask = None
+                return
         print("store mask calculated for " + self.static_node.hex_insn + " to be " + "{:64b}".format(self.store_bit_mask))
 
 
