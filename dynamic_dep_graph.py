@@ -1303,8 +1303,8 @@ class DynamicGraph:
                     assert succe.id != dynamic_node.id
                     succe.cf_predes.append(dynamic_node)
                     dynamic_node.cf_succes.append(succe)
-                    assert succe.static_node.id != dynamic_node.static_node.id
-                    assert succe.static_node.insn != dynamic_node.static_node.insn
+                    #assert succe.static_node.id != dynamic_node.static_node.id
+                    #assert succe.static_node.insn != dynamic_node.static_node.insn
                     # Only save the closest pred
                     # TODO, what if actually have 2 predecessors
 
