@@ -778,9 +778,82 @@ class DynamicGraph:
               + " df ps: " + str([pp.id for pp in n.df_predes])
               + " cf ss: " + str([ps.id for ps in n.cf_succes])
               + " df ss: " + str([ps.id for ps in n.df_succes]))
-        
-    # a node can be visited if all its predecessors are visited
+       
+    def build_reverse_and_none_reverse_postorder_list_helper(self, reverse):
+        if reverse is True:
+            self.reverse_postorder_list = []
+        else:
+            self.postorder_list = []
+
+        q = deque()
+        visited = set()
+        for node in reversed(list(self.entry_nodes if reverse is False else self.exit_nodes)):
+            q.appendleft([node, None])
+        while len(q) > 0:
+            (node, parent) = q.popleft()
+            #print()
+            #if node is not None:
+            #    self.print_node("visiting ", node)
+            #if parent is not None:
+            #    self.print_node("parent is", parent)
+            if parent is not None:
+                if parent in visited:
+                    continue
+                visited.add(parent)
+                if reverse is True:
+                    self.reverse_postorder_list.append(parent)
+                else:
+                    self.postorder_list.append(parent)
+                continue
+            if node in visited:
+                continue
+            nodes = []
+            for n in (node.cf_succes if reverse is False else node.cf_predes):
+                nodes.append([n, None])
+                #self.print_node("appending child ", n)
+            for n in (node.df_succes if reverse is False else node.df_predes):
+                nodes.append([n, None])
+                #self.print_node("appending child ", n)
+            if len(nodes) > 0:
+                nodes.append([None, node])
+                for n in reversed(nodes):
+                    q.appendleft(n)
+            else:
+                if node in visited:
+                    continue
+                visited.add(node)
+
+                if reverse is True:
+                    self.reverse_postorder_list.append(node)
+                else:
+                    self.postorder_list.append(node)
+
+    def build_postorder_list(self): #TODO, refactor one day and combine into one function
+        self.build_reverse_and_none_reverse_postorder_list_helper(False)
+        print("[dyn_graph] number of nodes in the postorder list: " + str(len(self.postorder_list)))
+        visited = set()
+        for node in self.postorder_list:
+            print(node.id)
+            for s in node.cf_succes:
+                assert s in visited, str(s.id) + " " +str(node.id)
+            for s in node.df_succes:
+                assert s in visited, str(s.id) + " " + str(node.id)
+            visited.add(node)
+
     def build_reverse_postorder_list(self): #TODO, refactor one day and combine into one function
+        self.build_reverse_and_none_reverse_postorder_list_helper(True)
+        print("[dyn_graph] number of nodes in the reverese postorder list: " + str(len(self.reverse_postorder_list)))
+        visited = set()
+        for node in self.reverse_postorder_list:
+            print(node.id)
+            for s in node.cf_predes:
+                assert s in visited, str(s.id) + " " + str(node.id)
+            for s in node.df_predes:
+                assert s in visited, str(s.id) + " " + str(node.id)
+            visited.add(node)
+
+    # a node can be visited if all its predecessors are visited
+    def build_reverse_postorder_list_old(self): #TODO, refactor one day and combine into one function
         self.reverse_postorder_list = []
 
         prede_to_node = {}
@@ -867,7 +940,7 @@ class DynamicGraph:
         print("[dyn_dep] total number of nodes in reverse postorder_list: " + str(len(self.reverse_postorder_list)))
 
     # a node can be visited if all its successors are visited
-    def build_postorder_list(self):
+    def build_postorder_list_old(self):
         self.postorder_list = []
 
         succe_to_node = {}
