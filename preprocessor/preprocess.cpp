@@ -347,9 +347,14 @@ void parseStaticNode(char *filename) {
   }
 }
 
-void initData() {
+void initData(in pa_id) {
   long length;
-  char *buffer = readFile((char *)"preprocess_data", length);//TODO delete
+  string preprocessDataFile((char *)"preprocess_data");
+  if (pa_id >= 0) {
+    preprocessDataFile += "_";
+    preprocessDataFile += std::to_string(pa_id);
+  }
+  char *buffer = readFile(preprocessDataFile.c_str(), length);//TODO delete
 
   cJSON *data = cJSON_Parse(buffer);
   delete[] buffer;
@@ -525,10 +530,16 @@ void initData() {
   // TODO free json data lol
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+  int pa_id = -1;
+  if (argc >= 2) {
+    char *pa_str = (char *) argv[1];
+    pa_id = atoi(pa_str);
+  }
+  cout << pa_id << endl;
   std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-  initData();
+  initData(pa_id);
   std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
   std::cout << "Init data took = " << std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count() << "[s]" << std::endl;
 
@@ -540,6 +551,10 @@ int main()
 
   string outTraceFile(traceFile);
   outTraceFile += ".parsed";
+  if (pa_id >= 0) {
+    outTraceFile += "_";
+    outTraceFile += std::to_string(pa_id);
+  }
   ofstream os;
   os.open(outTraceFile.c_str(), ios::out);
 
@@ -847,6 +862,10 @@ int main()
 
   string outLargeFile(traceFile);
   outLargeFile += ".large";
+  if (pa_id >= 0) {
+    outLargeFile += "_";
+    outLargeFile += std::to_string(pa_id);
+  }
   ofstream osl;
   osl.open(outLargeFile.c_str());
   for (int i = 1; i < CodeCount; i++) {

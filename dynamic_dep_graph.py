@@ -493,7 +493,8 @@ class DynamicDependence:
         return used_cached_result
 
     # TODO, refactor into a more user friendly interface?
-    def build_dyanmic_dependencies(self, insn=None):
+    def build_dyanmic_dependencies(self, insn=None, pa_id=None):
+        print("Building dynamic graph, starting insn is: " + str(insn) + " pa_id " + str(pa_id))
         file_name = 'dynamic_graph_result_' + self.key + "_" + (hex(insn) if insn is not None else str(insn))
         result_file = os.path.join(curr_dir, 'cache', self.prog, file_name)
         time_record["start"] = time.time()
@@ -525,8 +526,7 @@ class DynamicDependence:
                 "bit_op_to_store_insns": self.bit_op_to_store_insns,
                 "max_code_with_static_node": self.max_code_with_static_node
             }
-
-            preprocess_data_file = os.path.join(curr_dir, 'preprocess_data')
+            preprocess_data_file = os.path.join(curr_dir, 'preprocess_data' + ('' if pa_id is None else ('_' + str(pa_id))))
             with open(preprocess_data_file, 'w') as f:
                 json.dump(preprocess_data, f, indent=4, ensure_ascii=False)
             preprocessor_file = os.path.join(curr_dir, 'preprocessor', 'preprocess')
@@ -538,10 +538,10 @@ class DynamicDependence:
             time_record["preparse"] = time.time()
             print("[TIME] Preparsing trace took: ", str(time_record["preparse"] - time_record["start"]), flush=True)
 
-            with open(self.trace_path + ".parsed", 'rb') as f:
+            with open(self.trace_path + ".parsed" + ('' if pa_id is None else ('_' + str(pa_id))), 'rb') as f:
                 byte_seq = f.read() #more than twice faster than readlines!
 
-            with open(self.trace_path + ".large", 'rb') as f:
+            with open(self.trace_path + ".large" + ('' if pa_id is None else ('_' + str(pa_id))) , 'rb') as f:
                 large = f.readlines() #more than twice faster than readlines!
                 codes_to_ignore = set()
                 for l in large:
@@ -2053,6 +2053,110 @@ class DynamicGraph:
             if done:
                 break
 
+    def calculate_base_weight(self):
+        base_weight = 0
+        use_weight = True
+        valid_count = 0
+        for node in self.target_nodes:
+            if node.is_valid_weight is False:
+                continue
+            valid_count += 1
+            base_weight += node.weight
+
+        if valid_count/len(self.target_nodes) < 0.99:
+            print("[ra][warn] Too many invalid weights to use weights ...")
+            use_weight = False
+            base_weight = -1
+
+        print("[ra] Base weight is: " + str(base_weight))
+        return base_weight, use_weight
+
+    def do_forward_propogation(self):
+        for node in self.target_nodes:
+            node.output_set.add(node)
+
+        for node in self.postorder_list: #a node will be visited only if its successors have all been visited
+            if node in self.target_nodes:
+                continue
+            node_insn = node.static_node.insn
+            #print("[ra] Forward propogating for node: " + hex(node_insn) + " " + str(node.id))
+            #backedge_sources = node.static_node.backedge_sources
+            for cf_succe in node.cf_succes:
+                cf_succe_insn = cf_succe.static_node.insn
+
+                if cf_succe_insn in node.static_node.backedge_sources:
+                    for output_node in cf_succe.output_set:
+                        if node_insn in output_node.input_sets and len(output_node.input_sets[node_insn]) > 0:
+                            #print("[ra] Node already attributed to the input of some output node: " + str(output_node.id))
+                            node.output_exclude_set.add(output_node)
+                #    wavefront.add(cf_succe.static_node)
+                #    print("[ra] insn: " + cf_succe.static_node.hex_insn + " added to pending list because of cycles...")
+                #    continue
+                node.output_set = node.output_set.union(cf_succe.output_set)
+                node.output_exclude_set = node.output_exclude_set.union(cf_succe.output_exclude_set)
+            #if len(node.output_exclude_set) > 0:
+            #    print("[ra] include outputs: " + str([n.id for n in node.output_set]))
+            #    print("[ra] exclude outputs: " + str([n.id for n in node.output_exclude_set]))
+
+            for df_succe in node.df_succes:
+                #df_succe_insn = df_succe.static_node.insn
+                #if df_succe_insn in backedge_sources:
+                #    wavefront.add(df_succe.static_node)
+                #    print("[ra] insn: " + df_succe.static_node.hex_insn + " added to pending list because of cycles...")
+                #    continue
+                node.output_set = node.output_set.union(df_succe.output_set)
+                if df_succe.static_node.is_df is False:
+                    node.output_exclude_set = node.output_exclude_set.union(df_succe.output_exclude_set) #TODO, never referenced?
+
+            for output_node in node.output_set:
+                if output_node in node.output_exclude_set:
+                    continue
+                if node_insn not in output_node.input_sets:
+                    output_node.input_sets[node_insn] = set()
+                output_node.input_sets[node_insn].add(node)
+
+
+            #if node.static_node.group_ids is not None:
+            #    for i in range(len(node.static_node.group_ids)):
+            #        group_id = node.static_node.group_ids[i]
+            #        group_insn = node.static_node.group_insns[i]
+            #        if group_id in StaticDepGraph.insn_to_node:
+            #            virtual_static_node = StaticDepGraph.insn_to_node[group_id]
+            #        else:
+            #            virtual_static_node = StaticNode(group_id, None, hex(group_insn))
+            #            virtual_static_node.explained = True
+            #            StaticDepGraph.insn_to_node[group_id] = virtual_static_node
+            #        node.static_node.print_node("Child node: ")
+            #        virtual_static_node.print_node("Creating virtual static node: ")
+            #        node.static_node.virtual_nodes.append(virtual_static_node)
+            #        virtual_node = DynamicNode(group_id, virtual_static_node)
+            #        if group_id not in dgraph.insn_to_dyn_nodes:
+            #            dgraph.insn_to_dyn_nodes[group_id] = []
+            #        dgraph.insn_to_dyn_nodes[group_id].append(virtual_node)
+            #
+            #        virtual_node.output_set = virtual_node.output_set.union(node.output_set)
+            #        for output_node in node.output_set:
+            #            if group_id not in output_node.input_sets:
+            #                output_node.input_sets[group_id] = set()
+            #            output_node.input_sets[group_id].add(virtual_node)
+
+        for node in self.postorder_list: #a node will be visited only if its successors have all been visited
+            if node in self.target_nodes:
+                continue
+            #node_insn = node.static_node.insn
+            node.output_set = node.output_set.difference(node.output_exclude_set)
+
+    def do_backward_propogation(self, starting_node):
+        # all the starting nodes
+        # insert starting node in the input set of the starting node
+        for node in self.insn_to_dyn_nodes[starting_node.insn]:
+            # special handle starting nodes
+            node_insn = node.static_node.insn #fixme: change to starting_node.insn
+            if node_insn not in node.input_sets:
+                node.input_sets[node_insn] = set()
+            node.input_sets[node_insn].add(node)
+            # special handle starting nodes
+
 def print_path(curr_node, end_id):
     for p in curr_node.df_predes:#itertools.chain(curr_node.cf_predes, curr_node.df_predes):
         if p.id == end_id:
@@ -2086,6 +2190,7 @@ def verify_0x409418_result(dg):
     addr_explained = set()
     prede_found = 0
     prede_not_found = 0
+    prede_not_found_weight = 0
     connected_predes = {}
     connected_predes_not_connected_to_malloc = {}
     connected_predes_not_connected_to_malloc1 = {}
@@ -2103,7 +2208,7 @@ def verify_0x409418_result(dg):
                 continue
             visited.add(sc)
             if sc.static_node.insn == 0x409418:
-                node_to_weight[n] = n.weight
+                node_to_weight[n] = sc.weight
                 """
                 if sc.mem_load_addr in sizes:
                     node_to_weight[n] = sizes[sc.mem_load_addr]
@@ -2121,6 +2226,7 @@ def verify_0x409418_result(dg):
         if len(n.df_predes) == 0:
             prede_not_found += 1
             addr_not_explained.add(hex(n.mem_load_addr))
+            prede_not_found_weight += node_to_weight[n]
         else:
             malloc_nodes = set()
             connected_to_malloc = False
@@ -2208,11 +2314,12 @@ def verify_0x409418_result(dg):
         print(" % : " + str(connected_predes_not_connected_to_malloc[p] / total_weight * 100))
         print(" addrs : " + str(connected_predes_not_connected_to_malloc1[p]))
         total_not_connected += connected_predes_not_connected_to_malloc[p]
-    print(" TOTAL COUNT: " + str(total_not_connected))
-    print(" TOTAL WEIGHT: " + str(total_not_connected))
+    print(" TOTAL WEIGHT connected but not to malloc: " + str(total_not_connected))
     print(" % " + str(total_not_connected / total_weight * 100))
-    print(" TOTAL COUNT: " + str(connected_count))
+    print(" TOTAL WEIGHT connected to malloc: " + str(connected_count))
     print(" % " + str(connected_count / total_weight * 100))
+    print(" TOTAL WEIGHT not connected at all: " + str(prede_not_found_weight))
+    print(" % " + str(prede_not_found_weight / total_weight * 100))
     print("==============================")
     for p in sn.df_predes:
         if p in connected_predes:
@@ -2223,6 +2330,13 @@ def verify_0x409418_result(dg):
     #    json.dump(predes, f, indent=4, ensure_ascii=False)
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--parallelize_id', dest='pa_id', type=int)
+    parser.add_argument('--starting_instruction', dest='starting_insn')
+    args = parser.parse_args()
+    print(args.pa_id)
+    print(args.starting_insn)
+
     starting_events = []
     starting_events.append(["rdi", 0x409daa, "sweep"])
     starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
@@ -2232,5 +2346,5 @@ if __name__ == '__main__':
     dd = DynamicDependence(starting_events, "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
     dd.prepare_to_build_dynamic_dependencies(10000)
 
-    dg = dd.build_dyanmic_dependencies(0x409418) #0x409418
-    #verify_0x409418_result(dg)
+    dg = dd.build_dyanmic_dependencies(0x409418 if args.starting_insn is None else int(args.starting_insn, 16), args.pa_id) #0x409418
+    verify_0x409418_result(dg)
