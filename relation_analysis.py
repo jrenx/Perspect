@@ -211,7 +211,13 @@ class RelationAnalysis:
             while starting_node.insn not in self.received_cache:
                 ret = self.received_cache.get()
                 for (key, value) in ret.items():
-                    self.received_cache[key] = value
+                    curr_wavefront = []
+                    for node_str in value[0]:
+                        segs = node_str.split("@")
+                        wavelet = StaticDepGraph.func_to_graph[segs[1]].insn_to_node[int(segs[0])]
+                        curr_wavefront.append(wavelet)
+                    rgroup = RelationGroup.fromJSON(value[1])
+                    self.received_cache[key] = (curr_wavefront, rgroup)
             (curr_wavefront, rgroup) = self.received_cache[key]
 
             if rgroup is None:
@@ -255,6 +261,7 @@ class RelationAnalysis:
                 self.print_wavelet(weight, starting_node, "ALL")
 
             #break #TODO
+        self.pending_inputs.put("FIN")
         self.relation_groups = sorted(self.relation_groups, key=lambda rg: rg.weight)
         num_rels = 0
         for relation_group in reversed(self.relation_groups):

@@ -31,7 +31,8 @@ def run_task(id, pipe, dd):
             max_contrib = int(segs[3])
             dgraph = dd.build_dynamic_dependencies(int(obj, 16))
             wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, node, starting_weight, max_contrib)
-            ret[insn] = (wavefront, rgroup)
+
+            ret[insn] = ([(str(w.insn) + "@" + w.func) for w in wavefront], rgroup.toJSON())
         except Exception as e:
             ret[insn] = (None, None)
             print("[rr][ERROR] Process {} failed for input: {}".format(id, str(obj)))
