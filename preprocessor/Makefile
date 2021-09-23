@@ -7,16 +7,16 @@ all: count_node preprocess
 
 count_node: count_node.o cJSON.o
 	$(CXX) count_node.o cJSON.o -L$(DYNINST_LIB) -lboost_system -ltbbmalloc_proxy -lcommon -lstdc++ -lm\
-	       	-o count_node -std=c++11
+	       	-o count_node -std=c++11 -O2
 count_node.o: count_node.cpp
-	$(CXX) -g -c $(CFLAGS) -I$(DYNINST_INCLUDE) count_node.cpp -std=c++11
+	$(CXX) -g -c $(CFLAGS) -I$(DYNINST_INCLUDE) count_node.cpp -std=c++11 -O2
 
 
 preprocess: preprocess.o cJSON.o
 	$(CXX) preprocess.o cJSON.o -L$(DYNINST_LIB) -lboost_system -ltbbmalloc_proxy -lcommon -lstdc++ -lm\
 	       	-o preprocess -std=c++11
 preprocess.o: preprocess.cpp
-	$(CXX) -g -c $(CFLAGS) -I$(DYNINST_INCLUDE) preprocess.cpp -std=c++11
+	$(CXX) -g -c $(CFLAGS) -I$(DYNINST_INCLUDE) preprocess.cpp -std=c++11 -O2
 #preprocess: preprocess.o cJSON.o
 #	$(CXX) preprocess.o cJSON.o -L$(DYNINST_LIB) -ldyninstAPI -lboost_system -ltbbmalloc_proxy -linstructionAPI -lparseAPI -lsymtabAPI -lcommon -lstdc++ -lm\
 #	      -shared -Wl,-soname,static_preprocess.so -o static_preprocess.so -std=c++11
