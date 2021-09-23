@@ -831,26 +831,26 @@ class DynamicGraph:
     def build_postorder_list(self): #TODO, refactor one day and combine into one function
         self.build_reverse_and_none_reverse_postorder_list_helper(False)
         print("[dyn_graph] number of nodes in the postorder list: " + str(len(self.postorder_list)))
-        visited = set()
-        for node in self.postorder_list:
-            print(node.id)
-            for s in node.cf_succes:
-                assert s in visited, str(s.id) + " " +str(node.id)
-            for s in node.df_succes:
-                assert s in visited, str(s.id) + " " + str(node.id)
-            visited.add(node)
+        #visited = set()
+        #for node in self.postorder_list:
+        #    #print(node.id)
+        #    for s in node.cf_succes:
+        #        assert s in visited, str(s.id) + " " +str(node.id)
+        #    for s in node.df_succes:
+        #        assert s in visited, str(s.id) + " " + str(node.id)
+        #    visited.add(node)
 
     def build_reverse_postorder_list(self): #TODO, refactor one day and combine into one function
         self.build_reverse_and_none_reverse_postorder_list_helper(True)
         print("[dyn_graph] number of nodes in the reverese postorder list: " + str(len(self.reverse_postorder_list)))
-        visited = set()
-        for node in self.reverse_postorder_list:
-            print(node.id)
-            for s in node.cf_predes:
-                assert s in visited, str(s.id) + " " + str(node.id)
-            for s in node.df_predes:
-                assert s in visited, str(s.id) + " " + str(node.id)
-            visited.add(node)
+        #visited = set()
+        #for node in self.reverse_postorder_list:
+        #    #print(node.id)
+        #    for s in node.cf_predes:
+        #        assert s in visited, str(s.id) + " " + str(node.id)
+        #    for s in node.df_predes:
+        #        assert s in visited, str(s.id) + " " + str(node.id)
+        #    visited.add(node)
 
     # a node can be visited if all its predecessors are visited
     def build_reverse_postorder_list_old(self): #TODO, refactor one day and combine into one function
