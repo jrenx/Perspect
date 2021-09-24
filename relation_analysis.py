@@ -11,7 +11,7 @@ from relations import *
 
 DEBUG = True
 Weight_Threshold = 0
-worker_addresses = [("localhost", 15000)]
+worker_addresses = [("10.10.0.33", 15000)]
 #worker_addresses = [("10.1.0.21", 15000), ("10.1.0.22", 15000), ("10.1.0.23", 15000), ("10.10.0.33", 15000)]
 
 def sender_receiver(q, results_q):
@@ -19,12 +19,12 @@ def sender_receiver(q, results_q):
     for addr in worker_addresses:
         for _ in range(16):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            print("[client] Connecting to {}".format(addr), flush=True)
+            print("[sender_receiver] Connecting to {}".format(addr), flush=True)
             s.connect(addr)
-            print("[client] Connected to {}".format(addr), flush=True)
+            print("[sender_receiver] Connected to {}".format(addr), flush=True)
             sockets.append(s)
 
-    print("[client] Sending initial tasks", flush=True)
+    print("[sender_receiver] Sending initial tasks", flush=True)
     closed_sockets = set()
     for s in sockets:
         while q.empty():
@@ -32,18 +32,18 @@ def sender_receiver(q, results_q):
         line = q.get()
 
         if line.startswith("FIN"):
-            print("[client] Received FIN", flush=True)
+            print("[sender_receiver] Received FIN", flush=True)
             s.close()
             q.put(line)
             closed_sockets.add(s)
             continue
 
-        print("[client] Sending task {}".format(line), flush=True)
+        print("[sender_receiver] Sending task {}".format(line), flush=True)
         s.send(line.encode())
-        print("[client] Sent task {}".format(line), flush=True)
+        print("[sender_receiver] Sent task {}".format(line), flush=True)
     sockets = [s for s in sockets if s not in closed_sockets]
 
-    print("[client] Waiting for results", flush=True)
+    print("[sender_receiver] Waiting for results", flush=True)
     while len(sockets) > 0:
         read_sockets, _, _ = select.select(sockets, [], [])
 
@@ -66,24 +66,24 @@ def sender_receiver(q, results_q):
                 sockets.remove(s)
                 continue
             ret = json.loads(ret)
-            print("[client] Receiving result for task {}".format(list(ret.keys())[0] if (len(ret) > 0) else ""), flush=True)
+            print("[sender_receiver] Receiving result for task {}".format(list(ret.keys())[0] if (len(ret) > 0) else ""), flush=True)
             results_q.put(ret)
             #TODO, start a connection and send to relation_analysis
 
             while q.empty():
                 continue
             line = q.get()
-            print("[client] Get task {}".format(line))
+            print("[sender_receiver] Get task {}".format(line))
             if line.startswith("FIN"):
-                print("[client] Received FIN", flush=True)
+                print("[sender_receiver] Received FIN", flush=True)
                 s.close()
                 q.put(line)
                 sockets.remove(s)
                 break
 
-            print("[client] Sending task {}".format(line), flush=True)
+            print("[sender_receiver] Sending task {}".format(line), flush=True)
             s.send(line.encode())
-            print("[client] Sent task {}".format(line), flush=True)
+            print("[sender_receiver] Sent task {}".format(line), flush=True)
 
 class RelationAnalysis:
     #negative_event_map = {}

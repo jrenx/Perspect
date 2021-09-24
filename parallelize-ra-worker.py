@@ -24,15 +24,14 @@ def run_task(id, pipe, prog, arg, path, starting_events):
             break
         print("[worker] Process {} recive task {}".format(id, obj))
         start_time = datetime.datetime.now()
-        ParallelizableRelationAnalysis.one_pass(dgraph)
         ret = {}
+        segs = obj.split("|")
+        insn = int(segs[0], 16)
+        func = segs[1]
+        node = StaticDepGraph.func_to_graph[func].insn_to_node[insn]
+        starting_weight = int(segs[2])
+        max_contrib = int(segs[3])
         try:
-            segs = obj.split("|")
-            insn = int(segs[0], 16)
-            func = segs[1]
-            node = StaticDepGraph.func_to_graph[func].insn_to_node[insn]
-            starting_weight = int(segs[2])
-            max_contrib = int(segs[3])
             dgraph = dd.build_dynamic_dependencies(insn=int(obj, 16), pa_id=id)
             wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, node, starting_weight, max_contrib)
 
