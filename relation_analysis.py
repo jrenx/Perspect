@@ -11,9 +11,10 @@ from relations import *
 
 DEBUG = True
 Weight_Threshold = 0
-worker_addresses = [("10.1.0.21", 15000), ("10.1.0.22", 15000), ("10.1.0.23", 15000), ("10.10.0.33", 15000)]
+worker_addresses = [("localhost", 15000)]
+#worker_addresses = [("10.1.0.21", 15000), ("10.1.0.22", 15000), ("10.1.0.23", 15000), ("10.10.0.33", 15000)]
 
-def sender(q, results_q):
+def sender_receiver(q, results_q):
     sockets = []
     for addr in worker_addresses:
         for _ in range(16):
@@ -66,7 +67,6 @@ def sender(q, results_q):
                 continue
             ret = json.loads(ret)
             print("[client] Receiving result for task {}".format(list(ret.keys())[0] if (len(ret) > 0) else ""), flush=True)
-            results_lock.acquire()
             results_q.put(ret)
             #TODO, start a connection and send to relation_analysis
 
@@ -98,12 +98,17 @@ class RelationAnalysis:
         self.received_cache = {}
         self.pending_inputs = queue.Queue()
 
-        preprocessor_file = os.path.join(curr_dir, 'preprocessor', 'count_node')
-        pp_process = subprocess.Popen([preprocessor_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = pp_process.communicate()
-        print(stdout)
-        print(stderr)
+        self.dd = DynamicDependence(starting_events, prog, arg, path)
+        self.dd.prepare_to_build_dynamic_dependencies(10000)
+        print("[ra] Getting the counts of each unique node in the dynamic trace")
+        if not os.path.exists(self.dd.trace_path + ".count"):
+            preprocessor_file = os.path.join(curr_dir, 'preprocessor', 'count_node')
+            pp_process = subprocess.Popen([preprocessor_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = pp_process.communicate()
+            print(stdout)
+            print(stderr)
         self.load_node_counts(self.dd.trace_path + ".count")
+        print("[ra] Finished getting the counts of each unique node in the dynamic trace")
         self.relation_groups = {} #results
 
     def add_to_explained_variant_relation(self, rgroup):
@@ -137,8 +142,8 @@ class RelationAnalysis:
                 self.node_counts[insn] = count
 
     def setup(self):
-        sender_receiver_t = threading.Thread(target=sender,
-                                    args=(self.pending_inputs, self.received_results, self.received_results_lock))
+        sender_receiver_t = threading.Thread(target=sender_receiver,
+                                    args=(self.pending_inputs, self.received_results))
         sender_receiver_t.start()
 
         self.dd.prepare_to_build_dynamic_dependencies(10000)
@@ -191,11 +196,13 @@ class RelationAnalysis:
         iteration = 0
         max_contrib = 0
 
-        wavefront.append((StaticDepGraph.func_to_graph[func].insn_to_node[insn], None))
+        wavefront.append((None, StaticDepGraph.func_to_graph[func].insn_to_node[insn]))
+        self.pending_inputs.put(hex(insn) + "|" + func + "|" + str(0) + "|" + str(0))
         while len(wavefront) > 0:
             curr_weight, starting_node = wavefront.popleft()
-            insn = next.insn
-            func = next.function
+            if starting_node is not None:
+                insn = starting_node.insn
+                func = starting_node.function
 
             if self.explained_by_invariant_relation(starting_node):
                 print("\n" + hex(insn) + "@" + func + " has a node forward and backward invariant already explained...")
@@ -204,12 +211,12 @@ class RelationAnalysis:
             iteration += 1
             print("\n=======================================================================", flush=True)
             print("Relational analysis, pass number: " + str(iteration) + " weight: " +
-                  str(100 if curr_weight is None else curr_weight.total_contrib) +
+                  str(100 if curr_weight is None else curr_weight.total_weight) +
                   " max weight: " + str(max_contrib))
-            starting_node.print_node("[ra] starting static node: ", flush=True)
+            starting_node.print_node("[ra] starting static node: ")
 
             while starting_node.insn not in self.received_cache:
-                ret = self.received_cache.get()
+                ret = self.received_results.get()
                 for (key, value) in ret.items():
                     curr_wavefront = []
                     for node_str in value[0]:

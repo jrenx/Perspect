@@ -347,14 +347,14 @@ void parseStaticNode(char *filename) {
   }
 }
 
-void initData(in pa_id) {
+void initData(int pa_id) {
   long length;
   string preprocessDataFile((char *)"preprocess_data");
   if (pa_id >= 0) {
     preprocessDataFile += "_";
     preprocessDataFile += std::to_string(pa_id);
   }
-  char *buffer = readFile(preprocessDataFile.c_str(), length);//TODO delete
+  char *buffer = readFile((char *)preprocessDataFile.c_str(), length);//TODO delete
 
   cJSON *data = cJSON_Parse(buffer);
   delete[] buffer;
