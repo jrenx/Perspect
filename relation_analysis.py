@@ -1,53 +1,45 @@
+from json.decoder import JSONDecodeError
 import time
 import heapq
 import numpy as np
 from scipy.stats import norm
 import subprocess
 import socketserver
+import socket
 import threading
 import queue
+import sys
+import os
+import select
+import json
+import traceback
 from dynamic_dep_graph import *
 from relations import *
 
 DEBUG = True
 Weight_Threshold = 0
-worker_addresses = [("10.10.0.33", 15000)]
+worker_addresses = [("10.1.0.23", 15000)]
 #worker_addresses = [("10.1.0.21", 15000), ("10.1.0.22", 15000), ("10.1.0.23", 15000), ("10.10.0.33", 15000)]
 
-def sender_receiver(q, results_q):
-    sockets = []
-    for addr in worker_addresses:
-        for _ in range(16):
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            print("[sender_receiver] Connecting to {}".format(addr), flush=True)
-            s.connect(addr)
-            print("[sender_receiver] Connected to {}".format(addr), flush=True)
-            sockets.append(s)
+def sender_receiver_worker(s, q, results_q):
+    try:
+        while True:
+            while q.empty():
+                continue
+            line = q.get()
 
-    print("[sender_receiver] Sending initial tasks", flush=True)
-    closed_sockets = set()
-    for s in sockets:
-        while q.empty():
-            continue
-        line = q.get()
+            if line.startswith("FIN"):
+                print("[sender_receiver] Received FIN, closing connection", flush=True)
+                s.close()
+                q.put(line)
+                return
 
-        if line.startswith("FIN"):
-            print("[sender_receiver] Received FIN", flush=True)
-            s.close()
-            q.put(line)
-            closed_sockets.add(s)
-            continue
+            print("[sender_receiver] Sending task {}".format(line), flush=True)
+            s.send(line.encode())
+            print("[sender_receiver] Sent task {}".format(line), flush=True)
+            read_sockets, _, _ = select.select([s], [], [])
 
-        print("[sender_receiver] Sending task {}".format(line), flush=True)
-        s.send(line.encode())
-        print("[sender_receiver] Sent task {}".format(line), flush=True)
-    sockets = [s for s in sockets if s not in closed_sockets]
-
-    print("[sender_receiver] Waiting for results", flush=True)
-    while len(sockets) > 0:
-        read_sockets, _, _ = select.select(sockets, [], [])
-
-        for s in read_sockets:
+            s = read_sockets[0]
             # Parse results
             chunks = []
             while True:
@@ -63,27 +55,35 @@ def sender_receiver(q, results_q):
             ret = b''.join(chunks).decode()
             if ret == "": # Server should not close the socket. Only for precaution
                 s.close()
-                sockets.remove(s)
-                continue
+                print("[sender_receiver] Received empty string, closing connection", flush=True)
+                return
             ret = json.loads(ret)
-            print("[sender_receiver] Receiving result for task {}".format(list(ret.keys())[0] if (len(ret) > 0) else ""), flush=True)
+            print("[sender_receiver] Receiving result for task {}".format(hex(int(list(ret.keys())[0])) if (len(ret) > 0) else ""), flush=True)
             results_q.put(ret)
-            #TODO, start a connection and send to relation_analysis
+    except Exception as e:
+        print("Caught exception in sender receiver thread: " + str(e))
+        print(str(e))
+        print("-" * 60)
+        traceback.print_exc(file=sys.stdout)
+        print("-" * 60)
 
-            while q.empty():
-                continue
-            line = q.get()
-            print("[sender_receiver] Get task {}".format(line))
-            if line.startswith("FIN"):
-                print("[sender_receiver] Received FIN", flush=True)
-                s.close()
-                q.put(line)
-                sockets.remove(s)
-                break
+def sender_receiver(q, results_q):
+    sockets = []
+    threads = []
+    for addr in worker_addresses:
+        for _ in range(16):
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            print("[sender_receiver] Connecting to {}".format(addr), flush=True)
+            s.connect(addr)
+            print("[sender_receiver] Connected to {}".format(addr), flush=True)
+            sockets.append(s)
+            t = threading.Thread(target=sender_receiver_worker, args=(s, q, results_q))
+            t.start()
+            threads.append(t)
+    print("[sender_receiver] Finished setting up connections", flush=True)
+    for t in threads:
+        t.join()
 
-            print("[sender_receiver] Sending task {}".format(line), flush=True)
-            s.send(line.encode())
-            print("[sender_receiver] Sent task {}".format(line), flush=True)
 
 class RelationAnalysis:
     #negative_event_map = {}
@@ -141,18 +141,6 @@ class RelationAnalysis:
                 count = int(l.split()[1])
                 self.node_counts[insn] = count
 
-    def setup(self):
-        sender_receiver_t = threading.Thread(target=sender_receiver,
-                                    args=(self.pending_inputs, self.received_results))
-        sender_receiver_t.start()
-
-        self.dd.prepare_to_build_dynamic_dependencies(10000)
-        #TODO, do below in the static graph logic
-        StaticDepGraph.build_postorder_list()
-        StaticDepGraph.build_postorder_ranks()
-        #print(len(StaticDepGraph.postorder_list))
-        #print(len(StaticDepGraph.postorder_ranks))
-
     def print_wavelet(self, weight, starting_node, type):
         print("[ra] "
                         # + " weight " + str("{:.2f}".format(weight.contrib)) + " " + str("{:.2f}".format(weight.corr))
@@ -165,7 +153,7 @@ class RelationAnalysis:
     def update_weights(self, rgroup):
         for prede_node in rgroup.relations:
             weight = rgroup.relations[prede_node].weight
-            if prede_node in static_node_to_weight:
+            if prede_node in self.static_node_to_weight:
                 if self.static_node_to_weight[prede_node] < weight:
                     self.static_node_to_weight[prede_node] = weight
                     print("[ra] Updating weight for node: " + prede_node.hex_insn + "@" + prede_node.function)
@@ -173,12 +161,13 @@ class RelationAnalysis:
                 self.static_node_to_weight[prede_node] = weight
 
     def get_weighted_wavefront(self, curr_wavefront):
+        unique_wavefront = set()
         curr_weighted_wavefront = []
         for wavelet in curr_wavefront:
             if wavelet in unique_wavefront:
                 continue
             unique_wavefront.add(wavelet)
-            if wavelet not in static_node_to_weight:
+            if wavelet not in self.static_node_to_weight:
                 print("[ra][warn] no weight " + str(wavelet.hex_insn))
             else:
                 weight = self.static_node_to_weight[wavelet]
@@ -187,88 +176,112 @@ class RelationAnalysis:
         return curr_weighted_wavefront
 
     def analyze(self):
-        self.setup()
-        insn = self.starting_insn
-        func = self.starting_func
-        visited = set()
-        wavefront = deque()
+        sender_receiver_t = threading.Thread(target=sender_receiver,
+                                    args=(self.pending_inputs, self.received_results))
+        sender_receiver_t.start()
 
-        iteration = 0
-        max_contrib = 0
+        try:
+            self.dd.prepare_to_build_dynamic_dependencies(10000)
+            #TODO, do below in the static graph logic
+            StaticDepGraph.build_postorder_list()
+            StaticDepGraph.build_postorder_ranks()
+            #print(len(StaticDepGraph.postorder_list))
+            #print(len(StaticDepGraph.postorder_ranks))
 
-        wavefront.append((None, StaticDepGraph.func_to_graph[func].insn_to_node[insn]))
-        self.pending_inputs.put(hex(insn) + "|" + func + "|" + str(0) + "|" + str(0))
-        while len(wavefront) > 0:
-            curr_weight, starting_node = wavefront.popleft()
-            if starting_node is not None:
-                insn = starting_node.insn
-                func = starting_node.function
+            insn = self.starting_insn
+            func = self.starting_func
+            visited = set()
+            wavefront = deque()
 
-            if self.explained_by_invariant_relation(starting_node):
-                print("\n" + hex(insn) + "@" + func + " has a node forward and backward invariant already explained...")
-                continue
+            iteration = 0
+            max_contrib = 0
 
-            iteration += 1
-            print("\n=======================================================================", flush=True)
-            print("Relational analysis, pass number: " + str(iteration) + " weight: " +
-                  str(100 if curr_weight is None else curr_weight.total_weight) +
-                  " max weight: " + str(max_contrib))
-            starting_node.print_node("[ra] starting static node: ")
+            wavefront.append((None, StaticDepGraph.func_to_graph[func].insn_to_node[insn]))
+            self.pending_inputs.put(hex(insn) + "|" + func + "|" + str(0) + "|" + str(0))
+            while len(wavefront) > 0:
+                curr_weight, starting_node = wavefront.popleft()
+                if starting_node is not None:
+                    insn = starting_node.insn
+                    func = starting_node.function
 
-            while starting_node.insn not in self.received_cache:
-                ret = self.received_results.get()
-                for (key, value) in ret.items():
-                    curr_wavefront = []
-                    for node_str in value[0]:
-                        segs = node_str.split("@")
-                        wavelet = StaticDepGraph.func_to_graph[segs[1]].insn_to_node[int(segs[0])]
-                        curr_wavefront.append(wavelet)
-                    rgroup = RelationGroup.fromJSON(value[1])
-                    self.received_cache[key] = (curr_wavefront, rgroup)
-            (curr_wavefront, rgroup) = self.received_cache[key]
-
-            if rgroup is None:
-                continue
-
-            if rgroup.base_contrib is None or rgroup.base_contrib != self.static_node_to_weight[starting_node]:
-                #TODO print
-                rgroup.add_base_contrib(self.static_node_to_weight[starting_node])
-
-            if rgroup.weight < (max_contrib * 0.01):
-                print("[ra] Base weight is less than 1% of the max weight, ignore the node "
-                      + starting_node.hex_insn + "@" + starting_node.function)
-                continue
-
-            rgroup.sorted_relations()
-            self.relation_groups[starting_node] = rgroup
-            self.add_to_explained_variant_relation(rgroup)
-
-            self.update_weights(rgroup)
-            if rgroup.weight > max_contrib: max_contrib = rgroup.weight
-
-            curr_weighted_wavefront = self.get_weighted_wavefront(curr_wavefront)
-            print("=======================================================================")
-            for weight, starting_node in curr_weighted_wavefront:
-                if starting_node in visited:
-                    print("\n" + hex(starting_node.insn) + "@" + starting_node.func + " already visited...")
-                    continue
-                visited.add(starting_node)
                 if self.explained_by_invariant_relation(starting_node):
-                    print("\n" + hex(starting_node.insn) + "@" + starting_node.func + " has a node forward and backward invariant already explained...")
+                    print("\n" + hex(insn) + "@" + func + " has a node forward and backward invariant already explained...")
                     continue
 
-                wavefront.append((weight, wavelet))
-                starting_weight = 0 if weight is None else weight.total_weight,
-                self.pending_inputs.put(starting_node.hex_insn + "|" + starting_node.func + "|" + str(starting_weight) + "|" + str(max_contrib))
-                self.print_wavelet(weight, starting_node, "NEW")
+                iteration += 1
+                print("\n=======================================================================", flush=True)
+                print("[ra] Relational analysis, pass number: " + str(iteration) + " weight: " +
+                      str(100 if curr_weight is None else curr_weight.total_weight) +
+                      " max weight: " + str(max_contrib))
+                starting_node.print_node("[ra] starting static node: ")
 
-            print("=======================================================================")
-            #wavefront = sorted(wavefront, key=lambda weight_and_node: weight_and_node[0])
-            for weight, starting_node in wavefront:
-                self.print_wavelet(weight, starting_node, "ALL")
+                print("[ra] Waiting results for: " + hex(starting_node.insn))
+                while starting_node.insn not in self.received_cache:
+                    ret = self.received_results.get()
+                    for (key, value) in ret.items():
+                        print("[ra] Getting results for: " + hex(int(key)))
+                        curr_wavefront = []
+                        rgroup = None
+                        if value[0] is not None:
+                            for node_str in value[0]:
+                                segs = node_str.split("@")
+                                wavelet = StaticDepGraph.func_to_graph[segs[1]].insn_to_node[int(segs[0])]
+                                curr_wavefront.append(wavelet)
+                            rgroup = RelationGroup.fromJSON(value[1])
+                        self.received_cache[int(key)] = (curr_wavefront, rgroup)
+                        print("[ra] Done getting results for: " + hex(int(key)))
+                (curr_wavefront, rgroup) = self.received_cache[starting_node.insn]
+                print("[ra] Got results for: " + hex(starting_node.insn))
+                if rgroup is None:
+                    continue
 
-            #break #TODO
-        self.pending_inputs.put("FIN")
+                if starting_node in self.static_node_to_weight:
+                    if rgroup.weight is None or rgroup.weight != self.static_node_to_weight[starting_node].total_weight:
+                        #TODO print
+                        rgroup.add_base_weight(self.static_node_to_weight[starting_node].total_weight)
+
+                if rgroup.weight < (max_contrib * 0.01):
+                    print("[ra] Base weight is less than 1% of the max weight, ignore the node "
+                          + starting_node.hex_insn + "@" + starting_node.function)
+                    continue
+
+                rgroup.sort_relations()
+                self.relation_groups[starting_node] = rgroup
+                self.add_to_explained_variant_relation(rgroup)
+
+                self.update_weights(rgroup)
+                if rgroup.weight > max_contrib: max_contrib = rgroup.weight
+
+                curr_weighted_wavefront = self.get_weighted_wavefront(curr_wavefront)
+                print("=======================================================================")
+                for weight, wavelet in curr_weighted_wavefront:
+                    if wavelet in visited:
+                        print("\n" + hex(wavelet.insn) + "@" + wavelet.function + " already visited...")
+                        continue
+                    visited.add(wavelet)
+                    if self.explained_by_invariant_relation(wavelet):
+                        print("\n" + hex(wavelet.insn) + "@" + wavelet.function + " has a node forward and backward invariant already explained...")
+                        continue
+
+                    wavefront.append((weight, wavelet))
+                    starting_weight = 0 if weight is None else weight.total_weight
+                    self.pending_inputs.put(wavelet.hex_insn + "|" + wavelet.function + "|" + str(starting_weight) + "|" + str(max_contrib))
+                    self.print_wavelet(weight, wavelet, "NEW")
+
+                print("=======================================================================")
+                #wavefront = sorted(wavefront, key=lambda weight_and_node: weight_and_node[0])
+                for weight, starting_node in wavefront:
+                    self.print_wavelet(weight, starting_node, "ALL")
+
+                #break #TODO
+            self.pending_inputs.put("FIN")
+        except Exception as e:
+            print("Caught exception in relation analysis loop: " + str(e))
+            print(str(e))
+            print("-" * 60)
+            traceback.print_exc(file=sys.stdout)
+            print("-" * 60)
+        sender_receiver_t.join()
         self.relation_groups = sorted(self.relation_groups, key=lambda rg: rg.weight)
         num_rels = 0
         for relation_group in reversed(self.relation_groups):

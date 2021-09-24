@@ -141,7 +141,8 @@ class ParallelizableRelationAnalysis:
         weight = Weight(total_weight, base_weight, perc_contribution, specificity, order_rank)
         return weight
 
-    def build_relation_with_predecessor(self, dgraph, starting_node, prede_node, rgroup, wavefront,
+    @staticmethod
+    def build_relation_with_predecessor(dgraph, starting_node, prede_node, rgroup, wavefront,
                                                  use_weight, base_weight):
         #insn = prede_node.insn
         #hex_insn = prede_node.hex_insn
@@ -213,7 +214,7 @@ class ParallelizableRelationAnalysis:
                         + " lines "
                         + (str(prede_node.bb.lines) if isinstance(prede_node.bb, BasicBlock) else str(prede_node.bb))
                         # + " weight: " + "{:.2f}".format(simple_weight)
-                        + " contrib: " + "{:.2f}".format(weight.contrib)
+                        + " contrib: " + "{:.2f}".format(weight.perc_contrib)
                         + " corr: " + "{:.2f}".format(weight.corr)
                         + " total number of nodes: " + str(node_count)
                         + " output set counts: " + str(output_set_counts)
@@ -231,9 +232,9 @@ class ParallelizableRelationAnalysis:
                         + " input set counts: " + str(input_set_counts)
                         + " " + str(input_set_count_list))
 
-        if weight.contrib < 1:
+        if weight.perc_contrib < 1:
             if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " only has a "
-                            + str(weight.contrib) + "% contribution to the output event, ignore ...")
+                            + str(weight.perc_contrib) + "% contribution to the output event, ignore ...")
             return
 
         if Invariance.is_irrelevant(output_set_counts) and Invariance.is_irrelevant(input_set_counts):
@@ -330,7 +331,7 @@ class ParallelizableRelationAnalysis:
                 #print("[ra][warn] insn not in dynamic graph??? " + hex(insn))
                 continue
             # assert insn in dgraph.insn_to_dyn_nodes, hex(insn)
-            self.build_relation_with_predecessor(dgraph, starting_node, static_node, rgroup, wavefront,
+            ParallelizableRelationAnalysis.build_relation_with_predecessor(dgraph, starting_node, static_node, rgroup, wavefront,
                                                  use_weight, base_weight)
 
             for p in static_node.cf_predes:
@@ -351,5 +352,17 @@ class ParallelizableRelationAnalysis:
         return wavefront, rgroup
 
 if __name__ == "__main__":
-    #need to get the starting node, the max contrib
-    pass
+    starting_events = []
+    starting_events.append(["rdi", 0x409daa, "sweep"])
+    starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
+    starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
+    starting_events.append(["rcx", 0x40764c, "runtime.free"])
+    prog = "909_ziptest_exe9"
+    arg = "test.zip"
+    path = "/home/anygroup/perf_debug_tool/"
+    dd = DynamicDependence(starting_events, prog, arg, path)
+    dd.prepare_to_build_dynamic_dependencies(10000)
+    dgraph = dd.build_dynamic_dependencies(insn=0x409daa, pa_id=0)
+    node = StaticDepGraph.func_to_graph["sweep"].insn_to_node[0x409daa]
+    wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, node, 0, 0)
+    print([(str(w.insn) + "@" + w.function) for w in wavefront], rgroup.toJSON())

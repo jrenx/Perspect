@@ -32,10 +32,10 @@ def run_task(id, pipe, prog, arg, path, starting_events):
         starting_weight = int(segs[2])
         max_contrib = int(segs[3])
         try:
-            dgraph = dd.build_dynamic_dependencies(insn=int(obj, 16), pa_id=id)
+            dgraph = dd.build_dynamic_dependencies(insn=insn, pa_id=id)
             wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, node, starting_weight, max_contrib)
 
-            ret[insn] = ([(str(w.insn) + "@" + w.func) for w in wavefront], rgroup.toJSON())
+            ret[insn] = ([(str(w.insn) + "@" + w.function) for w in wavefront], rgroup.toJSON())
         except Exception as e:
             ret[insn] = (None, None)
             print("[rr][ERROR] Process {} failed for input: {}".format(id, str(obj)))
@@ -98,6 +98,7 @@ def main():
                 ret = pipe.recv()
                 print("[server] Receiving result for task {}".format(line), flush=True)
                 socket.send(json.dumps(ret).encode())
+                print("[server] Sent result for task {}".format(line), flush=True)
 
         if len(pipes) > 0:
             pipe = pipes.pop()

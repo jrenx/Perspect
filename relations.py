@@ -22,9 +22,10 @@ class Invariance:
 
     def toJSON(self):
         data = {}
-        data["is_variant"] = True
+        data["is_invariant"] = True
         data["ratio"] = self.ratio
         data["conditional_proportion"] = self.conditional_proportion
+        return data
 
     @staticmethod
     def fromJSON(data):
@@ -63,7 +64,7 @@ class Proportion:
             self.weighted_distribution = weighted_distribution
             self.w_mu, self.w_std = norm.fit(weighted_distribution)
         else:
-            self.weighted_distribution = None
+            self.weighted_distribution = weighted_distribution
             self.w_mu = None
             self.w_std = None
 
@@ -77,9 +78,10 @@ class Proportion:
 
     def toJSON(self):
         data = {}
-        data["is_variant"] = False
+        data["is_invariant"] = False
         data["distribution"] = self.distribution
         data["weighted_distribution"] = self.weighted_distribution
+        return data
 
     @staticmethod
     def fromJSON(data):
@@ -107,12 +109,13 @@ class Relation:
 
     def toJSON(self):
         data = {}
-        data["target_node"] = str(self.target_node.insn) +"@" + self.target_node.func
-        data["prede_node"] = str(self.prede_node.insn) +"@" + self.prede_node.func
+        data["target_node"] = str(self.target_node.insn) +"@" + self.target_node.function
+        data["prede_node"] = str(self.prede_node.insn) +"@" + self.prede_node.function
         data["prede_count"] = self.prede_count
         data["weight"] = self.weight.toJSON()
         data["forward"] = self.forward.toJSON() if self.forward is not None else None
         data["backward"] = self.backward.toJSON() if self.backward is not None else None
+        return data
 
     @staticmethod
     def fromJSON(data):
@@ -128,11 +131,11 @@ class Relation:
 
         forward = data["forward"]
         if forward is not None:
-            rel.forward = Proportion.fromJSON(forward) if forward["is_variant"] is False else Invariance.fromJSON(forward)
+            rel.forward = Proportion.fromJSON(forward) if forward["is_invariant"] is False else Invariance.fromJSON(forward)
 
         backward = data["backward"]
         if backward is not None:
-            rel.backward = Proportion.fromJSON(backward) if backward["is_variant"] is False else Invariance.fromJSON(backward)
+            rel.backward = Proportion.fromJSON(backward) if backward["is_invariant"] is False else Invariance.fromJSON(backward)
         return rel
 
 class RelationGroup:
@@ -157,13 +160,14 @@ class RelationGroup:
 
     def toJSON(self):
         data = {}
-        data["starting_node"] = str(self.starting_node.insn) +"@" + self.starting_node.func
+        data["starting_node"] = str(self.starting_node.insn) +"@" + self.starting_node.function
         data["weight"] = self.weight
         data["finished"] = self.finished
         relations = []
         for relation in self.relations.values():
             relations.append(relation.toJSON())
         data["relations"] = relations
+        return data
 
     @staticmethod
     def fromJSON(data):
@@ -174,8 +178,8 @@ class RelationGroup:
         rgroup.finished = data["finished"]
         json_relations = data["relations"]
         for json_relation in json_relations:
-            relation = fromJSON(json_relation)
-            rgroup.relations[relation.prede] = relation
+            relation = Relation.fromJSON(json_relation)
+            rgroup.relations[relation.prede_node] = relation
         return rgroup
 
     def add_base_weight(self, base_weight):
@@ -212,8 +216,8 @@ class RelationGroup:
             del self.relations[prede]
         self.finished = True
 
-    def sorted_relations(self):
-        self.sorted_relations = sorted(list(rgroup.relations.values()), key=lambda relation: relation.weight)
+    def sort_relations(self):
+        self.sorted_relations = sorted(list(self.relations.values()), key=lambda relation: relation.weight)
 
     def get_or_make_relation(self, prede_node, prede_count, weight):
         if prede_node in self.relations:
@@ -233,7 +237,6 @@ class RelationGroup:
         # and simplify when there is an OR? makes verification easier too
         """
 
-
 class Weight:
     def __init__(self, actual_weight, base_weight, perc_contrib, corr, order):
         self.actual_weight = actual_weight
@@ -246,7 +249,8 @@ class Weight:
                 self.total_weight = base_weight * perc_contrib/100
         else:
             self.total_weight = actual_weight
-            assert actual_weight == base_weight * perc_contrib/100
+            assert round(actual_weight) == round(base_weight * perc_contrib/100), \
+                str(round(actual_weight)) + " " + str(round(base_weight * perc_contrib/100))
 
         self.corr = corr
         self.order = order
@@ -270,11 +274,12 @@ class Weight:
 
     def toJSON(self):
         data = {}
-        data["actual_weight"] = actual_weight
+        data["actual_weight"] = self.actual_weight
         data["base_weight"] = self.base_weight
         data["perc_contrib"] = self.perc_contrib
         data["corr"] = self.corr
         data["order"] = self.order
+        return data
 
     @staticmethod
     def fromJSON(data):

@@ -497,7 +497,7 @@ class DynamicDependence:
         return used_cached_result
 
     # TODO, refactor into a more user friendly interface?
-    def build_dyanmic_dependencies(self, insn=None, pa_id=None):
+    def build_dynamic_dependencies(self, insn=None, pa_id=None):
         print("Building dynamic graph, starting insn is: " + str(insn) + " pa_id " + str(pa_id))
         file_name = 'dynamic_graph_result_' + self.key + "_" + (hex(insn) if insn is not None else str(insn))
         result_file = os.path.join(curr_dir, 'cache', self.prog, file_name)
@@ -636,7 +636,7 @@ class DynamicDependence:
         time_record["invoke_pin"] = time.time()
         print("[TIME] Invoking PIN took: ",
               str(time_record["invoke_pin"] - time_record["static_slice"]), flush=True)
-        self.init_graph = self.build_dyanmic_dependencies()
+        self.init_graph = self.build_dynamic_dependencies()
 
 class DynamicGraph:
     # TODO: restructure DynamicGraph
@@ -2423,5 +2423,5 @@ if __name__ == '__main__':
     dd = DynamicDependence(starting_events, "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
     dd.prepare_to_build_dynamic_dependencies(10000)
 
-    dg = dd.build_dyanmic_dependencies(0x409418 if args.starting_insn is None else int(args.starting_insn, 16), args.pa_id) #0x409418
+    dg = dd.build_dynamic_dependencies(0x409418 if args.starting_insn is None else int(args.starting_insn, 16), args.pa_id) #0x409418
     verify_0x409418_result(dg)
