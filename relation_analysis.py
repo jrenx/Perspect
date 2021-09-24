@@ -70,8 +70,9 @@ def sender_receiver_worker(s, q, results_q):
 def sender_receiver(q, results_q):
     sockets = []
     threads = []
+    num_processor = 4
     for addr in worker_addresses:
-        for _ in range(16):
+        for _ in range(num_processor):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             print("[sender_receiver] Connecting to {}".format(addr), flush=True)
             s.connect(addr)
@@ -299,5 +300,5 @@ if __name__ == "__main__":
     starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
     starting_events.append(["rcx", 0x40764c, "runtime.free"])
 
-    ra = RelationAnalysis(starting_events, 0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
+    ra = RelationAnalysis(starting_events, 0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/renxian2/perf_debug_tool/")
     ra.analyze()

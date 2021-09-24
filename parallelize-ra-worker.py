@@ -54,19 +54,21 @@ def run_task(id, pipe, prog, arg, path, starting_events):
 def main():
     prog = "909_ziptest_exe9"
     arg = "test.zip"
-    path = "/home/anygroup/perf_debug_tool/"
+    path = "/home/renxian2/perf_debug_tool/"
     starting_events = []
     starting_events.append(["rdi", 0x409daa, "sweep"])
     starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
     starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
     starting_events.append(["rcx", 0x40764c, "runtime.free"])
 
-    num_processor = 16
-
     processes = []
     pipes = []
 
+    dd = DynamicDependence(starting_events, prog, arg, path)
+    dd.prepare_to_build_dynamic_dependencies(10000)
+
     mp.set_start_method('spawn')
+    num_processor = 4
     for i in range(num_processor):
         parent_conn, child_conn = mp.Pipe(duplex=True)
         p = mp.Process(target=run_task, args=(i, child_conn, prog, arg, path, starting_events))
@@ -77,7 +79,7 @@ def main():
     print("[server] Setting up sockets")
     listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     listener.bind((socket.gethostname(), PORT))
-    listener.listen(16)
+    listener.listen(num_processor)
 
     while True:
         (client, addr) = listener.accept()

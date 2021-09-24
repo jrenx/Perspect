@@ -11,6 +11,7 @@ from static_dep_graph import *
 from pin.instruction_reg_trace import *
 from json import JSONEncoder
 import subprocess
+import traceback
 
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 target_dir = os.path.join(curr_dir, 'dynamicGraph')
@@ -534,10 +535,20 @@ class DynamicDependence:
             with open(preprocess_data_file, 'w') as f:
                 json.dump(preprocess_data, f, indent=4, ensure_ascii=False)
             preprocessor_file = os.path.join(curr_dir, 'preprocessor', 'preprocess')
-            pp_process = subprocess.Popen([preprocessor_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            stdout, stderr = pp_process.communicate()
-            print(stdout)
-            print(stderr)
+            cmd = [preprocessor_file]
+            if pa_id is not None:
+                cmd.append(str(pa_id))
+            try:
+                pp_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                stdout, stderr = pp_process.communicate()
+            except Exception as e:
+                print(stdout)
+                print(stderr)
+                print("Caught exception: " + str(e))
+                print(str(e))
+                print("-" * 60)
+                traceback.print_exc(file=sys.stdout)
+                print("-" * 60)
 
             time_record["preparse"] = time.time()
             print("[TIME] Preparsing trace took: ", str(time_record["preparse"] - time_record["start"]), flush=True)
