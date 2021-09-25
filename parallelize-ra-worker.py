@@ -29,8 +29,8 @@ def run_task(id, pipe, prog, arg, path, starting_events):
         insn = int(segs[0], 16)
         func = segs[1]
         node = StaticDepGraph.func_to_graph[func].insn_to_node[insn]
-        starting_weight = int(segs[2])
-        max_contrib = int(segs[3])
+        starting_weight = float(segs[2])
+        max_contrib = float(segs[3])
         try:
             dgraph = dd.build_dynamic_dependencies(insn=insn, pa_id=id)
             wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, node, starting_weight, max_contrib)
