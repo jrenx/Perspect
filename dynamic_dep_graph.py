@@ -1,5 +1,6 @@
 import json
 import os
+import select
 import time
 from sa_util import *
 from rr_util import *
@@ -12,6 +13,9 @@ from pin.instruction_reg_trace import *
 from json import JSONEncoder
 import subprocess
 import traceback
+import socketserver
+import socket
+import select
 
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 target_dir = os.path.join(curr_dir, 'dynamicGraph')
@@ -19,6 +23,7 @@ target_dir = os.path.join(curr_dir, 'dynamicGraph')
 time_record = {}
 DEBUG_POST_ORDER = False
 DEBUG = False
+PARALLEL_PREPARSE = True
 
 class DynamicNode(JSONEncoder):
     id = 0
@@ -534,21 +539,36 @@ class DynamicDependence:
             preprocess_data_file = os.path.join(curr_dir, 'preprocess_data' + ('' if pa_id is None else ('_' + str(pa_id))))
             with open(preprocess_data_file, 'w') as f:
                 json.dump(preprocess_data, f, indent=4, ensure_ascii=False)
-            preprocessor_file = os.path.join(curr_dir, 'preprocessor', 'preprocess')
-            cmd = [preprocessor_file]
-            if pa_id is not None:
-                cmd.append(str(pa_id))
-            try:
-                pp_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                stdout, stderr = pp_process.communicate()
-            except Exception as e:
-                print(stdout)
-                print(stderr)
-                print("Caught exception: " + str(e))
-                print(str(e))
-                print("-" * 60)
-                traceback.print_exc(file=sys.stdout)
-                print("-" * 60)
+
+            if pa_id is not None and PARALLEL_PREPARSE is True:
+                print("Sending request to preparser")
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.connect(("localhost", 8080))
+                s.send(pa_id.to_bytes(1, 'big'))
+                s.send("F".encode())
+                print("Waiting for reply from preparser")
+                read_sockets, _, _ = select.select([s], [], [])
+                s = read_sockets[0]
+                ret = s.recv(4096).decode().strip()
+                print("Getting result from preparser")
+                assert(ret == "OK")
+                s.close()
+            else:
+                preprocessor_file = os.path.join(curr_dir, 'preprocessor', 'preprocess')
+                cmd = [preprocessor_file]
+                if pa_id is not None:
+                    cmd.append(str(pa_id))
+                try:
+                    pp_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    stdout, stderr = pp_process.communicate()
+                except Exception as e:
+                    print(stdout)
+                    print(stderr)
+                    print("Caught exception: " + str(e))
+                    print(str(e))
+                    print("-" * 60)
+                    traceback.print_exc(file=sys.stdout)
+                    print("-" * 60)
 
             time_record["preparse"] = time.time()
             print("[TIME] Preparsing trace took: ", str(time_record["preparse"] - time_record["start"]), flush=True)

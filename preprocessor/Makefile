@@ -3,7 +3,7 @@
 #CXX=cl
 CXX=g++
 CC=gcc
-all: count_node preprocess
+all: count_node preprocess preprocess_parallel
 
 count_node: count_node.o cJSON.o
 	$(CXX) count_node.o cJSON.o -L$(DYNINST_LIB) -lboost_system -ltbbmalloc_proxy -lcommon -lstdc++ -lm\
@@ -17,6 +17,14 @@ preprocess: preprocess.o cJSON.o
 	       	-o preprocess -std=c++11
 preprocess.o: preprocess.cpp
 	$(CXX) -g -c $(CFLAGS) -I$(DYNINST_INCLUDE) preprocess.cpp -std=c++11 -O2
+
+
+preprocess_parallel: preprocess_parallel.o cJSON.o
+	$(CXX) preprocess_parallel.o cJSON.o -L$(DYNINST_LIB) -lboost_system -ltbbmalloc_proxy -lcommon -lstdc++ -lm -lpthread\
+	       	-o preprocess_parallel -std=c++11
+preprocess_parallel.o: preprocess_parallel.cpp
+	$(CXX) -g -c $(CFLAGS) -I$(DYNINST_INCLUDE) preprocess_parallel.cpp -std=c++11 -O2
+
 #preprocess: preprocess.o cJSON.o
 #	$(CXX) preprocess.o cJSON.o -L$(DYNINST_LIB) -ldyninstAPI -lboost_system -ltbbmalloc_proxy -linstructionAPI -lparseAPI -lsymtabAPI -lcommon -lstdc++ -lm\
 #	      -shared -Wl,-soname,static_preprocess.so -o static_preprocess.so -std=c++11
