@@ -143,9 +143,9 @@ class DynamicNode(JSONEncoder):
         if self.store_bit_mask is not None:
             data["store_bit_mask"] = self.store_bit_mask
             data["store_bit_mask_binary"] = "{:64b}".format(self.store_bit_mask)
-        data["weight_origins"] = list(self.weight_origins)
-        data["weight_paths"] = list(self.weight_paths)
-        data["forward_weight_paths"] = list(self.forward_weight_paths)
+        #data["weight_origins"] = list(self.weight_origins)
+        #data["weight_paths"] = list(self.weight_paths)
+        #data["forward_weight_paths"] = list(self.forward_weight_paths)
         return data
 
     @staticmethod
@@ -174,8 +174,8 @@ class DynamicNode(JSONEncoder):
         if "store_bit_mask" in data:
             dn.store_bit_mask = data["store_bit_mask"]
         dn.weight = data["weight"]
-        dn.weight_origins = set(data["weight_origins"])
-        dn.weight_paths = set(data["weight_paths"])
+        #dn.weight_origins = set(data["weight_origins"])
+        #dn.weight_paths = set(data["weight_paths"])
         #if "forward_weight_paths" in data:
         #    dn.forward_weight_paths = set(data["forward_weight_paths"])
         dn.is_valid_weight = data["is_valid_weight"]
@@ -642,7 +642,7 @@ class DynamicDependence:
 
         #if self.init_graph is None:
         #    #pass
-        #    dynamic_graph.verify_initail_graph_weight()
+        #    dynamic_graph.verify_initial_graph_weight()
         #    #dynamic_graph.propogate_initial_graph_weight()
         #else:
         #    #dynamic_graph.propogate_weight(self.init_graph)
@@ -1710,7 +1710,7 @@ class DynamicGraph:
             with open(fname, 'a') as out:
                 out.write(str(node))
 
-    def verify_initail_graph_weight(self):
+    def verify_initial_graph_weight(self):
         bad_count = 0
         good_count = 0
         bad_nodes = set()
