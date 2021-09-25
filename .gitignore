@@ -12,6 +12,7 @@ binary_analysis/*result
 binary_analysis/*results
 preprocessor/*.o
 preprocessor/preprocess
+preprocessor/preprocess_parallel
 preprocessor/count_node
 rr/*.json
 rr/*.log
