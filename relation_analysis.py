@@ -178,6 +178,7 @@ class RelationAnalysis:
         return curr_weighted_wavefront
 
     def analyze(self):
+        a = time.time()
         sender_receiver_t = threading.Thread(target=sender_receiver,
                                     args=(self.pending_inputs, self.received_results))
         sender_receiver_t.start()
@@ -292,6 +293,8 @@ class RelationAnalysis:
             print(relation_group)
         print("[ra] Total number of relations groups: " + str(len(self.relation_groups)))
         print("[ra] Total number of relations: " + str(num_rels))
+        b = time.time()
+        print("[ra] took " + str(b-a))
 
 
 if __name__ == "__main__":
