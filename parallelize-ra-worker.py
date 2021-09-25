@@ -71,7 +71,7 @@ def main():
     os.system(preparse_cmd)
 
     mp.set_start_method('spawn')
-    num_processor = 4
+    num_processor = 16
     for i in range(num_processor):
         parent_conn, child_conn = mp.Pipe(duplex=True)
         p = mp.Process(target=run_task, args=(i, child_conn, prog, arg, path, starting_events))

@@ -18,8 +18,8 @@ from relations import *
 
 DEBUG = True
 Weight_Threshold = 0
-worker_addresses = [("10.1.0.23", 15000)]
-#worker_addresses = [("10.1.0.21", 15000), ("10.1.0.22", 15000), ("10.1.0.23", 15000), ("10.10.0.33", 15000)]
+#worker_addresses = [("10.1.0.23", 15000)]
+worker_addresses = [("10.1.0.21", 15000), ("10.1.0.22", 15000), ("10.1.0.23", 15000), ("10.10.0.33", 15000)]
 
 def sender_receiver_worker(s, q, results_q):
     try:
@@ -71,7 +71,7 @@ def sender_receiver_worker(s, q, results_q):
 def sender_receiver(q, results_q):
     sockets = []
     threads = []
-    num_processor = 4
+    num_processor = 16
     for addr in worker_addresses:
         for _ in range(num_processor):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
