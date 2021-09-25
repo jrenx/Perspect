@@ -66,7 +66,7 @@ def main():
 
     dd = DynamicDependence(starting_events, prog, arg, path)
     dd.prepare_to_build_dynamic_dependencies(10000)
-    preparse_cmd = "./preprocessor/preprocess_parallel " + dd.trace_path + " &"
+    preparse_cmd = "./preprocessor/preprocess_parallel " + dd.trace_path + " > preparser_out &"
     print("Starting preparser with command: " + preparse_cmd)
     os.system(preparse_cmd)
 
@@ -84,33 +84,36 @@ def main():
     listener.bind((socket.gethostname(), PORT))
     listener.listen(num_processor)
 
-    while True:
-        (client, addr) = listener.accept()
-        print("[server] Getting connection from {}".format(addr))
+    try:
+        while True:
+            (client, addr) = listener.accept()
+            print("[server] Getting connection from {}".format(addr))
 
-        def connect_bridge(socket, pipe):
-            while True:
-                line = socket.recv(4096).decode().strip()
-                print("[server] Receive from socket: {}".format(line), flush=True)
-                if line == "":
-                    pipes.append(pipe)
-                    return
+            def connect_bridge(socket, pipe):
+                while True:
+                    line = socket.recv(4096).decode().strip()
+                    print("[server] Receive from socket: {}".format(line), flush=True)
+                    if line == "":
+                        pipes.append(pipe)
+                        return
 
-                print("[server] Sending task {}".format(line), flush=True)
-                pipe.send(line)
-                print("[server] Sent task {}".format(line), flush=True)
+                    print("[server] Sending task {}".format(line), flush=True)
+                    pipe.send(line)
+                    print("[server] Sent task {}".format(line), flush=True)
 
-                ret = pipe.recv()
-                print("[server] Receiving result for task {}".format(line), flush=True)
-                socket.send(json.dumps(ret).encode())
-                print("[server] Sent result for task {}".format(line), flush=True)
+                    ret = pipe.recv()
+                    print("[server] Receiving result for task {}".format(line), flush=True)
+                    socket.send(json.dumps(ret).encode())
+                    print("[server] Sent result for task {}".format(line), flush=True)
 
-        if len(pipes) > 0:
-            pipe = pipes.pop()
-            threading.Thread(target=connect_bridge, args=(client, pipe)).start()
+            if len(pipes) > 0:
+                pipe = pipes.pop()
+                threading.Thread(target=connect_bridge, args=(client, pipe)).start()
 
-    for i in range(num_processor):
-        processes[i].join()
+        for i in range(num_processor):
+            processes[i].join()
+    except KeyboardInterrupt:
+        pass
     print("Worker processes finished running")
     with os.popen("ps ax | grep \"preprocess_parallel\" | grep -v grep") as p:
         lines = p.readlines()
@@ -118,7 +121,7 @@ def main():
             fields = line.split()
             child_pid = int(fields[0])
             print("Trying to kill process " + str(child_pid), flush=True)
-            os.system("sudo kill -9 " + str(child_pid))
+            os.system("kill -9 " + str(child_pid))
 
 if __name__ == '__main__':
     main()
