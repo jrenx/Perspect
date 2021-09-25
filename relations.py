@@ -239,16 +239,16 @@ class RelationGroup:
 
 class Weight:
     def __init__(self, actual_weight, base_weight, perc_contrib, corr, order):
-        self.actual_weight = round(actual_weight)
-        self.base_weight = round(base_weight)
+        self.actual_weight = actual_weight
+        self.base_weight = base_weight
 
-        self.perc_contrib = round(perc_contrib)
+        self.perc_contrib = perc_contrib
 
         assert (perc_contrib <= 100)
         if actual_weight is None:
-                self.total_weight = round(base_weight * perc_contrib/100)
+                self.total_weight = base_weight * perc_contrib/100
         else:
-            self.total_weight = round(actual_weight)
+            self.total_weight = actual_weight
             assert round(actual_weight) == round(base_weight * perc_contrib/100), \
                 str(round(actual_weight)) + " " + str(round(base_weight * perc_contrib/100))
 
