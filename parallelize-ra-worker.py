@@ -66,6 +66,9 @@ def main():
 
     dd = DynamicDependence(starting_events, prog, arg, path)
     dd.prepare_to_build_dynamic_dependencies(10000)
+    preparse_cmd = "./preprocessor/preprocess_parallel " + dd.trace_path + " &"
+    print("Starting preparser with command: " + preparse_cmd)
+    os.system(preparse_cmd)
 
     mp.set_start_method('spawn')
     num_processor = 4
@@ -108,7 +111,14 @@ def main():
 
     for i in range(num_processor):
         processes[i].join()
-
+    print("Worker processes finished running")
+    with os.popen("ps ax | grep \"preprocess_parallel\" | grep -v grep") as p:
+        lines = p.readlines()
+        for line in lines:
+            fields = line.split()
+            child_pid = int(fields[0])
+            print("Trying to kill process " + str(child_pid), flush=True)
+            os.system("sudo kill -9 " + str(child_pid))
 
 if __name__ == '__main__':
     main()
