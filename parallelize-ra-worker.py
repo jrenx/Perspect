@@ -33,11 +33,15 @@ def run_task(id, pipe, prog, arg, path, starting_events):
         max_contrib = float(segs[3])
         try:
             old = sys.stdout
-            sys.stdout = open(hex(insn) + "_graph.log", 'w')
+            old_e = sys.stderr
+            f = open(hex(insn) + "_graph.log", 'w')
+            sys.stdout = f
+            sys.stderr = f
             dgraph = dd.build_dynamic_dependencies(insn=insn, pa_id=id)
             wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, node, starting_weight, max_contrib)
-            sys.stdout.close()
+            f.close()
             sys.stdout = old
+            sys.stderr = old_e
 
             ret[insn] = ([(str(w.insn) + "@" + w.function) for w in wavefront], rgroup.toJSON())
         except Exception as e:
