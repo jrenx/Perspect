@@ -71,7 +71,7 @@ class Proportion:
     def __str__(self):
         s = "VARIABLE "
         s += "with distrib (mean: {:.2f}".format(self.mu) + ", std: {:.2f}".format(self.std) + ") "
-        if self.weighted_distribution is not None:
+        if self.weighted_distribution is not None and len(self.weighted_distribution) > 0:
             s += "and weighted distrib (mean: {:.2f}".format(self.w_mu) + ", std: {:.2f}".format(self.w_std) + ")"
         s += "\n"
         return s
