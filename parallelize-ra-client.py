@@ -30,7 +30,7 @@ def sender_receiver_worker(s, q, results_q):
 
             if line.startswith("FIN"):
                 print("[sender_receiver] Received FIN, closing connection", flush=True)
-                s.send(("Shutdown").encode())
+                #s.send(("Shutdown").encode())
                 s.close()
                 q.put(line)
                 return

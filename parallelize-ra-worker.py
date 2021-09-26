@@ -115,8 +115,9 @@ def main():
 
                     ret = pipe.recv()
                     print("[server] Receiving result for task {}".format(line), flush=True)
-                    socket.send(json.dumps(ret).encode())
-                    print("[server] Sent result for task {}".format(line), flush=True)
+                    result = json.dumps(ret).encode()
+                    socket.send(result)
+                    print("[server] Sent result for task {}".format(line) + " len is " + str(len(result)), flush=True)
 
             if len(pipes) > 0:
                 pipe = pipes.pop()
