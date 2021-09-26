@@ -112,7 +112,7 @@ class RelationAnalysis:
             print(stderr)
         self.load_node_counts(self.dd.trace_path + ".count")
         print("[ra] Finished getting the counts of each unique node in the dynamic trace")
-        self.relation_groups = {} #results
+        self.relation_groups = [] #results
 
     def add_to_explained_variant_relation(self, rgroup):
         for rel in rgroup.relations.values():
@@ -250,7 +250,7 @@ class RelationAnalysis:
                     continue
 
                 rgroup.sort_relations()
-                self.relation_groups[starting_node] = rgroup
+                self.relation_groups.append(rgroup)
                 self.add_to_explained_variant_relation(rgroup)
 
                 self.update_weights(rgroup)
