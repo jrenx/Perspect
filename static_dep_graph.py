@@ -1912,10 +1912,12 @@ class StaticDepGraph:
             print(node)
 
             if node.mem_load is None:
+                node.explained = True
                 print("[warn] node does not have memory load?")
                 continue
 
             if node.mem_load.read_same_as_write is True:
+                node.explained = True
                 print("Node read same as write, do no watch using RR...")
                 continue
 
