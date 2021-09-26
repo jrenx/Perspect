@@ -5,6 +5,7 @@ import heapq
 import numpy as np
 from scipy.stats import norm
 import subprocess
+import traceback
 
 DEBUG = True
 Weight_Threshold = 0
@@ -337,10 +338,16 @@ class RelationAnalysis:
                 #TODO also not rewatch pin
                 a = time.time()
                 try:
-                    dgraph = self.dd.build_dyanmic_dependencies(insn)
-                except:
+                    dgraph = self.dd.build_dynamic_dependencies(insn)
+                except Exception as e:
                     print("[ra] Building dynamic dependence graph failed for insn "
                           + starting_node.hex_insn + "@" + starting_node.function)
+                    print(str(e))
+                    print("-" * 60)
+                    traceback.print_exc(file=sys.stdout)
+                    print("-" * 60)
+                    raise e
+
                     if len(wavefront) > 0:
                         curr_weight, next = wavefront.pop()
                         insn = next.insn
