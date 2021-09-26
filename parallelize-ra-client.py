@@ -30,7 +30,7 @@ def sender_receiver_worker(s, q, results_q):
 
             if line.startswith("FIN"):
                 print("[sender_receiver] Received FIN, closing connection", flush=True)
-                s.send("Shutdown")
+                s.send(("Shutdown").encode())
                 s.close()
                 q.put(line)
                 return
@@ -67,6 +67,7 @@ def sender_receiver_worker(s, q, results_q):
         print("-" * 60)
         traceback.print_exc(file=sys.stdout)
         print("-" * 60)
+        s.close()
 
 def sender_receiver(q, results_q):
     sockets = []
