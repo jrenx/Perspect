@@ -50,6 +50,8 @@ class DynamicNode(JSONEncoder):
         self.store_bit_mask = None
         self.output_set = set() #TODO, persist these two as well?
         self.output_exclude_set = set()
+        self.output_set_count = None
+        self.output_weight = None
         #self.output_set1 = set()
         self.input_sets = {}
         self.weight = -1
@@ -651,6 +653,7 @@ class DynamicDependence:
         #    #    json.dump(dynamic_graph.toJSON(), f, indent=4, ensure_ascii=False)
 
         print("[dyn_dep] total number of dynamic nodes: " + str(len(dynamic_graph.dynamic_nodes)))
+        print("[dyn_dep] total number of target nodes: " + str(len(dynamic_graph.target_nodes)))
         return dynamic_graph
 
     def prepare_to_build_dynamic_dependencies(self, sa_steps=10000):
