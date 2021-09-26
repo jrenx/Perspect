@@ -120,7 +120,8 @@ class ParallelizableRelationAnalysis:
                 node.output_set_count = len(node.output_set)
                 if node.static_node not in reachable_output_events_per_static_node:
                     reachable_output_events_per_static_node[node.static_node] = set()
-                reachable_output_events_per_static_node[node.static_node].union(node.output_set)
+                reachable_output_events_per_static_node[node.static_node] = \
+                    reachable_output_events_per_static_node[node.static_node].union(node.output_set)
                 if use_weight is True:
                     output_weight = 0
                     for output in node.output_set:
@@ -151,7 +152,7 @@ class ParallelizableRelationAnalysis:
                     output_weight += output.weight
                 node.output_weight = output_weight
             node.output_exclude_set = None
-            node.output_exclude_set = None
+            node.output_set = None
 
     @staticmethod
     def do_backward_propogation(dgraph, starting_node):
