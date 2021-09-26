@@ -9,6 +9,7 @@ import datetime
 import traceback
 from dynamic_dep_graph import *
 from parallelizable_relation_analysis import *
+import time
 
 PORT = 15000
 dd = None
@@ -37,8 +38,11 @@ def run_task(id, pipe, prog, arg, path, starting_events):
             f = open(hex(insn) + "_graph.log", 'w')
             sys.stdout = f
             sys.stderr = f
+            a = time.time()
             dgraph = dd.build_dynamic_dependencies(insn=insn, pa_id=id)
             wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, node, starting_weight, max_contrib)
+            b = time.time()
+            print("analyzing " + str(obj) + " took " + str(b - a))
             f.close()
             sys.stdout = old
             sys.stderr = old_e
