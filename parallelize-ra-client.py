@@ -72,7 +72,7 @@ def sender_receiver_worker(s, q, results_q):
 def sender_receiver(q, results_q):
     sockets = []
     threads = []
-    num_processor = 16
+    num_processor = 8
     for addr in worker_addresses:
         for _ in range(num_processor):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
