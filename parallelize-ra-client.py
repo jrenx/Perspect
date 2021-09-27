@@ -93,6 +93,8 @@ class RelationAnalysis:
     def __init__(self, starting_events, insn, func, prog, arg, path):
         self.starting_insn = insn
         self.starting_func = func
+        self.prog = prog
+        self.path = path
         self.prede_node_to_invariant_rel = {}
         self.node_counts = {}
         self.static_node_to_weight = {}
@@ -126,6 +128,8 @@ class RelationAnalysis:
 
     def explained_by_invariant_relation(self, prede_node):
         if prede_node not in self.prede_node_to_invariant_rel:
+            return False
+        if prede_node.insn not in self.node_counts:
             return False
         print(self.node_counts)
         full_count = self.node_counts[prede_node.insn]
@@ -296,6 +300,12 @@ class RelationAnalysis:
         print("[ra] Total number of relations: " + str(num_rels))
         b = time.time()
         print("[ra] took " + str(b-a))
+        json_rgroups = []
+        for relation_group in reversed(self.relation_groups):
+            json_rgroups.append(relation_group.toJSON())
+        with open(os.path.join(self.path, "cache", self.prog, "rgroups.json"), 'w') as f:
+            json.dump(json_rgroups, f, indent=4)
+ 
 
 
 if __name__ == "__main__":
