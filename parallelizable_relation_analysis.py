@@ -33,6 +33,7 @@ class ParallelizableRelationAnalysis:
     @staticmethod
     def do_forward_propogation(dgraph, use_weight, reachable_output_events_per_static_node):
         print("[ra] starting forward propogation")
+        a = time.time()
         for node in dgraph.target_nodes:
             node.output_set.add(node)
 
@@ -45,20 +46,31 @@ class ParallelizableRelationAnalysis:
             if node in dgraph.target_nodes:
                 continue
             node_insn = node.static_node.insn
+            node_id = node.static_node.id
             #print("[ra] Forward propogating for node: " + hex(node_insn) + " " + str(node.id))
             #backedge_sources = node.static_node.backedge_sources
+            num_succes = len(node.cf_succes) + len(node.df_succes)
+            seen_sets = set()
             for cf_succe in node.cf_succes:
                 cf_succe_insn = cf_succe.static_node.insn
 
+                exclude_set_modified = False
                 if cf_succe_insn in node.static_node.backedge_sources:
                     for output_node in cf_succe.output_set:
-                        if node_insn in output_node.input_sets and output_node.input_sets[node_insn] > 0:
+                        if output_node.input_sets.get(node_id, 0) > 0:
                             #print("[ra] Node already attributed to the input of some output node: " + str(output_node.id))
                             node.output_exclude_set.add(output_node)
+                            exclude_set_modified = True
+                if num_succes == 1 and exclude_set_modified is False:
+                    node.output_set = cf_succe.output_set
+                    node.output_exclude_set = cf_succe.output_exclude_set
+                    break
                 #    wavefront.add(cf_succe.static_node)
                 #    print("[ra] insn: " + cf_succe.static_node.hex_insn + " added to pending list because of cycles...")
                 #    continue
-                node.output_set = node.output_set.union(cf_succe.output_set)
+                if cf_succe.output_set not in seen_sets:
+                    node.output_set = node.output_set.union(cf_succe.output_set)
+                    seen_sets.add(cf_succe.output_set)
                 node.output_exclude_set = node.output_exclude_set.union(cf_succe.output_exclude_set)
             #if len(node.output_exclude_set) > 0:
             #    print("[ra] include outputs: " + str([n.id for n in node.output_set]))
@@ -70,17 +82,29 @@ class ParallelizableRelationAnalysis:
                 #    wavefront.add(df_succe.static_node)
                 #    print("[ra] insn: " + df_succe.static_node.hex_insn + " added to pending list because of cycles...")
                 #    continue
-                node.output_set = node.output_set.union(df_succe.output_set)
+                exclude_set_same = False
                 if df_succe.static_node.is_df is False:
-                    node.output_exclude_set = node.output_exclude_set.union(df_succe.output_exclude_set) #TODO, never referenced?
+                    exclude_set_same = True
+                    if num_succes == 1:
+                        node.output_exclude_set = df_succe.output_exclude_set
+                    else:
+                        node.output_exclude_set = node.output_exclude_set.union(df_succe.output_exclude_set) #TODO, never referenced?
+                if num_succes == 1 and (exclude_set_same is True or len(node.output_exclude_set) == len(df_succe.output_exclude_set)):
+                    node.output_set = df_succe.output_set
+                    break
 
-            for output_node in node.output_set:
-                if output_node in node.output_exclude_set:
-                    continue
-                if node_insn not in output_node.input_sets:
-                    output_node.input_sets[node_insn] = 0
-                output_node.input_sets[node_insn] = output_node.input_sets[node_insn] + 1
+                if df_succe.output_set not in seen_sets:
+                    node.output_set = node.output_set.union(df_succe.output_set)
+                    seen_sets.add(df_succe.output_set)
 
+            #if len(visited)%100 == 0:
+            #    print("[ra] output set size " + str(len(node.output_set)) + " nodes")
+
+            #for output_node in node.output_set:
+            #    if output_node in node.output_exclude_set:
+            #        continue
+            #    count = output_node.input_sets.get(node_insn,0)
+            #    output_node.input_sets[node_insn] = count + 1
 
             #if node.static_node.group_ids is not None:
             #    for i in range(len(node.static_node.group_ids)):
@@ -115,13 +139,19 @@ class ParallelizableRelationAnalysis:
                 #node_insn = node.static_node.insn
                 if node.output_exclude_set is None: #already seen
                     continue
+                node_insn = node.static_node.insn
+                node_id = node.static_node.id
+                if len(node.output_exclude_set) > 0:
+                    node.output_set = node.output_set.difference(node.output_exclude_set)
+                for output_node in node.output_set:
+                    count = output_node.input_sets.get(node_id, 0)
+                    output_node.input_sets[node_id] = count + 1
 
-                node.output_set = node.output_set.difference(node.output_exclude_set)
                 node.output_set_count = len(node.output_set)
-                if node.static_node not in reachable_output_events_per_static_node:
-                    reachable_output_events_per_static_node[node.static_node] = set()
-                reachable_output_events_per_static_node[node.static_node] = \
-                    reachable_output_events_per_static_node[node.static_node].union(node.output_set)
+                reachable_output_events = reachable_output_events_per_static_node.get(node_id, set())
+                reachable_output_events = reachable_output_events.union(node.output_set)
+                reachable_output_events_per_static_node[node_id] = reachable_output_events
+
                 if use_weight is True:
                     output_weight = 0
                     for output in node.output_set:
@@ -131,7 +161,8 @@ class ParallelizableRelationAnalysis:
                     node.output_weight = output_weight
                 node.output_exclude_set = None
                 node.output_set = None
-        
+        b = time.time()
+        print("[ra] forward propogation part1 took " + str(b - a))
         # For the leftover nodes who have no predecessors
         for node in dgraph.postorder_list: #a node will be visited only if its successors have all been visited
             #if node in dgraph.target_nodes:
@@ -139,11 +170,19 @@ class ParallelizableRelationAnalysis:
             #node_insn = node.static_node.insn
             if node.output_exclude_set is None: #already seen
                 continue
-            node.output_set = node.output_set.difference(node.output_exclude_set)
+            node_insn = node.static_node.insn
+            node_id = node.static_node.id
+            if len(node.output_exclude_set) > 0:
+                node.output_set = node.output_set.difference(node.output_exclude_set)
+            for output_node in node.output_set:
+                count = output_node.input_sets.get(node_id, 0)
+                output_node.input_sets[node_id] = count + 1
             node.output_set_count = len(node.output_set)
-            if node.static_node not in reachable_output_events_per_static_node:
-                reachable_output_events_per_static_node[node.static_node] = set()
-            reachable_output_events_per_static_node[node.static_node].union(node.output_set)
+
+            reachable_output_events = reachable_output_events_per_static_node.get(node_id, set())
+            reachable_output_events = reachable_output_events.union(node.output_set)
+            reachable_output_events_per_static_node[node_id] = reachable_output_events
+
             if use_weight is True:
                 output_weight = 0
                 for output in node.output_set:
@@ -153,6 +192,8 @@ class ParallelizableRelationAnalysis:
                 node.output_weight = output_weight
             node.output_exclude_set = None
             node.output_set = None
+        c = time.time()
+        print("[ra] forward propogation part2 took " + str(c - b))
 
     @staticmethod
     def do_backward_propogation(dgraph, starting_node):
@@ -161,9 +202,9 @@ class ParallelizableRelationAnalysis:
         for node in dgraph.insn_to_dyn_nodes[starting_node.insn]:
             # special handle starting nodes
             node_insn = node.static_node.insn #fixme: change to starting_node.insn
-            if node_insn not in node.input_sets:
-                node.input_sets[node_insn] = 0
-            node.input_sets[node_insn] = node.input_sets[node_insn] + 1
+            node_id = node.static_node.id
+            count = node.input_sets.get(node_id, 0)
+            node.input_sets[node_id] = count + 1
             # special handle starting nodes
 
     def calculate_individual_weight(dgraph, reachable_output_events, starting_node, prede_node, use_weight, base_weight):
@@ -198,6 +239,22 @@ class ParallelizableRelationAnalysis:
         return weight
 
     @staticmethod
+    def setup_bit_array(dgraph):
+        target_node_to_id = {}
+        id_to_target_node = {}
+        id = 0
+        for node in dgraph.target_nodes:
+            target_node_to_id[node] = id
+            id_to_target_node[id] = node
+            id += 1
+        # if use more than 10G then we don't use bit array
+        estimated_mem = len(dgraph.target_nodes) * len(dgraph.dynamic_nodes) / 8 / 1024 / 1024 / 1024
+        if estimated_mem < 10:
+            global use_bit_array
+            use_bit_array = True
+            print("[ra] Use bit array because memory usage is " + str(estimated_mem) + "GB")
+
+    @staticmethod
     def build_relation_with_predecessor(dgraph, starting_node, prede_node, rgroup, wavefront,
                                                  use_weight, base_weight, reachable_output_events_per_static_node):
         #insn = prede_node.insn
@@ -207,7 +264,7 @@ class ParallelizableRelationAnalysis:
         output_set_counts = set()
         output_set_count_list = []
         weighted_output_set_count_list = []
-        reachable_output_events = reachable_output_events_per_static_node[prede_node]
+        reachable_output_events = reachable_output_events_per_static_node[prede_node.id]
         output_set_count_to_nodes = {} #for debugging
         for node in dgraph.insn_to_dyn_nodes[prede_node.insn]:
             output_set_count = node.output_set_count
@@ -231,13 +288,13 @@ class ParallelizableRelationAnalysis:
         input_set_count_list = []
         weighted_input_set_count_list = []
         for node in dgraph.insn_to_dyn_nodes[starting_node.insn]:
-            if prede_node.insn not in node.input_sets:
+            if prede_node.id not in node.input_sets:
                 input_set_counts.add(0)
                 input_set_count_list.append(0)
                 if use_weight is True:
                     weighted_input_set_count_list.append(0)
             else:
-                prede_count = node.input_sets[prede_node.insn]
+                prede_count = node.input_sets[prede_node.id]
                 input_set_counts.add(prede_count)
                 input_set_count_list.append(prede_count)
                 if use_weight is True:
