@@ -50,7 +50,6 @@ class ParallelizableRelationAnalysis:
             #print("[ra] Forward propogating for node: " + hex(node_insn) + " " + str(node.id))
             #backedge_sources = node.static_node.backedge_sources
             num_succes = len(node.cf_succes) + len(node.df_succes)
-            seen_sets = set()
             for cf_succe in node.cf_succes:
                 cf_succe_insn = cf_succe.static_node.insn
 
@@ -68,9 +67,7 @@ class ParallelizableRelationAnalysis:
                 #    wavefront.add(cf_succe.static_node)
                 #    print("[ra] insn: " + cf_succe.static_node.hex_insn + " added to pending list because of cycles...")
                 #    continue
-                if cf_succe.output_set not in seen_sets:
-                    node.output_set = node.output_set.union(cf_succe.output_set)
-                    seen_sets.add(cf_succe.output_set)
+                node.output_set = node.output_set.union(cf_succe.output_set)
                 node.output_exclude_set = node.output_exclude_set.union(cf_succe.output_exclude_set)
             #if len(node.output_exclude_set) > 0:
             #    print("[ra] include outputs: " + str([n.id for n in node.output_set]))
@@ -93,9 +90,7 @@ class ParallelizableRelationAnalysis:
                     node.output_set = df_succe.output_set
                     break
 
-                if df_succe.output_set not in seen_sets:
-                    node.output_set = node.output_set.union(df_succe.output_set)
-                    seen_sets.add(df_succe.output_set)
+                node.output_set = node.output_set.union(df_succe.output_set)
 
             #if len(visited)%100 == 0:
             #    print("[ra] output set size " + str(len(node.output_set)) + " nodes")
