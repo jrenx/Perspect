@@ -1632,6 +1632,8 @@ class DynamicGraph:
             del self.dynamic_nodes[node.id]
             del self.id_to_node[node.id]
             self.insn_to_dyn_nodes[node.static_node.insn].remove(node)
+            if len(self.insn_to_dyn_nodes[node.static_node.insn]) == 0:
+                del self.insn_to_dyn_nodes[node.static_node.insn]
 
     def report_result(self):
         """
