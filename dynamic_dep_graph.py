@@ -149,6 +149,10 @@ class DynamicNode(JSONEncoder):
         #data["weight_origins"] = list(self.weight_origins)
         #data["weight_paths"] = list(self.weight_paths)
         #data["forward_weight_paths"] = list(self.forward_weight_paths)
+        if len(self.input_sets) > 0:
+            data["input_sets"] = self.input_sets
+        data["output_set_count"] = self.output_set_count
+        data["output_weight"] = self.output_weight
         return data
 
     @staticmethod
@@ -183,6 +187,13 @@ class DynamicNode(JSONEncoder):
         #    dn.forward_weight_paths = set(data["forward_weight_paths"])
         dn.is_valid_weight = data["is_valid_weight"]
         dn.is_aggregate_weight = data["is_aggregate_weight"]
+
+        if "output_set_count" in data:
+            dn.output_set_count = data["output_set_count"]
+        if "output_weight" in data:
+            dn.output_weight =  data["output_weight"]
+        if "input_sets" in data:
+            dn.input_sets = data["input_sets"]
         return dn
 
 
@@ -741,7 +752,6 @@ class DynamicGraph:
         for k in self.reachable_output_events_per_static_node:
             json_reachable_output_events_per_static_node[k] = [dn.id for dn in self.reachable_output_events_per_static_node[k]]
         data["reachable_output_events_per_static_node"] = json_reachable_output_events_per_static_node
-
         return data
 
     @staticmethod
@@ -803,6 +813,8 @@ class DynamicGraph:
             dg.exit_nodes.add(id_to_node[id])
         for id in data["target_nodes"]:
             dg.target_nodes.add(id_to_node[id])
+        if "reachable_output_events_per_static_node" in data:
+            dg.reachable_output_events_per_static_node = data["reachable_output_events_per_static_node"]
         return dg
 
     """

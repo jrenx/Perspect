@@ -31,7 +31,7 @@ class ParallelizableRelationAnalysis:
         return True
 
     @staticmethod
-    def do_forward_propogation(dgraph, use_weight, reachable_output_events_per_static_node):
+    def do_forward_propogation(dgraph, use_weight):
         print("[ra] starting forward propogation")
         a = time.time()
         uid = 0
@@ -160,9 +160,9 @@ class ParallelizableRelationAnalysis:
                     output_node.input_sets[node_id] = count + 1
 
                 node.output_set_count = len(node.output_set)
-                reachable_output_events = reachable_output_events_per_static_node.get(node_id, set())
+                reachable_output_events = dgraph.reachable_output_events_per_static_node.get(node_id, set())
                 reachable_output_events = reachable_output_events.union(node.output_set)
-                reachable_output_events_per_static_node[node_id] = reachable_output_events
+                dgraph.reachable_output_events_per_static_node[node_id] = reachable_output_events
 
                 if use_weight is True:
                     output_weight = 0
@@ -197,9 +197,9 @@ class ParallelizableRelationAnalysis:
                 output_node.input_sets[node_id] = count + 1
             node.output_set_count = len(node.output_set)
 
-            reachable_output_events = reachable_output_events_per_static_node.get(node_id, set())
+            reachable_output_events = dgraph.reachable_output_events_per_static_node.get(node_id, set())
             reachable_output_events = reachable_output_events.union(node.output_set)
-            reachable_output_events_per_static_node[node_id] = reachable_output_events
+            dgraph.reachable_output_events_per_static_node[node_id] = reachable_output_events
 
             if use_weight is True:
                 output_weight = 0
@@ -274,7 +274,7 @@ class ParallelizableRelationAnalysis:
 
     @staticmethod
     def build_relation_with_predecessor(dgraph, starting_node, prede_node, rgroup, wavefront,
-                                                 use_weight, base_weight, reachable_output_events_per_static_node):
+                                                 use_weight, base_weight):
         #insn = prede_node.insn
         #hex_insn = prede_node.hex_insn
         if DEBUG: print("-------")
@@ -282,7 +282,7 @@ class ParallelizableRelationAnalysis:
         output_set_counts = set()
         output_set_count_list = []
         weighted_output_set_count_list = []
-        reachable_output_events = reachable_output_events_per_static_node[prede_node.id]
+        reachable_output_events = dgraph.reachable_output_events_per_static_node[prede_node.id]
         output_set_count_to_nodes = {} #for debugging
         for node in dgraph.insn_to_dyn_nodes[prede_node.insn]:
             output_set_count = node.output_set_count
@@ -438,8 +438,7 @@ class ParallelizableRelationAnalysis:
             return wavefront, None
         ################ Do forward propogation ######################
         ########## and backward propogation in the meanwhile #########
-        reachable_output_events_per_static_node = {}
-        ParallelizableRelationAnalysis.do_forward_propogation(dgraph, use_weight, reachable_output_events_per_static_node)
+        ParallelizableRelationAnalysis.do_forward_propogation(dgraph, use_weight)
 
         ############## Setup for backward propogation ################
         ##############################################################
@@ -467,7 +466,7 @@ class ParallelizableRelationAnalysis:
                 continue
             # assert insn in dgraph.insn_to_dyn_nodes, hex(insn)
             ParallelizableRelationAnalysis.build_relation_with_predecessor(dgraph, starting_node, static_node, rgroup, wavefront,
-                                                 use_weight, base_weight, reachable_output_events_per_static_node)
+                                                 use_weight, base_weight)
 
             for p in static_node.cf_predes:
                 worklist.append(p)
