@@ -737,6 +737,11 @@ class DynamicGraph:
         for n in self.target_nodes:
             data["target_nodes"].append(n.id)
 
+        json_reachable_output_events_per_static_node = {}
+        for k in self.reachable_output_events_per_static_node:
+            json_reachable_output_events_per_static_node[k] = list(self.reachable_output_events_per_static_node[k])
+        data["reachable_output_events_per_static_node"] = json_reachable_output_events_per_static_node
+
         return data
 
     @staticmethod
