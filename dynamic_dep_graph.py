@@ -739,7 +739,7 @@ class DynamicGraph:
 
         json_reachable_output_events_per_static_node = {}
         for k in self.reachable_output_events_per_static_node:
-            json_reachable_output_events_per_static_node[k] = list(self.reachable_output_events_per_static_node[k])
+            json_reachable_output_events_per_static_node[k] = [dn.id for dn in self.reachable_output_events_per_static_node[k]]
         data["reachable_output_events_per_static_node"] = json_reachable_output_events_per_static_node
 
         return data
