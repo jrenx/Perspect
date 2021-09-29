@@ -51,7 +51,7 @@ def run_task(id, pipe, prog, arg, path, starting_events):
             sys.stdout = old
             sys.stderr = old_e
 
-            ret[insn] = ([(str(w.insn) + "@" + w.function) for w in wavefront], rgroup.toJSON())
+            ret[insn] = ([(str(w.insn) + "@" + w.function) for w in wavefront], rgroup.toJSON() if rgroup is not None else None)
         except Exception as e:
             ret[insn] = (None, None)
             print("[rr][ERROR] Process {} failed for input: {}".format(id, str(obj)))
