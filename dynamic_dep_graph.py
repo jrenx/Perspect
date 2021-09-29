@@ -520,6 +520,7 @@ class DynamicDependence:
                     for sn in StaticDepGraph.func_to_graph[func].id_to_node.values():
                         static_id_to_node[sn.id] = sn
                 dynamic_graph = DynamicGraph.fromJSON(in_result, static_id_to_node)
+                dynamic_graph.result_file = result_file
                 time_record["load_json"] = time.time()
                 print("[TIME] Loading graph from json: ", str(time_record["load_json"] - time_record["start"]), flush=True)
         else:
@@ -603,6 +604,7 @@ class DynamicDependence:
             print("[TIME] Trimming dynamic graph took: ", str(time_record["trim_finish"] - time_record["build_finish"]), flush=True)
 
             dynamic_graph.report_result()
+            dynamic_graph.result_file = result_file
             time_record["report_result"] = time.time()
             print("[TIME] Reporting result took: ", str(time_record["report_result"] - time_record["trim_finish"]), flush=True)
 
@@ -701,7 +703,9 @@ class DynamicGraph:
         self.target_nodes = set()
         self.insn_to_dyn_nodes = {}
         self.id_to_node = {} #TODO, obselete now
-        
+        self.reachable_output_events_per_static_node = {}
+        self.result_file = None
+
     def toJSON(self):
         data = {}
         data["starting_events"] = self.starting_events
