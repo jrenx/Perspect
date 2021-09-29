@@ -251,12 +251,14 @@ class RelationAnalysis:
                 if rgroup is None:
                     continue
 
+                updated_weight = rgroup.weight
                 if starting_node in self.static_node_to_weight:
+                    updated_weight = self.static_node_to_weight[starting_node].total_weight
                     if rgroup.weight is None: # or rgroup.weight != self.static_node_to_weight[starting_node].total_weight:
                         #TODO print
                         rgroup.add_base_weight(self.static_node_to_weight[starting_node].total_weight)
 
-                if rgroup.weight < (max_contrib * 0.01):
+                if updated_weight < (max_contrib * 0.01):
                     print("[ra] Base weight is less than 1% of the max weight, ignore the node "
                           + starting_node.hex_insn + "@" + starting_node.function)
                     continue
