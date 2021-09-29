@@ -34,10 +34,17 @@ class ParallelizableRelationAnalysis:
     def do_forward_propogation(dgraph, use_weight, reachable_output_events_per_static_node):
         print("[ra] starting forward propogation")
         a = time.time()
+        uid = 0
         for node in dgraph.target_nodes:
             node.output_set.add(node)
+            node.output_set_uid = uid
+            uid += 1
 
         visited = set()
+        #same = 0
+        #diff = 0
+        #total1 = 0
+        #total2 = 0
         for node in dgraph.postorder_list: #a node will be visited only if its successors have all been visited
             assert node not in visited
             visited.add(node)
@@ -45,56 +52,64 @@ class ParallelizableRelationAnalysis:
             #    print("[ra] visited " + str(len(visited)) + " nodes")
             if node in dgraph.target_nodes:
                 continue
-            node_insn = node.static_node.insn
+            #a1 = time.time()
+            #node_insn = node.static_node.insn
             node_id = node.static_node.id
             #print("[ra] Forward propogating for node: " + hex(node_insn) + " " + str(node.id))
             #backedge_sources = node.static_node.backedge_sources
-            num_succes = len(node.cf_succes) + len(node.df_succes)
+            seen_output_set = {}
+            seen_output_exclude_set = {}
+            exclude_set_updated = False
             for cf_succe in node.cf_succes:
                 cf_succe_insn = cf_succe.static_node.insn
-
-                exclude_set_modified = False
                 if cf_succe_insn in node.static_node.backedge_sources:
                     for output_node in cf_succe.output_set:
                         if output_node.input_sets.get(node_id, 0) > 0:
                             #print("[ra] Node already attributed to the input of some output node: " + str(output_node.id))
                             node.output_exclude_set.add(output_node)
-                            exclude_set_modified = True
-                if num_succes == 1 and exclude_set_modified is False:
-                    node.output_set = cf_succe.output_set
-                    node.output_exclude_set = cf_succe.output_exclude_set
-                    break
-                #    wavefront.add(cf_succe.static_node)
-                #    print("[ra] insn: " + cf_succe.static_node.hex_insn + " added to pending list because of cycles...")
-                #    continue
-                node.output_set = node.output_set.union(cf_succe.output_set)
-                node.output_exclude_set = node.output_exclude_set.union(cf_succe.output_exclude_set)
-            #if len(node.output_exclude_set) > 0:
-            #    print("[ra] include outputs: " + str([n.id for n in node.output_set]))
-            #    print("[ra] exclude outputs: " + str([n.id for n in node.output_exclude_set]))
+                            exclude_set_updated = True
+
+                if cf_succe.output_set_uid not in seen_output_set:
+                    seen_output_set[cf_succe.output_set_uid] = cf_succe.output_set
+                    seen_output_exclude_set[cf_succe.output_set_uid] = cf_succe.output_exclude_set
 
             for df_succe in node.df_succes:
-                #df_succe_insn = df_succe.static_node.insn
-                #if df_succe_insn in backedge_sources:
-                #    wavefront.add(df_succe.static_node)
-                #    print("[ra] insn: " + df_succe.static_node.hex_insn + " added to pending list because of cycles...")
-                #    continue
-                exclude_set_same = False
                 if df_succe.static_node.is_df is False:
-                    exclude_set_same = True
-                    if num_succes == 1:
-                        node.output_exclude_set = df_succe.output_exclude_set
-                    else:
-                        node.output_exclude_set = node.output_exclude_set.union(df_succe.output_exclude_set) #TODO, never referenced?
-                if num_succes == 1 and (exclude_set_same is True or len(node.output_exclude_set) == len(df_succe.output_exclude_set)):
-                    node.output_set = df_succe.output_set
+                    if df_succe.output_set_uid not in seen_output_exclude_set:
+                        seen_output_exclude_set[df_succe.output_set_uid] = df_succe.output_exclude_set
+                else:
+                    if len(df_succe.output_exclude_set) > 0:
+                        exclude_set_updated = True
+
+                if df_succe.output_set_uid not in seen_output_set:
+                    seen_output_set[df_succe.output_set_uid] = df_succe.output_set
+
+            if exclude_set_updated is False and len(seen_output_set) == 1:
+                assert(len(seen_output_exclude_set) <= 1)
+                #same += 1
+                for k in seen_output_set:
+                    node.output_set_uid = k
+                    node.output_set = seen_output_set[k]
                     break
+                for k in seen_output_exclude_set:
+                    assert node.output_set_uid == k
+                    node.output_exclude_set = seen_output_exclude_set[k]
+            else:
+                #diff += 1
+                for k in seen_output_set:
+                    node.output_set = node.output_set.union(seen_output_set[k])
+                for k in seen_output_exclude_set:
+                    node.output_exclude_set = node.output_exclude_set.union(seen_output_exclude_set[k])
 
-                node.output_set = node.output_set.union(df_succe.output_set)
-
+            if node.output_set_uid is None:
+                node.output_set_uid = uid
+                uid += 1
             #if len(visited)%100 == 0:
-            #    print("[ra] output set size " + str(len(node.output_set)) + " nodes")
-
+            #    print("[ra] output set size " + str(len(node.output_set)) + " nodes " + str([len(s.output_set) for s in itertools.chain(node.cf_succes, node.df_succes)]))
+            #    print("[ra] same: " + str(same))
+            #    print("[ra] diff: " + str(diff))
+            #    print("[ra]total1 " + str(total1))
+            #    print("[ra]total2 " + str(total2))
             #for output_node in node.output_set:
             #    if output_node in node.output_exclude_set:
             #        continue
@@ -125,16 +140,18 @@ class ParallelizableRelationAnalysis:
             #                output_node.input_sets[group_id] = set()
             #            output_node.input_sets[group_id].add(virtual_node)
 
+            #a2 = time.time()
+            #total1 += (a2-a1)
             for node in itertools.chain(node.cf_succes, node.df_succes):
+                if node.output_exclude_set is None: #already seen
+                    continue
                 if not ParallelizableRelationAnalysis.predes_all_visited(node, visited):
                     continue
 
                 #if node in dgraph.target_nodes:
                 #    continue
                 #node_insn = node.static_node.insn
-                if node.output_exclude_set is None: #already seen
-                    continue
-                node_insn = node.static_node.insn
+                #node_insn = node.static_node.insn
                 node_id = node.static_node.id
                 if len(node.output_exclude_set) > 0:
                     node.output_set = node.output_set.difference(node.output_exclude_set)
@@ -156,6 +173,12 @@ class ParallelizableRelationAnalysis:
                     node.output_weight = output_weight
                 node.output_exclude_set = None
                 node.output_set = None
+            #a3 = time.time()
+            #total2 += (a3-a2)
+        #print("[ra]total1 " + str(total1))
+        #print("[ra]total2 " + str(total2))
+        #print("[ra] same: " + str(same))
+        #print("[ra] diff: " + str(diff))
         b = time.time()
         print("[ra] forward propogation part1 took " + str(b - a))
         # For the leftover nodes who have no predecessors
@@ -476,7 +499,13 @@ if __name__ == "__main__":
     path = "/home/anygroup/perf_debug_tool/"
     dd = DynamicDependence(starting_events, prog, arg, path)
     dd.prepare_to_build_dynamic_dependencies(10000)
+<<<<<<< HEAD
     dgraph = dd.build_dynamic_dependencies(insn=0x409daa, pa_id=0)
     node = StaticDepGraph.func_to_graph["sweep"].insn_to_node[0x409daa]
+=======
+    dgraph = dd.build_dynamic_dependencies(insn=0x8050402, pa_id=0)
+    node = StaticDepGraph.func_to_graph["scanblock"].insn_to_node[0x8050402]
+>>>>>>> 46f4061... [ra] Remove redundant unions in forward propogation.
     wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, node, 0, 0)
     print([(str(w.insn) + "@" + w.function) for w in wavefront], rgroup.toJSON())
+    print(rgroup)

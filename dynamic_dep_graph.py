@@ -49,6 +49,7 @@ class DynamicNode(JSONEncoder):
         self.load_bit_mask = None
         self.store_bit_mask = None
         self.output_set = set() #TODO, persist these two as well?
+        self.output_set_uid = None
         self.output_exclude_set = set()
         self.output_set_count = None
         self.output_weight = None
