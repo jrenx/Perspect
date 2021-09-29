@@ -244,7 +244,7 @@ class RelationAnalysis:
                     continue
 
                 if starting_node in self.static_node_to_weight:
-                    if rgroup.weight is None or rgroup.weight != self.static_node_to_weight[starting_node].total_weight:
+                    if rgroup.weight is None: # or rgroup.weight != self.static_node_to_weight[starting_node].total_weight:
                         #TODO print
                         rgroup.add_base_weight(self.static_node_to_weight[starting_node].total_weight)
 
