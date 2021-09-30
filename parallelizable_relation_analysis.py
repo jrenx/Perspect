@@ -501,13 +501,8 @@ if __name__ == "__main__":
     path = "/home/anygroup/perf_debug_tool/"
     dd = DynamicDependence(starting_events, prog, arg, path)
     dd.prepare_to_build_dynamic_dependencies(10000)
-<<<<<<< HEAD
     dgraph = dd.build_dynamic_dependencies(insn=0x409daa, pa_id=0)
     node = StaticDepGraph.func_to_graph["sweep"].insn_to_node[0x409daa]
-=======
-    dgraph = dd.build_dynamic_dependencies(insn=0x8050402, pa_id=0)
-    node = StaticDepGraph.func_to_graph["scanblock"].insn_to_node[0x8050402]
->>>>>>> 46f4061... [ra] Remove redundant unions in forward propogation.
     wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, node, 0, 0)
     print([(str(w.insn) + "@" + w.function) for w in wavefront], rgroup.toJSON())
     print(rgroup)
