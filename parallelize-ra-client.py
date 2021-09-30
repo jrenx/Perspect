@@ -75,9 +75,17 @@ def sender_receiver(q, results_q):
     num_processor = 8
     for addr in worker_addresses:
         for _ in range(num_processor):
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            print("[sender_receiver] Connecting to {}".format(addr), flush=True)
-            s.connect(addr)
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                print("[sender_receiver] Connecting to {}".format(addr), flush=True)
+                s.connect(addr)
+            except Exception as ex:
+                print("Caught exception in sender receiver loop: " + str(e))
+                print(str(e))
+                print("-" * 60)
+                traceback.print_exc(file=sys.stdout)
+                print("-" * 60)
+                continue
             print("[sender_receiver] Connected to {}".format(addr), flush=True)
             sockets.append(s)
             t = threading.Thread(target=sender_receiver_worker, args=(s, q, results_q))
@@ -230,7 +238,7 @@ class RelationAnalysis:
                         print("[ra] Getting results for: " + hex(int(key)))
                         curr_wavefront = []
                         rgroup = None
-                        if value[0] is not None:
+                        if value[0] is not None and value[1] is not None:
                             for node_str in value[0]:
                                 segs = node_str.split("@")
                                 wavelet = StaticDepGraph.func_to_graph[segs[1]].insn_to_node[int(segs[0])]
