@@ -13,7 +13,7 @@ CC=gcc
 
 analysis: analysis.o util.o dataflow_analysis.o static_df_analysis.o stack_analysis.o bitvar_analysis.o cJSON.o
 	$(CXX) analysis.o util.o dataflow_analysis.o static_df_analysis.o stack_analysis.o bitvar_analysis.o cJSON.o -L$(DYNINST_LIB) -ldyninstAPI -lboost_system -ltbbmalloc_proxy -linstructionAPI -lparseAPI -lsymtabAPI -lcommon -lstdc++ -lm\
-	      -shared -Wl,-soname,static_analysis.so -o static_analysis.so -std=c++11
+	      -shared -Wl,-soname,static_analysis.so -o static_analysis.so -std=c++11 -O2
 
 analysis.o: analysis.cpp
 	$(CXX) -g -c -fPIC $(CFLAGS) -I$(DYNINST_INCLUDE) analysis.cpp -std=c++11
