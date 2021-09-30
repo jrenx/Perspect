@@ -436,13 +436,16 @@ class ParallelizableRelationAnalysis:
             print("[ra] Base weight is less than 1% of the max weight, ignore the node "
                   + starting_node.hex_insn + "@" + starting_node.function)
             return wavefront, None
-        ################ Do forward propogation ######################
-        ########## and backward propogation in the meanwhile #########
-        ParallelizableRelationAnalysis.do_forward_propogation(dgraph, use_weight)
 
-        ############## Setup for backward propogation ################
-        ##############################################################
-        ParallelizableRelationAnalysis.do_backward_propogation(dgraph, starting_node)
+        if dgraph.reachable_output_events_per_static_node is None:
+            dgraph.reachable_output_events_per_static_node = {}
+            ################ Do forward propogation ######################
+            ########## and backward propogation in the meanwhile #########
+            ParallelizableRelationAnalysis.do_forward_propogation(dgraph, use_weight)
+
+            ############## Setup for backward propogation ################
+            ##############################################################
+            ParallelizableRelationAnalysis.do_backward_propogation(dgraph, starting_node)
 
         ################### Calculate relations ######################
         ##############################################################

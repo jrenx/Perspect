@@ -714,7 +714,7 @@ class DynamicGraph:
         self.target_nodes = set()
         self.insn_to_dyn_nodes = {}
         self.id_to_node = {} #TODO, obselete now
-        self.reachable_output_events_per_static_node = {}
+        self.reachable_output_events_per_static_node = None
         self.result_file = None
 
     def toJSON(self):
@@ -748,10 +748,11 @@ class DynamicGraph:
         for n in self.target_nodes:
             data["target_nodes"].append(n.id)
 
-        json_reachable_output_events_per_static_node = {}
-        for k in self.reachable_output_events_per_static_node:
-            json_reachable_output_events_per_static_node[k] = [dn.id for dn in self.reachable_output_events_per_static_node[k]]
-        data["reachable_output_events_per_static_node"] = json_reachable_output_events_per_static_node
+        if self.reachable_output_events_per_static_node is not None:
+            json_reachable_output_events_per_static_node = {}
+            for k in self.reachable_output_events_per_static_node:
+                json_reachable_output_events_per_static_node[k] = [dn.id for dn in self.reachable_output_events_per_static_node[k]]
+            data["reachable_output_events_per_static_node"] = json_reachable_output_events_per_static_node
         return data
 
     @staticmethod
