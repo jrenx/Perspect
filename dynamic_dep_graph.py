@@ -814,7 +814,12 @@ class DynamicGraph:
         for id in data["target_nodes"]:
             dg.target_nodes.add(id_to_node[id])
         if "reachable_output_events_per_static_node" in data:
-            dg.reachable_output_events_per_static_node = data["reachable_output_events_per_static_node"]
+            dg.reachable_output_events_per_static_node = {}
+            json_reachable_output_events_per_static_node = data["reachable_output_events_per_static_node"]
+            for k in json_reachable_output_events_per_static_node:
+                dg.reachable_output_events_per_static_node[k] = set()
+                for dn_id in json_reachable_output_events_per_static_node[k]:
+                    dg.reachable_output_events_per_static_node[k].add(id_to_node[dn_id])
         return dg
 
     """
