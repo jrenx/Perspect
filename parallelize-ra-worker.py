@@ -40,7 +40,7 @@ def run_task(id, pipe, prog, arg, path, starting_events):
             sys.stderr = f
             a = time.time()
             dgraph = dd.build_dynamic_dependencies(insn=insn, pa_id=id)
-            wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, node, starting_weight, max_contrib)
+            wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, node, starting_weight, max_contrib, prog)
             with open(dgraph.result_file, 'w') as f:
                 json.dump(dgraph.toJSON(), f, indent=4, ensure_ascii=False)
             print("WAVEFRONT: " + str(wavefront))

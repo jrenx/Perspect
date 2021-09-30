@@ -190,8 +190,18 @@ class RelationAnalysis:
         curr_weighted_wavefront = sorted(curr_weighted_wavefront, key=lambda weight_and_node: weight_and_node[0])
         return curr_weighted_wavefront
 
-    def analyze(self):
+    def analyze(self, use_cache=False):
         a = time.time()
+        cache_file = os.path.join(self.path, "cache", self.prog, "rgroups.json")
+        if use_cache is True:
+            if os.path.exists(cache_file):
+                with open(cache_file, 'w') as f:
+                    json_rgroups = json.load(f)
+                    rgroups = []
+                    for json_rgroup in json_rgroups:
+                        rgroups.append(RelationGroup.fromJSON(json_rgroup, self.prog))
+                    self.print_rgroups(rgroups)
+                return
         sender_receiver_t = threading.Thread(target=sender_receiver,
                                     args=(self.pending_inputs, self.received_results))
         sender_receiver_t.start()
@@ -301,24 +311,31 @@ class RelationAnalysis:
             print("-" * 60)
         sender_receiver_t.join()
         self.relation_groups = sorted(self.relation_groups, key=lambda rg: rg.weight)
-        num_rels = 0
-        for relation_group in reversed(self.relation_groups):
-            num_rels += len(relation_group.relations)
-            assert len(relation_group.relations) == len(relation_group.sorted_relations)
-            print(relation_group)
-        print("[ra] Total number of relations groups: " + str(len(self.relation_groups)))
-        print("[ra] Total number of relations: " + str(num_rels))
+        self.relation_groups = self.relation_groups[::-1] #reverse the list
+        print_rgroups(self.relation_groups)
         b = time.time()
         print("[ra] took " + str(b-a))
         json_rgroups = []
-        for relation_group in reversed(self.relation_groups):
+        for relation_group in self.relation_groups:
             json_rgroups.append(relation_group.toJSON())
-        with open(os.path.join(self.path, "cache", self.prog, "rgroups.json"), 'w') as f:
+        with open(cache_file, 'w') as f:
             json.dump(json_rgroups, f, indent=4)
- 
 
+    def print_rgroups(self, relation_groups):
+        num_rels = 0
+        for relation_group in relation_groups:
+            num_rels += len(relation_group.relations)
+            assert len(relation_group.relations) == len(relation_group.sorted_relations)
+            print(relation_group)
+        print("[ra] Total number of relations groups: " + str(len(relation_groups)))
+        print("[ra] Total number of relations: " + str(num_rels))
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--use_cache', dest='use_cache', action='store_true')
+    parser.set_defaults(use_cache=False)
+    args = parser.parse_args()
+
     starting_events = []
     starting_events.append(["rdi", 0x409daa, "sweep"])
     starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
@@ -326,4 +343,4 @@ if __name__ == "__main__":
     starting_events.append(["rcx", 0x40764c, "runtime.free"])
 
     ra = RelationAnalysis(starting_events, 0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool_dev_jenny/")
-    ra.analyze()
+    ra.analyze(args.use_cache)

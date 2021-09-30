@@ -274,7 +274,7 @@ class ParallelizableRelationAnalysis:
 
     @staticmethod
     def build_relation_with_predecessor(dgraph, starting_node, prede_node, rgroup, wavefront,
-                                                 use_weight, base_weight):
+                                                 use_weight, base_weight, prog):
         #insn = prede_node.insn
         #hex_insn = prede_node.hex_insn
         if DEBUG: print("-------")
@@ -375,7 +375,7 @@ class ParallelizableRelationAnalysis:
             return
 
         ################ build relations ################
-        relation = rgroup.get_or_make_relation(prede_node, len(dgraph.insn_to_dyn_nodes[prede_node.insn]), weight)
+        relation = rgroup.get_or_make_relation(prede_node, len(dgraph.insn_to_dyn_nodes[prede_node.insn]), weight, prog)
         ############ detect forward relations ############
         if Invariance.is_invariant(output_set_counts):
             if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " is forward invariant with the output event")
@@ -416,7 +416,7 @@ class ParallelizableRelationAnalysis:
                             + prede_node.hex_insn + "'s backward proportion with the output event is considered")
 
     @staticmethod
-    def one_pass(dgraph, starting_node, starting_weight, max_contrib):
+    def one_pass(dgraph, starting_node, starting_weight, max_contrib, prog):
         a = time.time()
         print("Starting forward and backward pass")
         wavefront = []
@@ -469,7 +469,7 @@ class ParallelizableRelationAnalysis:
                 continue
             # assert insn in dgraph.insn_to_dyn_nodes, hex(insn)
             ParallelizableRelationAnalysis.build_relation_with_predecessor(dgraph, starting_node, static_node, rgroup, wavefront,
-                                                 use_weight, base_weight)
+                                                 use_weight, base_weight, prog)
 
             for p in static_node.cf_predes:
                 worklist.append(p)
@@ -503,6 +503,6 @@ if __name__ == "__main__":
     dd.prepare_to_build_dynamic_dependencies(10000)
     dgraph = dd.build_dynamic_dependencies(insn=0x409daa, pa_id=0)
     node = StaticDepGraph.func_to_graph["sweep"].insn_to_node[0x409daa]
-    wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, node, 0, 0)
+    wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, node, 0, 0, prog)
     print([(str(w.insn) + "@" + w.function) for w in wavefront], rgroup.toJSON())
     print(rgroup)

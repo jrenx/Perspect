@@ -4,6 +4,18 @@ from dynamic_dep_graph import *
 DEBUG = True
 Weight_Threshold = 0
 
+def get_line(insn, prog):
+    if not isinstance(insn, str):
+        insn = hex(insn)
+    cmd = ['addr2line', '-e', prog, insn]
+    print("[main] running command: " + str(cmd))
+    result = subprocess.run(cmd, stdout=subprocess.PIPE)
+    result_seg = result.stdout.decode('ascii').strip().split(":")
+    file = result_seg[0].split("/")[-1]
+    line = result_seg[1]
+    print("[main] command returned: " + str(line))
+    return file, line
+
 class Invariance:
     def __init__(self, ratio, conditional_proportion=None): #TODO, in the future, replace with actual conditions
         self.ratio = ratio
@@ -90,7 +102,7 @@ class Proportion:
         return Proportion(distribution, weighted_distribution)
 
 class Relation:
-    def __init__(self, target_node, prede_node, prede_count, weight):
+    def __init__(self, target_node, prede_node, prede_count, weight, prog, lines=None, file=None):
         self.target_node = target_node
         self.prede_node = prede_node
         self.prede_count = prede_count
@@ -98,9 +110,25 @@ class Relation:
         self.forward = None
         self.backward = None
 
+        if lines is not None:
+            self.lines = lines
+        else:
+            if isinstance(prede_node.bb, BasicBlock):
+                self.lines = list(prede_node.bb.lines)
+            else:
+                self.lines = []
+            if len(self.lines) == 0:
+                file, line = get_line(prede_node.insn, prog)
+                self.lines.add(line)
+
+        if file is None:
+            file, line = get_line(prede_node.insn, prog)
+        self.file = file
+
     def __str__(self):
         s = ""
-        s += "  >>> " + self.prede_node.hex_insn + "@" + self.prede_node.function + " <<<\n"
+        s += "  >>> " + str(self.file) + ":" + str(self.lines) + " "
+        s += self.prede_node.hex_insn + "@" + self.prede_node.function + " <<<\n"
         s += "  " + str(self.weight) + "\n"
         s += "  => forward:  " + str(self.forward)
         s += "  => backward: " + str(self.backward)
@@ -115,10 +143,12 @@ class Relation:
         data["weight"] = self.weight.toJSON()
         data["forward"] = self.forward.toJSON() if self.forward is not None else None
         data["backward"] = self.backward.toJSON() if self.backward is not None else None
+        data["lines"] = self.lines
+        data["file"] = self.file
         return data
 
     @staticmethod
-    def fromJSON(data):
+    def fromJSON(data, prog):
         segs = data["target_node"].split("@")
         target_node = StaticDepGraph.func_to_graph[segs[1]].insn_to_node[int(segs[0])]
 
@@ -127,7 +157,10 @@ class Relation:
 
         prede_count = data["prede_count"]
         weight = Weight.fromJSON(data["weight"])
-        rel = Relation(target_node, prede_node, prede_count, weight)
+        lines = data["lines"] if "lines" in data else None
+        file = data["file"] if "file" in data else None
+
+        rel = Relation(target_node, prede_node, prede_count, weight, prog, lines=lines, file=file)
 
         forward = data["forward"]
         if forward is not None:
@@ -139,18 +172,33 @@ class Relation:
         return rel
 
 class RelationGroup:
-    def __init__(self, starting_node, weight):
+    def __init__(self, starting_node, weight, prog, lines=None, file=None):
         self.starting_node = starting_node
         self.weight = weight
         self.relations = {}
         self.sorted_relations = []
+        if lines is not None:
+            self.lines = lines
+        else:
+            if isinstance(starting_node.bb, BasicBlock):
+                self.lines = starting_node.bb.lines
+            else:
+                self.lines = []
+            if len(self.lines) == 0:
+                file, line = get_line(starting_node.insn, prog)
+                self.lines.append(line)
+
+        if file is None:
+            file, line = get_line(starting_node.insn, prog)
+        self.file = file
         #self.invariant_predes = set()
         self.finished = False
 
     def __str__(self):
         assert(self.finished)
         s =  "================ Relation Group =================\n"
-        s += "Starting event: " + self.starting_node.hex_insn + "@" + self.starting_node.function
+        s += "Starting event: " + str(self.file) + ":" + str(self.lines) + " "
+        s +=  self.starting_node.hex_insn + "@" + self.starting_node.function
         s += " weight: " + str(self.weight) + "\n"
         s += " Total number of relations: " + str(len(self.sorted_relations)) + "\n"
         for rel in reversed(self.sorted_relations):
@@ -170,7 +218,7 @@ class RelationGroup:
         return data
 
     @staticmethod
-    def fromJSON(data):
+    def fromJSON(data, prog):
         segs = data["starting_node"].split("@")
         starting_node = StaticDepGraph.func_to_graph[segs[1]].insn_to_node[int(segs[0])]
         weight = data["weight"]
@@ -178,7 +226,7 @@ class RelationGroup:
         rgroup.finished = data["finished"]
         json_relations = data["relations"]
         for json_relation in json_relations:
-            relation = Relation.fromJSON(json_relation)
+            relation = Relation.fromJSON(json_relation, prog)
             rgroup.relations[relation.prede_node] = relation
         return rgroup
 
@@ -219,11 +267,11 @@ class RelationGroup:
     def sort_relations(self):
         self.sorted_relations = sorted(list(self.relations.values()), key=lambda relation: relation.weight)
 
-    def get_or_make_relation(self, prede_node, prede_count, weight):
+    def get_or_make_relation(self, prede_node, prede_count, weight, prog):
         if prede_node in self.relations:
             return self.relations[prede_node]
         else:
-            r = Relation(self.starting_node, prede_node, prede_count, weight)
+            r = Relation(self.starting_node, prede_node, prede_count, weight, prog)
             self.relations[prede_node] = r
             return r
         """
