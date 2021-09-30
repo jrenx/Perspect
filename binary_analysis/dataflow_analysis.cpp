@@ -302,7 +302,9 @@ void backwardSliceHelper(vector<Function *> *allFuncs,
           }
           if (INFO) cout << endl;
           cJSON_AddNumberToObject(json_bitOp, "insn_addr", opAssign->addr());
-          cJSON_AddStringToObject(json_bitOp, "operand", findMatchingOpExprStr(opAssign, bitOperands[opAssign]).c_str());
+	  string operandStr = findMatchingOpExprStr(opAssign, bitOperands[opAssign]);
+	  cout << "[sa] operand str: "<< operandStr << endl;
+          cJSON_AddStringToObject(json_bitOp, "operand", operandStr.c_str());
           cJSON_AddStringToObject(json_bitOp, "operation", opAssign->insn().getOperation().format().c_str());
           cJSON_AddItemToArray(json_bitOps, json_bitOp);
         }
