@@ -577,13 +577,13 @@ class DynamicDependence:
                     pp_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     stdout, stderr = pp_process.communicate()
                 except Exception as e:
-                    print(stdout)
-                    print(stderr)
                     print("Caught exception: " + str(e))
                     print(str(e))
                     print("-" * 60)
                     traceback.print_exc(file=sys.stdout)
                     print("-" * 60)
+                print(stdout)
+                print(stderr)
 
             time_record["preparse"] = time.time()
             print("[TIME] Preparsing trace took: ", str(time_record["preparse"] - time_record["start"]), flush=True)
