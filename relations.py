@@ -222,7 +222,7 @@ class RelationGroup:
         segs = data["starting_node"].split("@")
         starting_node = StaticDepGraph.func_to_graph[segs[1]].insn_to_node[int(segs[0])]
         weight = data["weight"]
-        rgroup = RelationGroup(starting_node, weight)
+        rgroup = RelationGroup(starting_node, weight, prog)
         rgroup.finished = data["finished"]
         json_relations = data["relations"]
         for json_relation in json_relations:
