@@ -119,7 +119,7 @@ class Relation:
                 self.lines = []
             if len(self.lines) == 0:
                 file, line = get_line(prede_node.insn, prog)
-                self.lines.add(line)
+                self.lines.append(line)
 
         if file is None:
             file, line = get_line(prede_node.insn, prog)
