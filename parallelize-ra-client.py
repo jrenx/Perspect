@@ -253,7 +253,7 @@ class RelationAnalysis:
                                 segs = node_str.split("@")
                                 wavelet = StaticDepGraph.func_to_graph[segs[1]].insn_to_node[int(segs[0])]
                                 curr_wavefront.append(wavelet)
-                            rgroup = RelationGroup.fromJSON(value[1])
+                            rgroup = RelationGroup.fromJSON(value[1], self.prog)
                         self.received_cache[int(key)] = (curr_wavefront, rgroup)
                         print("[ra] Done getting results for: " + hex(int(key)))
                 (curr_wavefront, rgroup) = self.received_cache[starting_node.insn]
