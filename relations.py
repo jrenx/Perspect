@@ -228,6 +228,7 @@ class RelationGroup:
         for json_relation in json_relations:
             relation = Relation.fromJSON(json_relation, prog)
             rgroup.relations[relation.prede_node] = relation
+            rgroup.sorted_relations.append(relation)
         return rgroup
 
     def add_base_weight(self, base_weight):
