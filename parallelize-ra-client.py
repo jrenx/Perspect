@@ -312,7 +312,7 @@ class RelationAnalysis:
         sender_receiver_t.join()
         self.relation_groups = sorted(self.relation_groups, key=lambda rg: rg.weight)
         self.relation_groups = self.relation_groups[::-1] #reverse the list
-        print_rgroups(self.relation_groups)
+        self.print_rgroups(self.relation_groups)
         b = time.time()
         print("[ra] took " + str(b-a))
         json_rgroups = []
