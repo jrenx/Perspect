@@ -422,7 +422,7 @@ class ParallelizableRelationAnalysis:
             if prede_node not in wavefront:
                 duplicate = False
                 for s in itertools.chain(prede_node.cf_succes, prede_node.df_succes):
-                    if s in rgroup.relations and rgroup[s] == relation:
+                    if s in rgroup.relations and rgroup.relations[s] == relation:
                         duplicate = True
                         print("[ra] Duplicate, do not add to wavefront")
                         break
