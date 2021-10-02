@@ -91,7 +91,7 @@ class Proportion:
         if not isinstance(other, Proportion):
             return False
         return self.mu == other.mu and \
-                self.std == oher.std and \
+                self.std == other.std and \
                 self.w_mu == other.w_mu and \
                 self.w_std == other.w_std
 
