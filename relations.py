@@ -124,10 +124,11 @@ class Relation:
         if file is None:
             file, line = get_line(prede_node.insn, prog)
         self.file = file
+        self.key = str(self.file) + ":" + str(self.lines)
 
     def __str__(self):
         s = ""
-        s += "  >>> " + str(self.file) + ":" + str(self.lines) + " "
+        s += "  >>> " + str(self.key) + " "
         s += self.prede_node.hex_insn + "@" + self.prede_node.function + " <<<\n"
         s += "  " + str(self.weight) + "\n"
         s += "  => forward:  " + str(self.forward)
@@ -228,7 +229,7 @@ class RelationGroup:
         for json_relation in json_relations:
             relation = Relation.fromJSON(json_relation, prog)
             rgroup.relations[relation.prede_node] = relation
-            rgroup.sorted_relations.append(relation)
+        rgroup.sort_relations()
         return rgroup
 
     def add_base_weight(self, base_weight):
@@ -266,7 +267,7 @@ class RelationGroup:
         self.finished = True
 
     def sort_relations(self):
-        self.sorted_relations = sorted(list(self.relations.values()), key=lambda relation: relation.weight)
+        self.sorted_relations = sorted(list(self.relations.values()), key=lambda relation: (relation.weight, relation.key))
 
     def get_or_make_relation(self, prede_node, prede_count, weight, prog):
         if prede_node in self.relations:
