@@ -389,10 +389,17 @@ class ParallelizableRelationAnalysis:
         elif not Invariance.is_irrelevant(output_set_counts):
             if DEBUG: print("[ra] NO INVARIANCE DETECTED")
             # It really only makes sense to consider every ratio there is ...
-            wavefront.append(prede_node)
             relation.forward = Proportion(output_set_count_list, weighted_output_set_count_list)
             if DEBUG: print("[ra] insn: "
                             + prede_node.hex_insn + "'s forward proportion with the output event is considered")
+            duplicate = False
+            for s in itertools.chain(prede_node.cf_succes, prede_node.df_succes):
+                if s in rgroup.relations and rgroup[s] == relation:
+                    duplicate = True
+                    print("[ra] Duplicate, do not add to wavefront")
+                    break
+            if duplicate is False:
+                wavefront.append(prede_node)
         ############ detect backward relations ###########
         if Invariance.is_invariant(input_set_counts):
             if DEBUG: print("[ra] insn: "
@@ -409,11 +416,18 @@ class ParallelizableRelationAnalysis:
         elif not Invariance.is_irrelevant(input_set_counts):
             if DEBUG: print("[ra] NO INVARIANCE DETECTED")
             # It really only makes sense to consider every ratio there is ...
-            if prede_node not in wavefront:
-                wavefront.append(prede_node)
             relation.backward = Proportion(input_set_count_list, weighted_input_set_count_list)
             if DEBUG: print("[ra] insn: "
                             + prede_node.hex_insn + "'s backward proportion with the output event is considered")
+            if prede_node not in wavefront:
+                duplicate = False
+                for s in itertools.chain(prede_node.cf_succes, prede_node.df_succes):
+                    if s in rgroup.relations and rgroup[s] == relation:
+                        duplicate = True
+                        print("[ra] Duplicate, do not add to wavefront")
+                        break
+                if duplicate is False:
+                    wavefront.append(prede_node)
 
     @staticmethod
     def one_pass(dgraph, starting_node, starting_weight, max_contrib, prog):
@@ -468,7 +482,8 @@ class ParallelizableRelationAnalysis:
                 #print("[ra][warn] insn not in dynamic graph??? " + hex(insn))
                 continue
             # assert insn in dgraph.insn_to_dyn_nodes, hex(insn)
-            ParallelizableRelationAnalysis.build_relation_with_predecessor(dgraph, starting_node, static_node, rgroup, wavefront,
+            ParallelizableRelationAnalysis.build_relation_with_predecessor(dgraph, starting_node, static_node,
+                                                                           rgroup, wavefront,
                                                  use_weight, base_weight, prog)
 
             for p in static_node.cf_predes:

@@ -25,6 +25,13 @@ class Invariance:
             self.is_conditional = True
             self.conditional_proportion = conditional_proportion
 
+    def __eq__(self, other):
+        if not isinstance(other, Invariance):
+            return False
+        return self.ratio == other.ratio and \
+                self.is_conditional == other.is_conditional and \
+                self.conditional_proportion == other.conditional_proportion
+
     def __str__(self):
         s = "INVARIANT with ratio: " + str(self.ratio)
         if self.is_conditional is True:
@@ -80,6 +87,14 @@ class Proportion:
             self.w_mu = None
             self.w_std = None
 
+    def __eq__(self, other):
+        if not isinstance(other, Proportion):
+            return False
+        return self.mu == other.mu and \
+                self.std == oher.std and \
+                self.w_mu == other.w_mu and \
+                self.w_std == other.w_std
+
     def __str__(self):
         s = "VARIABLE "
         s += "with distrib (mean: {:.2f}".format(self.mu) + ", std: {:.2f}".format(self.std) + ") "
@@ -125,6 +140,13 @@ class Relation:
             file, line = get_line(prede_node.insn, prog)
         self.file = file
         self.key = str(self.file) + ":" + str(self.lines)
+
+    def __eq__(self, other):
+        if not isinstance(other, Relation):
+            return False
+        return self.weight == other.weight and \
+                self.forward == other.forward and \
+                self.backward == other.backward
 
     def __str__(self):
         s = ""
