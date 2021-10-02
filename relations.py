@@ -8,12 +8,12 @@ def get_line(insn, prog):
     if not isinstance(insn, str):
         insn = hex(insn)
     cmd = ['addr2line', '-e', prog, insn]
-    print("[main] running command: " + str(cmd))
+    #print("[main] running command: " + str(cmd))
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
     result_seg = result.stdout.decode('ascii').strip().split(":")
     file = result_seg[0].split("/")[-1]
     line = result_seg[1]
-    print("[main] command returned: " + str(line))
+    #print("[main] command returned: " + str(line))
     return file, line
 
 class Invariance:
@@ -267,7 +267,7 @@ class RelationGroup:
         self.finished = True
 
     def sort_relations(self):
-        self.sorted_relations = sorted(list(self.relations.values()), key=lambda relation: (relation.weight, relation.key))
+        self.sorted_relations = sorted(list(self.relations.values()), key=lambda relation: (relation.key, relation.weight))
 
     def get_or_make_relation(self, prede_node, prede_count, weight, prog):
         if prede_node in self.relations:
@@ -341,14 +341,14 @@ class Weight:
         return Weight(actual_weight, base_weight, perc_contrib, corr, order)
 
     def __eq__(self, other):
-        return (self.total_weight == other.total_weight
+        return (round(self.total_weight, 2) == round(other.total_weight, 2)
                 and self.corr == other.corr
                 and self.order == other.order)
 
     def __gt__(self, other):
-        if self.total_weight > other.total_weight:
+        if round(self.total_weight, 2) > round(other.total_weight, 2):
             return True
-        if self.total_weight < other.total_weight:
+        if round(self.total_weight, 2) < round(other.total_weight, 2):
             return False
         if self.corr > other.corr:
             return True
@@ -359,9 +359,9 @@ class Weight:
         return False
 
     def __lt__(self, other):
-        if self.total_weight < other.total_weight:
+        if round(self.total_weight, 2) < round(other.total_weight, 2):
             return True
-        if self.total_weight > other.total_weight:
+        if round(self.total_weight, 2) > round(other.total_weight, 2):
             return False
         if self.corr < other.corr:
             return True
