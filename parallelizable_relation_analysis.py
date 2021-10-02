@@ -460,6 +460,8 @@ class ParallelizableRelationAnalysis:
             ############## Setup for backward propogation ################
             ##############################################################
             ParallelizableRelationAnalysis.do_backward_propogation(dgraph, starting_node)
+            with open(dgraph.result_file, 'w') as f:
+                json.dump(dgraph.toJSON(), f, indent=4, ensure_ascii=False)
 
         ################### Calculate relations ######################
         ##############################################################
