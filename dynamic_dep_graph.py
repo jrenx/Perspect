@@ -193,7 +193,9 @@ class DynamicNode(JSONEncoder):
         if "output_weight" in data:
             dn.output_weight =  data["output_weight"]
         if "input_sets" in data:
-            dn.input_sets = data["input_sets"]
+            json_input_sets = data["input_sets"]
+            for k in json_input_sets:
+                dn.input_sets[int(k)] = json_input_sets[k]
         return dn
 
 
