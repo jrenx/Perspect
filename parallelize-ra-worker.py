@@ -125,10 +125,11 @@ def main():
                 pipe = pipes.pop()
                 threading.Thread(target=connect_bridge, args=(client, pipe)).start()
 
-        for i in range(num_processor):
-            processes[i].join()
     except KeyboardInterrupt:
         pass
+    listener.close()
+    for i in range(num_processor):
+        processes[i].join()
     print("Worker processes finished running")
     with os.popen("ps ax | grep \"preprocess_parallel\" | grep -v grep") as p:
         lines = p.readlines()
