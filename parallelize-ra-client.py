@@ -344,5 +344,5 @@ if __name__ == "__main__":
     starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
     starting_events.append(["rcx", 0x40764c, "runtime.free"])
 
-    ra = RelationAnalysis(starting_events, 0x8050c16, "sweep", "909_ziptest_exe9_32", "test.zip", "/home/anygroup/eval_909_32bit/")
+    ra = RelationAnalysis(starting_events, 0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool_dev_jenny/")
     ra.analyze(args.use_cache)
