@@ -79,7 +79,7 @@ def sender_receiver(q, results_q):
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 print("[sender_receiver] Connecting to {}".format(addr), flush=True)
                 s.connect(addr)
-            except Exception as ex:
+            except Exception as e:
                 print("Caught exception in sender receiver loop: " + str(e))
                 print(str(e))
                 print("-" * 60)
