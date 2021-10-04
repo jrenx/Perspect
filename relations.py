@@ -12,7 +12,7 @@ def get_line(insn, prog):
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
     result_seg = result.stdout.decode('ascii').strip().split(":")
     file = result_seg[0].split("/")[-1]
-    line = result_seg[1]
+    line = int(result_seg[1])
     #print("[main] command returned: " + str(line))
     return file, line
 
@@ -180,7 +180,7 @@ class Relation:
 
         prede_count = data["prede_count"]
         weight = Weight.fromJSON(data["weight"])
-        lines = data["lines"] if "lines" in data else None
+        lines = [int(d) for d in data["lines"]] if "lines" in data else None
         file = data["file"] if "file" in data else None
 
         rel = Relation(target_node, prede_node, prede_count, weight, prog, lines=lines, file=file)
@@ -234,6 +234,8 @@ class RelationGroup:
         data["starting_node"] = str(self.starting_node.insn) +"@" + self.starting_node.function
         data["weight"] = self.weight
         data["finished"] = self.finished
+        data['lines'] = self.lines
+        data['file'] = self.file
         relations = []
         for relation in self.relations.values():
             relations.append(relation.toJSON())
@@ -247,6 +249,10 @@ class RelationGroup:
         weight = data["weight"]
         rgroup = RelationGroup(starting_node, weight, prog)
         rgroup.finished = data["finished"]
+        if 'lines' in data:
+            self.lines = data['lines']
+        if 'file' in data:
+            self.file = data['file']
         json_relations = data["relations"]
         for json_relation in json_relations:
             relation = Relation.fromJSON(json_relation, prog)
