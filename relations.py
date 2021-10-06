@@ -12,8 +12,11 @@ def get_line(insn, prog):
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
     result_seg = result.stdout.decode('ascii').strip().split(":")
     file = result_seg[0].split("/")[-1]
-    line = int(result_seg[1])
-    #print("[main] command returned: " + str(line))
+    try:
+        line = int(result_seg[1])
+        #print("[main] command returned: " + str(line))
+    except ValueError:
+        line = None
     return file, line
 
 class Invariance:
@@ -128,13 +131,12 @@ class Relation:
         if lines is not None:
             self.lines = lines
         else:
-            if isinstance(prede_node.bb, BasicBlock):
-                self.lines = list(prede_node.bb.lines)
-            else:
-                self.lines = []
-            if len(self.lines) == 0:
-                file, line = get_line(prede_node.insn, prog)
+            self.lines = []
+            file, line = get_line(prede_node.insn, prog)
+            if line is not None:
                 self.lines.append(line)
+            elif isinstance(prede_node.bb, BasicBlock):
+                self.lines = list(prede_node.bb.lines)
 
         if file is None:
             file, line = get_line(prede_node.insn, prog)
@@ -203,13 +205,12 @@ class RelationGroup:
         if lines is not None:
             self.lines = lines
         else:
-            if isinstance(starting_node.bb, BasicBlock):
-                self.lines = starting_node.bb.lines
-            else:
-                self.lines = []
-            if len(self.lines) == 0:
-                file, line = get_line(starting_node.insn, prog)
+            self.lines = []
+            file, line = get_line(starting_node.insn, prog)
+            if line is not None:
                 self.lines.append(line)
+            elif isinstance(starting_node.bb, BasicBlock):
+                self.lines = starting_node.bb.lines
 
         if file is None:
             file, line = get_line(starting_node.insn, prog)
