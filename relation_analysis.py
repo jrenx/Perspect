@@ -125,92 +125,92 @@ class RelationAnalysis:
                     self.print_rgroups(rgroups)
                 return
 
-        try:
-            self.dd.prepare_to_build_dynamic_dependencies(10000)
-            #TODO, do below in the static graph logic
-            StaticDepGraph.build_postorder_list()
-            StaticDepGraph.build_postorder_ranks()
-            #print(len(StaticDepGraph.postorder_list))
-            #print(len(StaticDepGraph.postorder_ranks))
+        self.dd.prepare_to_build_dynamic_dependencies(10000)
+        #TODO, do below in the static graph logic
+        StaticDepGraph.build_postorder_list()
+        StaticDepGraph.build_postorder_ranks()
+        #print(len(StaticDepGraph.postorder_list))
+        #print(len(StaticDepGraph.postorder_ranks))
 
-            insn = self.starting_insn
-            func = self.starting_func
-            visited = set()
-            wavefront = deque()
+        insn = self.starting_insn
+        func = self.starting_func
+        visited = set()
+        wavefront = deque()
 
-            iteration = 0
-            max_contrib = 0
+        iteration = 0
+        max_contrib = 0
 
-            wavefront.append((None, StaticDepGraph.func_to_graph[func].insn_to_node[insn], 0))
-            while len(wavefront) > 0:
-                curr_weight, starting_node, curr_max_contrib = wavefront.popleft()
-                if starting_node is not None:
-                    insn = starting_node.insn
-                    func = starting_node.function
+        wavefront.append((None, StaticDepGraph.func_to_graph[func].insn_to_node[insn], 0))
+        while len(wavefront) > 0:
+            curr_weight, starting_node, curr_max_contrib = wavefront.popleft()
+            if starting_node is not None:
+                insn = starting_node.insn
+                func = starting_node.function
 
-                if self.explained_by_invariant_relation(starting_node):
-                    print("\n" + hex(insn) + "@" + func + " has a node forward and backward invariant already explained...")
+            if self.explained_by_invariant_relation(starting_node):
+                print("\n" + hex(insn) + "@" + func + " has a node forward and backward invariant already explained...")
+                continue
+
+            iteration += 1
+            print("\n=======================================================================", flush=True)
+            print("[ra] Relational analysis, pass number: " + str(iteration) + " insn: " + hex(insn) + " weight: " +
+                  str(100 if curr_weight is None else curr_weight.total_weight) +
+                  " max weight: " + str(max_contrib))
+            starting_node.print_node("[ra] starting static node: ")
+
+            try:
+                dgraph = self.dd.build_dynamic_dependencies(insn=insn)
+            except Exception as e:
+                print("Caught exception in building dynamic graph for " + str(insn) + ": " + str(e))
+                print(str(e))
+                print("-" * 60)
+                traceback.print_exc(file=sys.stdout)
+                print("-" * 60)
+
+            curr_wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, starting_node, (0 if curr_weight is None else curr_weight.total_weight), curr_max_contrib, self.prog)
+            print("[ra] Got results for: " + hex(starting_node.insn))
+            if rgroup is None:
+                continue
+
+            updated_weight = rgroup.weight
+            if starting_node in self.static_node_to_weight:
+                updated_weight = self.static_node_to_weight[starting_node].total_weight
+                if rgroup.weight is None: # or rgroup.weight != self.static_node_to_weight[starting_node].total_weight:
+                    #TODO print
+                    rgroup.add_base_weight(self.static_node_to_weight[starting_node].total_weight)
+
+            if updated_weight < (max_contrib * 0.01):
+                print("[ra] Base weight is less than 1% of the max weight, ignore the node "
+                      + starting_node.hex_insn + "@" + starting_node.function)
+                continue
+
+            rgroup.sort_relations()
+            self.relation_groups.append(rgroup)
+            self.add_to_explained_variant_relation(rgroup)
+
+            self.update_weights(rgroup)
+            if rgroup.weight > max_contrib: max_contrib = rgroup.weight
+
+            curr_weighted_wavefront = self.get_weighted_wavefront(curr_wavefront)
+            print("=======================================================================")
+            for weight, wavelet in curr_weighted_wavefront:
+                if wavelet in visited:
+                    print("\n" + hex(wavelet.insn) + "@" + wavelet.function + " already visited...")
+                    continue
+                visited.add(wavelet)
+                if self.explained_by_invariant_relation(wavelet):
+                    print("\n" + hex(wavelet.insn) + "@" + wavelet.function + " has a node forward and backward invariant already explained...")
                     continue
 
-                iteration += 1
-                print("\n=======================================================================", flush=True)
-                print("[ra] Relational analysis, pass number: " + str(iteration) + " weight: " +
-                      str(100 if curr_weight is None else curr_weight.total_weight) +
-                      " max weight: " + str(max_contrib))
-                starting_node.print_node("[ra] starting static node: ")
+                wavefront.append((weight, wavelet, max_contrib))
+                starting_weight = 0 if weight is None else weight.total_weight
+                self.print_wavelet(weight, wavelet, "NEW")
 
-                dgraph = self.dd.build_dynamic_dependencies(insn=insn, pa_id=id)
-                curr_wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, starting_node, curr_weight, curr_max_contrib, self.prog)
-                print("[ra] Got results for: " + hex(starting_node.insn))
-                if rgroup is None:
-                    continue
+            print("=======================================================================")
+            #wavefront = sorted(wavefront, key=lambda weight_and_node: weight_and_node[0])
+            for weight, starting_node, _ in wavefront:
+                self.print_wavelet(weight, starting_node, "ALL")
 
-                updated_weight = rgroup.weight
-                if starting_node in self.static_node_to_weight:
-                    updated_weight = self.static_node_to_weight[starting_node].total_weight
-                    if rgroup.weight is None: # or rgroup.weight != self.static_node_to_weight[starting_node].total_weight:
-                        #TODO print
-                        rgroup.add_base_weight(self.static_node_to_weight[starting_node].total_weight)
-
-                if updated_weight < (max_contrib * 0.01):
-                    print("[ra] Base weight is less than 1% of the max weight, ignore the node "
-                          + starting_node.hex_insn + "@" + starting_node.function)
-                    continue
-
-                rgroup.sort_relations()
-                self.relation_groups.append(rgroup)
-                self.add_to_explained_variant_relation(rgroup)
-
-                self.update_weights(rgroup)
-                if rgroup.weight > max_contrib: max_contrib = rgroup.weight
-
-                curr_weighted_wavefront = self.get_weighted_wavefront(curr_wavefront)
-                print("=======================================================================")
-                for weight, wavelet in curr_weighted_wavefront:
-                    if wavelet in visited:
-                        print("\n" + hex(wavelet.insn) + "@" + wavelet.function + " already visited...")
-                        continue
-                    visited.add(wavelet)
-                    if self.explained_by_invariant_relation(wavelet):
-                        print("\n" + hex(wavelet.insn) + "@" + wavelet.function + " has a node forward and backward invariant already explained...")
-                        continue
-
-                    wavefront.append((weight, wavelet, max_contrib))
-                    starting_weight = 0 if weight is None else weight.total_weight
-                    self.print_wavelet(weight, wavelet, "NEW")
-
-                print("=======================================================================")
-                #wavefront = sorted(wavefront, key=lambda weight_and_node: weight_and_node[0])
-                for weight, starting_node in wavefront:
-                    self.print_wavelet(weight, starting_node, "ALL")
-
-                #break #TODO
-        except Exception as e:
-            print("Caught exception in relation analysis loop: " + str(e))
-            print(str(e))
-            print("-" * 60)
-            traceback.print_exc(file=sys.stdout)
-            print("-" * 60)
         self.relation_groups = sorted(self.relation_groups, key=lambda rg: rg.weight)
         self.relation_groups = self.relation_groups[::-1] #reverse the list
         self.print_rgroups(self.relation_groups)
