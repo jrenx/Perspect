@@ -161,7 +161,7 @@ class RelationAnalysis:
             try:
                 dgraph = self.dd.build_dynamic_dependencies(insn=insn)
             except Exception as e:
-                print("Caught exception in building dynamic graph for " + str(insn) + ": " + str(e))
+                print("Caught exception in building dynamic graph for " + hex(insn) + ": " + str(e))
                 print(str(e))
                 print("-" * 60)
                 traceback.print_exc(file=sys.stdout)
