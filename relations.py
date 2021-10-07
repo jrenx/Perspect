@@ -251,9 +251,9 @@ class RelationGroup:
         rgroup = RelationGroup(starting_node, weight, prog)
         rgroup.finished = data["finished"]
         if 'lines' in data:
-            self.lines = data['lines']
+            rgroup.lines = data['lines']
         if 'file' in data:
-            self.file = data['file']
+            rgroup.file = data['file']
         json_relations = data["relations"]
         for json_relation in json_relations:
             relation = Relation.fromJSON(json_relation, prog)
