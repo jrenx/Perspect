@@ -371,8 +371,8 @@ class Weight:
 
     def __eq__(self, other):
         return (round(self.total_weight, 2) == round(other.total_weight, 2)
-                and self.corr == other.corr
-                and self.order == other.order)
+                and self.corr == other.corr)
+        #and self.order == other.order)
 
     def __gt__(self, other):
         if round(self.total_weight, 2) > round(other.total_weight, 2):
@@ -383,8 +383,8 @@ class Weight:
             return True
         if self.corr < other.corr:
             return False
-        if self.order > other.order:
-            return True
+        #if self.order > other.order:
+        #    return True
         return False
 
     def __lt__(self, other):
@@ -396,6 +396,6 @@ class Weight:
             return True
         if self.corr > other.corr:
             return False
-        if self.order < other.order:
-            return True
+        #if self.order < other.order:
+        #    return True
         return False

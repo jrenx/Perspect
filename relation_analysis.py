@@ -127,8 +127,8 @@ class RelationAnalysis:
 
         self.dd.prepare_to_build_dynamic_dependencies(10000)
         #TODO, do below in the static graph logic
-        StaticDepGraph.build_postorder_list()
-        StaticDepGraph.build_postorder_ranks()
+        #StaticDepGraph.build_postorder_list()
+        #StaticDepGraph.build_postorder_ranks()
         #print(len(StaticDepGraph.postorder_list))
         #print(len(StaticDepGraph.postorder_ranks))
 
