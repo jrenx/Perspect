@@ -1452,6 +1452,7 @@ class StaticDepGraph:
             if i + 1 < len(starting_events):
                 key += "_"
         result_file = os.path.join(result_dir, 'static_graph_' + str(limit) + "_" + key)
+        indice_file = os.path.join(result_dir, 'indices_' + key)
         StaticDepGraph.result_file = result_file
         StaticDepGraph.prog = prog
         if use_cached_static_graph and os.path.isfile(result_file):
@@ -1462,7 +1463,7 @@ class StaticDepGraph:
             #StaticDepGraph.binary_ptr = setup(prog)
             #StaticDepGraph.get_indices(prog)
             #StaticDepGraph.writeJSON(result_file)
-            
+            #StaticDepGraph.output_indices_mapping(indice_file)
             StaticDepGraph.print_graph_info()
             return True
 
@@ -1547,7 +1548,9 @@ class StaticDepGraph:
                 StaticDepGraph.build_reverse_postorder_list()
                 StaticDepGraph.build_postorder_list()
                 StaticDepGraph.detect_df_backedges()
-                StaticDepGraph.get_indices(prog)
+                if GENERATE_INSN_MAPPING:
+                    StaticDepGraph.get_indices(prog)
+                    StaticDepGraph.output_indices_mapping(indice_file)
                 StaticDepGraph.print_graph_info()
         except Exception as e:
             print("Caught exception: " + str(e))
@@ -1585,6 +1588,19 @@ class StaticDepGraph:
         end = time.time()
         print("[static_dep] static analysis took a total time of: " + str(end - start))
         return False
+
+    @staticmethod
+    def output_indices_mapping(result_file):
+        indices = []
+        for graph in StaticDepGraph.func_to_graph.values():
+            for node in itertools.chain(graph.none_df_starting_nodes, \
+                                        graph.nodes_in_cf_slice.keys(), \
+                                        graph.nodes_in_df_slice.keys()):
+                if node.explained is False:
+                    continue
+                indices.append([node.file, node.line, node.index, node.total_count])
+        with open(result_file, 'w') as f:
+            json.dump(indices, f, indent=4)
 
     @staticmethod
     def get_indices(prog):
