@@ -154,7 +154,7 @@ class RelationAnalysis:
     def analyze(self, use_cache=False):
         print(use_cache)
         a = time.time()
-        cache_file = os.path.join(self.path, "cache", self.prog, "rgroups.json")
+        cache_file = os.path.join(self.path, "cache", self.prog, "rgroups_" + self.dd.key + ".json")
         print(cache_file)
         if use_cache is True:
             if os.path.exists(cache_file):
@@ -264,11 +264,18 @@ class RelationAnalysis:
         self.print_rgroups(self.relation_groups)
         b = time.time()
         print("[ra] took " + str(b-a))
+
         json_rgroups = []
         for relation_group in self.relation_groups:
             json_rgroups.append(relation_group.toJSON())
         with open(cache_file, 'w') as f:
             json.dump(json_rgroups, f, indent=4)
+
+        json_rgroups_simple = []
+        for relation_group in self.relation_groups:
+            json_rgroups_simple.append(relation_group.toJSON_simple())
+        with open(os.path.join(self.path, "cache", self.prog, "rgroups_simple_" + self.dd.key + ".json"), 'w') as f:
+            json.dump(json_rgroups_simple, f, indent=4)
 
     def print_rgroups(self, relation_groups):
         num_rels = 0

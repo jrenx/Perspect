@@ -483,6 +483,7 @@ class ParallelizableRelationAnalysis:
         ################### Calculate relations ######################
         ##############################################################
         rgroup = RelationGroup(starting_node, base_weight, prog)
+        rgroup.use_weight = use_weight
 
         worklist = deque()
         worklist.append(starting_node)

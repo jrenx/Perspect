@@ -217,6 +217,7 @@ class RelationGroup:
         self.file = file
         #self.invariant_predes = set()
         self.finished = False
+        self.use_weight = False
 
     def __str__(self):
         assert(self.finished)
@@ -237,10 +238,18 @@ class RelationGroup:
         data["finished"] = self.finished
         data['lines'] = self.lines
         data['file'] = self.file
+        data["use_weight"] = self.use_weight
         relations = []
         for relation in self.relations.values():
             relations.append(relation.toJSON())
         data["relations"] = relations
+        return data
+
+    def toJSON_simple(self):
+        data = {}
+        data["starting_node"] = [self.starting_node.file, self.starting_node.line,\
+                                 self.starting_node.index, self.starting_node.total_count]
+        data["use_weight"] = self.use_weight
         return data
 
     @staticmethod
@@ -254,12 +263,20 @@ class RelationGroup:
             rgroup.lines = data['lines']
         if 'file' in data:
             rgroup.file = data['file']
+        if 'use_weight' in data:
+            rgroup.use_weight = data['use_weight']
         json_relations = data["relations"]
         for json_relation in json_relations:
             relation = Relation.fromJSON(json_relation, prog)
             rgroup.relations[relation.prede_node] = relation
         rgroup.sort_relations()
         return rgroup
+
+    @staticmethod
+    def fromJSON(data):
+        [file, line, index, total_count] = data["starting_node"]
+        use_weight = data["use_weight"]
+        return ([file, line, index, total_count], use_weight)
 
     def add_base_weight(self, base_weight):
         self.weight = base_weight
