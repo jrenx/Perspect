@@ -1460,8 +1460,9 @@ class StaticDepGraph:
             b = time.time()
             print("[static_dep] Finished loading graph, took: " + str(b-a))
             #StaticDepGraph.binary_ptr = setup(prog)
-            #StaticDepGraph.getIndices(prog)
+            #StaticDepGraph.get_indices(prog)
             #StaticDepGraph.writeJSON(result_file)
+            
             StaticDepGraph.print_graph_info()
             return True
 
@@ -1546,7 +1547,7 @@ class StaticDepGraph:
                 StaticDepGraph.build_reverse_postorder_list()
                 StaticDepGraph.build_postorder_list()
                 StaticDepGraph.detect_df_backedges()
-                StaticDepGraph.getIndices(prog)
+                StaticDepGraph.get_indices(prog)
                 StaticDepGraph.print_graph_info()
         except Exception as e:
             print("Caught exception: " + str(e))
@@ -1586,7 +1587,7 @@ class StaticDepGraph:
         return False
 
     @staticmethod
-    def getIndices(prog):
+    def get_indices(prog):
         for file in StaticDepGraph.file_to_line_to_nodes:
             for line in StaticDepGraph.file_to_line_to_nodes[file]:
                 nodes = StaticDepGraph.file_to_line_to_nodes[file][line]
