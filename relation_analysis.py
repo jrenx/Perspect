@@ -44,7 +44,7 @@ class RelationAnalysis:
         self.load_node_counts(self.dd.trace_path + ".count")
         if indice_file is not None:
             indice_file_path = os.path.join(self.path, "cache", self.prog, indice_file)
-            self.load_indices(indice_file)
+            self.load_indices(indice_file_path)
         print("[ra] Finished getting the counts of each unique node in the dynamic trace")
         self.relation_groups = [] #results
 
