@@ -468,15 +468,15 @@ class ParallelizableRelationAnalysis:
             print(key)
             other_used_weight = other_simple_relation_groups.get(key, True)
             print("[ra] same relation group in the other set of relations used weight? " + str(other_used_weight))
-        if other_used_weight is False:
-            use_weight = False
-            base_weight = None
+        #if other_used_weight is False:
+        #    use_weight = False
+        #    base_weight = None
         if base_weight is None:
             assert use_weight is False
             base_weight = starting_weight
         else:
             assert use_weight is True
-        if base_weight < (max_contrib*0.01):
+        if (base_weight if other_used_weight is True else starting_weight) < (max_contrib*0.01):
             print("[ra] Base weight is less than 1% of the max weight, ignore the node "
                   + starting_node.hex_insn + "@" + starting_node.function)
             return wavefront, None
@@ -539,6 +539,7 @@ class ParallelizableRelationAnalysis:
             #only include the original ones?
         """
         rgroup.trim_invariant_group()
+        rgroup.weight = base_weight if other_used_weight is True else starting_weight
         b = time.time()
         print("[ra] One pass of relational analysis took: " + str(b - a))
         return wavefront, rgroup
