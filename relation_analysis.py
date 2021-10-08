@@ -22,7 +22,7 @@ Weight_Threshold = 0
 
 class RelationAnalysis:
     #negative_event_map = {}
-    def __init__(self, starting_events, insn, func, prog, arg, path):
+    def __init__(self, starting_events, insn, func, prog, arg, path, indice_file=None):
         self.starting_insn = insn
         self.starting_func = func
         self.prog = prog
@@ -30,6 +30,7 @@ class RelationAnalysis:
         self.prede_node_to_invariant_rel = {}
         self.node_counts = {}
         self.static_node_to_weight = {}
+        self.indices_map = {}
 
         self.dd = DynamicDependence(starting_events, prog, arg, path)
         self.dd.prepare_to_build_dynamic_dependencies(10000)
@@ -41,6 +42,9 @@ class RelationAnalysis:
             print(stdout)
             print(stderr)
         self.load_node_counts(self.dd.trace_path + ".count")
+        if indice_file is not None:
+            indice_file_path = os.path.join(self.path, "cache", self.prog, indice_file)
+            self.load_indices(indice_file)
         print("[ra] Finished getting the counts of each unique node in the dynamic trace")
         self.relation_groups = [] #results
 
@@ -67,7 +71,44 @@ class RelationAnalysis:
             if full_count == rel.prede_count:
                 return True
         return False
-    
+
+    def indices_not_found(self, prede_node):
+        lines = self.indices_map.get(prede_node.file, None)
+        if lines is None: #file not found
+            return True
+        (total_count, indices) = lines.get(prede_node.line, (None, None))
+        if indices is None: #line not found
+            return True
+        # only check if the index exists if the line maps to the same number of binary instructions
+        # so it's highly likely that it makes sense to match on the index of the binaries
+        if prede_node.total_count is None:
+            return False
+        if prede_node.total_count == total_count:
+            if prede_node.index not in indices:
+                return True
+        return False
+
+    def load_indices(self, indices_file_path):
+        with open(indices_file_path, 'r') as f:
+            index_quads = json.load(f)
+        self.indices_map = {}
+        for index_quad in index_quads:
+            file = index_quad[0]
+            line = index_quad[1]
+            index = index_quad[2]
+            total_count = index_quad[3]
+            lines = self.indices_map.get(file, None)
+            if lines is None:
+                lines = {}
+                self.indices_map[file] = lines
+            existing_total_count, indices = lines.get(line, (None, None))
+            if indices is None:
+                indices = set()
+                lines[line] = (total_count, indices)
+            else:
+                assert existing_total_count == total_count
+            indices.add(index)
+
     def load_node_counts(self, count_file_path):
         print("[ra] Loading node counts from file: " + str(count_file_path))
         with open(count_file_path, 'r') as f: #TODO
@@ -151,6 +192,10 @@ class RelationAnalysis:
                 print("\n" + hex(insn) + "@" + func + " has a node forward and backward invariant already explained...")
                 continue
 
+            if self.indices_not_found(starting_node):
+                print("\n" + hex(insn) + "@" + func + " is not found in the other repro's static slice...")
+                continue
+
             iteration += 1
             print("\n=======================================================================", flush=True)
             print("[ra] Relational analysis, pass number: " + str(iteration) + " insn: " + hex(insn) + " weight: " +
@@ -167,7 +212,10 @@ class RelationAnalysis:
                 traceback.print_exc(file=sys.stdout)
                 print("-" * 60)
 
-            curr_wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, starting_node, (0 if curr_weight is None else curr_weight.total_weight), curr_max_contrib, self.prog)
+            curr_wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, starting_node, \
+                                          (0 if curr_weight is None else curr_weight.total_weight), \
+                                                                       curr_max_contrib, self.prog, \
+                                                                             self.indices_map)
             print("[ra] Got results for: " + hex(starting_node.insn))
             if rgroup is None:
                 continue
@@ -243,5 +291,6 @@ if __name__ == "__main__":
     starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
     starting_events.append(["rcx", 0x40764c, "runtime.free"])
 
-    ra = RelationAnalysis(starting_events, 0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool_dev_jenny/")
+    ra = RelationAnalysis(starting_events, 0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool_dev_jenny/",
+                          indice_file='indices_esi_0x8050c16_ebx_0x804e41c_eax_0x804e5fb_eax_0x804e804')
     ra.analyze(args.use_cache)

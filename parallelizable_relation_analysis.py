@@ -3,6 +3,23 @@ from relations import *
 import itertools
 import time
 
+
+def indices_not_found(indices_map, prede_node):
+    lines = indices_map.get(prede_node.file, None)
+    if lines is None:  # file not found
+        return True
+    (total_count, indices) = lines.get(prede_node.line, (None, None))
+    if indices is None:  # line not found
+        return True
+    # only check if the index exists if the line maps to the same number of binary instructions
+    # so it's highly likely that it makes sense to match on the index of the binaries
+    if prede_node.total_count is None:
+        return False
+    if prede_node.total_count == total_count:
+        if prede_node.index not in indices:
+            return True
+    return False
+
 class ParallelizableRelationAnalysis:
 
     @staticmethod
@@ -430,7 +447,7 @@ class ParallelizableRelationAnalysis:
                     wavefront.append(prede_node)
 
     @staticmethod
-    def one_pass(dgraph, starting_node, starting_weight, max_contrib, prog):
+    def one_pass(dgraph, starting_node, starting_weight, max_contrib, prog, indices_map=None):
         a = time.time()
         print("Starting forward and backward pass")
         wavefront = []
@@ -484,6 +501,11 @@ class ParallelizableRelationAnalysis:
                 #print("[ra][warn] insn not in dynamic graph??? " + hex(insn))
                 continue
             # assert insn in dgraph.insn_to_dyn_nodes, hex(insn)
+            if indices_map is not None:
+                if indices_not_found(indices_map, static_node):
+                    print("\n" + hex(static_node.insn) + "@" + static_node.function + " is not found in the other repro's static slice...")
+                    continue
+
             ParallelizableRelationAnalysis.build_relation_with_predecessor(dgraph, starting_node, static_node,
                                                                            rgroup, wavefront,
                                                  use_weight, base_weight, prog)
