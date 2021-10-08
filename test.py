@@ -128,6 +128,18 @@ class TestSA(unittest.TestCase):
         print(ret)
         print(ret1)
 
+    def test_get_insn_offsets(self):
+        s, e = get_insn_offsets(500, "mgc0.c", "909_ziptest_exe9")
+        print(s)
+        print(e)
+
+    def test_get_addr_indices(self):
+        prog = '909_ziptest_exe9'
+        binary_ptr = setup(prog)
+        ret = get_addr_indices(binary_ptr, 'memcopy', 0x40fab2, 0x40fab7, [4258482])
+        print(ret)
+
+
 class TestStaticSlicing(unittest.TestCase):
     def test_basic(self):
         slice_starts = []

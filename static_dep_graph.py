@@ -18,6 +18,7 @@ DEBUG_SLICE = False
 VERBOSE = False
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 TRACKS_DIRECT_CALLER = False
+GENERATE_INSN_MAPPING = True
 HOST, PORT = "localhost", 9999
 
 class BasicBlock:
@@ -140,7 +141,6 @@ class BasicBlock:
         s += str([source.id for source in self.backedge_sources])
         s += " \n"
         return s
-
 
 class CFG:
     def __init__(self, func, prog):
@@ -708,7 +708,6 @@ class CFG:
                 continue
         raise Exception("Building CFG failed twice.")
 
-
 class BitOperation:
     def __init__(self, insn, operand, operation):
         self.insn = insn
@@ -829,7 +828,7 @@ class MemoryAccess:
 class StaticNode:
     id = 0
     group_id = 0
-    def __init__(self, insn, bb, function, id=None):
+    def __init__(self, insn, bb, function, id=None, file=None, line=None):
         if id is not None:
             self.id = id
             if StaticNode.id <= id:
@@ -875,6 +874,25 @@ class StaticNode:
         self.virtual_nodes = []
 
         self.is_intermediate_node = False
+
+        if GENERATE_INSN_MAPPING is True:
+            if file is None and line is None:
+                file, line = get_line(insn, StaticDepGraph.prog)
+        self.file = file
+        self.line = line
+        if GENERATE_INSN_MAPPING is True:
+            if file is not None and line is not None:
+                lines = StaticDepGraph.file_to_line_to_nodes.get(file, None)
+                if lines is None:
+                    lines = {}
+                    StaticDepGraph.file_to_line_to_nodes[file] = lines
+                nodes = lines.get(line, None)
+                if nodes is None:
+                    nodes = set()
+                    lines[line] = nodes
+                nodes.add(self)
+        self.index = None
+        self.total_count = None
 
     def print_node(self, prefix): #FIXME change the one in dynamic graph
         print(prefix
@@ -943,6 +961,11 @@ class StaticNode:
         data["group_insns"] = self.group_insns
         if self.is_intermediate_node is True:
             data["is_intermediate_node"] = self.is_intermediate_node
+        if GENERATE_INSN_MAPPING:
+            data["file"] = self.file
+            data["line"] = self.line
+            data["index"] = self.index
+            data["total_count"] = self.total_count
         return data
 
     @staticmethod
@@ -952,8 +975,19 @@ class StaticNode:
         function = data["function"]
         bb = data["bb"] if 'bb' in data else None #TODO, assign actual BB later
 
-        sn = StaticNode(insn, bb, function, id)
+        file = None
+        line = None
+        if "file" in data and "line" in data:
+            file = data["file"]
+            line = data["line"]
+
+        sn = StaticNode(insn, bb, function, id, file, line)
         StaticDepGraph.insn_to_node[sn.insn] = sn
+
+        if "index" in data:
+            sn.index = data["index"]
+        if "total_count" in data:
+            sn.total_count = data["total_count"]
 
         sn.explained = data["explained"]
         sn.is_cf = data["is_cf"]
@@ -1122,6 +1156,9 @@ class StaticDepGraph:
 
     group_to_nodes = {}
     insn_to_node = {}
+
+    file_to_line_to_nodes = {}
+    prog = None #FIXME, stop passing prog around, there is only one prog per analysis
 
     def __init__(self, func, prog):
         self.func = func
@@ -1416,8 +1453,15 @@ class StaticDepGraph:
                 key += "_"
         result_file = os.path.join(result_dir, 'static_graph_' + str(limit) + "_" + key)
         StaticDepGraph.result_file = result_file
+        StaticDepGraph.prog = prog
         if use_cached_static_graph and os.path.isfile(result_file):
+            a = time.time()
             StaticDepGraph.loadJSON(result_file)
+            b = time.time()
+            print("[static_dep] Finished loading graph, took: " + str(b-a))
+            #StaticDepGraph.binary_ptr = setup(prog)
+            #StaticDepGraph.getIndices(prog)
+            #StaticDepGraph.writeJSON(result_file)
             StaticDepGraph.print_graph_info()
             return True
 
@@ -1502,6 +1546,7 @@ class StaticDepGraph:
                 StaticDepGraph.build_reverse_postorder_list()
                 StaticDepGraph.build_postorder_list()
                 StaticDepGraph.detect_df_backedges()
+                StaticDepGraph.getIndices(prog)
                 StaticDepGraph.print_graph_info()
         except Exception as e:
             print("Caught exception: " + str(e))
@@ -1539,6 +1584,32 @@ class StaticDepGraph:
         end = time.time()
         print("[static_dep] static analysis took a total time of: " + str(end - start))
         return False
+
+    @staticmethod
+    def getIndices(prog):
+        for file in StaticDepGraph.file_to_line_to_nodes:
+            for line in StaticDepGraph.file_to_line_to_nodes[file]:
+                nodes = StaticDepGraph.file_to_line_to_nodes[file][line]
+                start, end = get_insn_offsets(line, file, prog)
+                node_list = []
+                addrs = []
+                func = None
+                for n in nodes:
+                    func = n.function
+                    node_list.append(n)
+                    addrs.append(n.insn)
+                    if n.insn > end: end = n.insn + 1
+                    if n.insn < start: start = n.insn
+                indices = get_addr_indices(StaticDepGraph.binary_ptr, func, start, end, addrs)
+                print(indices)
+                print(len(node_list))
+                print(len(indices))
+                assert(len(indices) == len(node_list) + 1)
+                total_count = indices[-1] if (len(indices) == len(node_list) + 1) else None
+                for i in range(len(node_list)):
+                    index = indices[i]
+                    node_list[i].index = index if index >= 0 else None
+                    node_list[i].total_count = total_count
 
     @staticmethod
     def print_graph_info():
@@ -2430,8 +2501,6 @@ def main():
     parser.add_argument('--use_cached_static_graph', dest='use_cached_static_graph', action='store_true')
     parser.set_defaults(use_cached_static_graph=False)
     args = parser.parse_args()
-
-    print(args.parallelize_rr)
 
     starting_events = []
     starting_events.append(["rdi", 0x409daa, "sweep"])

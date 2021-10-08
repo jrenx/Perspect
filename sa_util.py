@@ -5,6 +5,7 @@ import sys
 import json
 import time
 from ctypes import *
+import subprocess
 lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
 #https://stackoverflow.com/questions/145270/calling-c-c-from-python
 
@@ -57,6 +58,38 @@ reg_size_map = dict(al=1,   ah=1, ax=2,   eax=4,  rax=8,
 ################################################################
 #### C function declarations for accessing Dyninst analysis ####
 ################################################################
+
+def get_line(insn, prog):
+    if not isinstance(insn, str):
+        insn = hex(insn)
+    cmd = ['addr2line', '-e', prog, insn]
+    #print("[main] running command: " + str(cmd))
+    result = subprocess.run(cmd, stdout=subprocess.PIPE)
+    result_seg = result.stdout.decode('ascii').strip().split(":")
+    file = result_seg[0].split("/")[-1]
+    try:
+        line = int(result_seg[1])
+        #print("[main] command returned: " + str(line))
+    except ValueError:
+        line = None
+    return file, line
+
+def get_insn_offsets(line, file, prog):
+    cmd = 'gdb ./'+ prog + ' -ex "info line ' + file + ':' + str(line)+'" --batch > infoLine_result'
+    #print("[main] running command: " + str(cmd))
+    os.system(cmd)
+    with open("infoLine_result", 'r') as f:
+        result = f.readlines()
+    result = result[-1]
+    if "contains no code" in result:
+        return (float('inf'), float('-inf'))
+    print(result)
+    result = result.split("at address")[1]
+    result = result.split("and ends at")
+    start = int(result[0].split()[0], 16)
+    end = int(result[1].split()[0], 16)
+    #print("start " + hex(start) + " end " + hex(end))
+    return (start, end)
 
 def parseLoadsOrStores(json_exprs):
     # TODO, why is it called a read again?
@@ -422,11 +455,28 @@ def static_backslice(binary_ptr, reg, insn_addr, func):
     f = open(os.path.join(curr_dir, 'backwardSlice_result'))
     json_reads = json.load(f)
     if DEBUG_CTYPE: print("[main] : returned: " + json_reads)
-    data_points = parseReads(json_reads)
+    data_points = parseLoadsOrStores(json_reads)
     f.close()
 
     if DEBUG_CTYPE: print( "[main] returned " + str(data_points))
     return data_points
+
+def get_addr_indices(binary_ptr, func, start_addr, end_addr, addrs):
+    print()
+    print( "[main] getting the indexes for addrs: ")
+    if DEBUG_CTYPE: print( "[main] func: " + func)
+    if DEBUG_CTYPE: print("[main] start addr: " + hex(start_addr))
+    if DEBUG_CTYPE: print("[main] end addr: " + hex(end_addr))
+    if DEBUG_CTYPE: print("[main] addrs: " + str(addrs))
+    if DEBUG_CTYPE: print("[main] : " + "Calling C", flush=True)
+    func_name = c_char_p(str.encode(func))
+    addrs_str = c_char_p(str.encode(json.dumps(addrs)))
+    lib.getAddrIndices(c_ulong(binary_ptr), func_name, c_ulong(start_addr), c_ulong(end_addr), addrs_str)
+    f = open(os.path.join(curr_dir, 'getAddrIndices_result'))
+    json_addrs = json.load(f)
+    f.close()
+    if DEBUG_CTYPE: print("[main] returned " + str(json_addrs))
+    return json_addrs
 
 def getImmedDom(binary_ptr, insn_addr, func):
     print()
