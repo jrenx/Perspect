@@ -447,7 +447,8 @@ class ParallelizableRelationAnalysis:
                     wavefront.append(prede_node)
 
     @staticmethod
-    def one_pass(dgraph, starting_node, starting_weight, max_contrib, prog, indices_map=None):
+    def one_pass(dgraph, starting_node, starting_weight, max_contrib, prog, \
+                 indices_map=None, other_simple_relation_groups=None):
         a = time.time()
         print("Starting forward and backward pass")
         wavefront = []
@@ -461,8 +462,20 @@ class ParallelizableRelationAnalysis:
         ##############################################################
         base_weight, use_weight = ParallelizableRelationAnalysis.calculate_base_weight(dgraph)
 
+        other_used_weight = True
+        if other_simple_relation_groups is not None:
+            key = starting_node.file + "_" + str(starting_node.line) + "_" + str(starting_node.total_count) + "_" + str(starting_node.index)
+            print(key)
+            other_used_weight = other_simple_relation_groups.get(key, True)
+            print("[ra] same relation group in the other set of relations used weight? " + str(other_used_weight))
+        if other_used_weight is False:
+            use_weight = False
+            base_weight = None
         if base_weight is None:
+            assert use_weight is False
             base_weight = starting_weight
+        else:
+            assert use_weight is True
         if base_weight < (max_contrib*0.01):
             print("[ra] Base weight is less than 1% of the max weight, ignore the node "
                   + starting_node.hex_insn + "@" + starting_node.function)

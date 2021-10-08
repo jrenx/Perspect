@@ -22,15 +22,16 @@ Weight_Threshold = 0
 
 class RelationAnalysis:
     #negative_event_map = {}
-    def __init__(self, starting_events, insn, func, prog, arg, path, indice_file=None):
+    def __init__(self, starting_events, insn, func, prog, arg, path, other_indices_file=None, other_relations_file=None):
         self.starting_insn = insn
         self.starting_func = func
         self.prog = prog
         self.path = path
         self.prede_node_to_invariant_rel = {}
-        self.node_counts = {}
         self.static_node_to_weight = {}
-        self.indices_map = {}
+        self.other_indices_map = None
+        self.other_simple_relation_groups = None
+        self.relation_groups = []  # results
 
         self.dd = DynamicDependence(starting_events, prog, arg, path)
         self.dd.prepare_to_build_dynamic_dependencies(10000)
@@ -41,12 +42,14 @@ class RelationAnalysis:
             stdout, stderr = pp_process.communicate()
             print(stdout)
             print(stderr)
-        self.load_node_counts(self.dd.trace_path + ".count")
-        if indice_file is not None:
-            indice_file_path = os.path.join(self.path, "cache", self.prog, indice_file)
-            self.load_indices(indice_file_path)
+        self.node_counts = self.load_node_counts(self.dd.trace_path + ".count")
         print("[ra] Finished getting the counts of each unique node in the dynamic trace")
-        self.relation_groups = [] #results
+        if other_indices_file is not None:
+            other_indices_file_path = os.path.join(self.path, "cache", self.prog, other_indices_file)
+            self.other_indices_map = self.load_indices(other_indices_file_path)
+        if other_relations_file is not None:
+            other_relations_file_path = os.path.join(self.path, "cache", self.prog, other_relations_file)
+            self.other_simple_relation_groups = self.load_simple_relations(other_relations_file_path)
 
     def add_to_explained_variant_relation(self, rgroup):
         for rel in rgroup.relations.values():
@@ -73,7 +76,7 @@ class RelationAnalysis:
         return False
 
     def indices_not_found(self, prede_node):
-        lines = self.indices_map.get(prede_node.file, None)
+        lines = self.other_indices_map.get(prede_node.file, None)
         if lines is None: #file not found
             return True
         (total_count, indices) = lines.get(prede_node.line, (None, None))
@@ -91,16 +94,16 @@ class RelationAnalysis:
     def load_indices(self, indices_file_path):
         with open(indices_file_path, 'r') as f:
             index_quads = json.load(f)
-        self.indices_map = {}
+        indices_map = {}
         for index_quad in index_quads:
             file = index_quad[0]
             line = index_quad[1]
             index = index_quad[2]
             total_count = index_quad[3]
-            lines = self.indices_map.get(file, None)
+            lines = indices_map.get(file, None)
             if lines is None:
                 lines = {}
-                self.indices_map[file] = lines
+                indices_map[file] = lines
             existing_total_count, indices = lines.get(line, (None, None))
             if indices is None:
                 indices = set()
@@ -108,14 +111,33 @@ class RelationAnalysis:
             else:
                 assert existing_total_count == total_count
             indices.add(index)
+        return indices_map
+
+    def load_simple_relations(self, relations_file_path):
+        with open(relations_file_path, 'r') as f:
+            json_simple_relation_groups = json.load(f)
+        simple_relation_groups = {}
+        for pair in json_simple_relation_groups:
+            index_quad = pair["starting_node"]
+            use_weight = pair["use_weight"]
+            file = index_quad[0]
+            line = index_quad[1]
+            index = index_quad[2]
+            total_count = index_quad[3]
+            key = file + "_" + str(line) + "_" + str(total_count) + "_" + str(index)
+            simple_relation_groups[key] = use_weight
+        print(simple_relation_groups)
+        return simple_relation_groups
 
     def load_node_counts(self, count_file_path):
         print("[ra] Loading node counts from file: " + str(count_file_path))
+        node_counts = {}
         with open(count_file_path, 'r') as f: #TODO
             for l in f.readlines():
                 insn = int(l.split()[0], 16)
                 count = int(l.split()[1])
-                self.node_counts[insn] = count
+                node_counts[insn] = count
+        return node_counts
 
     def print_wavelet(self, weight, starting_node, type):
         print("[ra] "
@@ -215,7 +237,8 @@ class RelationAnalysis:
             curr_wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, starting_node, \
                                           (0 if curr_weight is None else curr_weight.total_weight), \
                                                                        curr_max_contrib, self.prog, \
-                                                                             self.indices_map)
+                                                                             self.other_indices_map, \
+                                                                             self.other_simple_relation_groups)
             print("[ra] Got results for: " + hex(starting_node.insn))
             if rgroup is None:
                 continue
@@ -299,5 +322,6 @@ if __name__ == "__main__":
     starting_events.append(["rcx", 0x40764c, "runtime.free"])
 
     ra = RelationAnalysis(starting_events, 0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool_dev_jenny/",
-                          indice_file='indices_esi_0x8050c16_ebx_0x804e41c_eax_0x804e5fb_eax_0x804e804')
+                          other_indices_file='indices_esi_0x8050c16_ebx_0x804e41c_eax_0x804e5fb_eax_0x804e804',
+                          other_relations_file='rgroups_simple_esi_0x8050c16_ebx_0x804e41c_eax_0x804e5fb_eax_0x804e804.json')
     ra.analyze(args.use_cache)
