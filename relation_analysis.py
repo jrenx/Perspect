@@ -126,13 +126,13 @@ class RelationAnalysis:
             key = self.build_key_from_index_quad(json_simple_relation_group["starting_node"])
             use_weight = json_simple_relation_group["use_weight"]
 
-            relations = set()
+            relations = None
             if "relations" in json_simple_relation_group:
                 for index_quad in json_simple_relation_group["relations"]:
                     child_key = self.build_key_from_index_quad(index_quad)
                     relations.add(child_key)
 
-            wavefront = set()
+            wavefront = None
             if "wavefront" in json_simple_relation_group:
                 for index_quad in json_simple_relation_group["wavefront"]:
                     child_key = self.build_key_from_index_quad(index_quad)

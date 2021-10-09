@@ -463,10 +463,12 @@ class ParallelizableRelationAnalysis:
         base_weight, use_weight = ParallelizableRelationAnalysis.calculate_base_weight(dgraph)
 
         other_used_weight = True
+        other_relations = None
+        other_wavefront = None
         if other_simple_relation_groups is not None:
             key = starting_node.file + "_" + str(starting_node.line) + "_" + str(starting_node.total_count) + "_" + str(starting_node.index)
             print(key)
-            other_used_weight, _, _ = other_simple_relation_groups.get(key, (True, None, None))
+            other_used_weight, other_relations, other_wavefront = other_simple_relation_groups.get(key, (True, None, None))
             print("[ra] same relation group in the other set of relations used weight? " + str(other_used_weight))
         #if other_used_weight is False:
         #    use_weight = False
@@ -538,12 +540,27 @@ class ParallelizableRelationAnalysis:
             #TODO, change: only include those that are on the edgraphe of invariant and variant?
             #only include the original ones?
         """
-        rgroup.trim_invariant_group()
+        rgroup.trim_invariant_group(other_wavefront)
         rgroup.weight = base_weight if other_used_weight is True else starting_weight
         rgroup.wavefront = wavefront
         b = time.time()
         print("[ra] One pass of relational analysis took: " + str(b - a))
-        return wavefront, rgroup
+        if other_wavefront is None:
+            assert other_relations is None
+            return wavefront, rgroup
+        else:
+            trimmed_wavefront = []
+            for w in wavefront:
+                key = w.file + "_" + str(w.line) + "_" + str(w.total_count) + "_" + str(w.index)
+                if key in other_relations and key not in other_wavefront:
+                    print("[ra] Remove wavelet " + w.hex_insn \
+                          + " because it exists in the relations of the other repro but not in its wavefront")
+                    continue
+                if key not in other_relations and key not in other_wavefront:
+                    print("[ra/warn] Wavelet " + w.hex_insn \
+                          + " does not exist in the relations of the other repro or its wavefront")
+                trimmed_wavefront.add(w)
+            return trimmed_wavefront, rgroup
 
 if __name__ == "__main__":
     starting_events = []

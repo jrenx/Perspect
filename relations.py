@@ -257,7 +257,7 @@ class RelationGroup:
             simple_relations.append([n.file, n.line, n.index, n.total_count])
         data["relations"] = simple_relations
         simple_wavefront = []
-        for n in self.wavefront.values():
+        for n in self.wavefront:
             simple_wavefront.append([n.file, n.line, n.index, n.total_count])
         data["wavefront"] = simple_wavefront
         return data
@@ -287,9 +287,15 @@ class RelationGroup:
         for rel in self.relations.values():
             rel.weight.update_base_weight(base_weight)
 
-    def trim_invariant_group(self):
+    def trim_invariant_group(self, other_wavefront=None):
         to_remove = set()
         for prede in self.relations:
+            key = prede.file + "_" + str(prede.line) + "_" + str(prede.total_count) + "_" + str(prede.index)
+            if other_wavefront is not None:
+                if key in other_wavefront:
+                    print("[ra] cannot remove node " + prede.hex_insn \
+                          + " because it exists in the relations of the other repro")
+                    continue
             if not isinstance(self.relations[prede].forward, Proportion):
                 continue
             if not isinstance(self.relations[prede].backward, Proportion):
