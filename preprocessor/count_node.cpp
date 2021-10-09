@@ -135,7 +135,8 @@ unordered_set<long> PendingAddrs;
 StaticNode **CodeToStaticNode;
 unordered_map<int, long> StaticNodeIdToInsn;
 
-long *OccurrencesPerCode;
+unsigned long *OccurrencesPerCode;
+unsigned long *AverageTimeStampPerCode;
 
 char *traceFile;
 
@@ -365,8 +366,10 @@ void initData() {
     CodeToInsn[(*it).first] = (*it).second;
     InsnToCode.insert({(*it).second, (unsigned short)(*it).first});
   }
-  OccurrencesPerCode = new long[CodeCount];
+  OccurrencesPerCode = new unsigned long[CodeCount];
   for (int i = 0; i < CodeCount; i++) OccurrencesPerCode[i] = 0;
+  AverageTimeStampPerCode = new unsigned long[CodeCount];
+  for (int i = 0; i < CodeCount; i++) AverageTimeStampPerCode[i] = 0;
 
   cJSON *json_startInsns = cJSON_GetObjectItem(data, "starting_insns");
   if (json_startInsns != NULL) {
@@ -665,7 +668,14 @@ int main()
     //cout << "====" << nodeCount << "\n";
     //cout << "curr code" << code << " index: "<< i <<endl;
     //cout << std::hex << CodeToInsn[code] << std::dec << "\n";
-    OccurrencesPerCode[code] = OccurrencesPerCode[code] + 1;
+    unsigned long occurrences = OccurrencesPerCode[code] + 1;
+    OccurrencesPerCode[code] = occurrences;
+    if (occurrences == 1) AverageTimeStampPerCode[code] = uid;
+    else {
+      unsigned long avg = AverageTimeStampPerCode[code];
+      avg += (uid - avg)/occurrences;
+      AverageTimeStampPerCode[code] = avg;
+    }
   }
   os.close();
   std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
@@ -676,11 +686,19 @@ int main()
   ofstream osl;
   osl.open(outLargeFile.c_str());
   for (int i = 1; i < CodeCount; i++) {
-    long count = OccurrencesPerCode[i];
-    //if (count <= 50000) continue;
-    //cout << "LARGE " << i << "\n";
+    unsigned long count = OccurrencesPerCode[i];
     osl << std::hex << CodeToInsn[i] << std::dec << " " << count << "\n";
   }
   osl.close();
   cout << "total nodes: " << nodeCount << endl;
+
+  string outAvgTimeStampFile(traceFile);
+  outAvgTimeStampFile += ".avg_timestamp";
+  ofstream osa;
+  osa.open(outAvgTimeStampFile.c_str());
+  for (int i = 1; i < CodeCount; i++) {
+    unsigned long avg = AverageTimeStampPerCode[i];
+    osa << std::hex << CodeToInsn[i] << std::dec << " " << avg << "\n";
+  }
+  osa.close();
 }
