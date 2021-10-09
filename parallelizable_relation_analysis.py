@@ -466,7 +466,7 @@ class ParallelizableRelationAnalysis:
         if other_simple_relation_groups is not None:
             key = starting_node.file + "_" + str(starting_node.line) + "_" + str(starting_node.total_count) + "_" + str(starting_node.index)
             print(key)
-            other_used_weight = other_simple_relation_groups.get(key, True)
+            other_used_weight, _, _ = other_simple_relation_groups.get(key, (True, None, None))
             print("[ra] same relation group in the other set of relations used weight? " + str(other_used_weight))
         #if other_used_weight is False:
         #    use_weight = False
@@ -540,6 +540,7 @@ class ParallelizableRelationAnalysis:
         """
         rgroup.trim_invariant_group()
         rgroup.weight = base_weight if other_used_weight is True else starting_weight
+        rgroup.wavefront = wavefront
         b = time.time()
         print("[ra] One pass of relational analysis took: " + str(b - a))
         return wavefront, rgroup

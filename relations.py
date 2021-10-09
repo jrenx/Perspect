@@ -218,6 +218,7 @@ class RelationGroup:
         #self.invariant_predes = set()
         self.finished = False
         self.use_weight = False
+        self.wavefront = None
 
     def __str__(self):
         assert(self.finished)
@@ -250,6 +251,15 @@ class RelationGroup:
         data["starting_node"] = [self.starting_node.file, self.starting_node.line,\
                                  self.starting_node.index, self.starting_node.total_count]
         data["use_weight"] = self.use_weight
+        simple_relations = []
+        for relation in self.relations.values():
+            n = relation.prede_node
+            simple_relations.append([n.file, n.line, n.index, n.total_count])
+        data["relations"] = simple_relations
+        simple_wavefront = []
+        for n in self.wavefront.values():
+            simple_wavefront.append([n.file, n.line, n.index, n.total_count])
+        data["wavefront"] = simple_wavefront
         return data
 
     @staticmethod
@@ -271,12 +281,6 @@ class RelationGroup:
             rgroup.relations[relation.prede_node] = relation
         rgroup.sort_relations()
         return rgroup
-
-    @staticmethod
-    def fromJSON(data):
-        [file, line, index, total_count] = data["starting_node"]
-        use_weight = data["use_weight"]
-        return ([file, line, index, total_count], use_weight)
 
     def add_base_weight(self, base_weight):
         self.weight = base_weight
