@@ -128,12 +128,14 @@ class RelationAnalysis:
 
             relations = None
             if "relations" in json_simple_relation_group:
+                relations = set()
                 for index_quad in json_simple_relation_group["relations"]:
                     child_key = self.build_key_from_index_quad(index_quad)
                     relations.add(child_key)
 
             wavefront = None
             if "wavefront" in json_simple_relation_group:
+                wavefront = set()
                 for index_quad in json_simple_relation_group["wavefront"]:
                     child_key = self.build_key_from_index_quad(index_quad)
                     wavefront.add(child_key)
