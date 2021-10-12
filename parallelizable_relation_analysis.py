@@ -299,7 +299,7 @@ class ParallelizableRelationAnalysis:
         output_set_counts = set()
         output_set_count_list = []
         weighted_output_set_count_list = []
-        reachable_output_events = dgraph.reachable_output_events_per_static_node[prede_node.id]
+        reachable_output_events = dgraph.reachable_output_events_per_static_node.get(prede_node.id, {})
         output_set_count_to_nodes = {} #for debugging
         for node in dgraph.insn_to_dyn_nodes[prede_node.insn]:
             output_set_count = node.output_set_count
