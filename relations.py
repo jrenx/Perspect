@@ -1,5 +1,6 @@
 from scipy.stats import norm
 from dynamic_dep_graph import *
+import sys, traceback
 
 DEBUG = True
 Weight_Threshold = 0
@@ -84,7 +85,16 @@ class Proportion:
         #print(weighted_distribution)
         if len(weighted_distribution) > 0:
             self.weighted_distribution = weighted_distribution
-            self.w_mu, self.w_std = norm.fit(weighted_distribution)
+            try:
+                self.w_mu, self.w_std = norm.fit(weighted_distribution)
+            except Exception as e:
+                print("Caught exception fitting to distribution: " + str(e))
+                print(str(e))
+                print("-" * 60)
+                traceback.print_exc(file=sys.stdout)
+                print("-" * 60)
+                print("Distribution is: " + str(weighted_distribution))
+
         else:
             self.weighted_distribution = weighted_distribution
             self.w_mu = None
