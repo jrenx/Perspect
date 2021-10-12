@@ -559,7 +559,7 @@ class ParallelizableRelationAnalysis:
                 if key not in other_relations and key not in other_wavefront:
                     print("[ra/warn] Wavelet " + w.hex_insn \
                           + " does not exist in the relations of the other repro or its wavefront")
-                trimmed_wavefront.add(w)
+                trimmed_wavefront.append(w)
             return trimmed_wavefront, rgroup
 
 if __name__ == "__main__":
