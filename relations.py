@@ -295,6 +295,7 @@ class RelationGroup:
             relation_data["weight"] = r.weight.toJSON()
             relation_data["forward"] = r.forward.toJSON() if r.forward is not None else None
             relation_data["backward"] = r.backward.toJSON() if r.backward is not None else None
+            relations.append(relation_data)
         data["relations"] = relations
 
         wavelets = []
