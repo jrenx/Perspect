@@ -79,6 +79,8 @@ class Invariance:
 
 class Proportion:
     def __init__(self, distribution, weighted_distribution):
+        if None in weighted_distribution:
+            weighted_distribution = []
         #print(distribution)
         self.distribution = distribution
         self.mu, self.std = norm.fit(distribution)
