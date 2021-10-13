@@ -468,7 +468,7 @@ class ParallelizableRelationAnalysis:
         if other_simple_relation_groups is not None:
             key = starting_node.file + "_" + str(starting_node.line) + "_" + str(starting_node.total_count) + "_" + str(starting_node.index)
             print(key)
-            other_used_weight, other_predes, other_wavefront, _ = other_simple_relation_groups.get(key, (True, None, None, None))
+            other_used_weight, other_predes, other_wavefront, _, _ = other_simple_relation_groups.get(key, (True, None, None, None, None))
             print("[ra] same relation group in the other set of relations used weight? " + str(other_used_weight))
         #if other_used_weight is False:
         #    use_weight = False

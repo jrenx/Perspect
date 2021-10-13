@@ -283,6 +283,7 @@ class RelationGroup:
         data["starting_node"] = [self.starting_node.file, self.starting_node.line,\
                                  self.starting_node.index, self.starting_node.total_count]
         data["use_weight"] = self.use_weight
+        data["weight"] = self.weight
         predes = []
         for r in self.relations.values():
             n = r.prede_node
@@ -310,6 +311,9 @@ class RelationGroup:
         for json_simple_relation_group in data:
             key = RelationGroup.build_key_from_index_quad(json_simple_relation_group["starting_node"])
             use_weight = json_simple_relation_group["use_weight"]
+            group_weight = None
+            if "weight" in json_simple_relation_group:
+                group_weight = json_simple_relation_group["weight"]
 
             predes = None
             sorted_predes = None
@@ -329,16 +333,16 @@ class RelationGroup:
                     relation_data = json_simple_relation_group["relations"][i]
                     prede = sorted_predes[i]
                     weight = Weight.fromJSON(relation_data["weight"])
+                    relation = Relation(None, None, None, weight, None, prede[0], prede[1])
                     forward = relation_data["forward"]
                     if forward is not None:
-                        rel.forward = Proportion.fromJSON(forward) \
+                        relation.forward = Proportion.fromJSON(forward) \
                             if forward["is_invariant"] is False else Invariance.fromJSON(forward)
 
                     backward = relation_data["backward"]
                     if backward is not None:
-                        rel.backward = Proportion.fromJSON(backward) \
+                        relation.backward = Proportion.fromJSON(backward) \
                             if backward["is_invariant"] is False else Invariance.fromJSON(backward)
-                    relation = Relation(None, None, None, weight, None, prede[0], prede[1])
                     relations.append(relation)
 
             wavefront = None
@@ -348,7 +352,7 @@ class RelationGroup:
                     child_key = RelationGroup.build_key_from_index_quad(index_quad)
                     wavefront.add(child_key)
 
-            simple_relation_groups[key] = (use_weight, predes, wavefront, relations)
+            simple_relation_groups[key] = (use_weight, predes, wavefront, relations, group_weight)
         return simple_relation_groups
 
     @staticmethod
