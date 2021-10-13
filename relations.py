@@ -258,22 +258,6 @@ class RelationGroup:
         data["relations"] = relations
         return data
 
-    def toJSON_simple(self):
-        data = {}
-        data["starting_node"] = [self.starting_node.file, self.starting_node.line,\
-                                 self.starting_node.index, self.starting_node.total_count]
-        data["use_weight"] = self.use_weight
-        simple_relations = []
-        for relation in self.relations.values():
-            n = relation.prede_node
-            simple_relations.append([n.file, n.line, n.index, n.total_count])
-        data["relations"] = simple_relations
-        simple_wavefront = []
-        for n in self.wavefront:
-            simple_wavefront.append([n.file, n.line, n.index, n.total_count])
-        data["wavefront"] = simple_wavefront
-        return data
-
     @staticmethod
     def fromJSON(data, prog):
         segs = data["starting_node"].split("@")
@@ -293,6 +277,88 @@ class RelationGroup:
             rgroup.relations[relation.prede_node] = relation
         rgroup.sort_relations()
         return rgroup
+
+    def toJSON_simple(self):
+        data = {}
+        data["starting_node"] = [self.starting_node.file, self.starting_node.line,\
+                                 self.starting_node.index, self.starting_node.total_count]
+        data["use_weight"] = self.use_weight
+        predes = []
+        for r in self.relations.values():
+            n = r.prede_node
+            predes.append([n.file, n.line, n.index, n.total_count])
+        data["predes"] = predes
+
+        relations = []
+        for r in self.relations.values():
+            relation_data = {}
+            relation_data["weight"] = r.weight.toJSON()
+            relation_data["forward"] = r.forward.toJSON() if r.forward is not None else None
+            relation_data["backward"] = r.backward.toJSON() if r.backward is not None else None
+        data["relations"] = relations
+
+        wavelets = []
+        for n in self.wavefront:
+            wavelets.append([n.file, n.line, n.index, n.total_count])
+        data["wavefront"] = wavelets
+        return data
+
+    @staticmethod
+    def fromJSON_simple(data):
+        simple_relation_groups = {}
+        for json_simple_relation_group in data:
+            key = RelationGroup.build_key_from_index_quad(json_simple_relation_group["starting_node"])
+            use_weight = json_simple_relation_group["use_weight"]
+
+            predes = None
+            sorted_predes = None
+            if "predes" in json_simple_relation_group:
+                predes = set()
+                sorted_predes = []
+                for index_quad in json_simple_relation_group["predes"]:
+                    child_key = RelationGroup.build_key_from_index_quad(index_quad)
+                    predes.add(child_key)
+                    sorted_predes.append(child_key)
+
+            relations = None
+            if "relations" in json_simple_relation_group:
+                relations = []
+                assert(len(sorted_predes) == len(json_simple_relation_group["relations"]))
+                for i in range(len(sorted_predes)):
+                    relation_data = json_simple_relation_group["relations"][i]
+                    prede = sorted_predes[i]
+                    weight = Weight.fromJSON(relation_data["weight"])
+                    forward = relation_data["forward"]
+                    if forward is not None:
+                        rel.forward = Proportion.fromJSON(forward) \
+                            if forward["is_invariant"] is False else Invariance.fromJSON(forward)
+
+                    backward = relation_data["backward"]
+                    if backward is not None:
+                        rel.backward = Proportion.fromJSON(backward) \
+                            if backward["is_invariant"] is False else Invariance.fromJSON(backward)
+                    relation = Relation(None, None, None, weight, None, prede[0], prede[1])
+                    relations.append(relation)
+
+            wavefront = None
+            if "wavefront" in json_simple_relation_group:
+                wavefront = set()
+                for index_quad in json_simple_relation_group["wavefront"]:
+                    child_key = RelationGroup.build_key_from_index_quad(index_quad)
+                    wavefront.add(child_key)
+
+            simple_relation_groups[key] = (use_weight, predes, wavefront, relations)
+        return simple_relation_groups
+
+    @staticmethod
+    def parse_index_quad(index_quad):
+        return index_quad[0], index_quad[1], index_quad[2], index_quad[3]
+
+    @staticmethod
+    def build_key_from_index_quad(index_quad):
+        file, line, index, total_count = RelationGroup.parse_index_quad(index_quad)
+        key = file + "_" + str(line) + "_" + str(total_count) + "_" + str(index)
+        return key
 
     def add_base_weight(self, base_weight):
         self.weight = base_weight

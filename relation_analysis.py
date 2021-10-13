@@ -49,7 +49,7 @@ class RelationAnalysis:
             self.other_indices_map = self.load_indices(other_indices_file_path)
         if other_relations_file is not None:
             other_relations_file_path = os.path.join(self.path, "cache", self.prog, other_relations_file)
-            self.other_simple_relation_groups = self.load_simple_relations(other_relations_file_path)
+            self.other_simple_relation_groups = RelationAnalysis.load_simple_relations(other_relations_file_path)
 
     def add_to_explained_variant_relation(self, rgroup):
         for rel in rgroup.relations.values():
@@ -94,11 +94,6 @@ class RelationAnalysis:
     def parse_index_quad(self, index_quad):
         return index_quad[0], index_quad[1], index_quad[2], index_quad[3]
 
-    def build_key_from_index_quad(self, index_quad):
-        file, line, index, total_count = self.parse_index_quad(index_quad)
-        key = file + "_" + str(line) + "_" + str(total_count) + "_" + str(index)
-        return key
-
     def load_indices(self, indices_file_path):
         with open(indices_file_path, 'r') as f:
             index_quads = json.load(f)
@@ -118,29 +113,10 @@ class RelationAnalysis:
             indices.add(index)
         return indices_map
 
-    def load_simple_relations(self, relations_file_path):
+    @staticmethod
+    def load_simple_relations(relations_file_path):
         with open(relations_file_path, 'r') as f:
-            json_simple_relation_groups = json.load(f)
-        simple_relation_groups = {}
-        for json_simple_relation_group in json_simple_relation_groups:
-            key = self.build_key_from_index_quad(json_simple_relation_group["starting_node"])
-            use_weight = json_simple_relation_group["use_weight"]
-
-            relations = None
-            if "relations" in json_simple_relation_group:
-                relations = set()
-                for index_quad in json_simple_relation_group["relations"]:
-                    child_key = self.build_key_from_index_quad(index_quad)
-                    relations.add(child_key)
-
-            wavefront = None
-            if "wavefront" in json_simple_relation_group:
-                wavefront = set()
-                for index_quad in json_simple_relation_group["wavefront"]:
-                    child_key = self.build_key_from_index_quad(index_quad)
-                    wavefront.add(child_key)
-
-            simple_relation_groups[key] = (use_weight, relations, wavefront)
+            simple_relation_groups = RelationGroup.fromJSON_simple(json.load(f))
         print(simple_relation_groups)
         return simple_relation_groups
 

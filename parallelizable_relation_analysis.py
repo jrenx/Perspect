@@ -463,12 +463,12 @@ class ParallelizableRelationAnalysis:
         base_weight, use_weight = ParallelizableRelationAnalysis.calculate_base_weight(dgraph)
 
         other_used_weight = True
-        other_relations = None
+        other_predes = None
         other_wavefront = None
         if other_simple_relation_groups is not None:
             key = starting_node.file + "_" + str(starting_node.line) + "_" + str(starting_node.total_count) + "_" + str(starting_node.index)
             print(key)
-            other_used_weight, other_relations, other_wavefront = other_simple_relation_groups.get(key, (True, None, None))
+            other_used_weight, other_predes, other_wavefront, _ = other_simple_relation_groups.get(key, (True, None, None, None))
             print("[ra] same relation group in the other set of relations used weight? " + str(other_used_weight))
         #if other_used_weight is False:
         #    use_weight = False
@@ -546,17 +546,17 @@ class ParallelizableRelationAnalysis:
         b = time.time()
         print("[ra] One pass of relational analysis took: " + str(b - a))
         if other_wavefront is None:
-            assert other_relations is None
+            assert other_predes is None
             return wavefront, rgroup
         else:
             trimmed_wavefront = []
             for w in wavefront:
                 key = w.file + "_" + str(w.line) + "_" + str(w.total_count) + "_" + str(w.index)
-                if key in other_relations and key not in other_wavefront:
+                if key in other_predes and key not in other_wavefront:
                     print("[ra] Remove wavelet " + w.hex_insn \
                           + " because it exists in the relations of the other repro but not in its wavefront")
                     continue
-                if key not in other_relations and key not in other_wavefront:
+                if key not in other_predes and key not in other_wavefront:
                     print("[ra/warn] Wavelet " + w.hex_insn \
                           + " does not exist in the relations of the other repro or its wavefront")
                 trimmed_wavefront.append(w)
