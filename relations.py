@@ -278,93 +278,6 @@ class RelationGroup:
         rgroup.sort_relations()
         return rgroup
 
-    def toJSON_simple(self):
-        data = {}
-        data["starting_node"] = [self.starting_node.file, self.starting_node.line,\
-                                 self.starting_node.index, self.starting_node.total_count]
-        data["use_weight"] = self.use_weight
-        data["weight"] = self.weight
-        predes = []
-        for r in self.relations.values():
-            n = r.prede_node
-            predes.append([n.file, n.line, n.index, n.total_count])
-        data["predes"] = predes
-
-        relations = []
-        for r in self.relations.values():
-            relation_data = {}
-            relation_data["weight"] = r.weight.toJSON()
-            relation_data["forward"] = r.forward.toJSON() if r.forward is not None else None
-            relation_data["backward"] = r.backward.toJSON() if r.backward is not None else None
-            relations.append(relation_data)
-        data["relations"] = relations
-
-        wavelets = []
-        for n in self.wavefront:
-            wavelets.append([n.file, n.line, n.index, n.total_count])
-        data["wavefront"] = wavelets
-        return data
-
-    @staticmethod
-    def fromJSON_simple(data):
-        simple_relation_groups = {}
-        for json_simple_relation_group in data:
-            key = RelationGroup.build_key_from_index_quad(json_simple_relation_group["starting_node"])
-            use_weight = json_simple_relation_group["use_weight"]
-            group_weight = None
-            if "weight" in json_simple_relation_group:
-                group_weight = json_simple_relation_group["weight"]
-
-            predes = None
-            sorted_predes = None
-            if "predes" in json_simple_relation_group:
-                predes = set()
-                sorted_predes = []
-                for index_quad in json_simple_relation_group["predes"]:
-                    child_key = RelationGroup.build_key_from_index_quad(index_quad)
-                    predes.add(child_key)
-                    sorted_predes.append(child_key)
-
-            relations = None
-            if "relations" in json_simple_relation_group:
-                relations = []
-                assert(len(sorted_predes) == len(json_simple_relation_group["relations"]))
-                for i in range(len(sorted_predes)):
-                    relation_data = json_simple_relation_group["relations"][i]
-                    prede = sorted_predes[i]
-                    weight = Weight.fromJSON(relation_data["weight"])
-                    relation = Relation(None, None, None, weight, None, prede[0], prede[1])
-                    forward = relation_data["forward"]
-                    if forward is not None:
-                        relation.forward = Proportion.fromJSON(forward) \
-                            if forward["is_invariant"] is False else Invariance.fromJSON(forward)
-
-                    backward = relation_data["backward"]
-                    if backward is not None:
-                        relation.backward = Proportion.fromJSON(backward) \
-                            if backward["is_invariant"] is False else Invariance.fromJSON(backward)
-                    relations.append(relation)
-
-            wavefront = None
-            if "wavefront" in json_simple_relation_group:
-                wavefront = set()
-                for index_quad in json_simple_relation_group["wavefront"]:
-                    child_key = RelationGroup.build_key_from_index_quad(index_quad)
-                    wavefront.add(child_key)
-
-            simple_relation_groups[key] = (use_weight, predes, wavefront, relations, group_weight)
-        return simple_relation_groups
-
-    @staticmethod
-    def parse_index_quad(index_quad):
-        return index_quad[0], index_quad[1], index_quad[2], index_quad[3]
-
-    @staticmethod
-    def build_key_from_index_quad(index_quad):
-        file, line, index, total_count = RelationGroup.parse_index_quad(index_quad)
-        key = file + "_" + str(line) + "_" + str(total_count) + "_" + str(index)
-        return key
-
     def add_base_weight(self, base_weight):
         self.weight = base_weight
         for rel in self.relations.values():
@@ -425,6 +338,186 @@ class RelationGroup:
         #TODO, what if we just include the invariant nodes at the edgraphes
         # and simplify when there is an OR? makes verification easier too
         """
+
+class SimpleRelationGroup:
+    def __init__(self, index_quad, key, key_short, \
+                 used_weight, predes, wavefront, relations, group_weight):
+        self.index_quad = index_quad
+        self.key = key
+        self.key_short = key_short
+        self.used_weight = used_weight
+        self.predes = predes
+        self.wavefront = wavefront
+        self.relations = relations
+        self.group_weight = group_weight
+
+    @staticmethod
+    def toJSON(relation_group):
+        data = {}
+        data["starting_node"] = [relation_group.starting_node.file, relation_group.starting_node.line,\
+                                 relation_group.starting_node.index, relation_group.starting_node.total_count]
+        data["use_weight"] = relation_group.use_weight
+        data["weight"] = relation_group.weight
+        predes = []
+        for r in relation_group.relations.values():
+            n = r.prede_node
+            predes.append([n.file, n.line, n.index, n.total_count])
+        data["predes"] = predes
+
+        relations = []
+        for r in relation_group.relations.values():
+            relation_data = {}
+            relation_data["weight"] = r.weight.toJSON()
+            relation_data["forward"] = r.forward.toJSON() if r.forward is not None else None
+            relation_data["backward"] = r.backward.toJSON() if r.backward is not None else None
+            relations.append(relation_data)
+        data["relations"] = relations
+
+        wavelets = []
+        for n in relation_group.wavefront:
+            wavelets.append([n.file, n.line, n.index, n.total_count])
+        data["wavefront"] = wavelets
+        return data
+
+    @staticmethod
+    def fromJSON(json_simple_relation_group):
+        use_weight = json_simple_relation_group["use_weight"]
+        group_weight = None
+        if "weight" in json_simple_relation_group:
+            group_weight = json_simple_relation_group["weight"]
+        predes = None
+        sorted_predes = None
+        if "predes" in json_simple_relation_group:
+            predes = set()
+            sorted_predes = []
+            for index_quad in json_simple_relation_group["predes"]:
+                #child_key = Indices.build_key_from_index_quad(index_quad)
+                file, line, index, total_count = Indices.parse_index_quad(index_quad)
+                child_key = file + "_" + str(line) + "_" + str(total_count) + "_" + str(index)
+                child_key_short = file + "_" + str(line)
+                predes.add(child_key)
+                predes.add(child_key_short)
+                sorted_predes.append(child_key)
+        relations = None
+        if "relations" in json_simple_relation_group:
+            relations = []
+            assert(len(sorted_predes) == len(json_simple_relation_group["relations"]))
+            for i in range(len(sorted_predes)):
+                relation_data = json_simple_relation_group["relations"][i]
+                prede = sorted_predes[i]
+                weight = Weight.fromJSON(relation_data["weight"])
+                relation = Relation(None, None, None, weight, None, prede[0], prede[1])
+                forward = relation_data["forward"]
+                if forward is not None:
+                    relation.forward = Proportion.fromJSON(forward) \
+                        if forward["is_invariant"] is False else Invariance.fromJSON(forward)
+                backward = relation_data["backward"]
+                if backward is not None:
+                    relation.backward = Proportion.fromJSON(backward) \
+                        if backward["is_invariant"] is False else Invariance.fromJSON(backward)
+                relations.append(relation)
+        wavefront = None
+        if "wavefront" in json_simple_relation_group:
+            wavefront = set()
+            for index_quad in json_simple_relation_group["wavefront"]:
+                file, line, index, total_count = Indices.parse_index_quad(index_quad)
+                child_key = file + "_" + str(line) + "_" + str(total_count) + "_" + str(index)
+                child_key_short = file + "_" + str(line)
+                #child_key = Indices.build_key_from_index_quad(index_quad)
+                wavefront.add(child_key)
+                wavefront.add(child_key_short)
+        file, line, index, total_count = Indices.parse_index_quad(json_simple_relation_group["starting_node"])
+        key = file + "_" + str(line) + "_" + str(total_count) + "_" + str(index)
+        key_short = file + "_" + str(line)
+        simple_relation_group = SimpleRelationGroup(json_simple_relation_group["starting_node"], key, key_short, \
+                                                    use_weight, predes, wavefront, relations, group_weight)
+        return simple_relation_group
+
+class SimpleRelationGroups:
+
+    def __init__(self, relations_map, indices):
+        self.relations_map = relations_map
+        self.indices = indices
+
+    @staticmethod
+    def fromJSON(data):
+        relations_map = {}
+        index_quads = []
+        for json_simple_relation_group in data:
+            simple_relation = SimpleRelationGroup.fromJSON(json_simple_relation_group)
+            relations_map[simple_relation.key] = simple_relation
+            relations_map[simple_relation.key_short] = simple_relation
+            index_quads.append(simple_relation.index_quad)
+        indices_map = Indices.build_indices(index_quads)
+        return SimpleRelationGroups(relations_map, indices_map)
+
+class Indices:
+    def __init__(self, indices_map):
+        self.indices_map = indices_map
+
+    @staticmethod
+    def parse_index_quad(index_quad):
+        return index_quad[0], index_quad[1], index_quad[2], index_quad[3]
+
+    @staticmethod
+    def build_key_from_index_quad(index_quad):
+        file, line, index, total_count = Indices.parse_index_quad(index_quad)
+        key = file + "_" + str(line) + "_" + str(total_count) + "_" + str(index)
+        return key
+
+    @staticmethod
+    def build_indices(index_quads):
+        indices_map = {}
+        for index_quad in index_quads:
+            file, line, index, total_count = Indices.parse_index_quad(index_quad)
+            lines = indices_map.get(file, None)
+            if lines is None:
+                lines = {}
+                indices_map[file] = lines
+            existing_total_count, indices = lines.get(line, (None, None))
+            if indices is None:
+                indices = set()
+                lines[line] = (total_count, indices)
+            else:
+                assert existing_total_count == total_count
+            indices.add(index)
+        return Indices(indices_map)
+
+    def get_indices(self, prede_node):
+        lines = self.indices_map.get(prede_node.file, None)
+        if lines is None:  # file not found
+            return None
+        (total_count, indices) = lines.get(prede_node.line, (None, None))
+        if indices is None:  # line not found
+            return None
+        # only check if the index exists if the line maps to the same number of binary instructions
+        # so it's highly likely that it makes sense to match on the index of the binaries
+        if prede_node.total_count is None:
+            return prede_node.file + "_" + str(prede_node.line)
+        if prede_node.total_count == total_count:
+            if prede_node.index not in indices:
+                return None
+            else:
+                return prede_node.file + "_" + str(prede_node.line) + "_" + str(prede_node.total_count) + "_" + str(prede_node.index)
+        else:
+            return prede_node.file + "_" + str(prede_node.line)
+
+    def indices_not_found(self, prede_node):
+        lines = self.indices_map.get(prede_node.file, None)
+        if lines is None:  # file not found
+            return True
+        (total_count, indices) = lines.get(prede_node.line, (None, None))
+        if indices is None:  # line not found
+            return True
+        # only check if the index exists if the line maps to the same number of binary instructions
+        # so it's highly likely that it makes sense to match on the index of the binaries
+        if prede_node.total_count is None:
+            return False
+        if prede_node.total_count == total_count:
+            if prede_node.index not in indices:
+                return True
+        return False
+
 
 class Weight:
     def __init__(self, actual_weight, base_weight, perc_contrib, corr, order):

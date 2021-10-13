@@ -3,23 +3,6 @@ from relations import *
 import itertools
 import time
 
-
-def indices_not_found(indices_map, prede_node):
-    lines = indices_map.get(prede_node.file, None)
-    if lines is None:  # file not found
-        return True
-    (total_count, indices) = lines.get(prede_node.line, (None, None))
-    if indices is None:  # line not found
-        return True
-    # only check if the index exists if the line maps to the same number of binary instructions
-    # so it's highly likely that it makes sense to match on the index of the binaries
-    if prede_node.total_count is None:
-        return False
-    if prede_node.total_count == total_count:
-        if prede_node.index not in indices:
-            return True
-    return False
-
 class ParallelizableRelationAnalysis:
 
     @staticmethod
@@ -465,10 +448,17 @@ class ParallelizableRelationAnalysis:
         other_used_weight = True
         other_predes = None
         other_wavefront = None
+        curr_key = starting_node.file + "_" + str(starting_node.line) + "_" + str(starting_node.total_count) + "_" + str(
+            starting_node.index)
         if other_simple_relation_groups is not None:
-            key = starting_node.file + "_" + str(starting_node.line) + "_" + str(starting_node.total_count) + "_" + str(starting_node.index)
-            print(key)
-            other_used_weight, other_predes, other_wavefront, _, _ = other_simple_relation_groups.get(key, (True, None, None, None, None))
+            key = other_simple_relation_groups.indices.get_indices(starting_node)
+            #print(other_simple_relation_groups.relations_map)
+            if key is not None:
+                #print("[ra] key is: " + str(key))
+                simple_relation_group = other_simple_relation_groups.relations_map.get(key)
+                other_used_weight = simple_relation_group.used_weight
+                other_predes = simple_relation_group.predes
+                other_wavefront = simple_relation_group.wavefront
             print("[ra] same relation group in the other set of relations used weight? " + str(other_used_weight))
         #if other_used_weight is False:
         #    use_weight = False
@@ -518,7 +508,7 @@ class ParallelizableRelationAnalysis:
                 continue
             # assert insn in dgraph.insn_to_dyn_nodes, hex(insn)
             if indices_map is not None:
-                if indices_not_found(indices_map, static_node):
+                if indices_map.indices_not_found(static_node):
                     print("\n" + hex(static_node.insn) + "@" + static_node.function + " is not found in the other repro's static slice...")
                     continue
 
@@ -546,10 +536,14 @@ class ParallelizableRelationAnalysis:
         b = time.time()
         print("[ra] One pass of relational analysis took: " + str(b - a))
         if other_wavefront is None:
+            print("[ra] Other wavefront not found: " + str(curr_key))
             assert other_predes is None
             return wavefront, rgroup
         else:
             trimmed_wavefront = []
+            print("[ra] Other wavefront found: " )
+            print(other_predes)
+            print(other_wavefront)
             for w in wavefront:
                 key = w.file + "_" + str(w.line) + "_" + str(w.total_count) + "_" + str(w.index)
                 if key in other_predes and key not in other_wavefront:

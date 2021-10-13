@@ -75,48 +75,18 @@ class RelationAnalysis:
                 return True
         return False
 
-    def indices_not_found(self, prede_node):
-        lines = self.other_indices_map.get(prede_node.file, None)
-        if lines is None: #file not found
-            return True
-        (total_count, indices) = lines.get(prede_node.line, (None, None))
-        if indices is None: #line not found
-            return True
-        # only check if the index exists if the line maps to the same number of binary instructions
-        # so it's highly likely that it makes sense to match on the index of the binaries
-        if prede_node.total_count is None:
-            return False
-        if prede_node.total_count == total_count:
-            if prede_node.index not in indices:
-                return True
-        return False
-
     def parse_index_quad(self, index_quad):
         return index_quad[0], index_quad[1], index_quad[2], index_quad[3]
 
     def load_indices(self, indices_file_path):
         with open(indices_file_path, 'r') as f:
             index_quads = json.load(f)
-        indices_map = {}
-        for index_quad in index_quads:
-            file, line, index, total_count = self.parse_index_quad(index_quad)
-            lines = indices_map.get(file, None)
-            if lines is None:
-                lines = {}
-                indices_map[file] = lines
-            existing_total_count, indices = lines.get(line, (None, None))
-            if indices is None:
-                indices = set()
-                lines[line] = (total_count, indices)
-            else:
-                assert existing_total_count == total_count
-            indices.add(index)
-        return indices_map
+            return Indices.build_indices(index_quads)
 
     @staticmethod
     def load_simple_relations(relations_file_path):
         with open(relations_file_path, 'r') as f:
-            simple_relation_groups = RelationGroup.fromJSON_simple(json.load(f))
+            simple_relation_groups = SimpleRelationGroups.fromJSON(json.load(f))
         print(simple_relation_groups)
         return simple_relation_groups
 
@@ -205,7 +175,7 @@ class RelationAnalysis:
                 print("\n" + hex(insn) + "@" + func + " has a node forward and backward invariant already explained...")
                 continue
 
-            if self.indices_not_found(starting_node):
+            if self.other_indices_map.indices_not_found(starting_node):
                 print("\n" + hex(insn) + "@" + func + " is not found in the other repro's static slice...")
                 continue
 
@@ -287,7 +257,7 @@ class RelationAnalysis:
 
         json_rgroups_simple = []
         for relation_group in self.relation_groups:
-            json_rgroups_simple.append(relation_group.toJSON_simple())
+            json_rgroups_simple.append(SimpleRelationGroup.toJSON(relation_group))
         with open(os.path.join(self.path, "cache", self.prog, "rgroups_simple_" + self.dd.key + ".json"), 'w') as f:
             json.dump(json_rgroups_simple, f, indent=4)
 
