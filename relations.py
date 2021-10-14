@@ -484,7 +484,7 @@ class Indices:
         return Indices(indices_map)
 
     def get_indices(self, n):
-        self.get_indices2(n.file, n.line, n.total_count, n.index)
+        return self.get_indices2(n.file, n.line, n.total_count, n.index)
 
     def get_indices2(self, file, line, total_count, index):
         lines = self.indices_map.get(file, None)
