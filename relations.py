@@ -483,24 +483,27 @@ class Indices:
             indices.add(index)
         return Indices(indices_map)
 
-    def get_indices(self, prede_node):
-        lines = self.indices_map.get(prede_node.file, None)
+    def get_indices(self, n):
+        self.get_indices2(n.file, n.line, n.total_count, n.index)
+
+    def get_indices2(self, file, line, total_count, index):
+        lines = self.indices_map.get(file, None)
         if lines is None:  # file not found
             return None
-        (total_count, indices) = lines.get(prede_node.line, (None, None))
+        (existing_total_count, indices) = lines.get(line, (None, None))
         if indices is None:  # line not found
             return None
         # only check if the index exists if the line maps to the same number of binary instructions
         # so it's highly likely that it makes sense to match on the index of the binaries
-        if prede_node.total_count is None:
-            return prede_node.file + "_" + str(prede_node.line)
-        if prede_node.total_count == total_count:
-            if prede_node.index not in indices:
+        if total_count is None:
+            return file + "_" + str(line)
+        if total_count == existing_total_count:
+            if index not in indices:
                 return None
             else:
-                return prede_node.file + "_" + str(prede_node.line) + "_" + str(prede_node.total_count) + "_" + str(prede_node.index)
+                return file + "_" + str(line) + "_" + str(total_count) + "_" + str(index)
         else:
-            return prede_node.file + "_" + str(prede_node.line)
+            return file + "_" + str(line)
 
     def indices_not_found(self, prede_node):
         lines = self.indices_map.get(prede_node.file, None)
