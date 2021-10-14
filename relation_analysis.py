@@ -35,6 +35,7 @@ class RelationAnalysis:
 
         self.dd = DynamicDependence(starting_events, prog, arg, path)
         self.dd.prepare_to_build_dynamic_dependencies(10000)
+
         print("[ra] Getting the counts of each unique node in the dynamic trace")
         if not os.path.exists(self.dd.trace_path + ".count"):
             preprocessor_file = os.path.join(curr_dir, 'preprocessor', 'count_node')
@@ -42,8 +43,19 @@ class RelationAnalysis:
             stdout, stderr = pp_process.communicate()
             print(stdout)
             print(stderr)
-        self.node_counts = self.load_node_counts(self.dd.trace_path + ".count")
+        self.node_counts = self.load_node_info(self.dd.trace_path + ".count")
         print("[ra] Finished getting the counts of each unique node in the dynamic trace")
+
+        print("[ra] Getting the average timestamp of each unique node in the dynamic trace")
+        if not os.path.exists(self.dd.trace_path + ".avg_timestamp"):
+            preprocessor_file = os.path.join(curr_dir, 'preprocessor', 'count_node')
+            pp_process = subprocess.Popen([preprocessor_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = pp_process.communicate()
+            print(stdout)
+            print(stderr)
+        self.node_avg_timestamps = self.load_node_info(self.dd.trace_path + ".avg_timestamp")
+        print("[ra] Finished getting the average timestamp of each unique node in the dynamic trace")
+
         if other_indices_file is not None:
             other_indices_file_path = os.path.join(self.path, "cache", self.prog, other_indices_file)
             self.other_indices_map = self.load_indices(other_indices_file_path)
@@ -92,8 +104,8 @@ class RelationAnalysis:
             print(simple_relation_groups)
         return simple_relation_groups
 
-    def load_node_counts(self, count_file_path):
-        print("[ra] Loading node counts from file: " + str(count_file_path))
+    def load_node_info(self, count_file_path):
+        print("[ra] Loading node info from file: " + str(count_file_path))
         node_counts = {}
         with open(count_file_path, 'r') as f: #TODO
             for l in f.readlines():
