@@ -392,7 +392,7 @@ class SimpleRelationGroup:
             sorted_predes = []
             for index_quad in json_simple_relation_group["predes"]:
                 predes.append(index_quad)
-                sorted_predes.append(child_key)
+                sorted_predes.append(index_quad)
             predes = Indices.build_indices(predes)
         relations = None
         if "relations" in json_simple_relation_group:
