@@ -173,7 +173,11 @@ class RelationAnalysis:
                 insn = starting_node.insn
                 func = starting_node.function
 
-            if self.explained_by_invariant_relation(starting_node):
+            key = None
+            if self.other_simple_relation_groups is not None:
+                key = self.other_simple_relation_groups.indices.get_indices(starting_node)
+
+            if key is None and self.explained_by_invariant_relation(starting_node):
                 print("\n" + hex(insn) + "@" + func + " has a node forward and backward invariant already explained...")
                 continue
 
@@ -213,9 +217,6 @@ class RelationAnalysis:
                     #TODO print
                     rgroup.add_base_weight(self.static_node_to_weight[starting_node].total_weight)
 
-            key = None
-            if self.other_simple_relation_groups is not None:
-                key = self.other_simple_relation_groups.indices.get_indices(starting_node)
             if key is None and updated_weight < (max_contrib * 0.01):
                 print("[ra] Base weight is less than 1% of the max weight, ignore the node "
                       + starting_node.hex_insn + "@" + starting_node.function)
