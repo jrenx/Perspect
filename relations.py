@@ -286,9 +286,9 @@ class RelationGroup:
     def trim_invariant_group(self, other_wavefront=None):
         to_remove = set()
         for prede in self.relations:
-            key = prede.file + "_" + str(prede.line) + "_" + str(prede.total_count) + "_" + str(prede.index)
             if other_wavefront is not None:
-                if key in other_wavefront:
+                key = other_wavefront.get_indices(prede)
+                if key is not None:
                     print("[ra] cannot remove node " + prede.hex_insn \
                           + " because it exists in the relations of the other repro")
                     continue
