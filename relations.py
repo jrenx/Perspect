@@ -359,10 +359,13 @@ class SimpleRelationGroup:
         data["use_weight"] = relation_group.use_weight
         data["weight"] = relation_group.weight
         predes = []
+        prede_insns = []
         for r in relation_group.relations.values():
             n = r.prede_node
             predes.append([n.file, n.line, n.index, n.total_count])
+            prede_insns.append(n.hex_insn)
         data["predes"] = predes
+        data["predes_insns"] = prede_insns
 
         relations = []
         for r in relation_group.relations.values():
@@ -391,18 +394,27 @@ class SimpleRelationGroup:
             predes = []
             sorted_predes = []
             for index_quad in json_simple_relation_group["predes"]:
-                predes.append(index_quad)
                 sorted_predes.append(index_quad)
+                predes.append(index_quad)
+
             predes = Indices.build_indices(predes)
+        prede_insns = None
+        if "prede_insns" in json_simple_relation_group:
+            prede_insns = json_simple_relation_group["prede_insns"]
         relations = None
         if "relations" in json_simple_relation_group:
             relations = []
             assert(len(sorted_predes) == len(json_simple_relation_group["relations"]))
             for i in range(len(sorted_predes)):
+                print(sorted_predes[i])
+                if "??" in sorted_predes[i]:
+                    print("[ra/warn] no file or linenum found for insn: " + prede_insns[i] if prede_insns is not None else "")
+                    continue
                 relation_data = json_simple_relation_group["relations"][i]
                 file, line, index, total_count = Indices.parse_index_quad(sorted_predes[i])
                 weight = Weight.fromJSON(relation_data["weight"])
-                relation = Relation(None, None, None, weight, None, file, line)
+                print(weight)
+                relation = Relation(None, None, None, weight, None, lines=line, file=file)
                 forward = relation_data["forward"]
                 if forward is not None:
                     relation.forward = Proportion.fromJSON(forward) \
