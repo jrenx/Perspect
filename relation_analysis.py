@@ -86,7 +86,7 @@ class RelationAnalysis:
     @staticmethod
     def load_simple_relations(relations_file_path):
         simple_relation_groups = None
-        if os.path.exists(relations_file_path)
+        if os.path.exists(relations_file_path):
             with open(relations_file_path, 'r') as f:
                 simple_relation_groups = SimpleRelationGroups.fromJSON(json.load(f))
             print(simple_relation_groups)
