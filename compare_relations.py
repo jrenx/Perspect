@@ -5,46 +5,90 @@ from relations import *
 def parse(f):
     with open(f, 'r') as ff:
         simple_relation_groups = SimpleRelationGroups.fromJSON(json.load(ff))
-    print(simple_relation_groups)
+    #print(simple_relation_groups)
     return simple_relation_groups
 
-def compare(f1, f2):
+def compare_relation_groups(f1, f2):
     rs1 = parse(f1)
-    print(rs1)
+    #print(rs1)
     rs2 = parse(f2)
-    print(rs2)
+    #print(rs2)
     
     diff = []
     for rg in set(rs1.relations_map.values()):
         file, line, index, total_count = Indices.parse_index_quad(rg.index_quad)
         key = rs2.indices.get_indices2(file, line, total_count, index)
-        unique = False
+        right = None
         if key is None:
-            print(str(rg.index_quad) + " not found in other set of relations.")
+            #print(str(rg.index_quad) + " not found in other set of relations.")
             #continue
             d = rg.group_weight
-            unique = True
             key = rg.index_quad
         else:
             #d = abs(rs1[key][0] - rs2[key][0])
-            d = abs(rg.group_weight - rs2.relations_map[key].group_weight)
+            right = rs2.relations_map[key]
+            d = abs(rg.group_weight - right.group_weight)
         d = round(d)
-        diff.append((d, key, unique, "left"))
+        diff.append((d, key, rg, right))
     for rg in set(rs2.relations_map.values()):
         file, line, index, total_count = Indices.parse_index_quad(rg.index_quad)
         key = rs1.indices.get_indices2(file, line, total_count, index)
         if key is None:
-            print(str(rg.index_quad) + " not found in other set of relations.")
+            #print(str(rg.index_quad) + " not found in other set of relations.")
             #continue
             d = rg.group_weight
             d = round(d)
-            diff.append((d, rg.index_quad, True, "right"))
-    print(diff)
-    sorted_diff = sorted(diff, key=lambda pair: (pair[0], pair[1]))
-    print(sorted_diff)
+            diff.append((d, rg.index_quad, None, rg))
+    #print(diff)
+    sorted_diff = sorted(diff, key=lambda e: (e[0], e[1]))
+    #print(sorted_diff)
+    print("========================================")
     for p in sorted_diff:
+        print()
         print(p)
+        print()
+        compare_relations(p[0], p[1], p[2], p[3])
+        print()
+        print(p)
+        print()
+        print("========================================")
     return sorted_diff
+
+def compare_relations(parent_d, parent_key, left, right):
+    diff = []
+    for pair in left.relations:
+        r = pair[0]
+        prede = pair[1]
+        file, line, index, total_count = Indices.parse_index_quad(prede)
+        key = right.predes.get_indices2(file, line, total_count, index)
+        if key is None:
+            if r.weight.perc_contrib < 5:
+                continue
+            diff.append((r.weight.perc_contrib, r, None))
+            continue
+        pair = right.relations_map.get(key) #TODO
+        r2 = pair[0]
+        if r.relaxed_equals(r2):
+            continue
+        d = abs(r2.weight.perc_contrib - r.weight.perc_contrib) #TODO diff by contribution
+        if d < 5:
+            continue
+        diff.append((d, r, r2))
+    for pair in right.relations:
+        r = pair[0]
+        prede = pair[1]
+        file, line, index, total_count = Indices.parse_index_quad(prede)
+        key = left.predes.get_indices2(file, line, total_count, index)
+        if key is None:
+            if r.weight.perc_contrib < 5:
+                continue
+            diff.append((r.weight.perc_contrib, None, r))
+    sorted_diff = sorted(diff, key=lambda e: e[0])
+    for p in sorted_diff:
+        print("-----------------------------------------")
+        print(str(p[0]))
+        print(str(p[1]))
+        print(str(p[2]))
 
 if __name__ == "__main__":
     #f1 = sys.argv[1]
@@ -64,31 +108,4 @@ if __name__ == "__main__":
     f1 = os.path.join(dir1, cache_dir1, file1)
     f2 = os.path.join(dir2, cache_dir2, file2)
 
-    #cmd = "cp " + f1 + " " + d2
-    #print(cmd)
-    #os.system(cmd)
-    #cmd = "cp " + f2 + " " + d1
-    #print(cmd)
-    #os.system(cmd)
-
-    sd_old = None
-    for i in range(100):
-        print("Iteration: " + str(i))
-        os.chdir(dir1)
-        cmd = "python3 relation_analysis.py  > rel_" + str(i)+ " 2>&1"
-        print(cmd)
-        os.system(cmd)
-        os.chdir(dir2)
-        cmd = "python3 relation_analysis.py  > rel_" + str(i)+ " 2>&1"
-        print(cmd)
-        os.system(cmd)
-        sd = compare(f1, f2)
-        if sd_old is not None and sd_old == sd:
-            break
-        sd_old = sd
-        cmd = "cp " + f1 + " " + d2
-        print(cmd)
-        os.system(cmd)
-        cmd = "cp " + f2 + " " + d1
-        print(cmd)
-        os.system(cmd)
+    compare_relation_groups(f1, f2)

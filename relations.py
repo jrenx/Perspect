@@ -162,10 +162,19 @@ class Relation:
                 self.forward == other.forward and \
                 self.backward == other.backward
 
+    def relaxed_equals(self, other):
+        if not isinstance(other, Relation):
+            return False
+        return self.weight.perc_contrib == other.weight.perc_contrib and \
+               self.weight.corr == other.weight.corr and \
+               self.forward == other.forward and \
+                self.backward == other.backward
+
     def __str__(self):
         s = ""
         s += "  >>> " + str(self.key) + " "
-        s += self.prede_node.hex_insn + "@" + self.prede_node.function + " <<<\n"
+        if self.prede_node is not None:
+            s += self.prede_node.hex_insn + "@" + self.prede_node.function + " <<<\n"
         s += "  " + str(self.weight) + "\n"
         s += "  => forward:  " + str(self.forward)
         s += "  => backward: " + str(self.backward)
@@ -341,14 +350,15 @@ class RelationGroup:
 
 class SimpleRelationGroup:
     def __init__(self, index_quad, key, key_short, \
-                 used_weight, predes, wavefront, relations, group_weight):
+                 used_weight, predes, wavefront, relations, relations_map, group_weight):
         self.index_quad = index_quad
         self.key = key
         self.key_short = key_short
         self.used_weight = used_weight
-        self.predes = predes
+        self.predes = predes # are the indices of predes
         self.wavefront = wavefront
         self.relations = relations
+        self.relations_map = relations_map
         self.group_weight = group_weight
 
     @staticmethod
@@ -402,16 +412,20 @@ class SimpleRelationGroup:
         if "prede_insns" in json_simple_relation_group:
             prede_insns = json_simple_relation_group["prede_insns"]
         relations = None
+        relations_map = None
         if "relations" in json_simple_relation_group:
             relations = []
+            relations_map = {}
             assert(len(sorted_predes) == len(json_simple_relation_group["relations"]))
             for i in range(len(sorted_predes)):
-                print(sorted_predes[i])
-                if "??" in sorted_predes[i]:
+                index_quad = sorted_predes[i]
+                print(index_quad)
+                if "??" in index_quad:
                     print("[ra/warn] no file or linenum found for insn: " + prede_insns[i] if prede_insns is not None else "")
                     continue
                 relation_data = json_simple_relation_group["relations"][i]
-                file, line, index, total_count = Indices.parse_index_quad(sorted_predes[i])
+                file, line, index, total_count = Indices.parse_index_quad(index_quad)
+
                 weight = Weight.fromJSON(relation_data["weight"])
                 print(weight)
                 relation = Relation(None, None, None, weight, None, lines=line, file=file)
@@ -423,7 +437,12 @@ class SimpleRelationGroup:
                 if backward is not None:
                     relation.backward = Proportion.fromJSON(backward) \
                         if backward["is_invariant"] is False else Invariance.fromJSON(backward)
-                relations.append(relation)
+                relations.append((relation, index_quad))
+
+                child_key = Indices.build_key_from_index_quad(index_quad)
+                relations_map[child_key] = (relation, index_quad)
+                child_key_short = file + "_" + str(line)
+                relations_map[child_key_short] = (relation, index_quad)
         wavefront = None
         if "wavefront" in json_simple_relation_group:
             wavefront = []
@@ -434,7 +453,7 @@ class SimpleRelationGroup:
         key = file + "_" + str(line) + "_" + str(total_count) + "_" + str(index)
         key_short = file + "_" + str(line)
         simple_relation_group = SimpleRelationGroup(json_simple_relation_group["starting_node"], key, key_short, \
-                                                    use_weight, predes, wavefront, relations, group_weight)
+                                                    use_weight, predes, wavefront, relations, relations_map, group_weight)
         return simple_relation_group
 
 class SimpleRelationGroups:
