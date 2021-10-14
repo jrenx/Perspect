@@ -353,9 +353,9 @@ class ParallelizableRelationAnalysis:
                         + " output set counts: " + str(output_set_counts)
                         + " " + str(output_set_count_list))
 
-            for output_set_count in output_set_count_to_nodes:
-                print("[ra]  nodes with output count " + str(output_set_count)
-                      + " are: " + str([node.id for node in output_set_count_to_nodes[output_set_count]]))
+            #for output_set_count in output_set_count_to_nodes:
+            #    print("[ra]  nodes with output count " + str(output_set_count)
+            #          + " are: " + str([node.id for node in output_set_count_to_nodes[output_set_count]]))
 
             print("[ra] insn: " + prede_node.hex_insn
                         + "@" + prede_node.function
