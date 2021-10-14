@@ -388,16 +388,12 @@ class SimpleRelationGroup:
         predes = None
         sorted_predes = None
         if "predes" in json_simple_relation_group:
-            predes = set()
+            predes = []
             sorted_predes = []
             for index_quad in json_simple_relation_group["predes"]:
-                #child_key = Indices.build_key_from_index_quad(index_quad)
-                file, line, index, total_count = Indices.parse_index_quad(index_quad)
-                child_key = file + "_" + str(line) + "_" + str(total_count) + "_" + str(index)
-                child_key_short = file + "_" + str(line)
-                predes.add(child_key)
-                predes.add(child_key_short)
+                predes.append(index_quad)
                 sorted_predes.append(child_key)
+            predes = Indices.build_indices(predes)
         relations = None
         if "relations" in json_simple_relation_group:
             relations = []
@@ -418,14 +414,10 @@ class SimpleRelationGroup:
                 relations.append(relation)
         wavefront = None
         if "wavefront" in json_simple_relation_group:
-            wavefront = set()
+            wavefront = []
             for index_quad in json_simple_relation_group["wavefront"]:
-                file, line, index, total_count = Indices.parse_index_quad(index_quad)
-                child_key = file + "_" + str(line) + "_" + str(total_count) + "_" + str(index)
-                child_key_short = file + "_" + str(line)
-                #child_key = Indices.build_key_from_index_quad(index_quad)
-                wavefront.add(child_key)
-                wavefront.add(child_key_short)
+                wavefront.append(index_quad)
+            wavefront = Indices.build_indices(wavefront)
         file, line, index, total_count = Indices.parse_index_quad(json_simple_relation_group["starting_node"])
         key = file + "_" + str(line) + "_" + str(total_count) + "_" + str(index)
         key_short = file + "_" + str(line)

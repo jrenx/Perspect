@@ -452,9 +452,7 @@ class ParallelizableRelationAnalysis:
             starting_node.index)
         if other_simple_relation_groups is not None:
             key = other_simple_relation_groups.indices.get_indices(starting_node)
-            #print(other_simple_relation_groups.relations_map)
             if key is not None:
-                #print("[ra] key is: " + str(key))
                 simple_relation_group = other_simple_relation_groups.relations_map.get(key)
                 other_used_weight = simple_relation_group.used_weight
                 other_predes = simple_relation_group.predes
@@ -542,15 +540,16 @@ class ParallelizableRelationAnalysis:
         else:
             trimmed_wavefront = []
             print("[ra] Other wavefront found: " )
-            print(other_predes)
-            print(other_wavefront)
+            #print(other_predes)
+            #print(other_wavefront)
             for w in wavefront:
-                key = w.file + "_" + str(w.line) + "_" + str(w.total_count) + "_" + str(w.index)
-                if key in other_predes and key not in other_wavefront:
+                k1 = other_predes.get_indices(w)
+                k2 = other_wavefront.get_indices(w)
+                if k1 is not None and k2 is None:
                     print("[ra] Remove wavelet " + w.hex_insn \
                           + " because it exists in the relations of the other repro but not in its wavefront")
                     continue
-                if key not in other_predes and key not in other_wavefront:
+                if k1 is None and k2 is None:
                     print("[ra/warn] Wavelet " + w.hex_insn \
                           + " does not exist in the relations of the other repro or its wavefront")
                     continue
