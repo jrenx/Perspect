@@ -400,9 +400,9 @@ class SimpleRelationGroup:
             assert(len(sorted_predes) == len(json_simple_relation_group["relations"]))
             for i in range(len(sorted_predes)):
                 relation_data = json_simple_relation_group["relations"][i]
-                prede = sorted_predes[i]
+                file, line, index, total_count = Indices.parse_index_quad(sorted_predes[i])
                 weight = Weight.fromJSON(relation_data["weight"])
-                relation = Relation(None, None, None, weight, None, prede[0], prede[1])
+                relation = Relation(None, None, None, weight, None, file, line)
                 forward = relation_data["forward"]
                 if forward is not None:
                     relation.forward = Proportion.fromJSON(forward) \
