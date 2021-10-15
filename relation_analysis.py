@@ -62,8 +62,8 @@ class RelationAnalysis:
             other_indices_file_path = os.path.join(self.path, "cache", self.prog, other_indices_file)
             self.other_indices_map = self.load_indices(other_indices_file_path)
 
-        if other_indices_file_inner is not None:
-            other_indices_file_path_inner = os.path.join(self.path, "cache", self.prog, other_indices_file_inner)
+        if other_indices_file is not None:
+            other_indices_file_path_inner = os.path.join(self.path, "cache", self.prog, other_indices_file + "_inner")
             self.other_indices_map_inner = self.load_indices(other_indices_file_path_inner)
 
         if other_relations_file is not None:
