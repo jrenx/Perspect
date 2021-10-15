@@ -274,7 +274,7 @@ class ParallelizableRelationAnalysis:
 
     @staticmethod
     def build_relation_with_predecessor(dgraph, starting_node, prede_node, rgroup, wavefront,
-                                                 use_weight, base_weight, prog):
+                                                 use_weight, base_weight, prog, indices_not_found):
         #insn = prede_node.insn
         #hex_insn = prede_node.hex_insn
         if DEBUG: print("-------")
@@ -398,7 +398,7 @@ class ParallelizableRelationAnalysis:
                     duplicate = True
                     print("[ra] Duplicate, do not add to wavefront")
                     break
-            if duplicate is False:
+            if duplicate is False and indices_not_found is False:
                 wavefront.append(prede_node)
         ############ detect backward relations ###########
         if Invariance.is_invariant(input_set_counts):
@@ -426,7 +426,7 @@ class ParallelizableRelationAnalysis:
                         duplicate = True
                         print("[ra] Duplicate, do not add to wavefront")
                         break
-                if duplicate is False:
+                if duplicate is False and indices_not_found is False:
                     wavefront.append(prede_node)
 
     @staticmethod
@@ -505,8 +505,10 @@ class ParallelizableRelationAnalysis:
                 #print("[ra][warn] insn not in dynamic graph??? " + hex(insn))
                 continue
             # assert insn in dgraph.insn_to_dyn_nodes, hex(insn)
+            indices_not_found = False
             if indices_map is not None:
                 if indices_map.indices_not_found(static_node):
+                    indices_not_found = True
                     print("\n" + hex(static_node.insn) + "@" + static_node.function + " is not found in the other repro's static slice...")
                     prede_explained = False
                     if indices_map_inner is not None:
@@ -520,7 +522,7 @@ class ParallelizableRelationAnalysis:
 
             ParallelizableRelationAnalysis.build_relation_with_predecessor(dgraph, starting_node, static_node,
                                                                            rgroup, wavefront,
-                                                                            use_weight, base_weight, prog)
+                                                                            use_weight, base_weight, prog, indices_not_found)
 
             for p in static_node.cf_predes:
                 worklist.append(p)
