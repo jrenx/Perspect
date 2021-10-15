@@ -102,3 +102,4 @@ if __name__ == "__main__":
         cmd = "cp " + f2 + " " + d1
         print(cmd)
         os.system(cmd)
+        print("", flush=True)
