@@ -196,14 +196,14 @@ class RelationAnalysis:
                 continue
 
             if self.other_indices_map.indices_not_found(starting_node):
-                prede_explained = False
-                for p in itertools.chain(starting_node.df_predes, starting_node.cf_predes):
-                    if self.other_indices_map.get_indices(p) is not None:
-                        prede_explained = True
-                        break
-                if prede_explained is False:
-                    print("\n" + hex(insn) + "@" + func + " is not found in the other repro's static slice...")
-                    continue
+                #prede_explained = False
+                #for p in itertools.chain(starting_node.df_predes, starting_node.cf_predes):
+                #    if self.other_indices_map.get_indices(p) is not None:
+                #        prede_explained = True
+                #        break
+                #if prede_explained is False:
+                print("\n" + hex(insn) + "@" + func + " is not found in the other repro's static slice...")
+                continue
 
             iteration += 1
             print("\n=======================================================================", flush=True)
@@ -220,12 +220,14 @@ class RelationAnalysis:
                 print("-" * 60)
                 traceback.print_exc(file=sys.stdout)
                 print("-" * 60)
+                continue
 
             curr_wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, starting_node, \
                                           (0 if curr_weight is None else curr_weight.total_weight), \
                                                                        curr_max_contrib, self.prog, \
                                                                              self.other_indices_map, \
-                                                                             self.other_simple_relation_groups)
+                                                                             self.other_simple_relation_groups,\
+                                                                             self.node_avg_timestamps)
             print("[ra] Got results for: " + hex(starting_node.insn))
             if rgroup is None:
                 continue

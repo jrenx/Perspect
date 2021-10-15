@@ -139,6 +139,7 @@ class Relation:
         self.weight = weight
         self.forward = None
         self.backward = None
+        self.timestamp = None
 
         if lines is not None:
             self.lines = lines

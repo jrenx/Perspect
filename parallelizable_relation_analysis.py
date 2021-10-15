@@ -431,7 +431,7 @@ class ParallelizableRelationAnalysis:
 
     @staticmethod
     def one_pass(dgraph, starting_node, starting_weight, max_contrib, prog, \
-                 indices_map=None, other_simple_relation_groups=None):
+                 indices_map=None, other_simple_relation_groups=None, node_avg_timestamps=None):
         a = time.time()
         print("Starting forward and backward pass")
         wavefront = []
@@ -518,7 +518,7 @@ class ParallelizableRelationAnalysis:
 
             ParallelizableRelationAnalysis.build_relation_with_predecessor(dgraph, starting_node, static_node,
                                                                            rgroup, wavefront,
-                                                 use_weight, base_weight, prog)
+                                                                            use_weight, base_weight, prog)
 
             for p in static_node.cf_predes:
                 worklist.append(p)
