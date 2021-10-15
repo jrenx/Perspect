@@ -1592,6 +1592,7 @@ class StaticDepGraph:
     @staticmethod
     def output_indices_mapping(result_file):
         indices = []
+        inner_indices = []
         for graph in StaticDepGraph.func_to_graph.values():
             for node in itertools.chain(graph.none_df_starting_nodes, \
                                         graph.nodes_in_cf_slice.keys(), \
@@ -1599,8 +1600,19 @@ class StaticDepGraph:
                 if node.explained is False:
                     continue
                 indices.append([node.file, node.line, node.index, node.total_count])
+
+                is_inner = True
+                for p in itertools.chain(node.cf_predes, node.df_predes):
+                    if p.explained is False:
+                        is_inner = False
+                        break
+                if is_inner is False:
+                    continue
+                inner_indices.append([node.file, node.line, node.index, node.total_count])
         with open(result_file, 'w') as f:
             json.dump(indices, f, indent=4)
+        with open(result_file + "_inner", 'w') as f:
+            json.dump(inner_indices, f, indent=4)
 
     @staticmethod
     def get_indices(prog):
