@@ -16,6 +16,7 @@ import traceback
 from dynamic_dep_graph import *
 from parallelizable_relation_analysis import *
 from relations import *
+import itertools
 
 DEBUG = True
 Weight_Threshold = 0
@@ -59,6 +60,7 @@ class RelationAnalysis:
         if other_indices_file is not None:
             other_indices_file_path = os.path.join(self.path, "cache", self.prog, other_indices_file)
             self.other_indices_map = self.load_indices(other_indices_file_path)
+
         if other_relations_file is not None:
             other_relations_file_path = os.path.join(self.path, "cache", self.prog, other_relations_file)
             self.other_simple_relation_groups = RelationAnalysis.load_simple_relations(other_relations_file_path)
@@ -194,8 +196,14 @@ class RelationAnalysis:
                 continue
 
             if self.other_indices_map.indices_not_found(starting_node):
-                print("\n" + hex(insn) + "@" + func + " is not found in the other repro's static slice...")
-                continue
+                prede_explained = False
+                for p in itertools.chain(starting_node.df_predes, starting_node.cf_predes):
+                    if self.other_indices_map.get_indices(p) is not None:
+                        prede_explained = True
+                        break
+                if prede_explained is False:
+                    print("\n" + hex(insn) + "@" + func + " is not found in the other repro's static slice...")
+                    continue
 
             iteration += 1
             print("\n=======================================================================", flush=True)
