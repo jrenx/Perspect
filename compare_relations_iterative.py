@@ -64,12 +64,21 @@ if __name__ == "__main__":
     f1 = os.path.join(dir1, cache_dir1, file1)
     f2 = os.path.join(dir2, cache_dir2, file2)
 
-    #cmd = "cp " + f1 + " " + d2
-    #print(cmd)
-    #os.system(cmd)
-    #cmd = "cp " + f2 + " " + d1
-    #print(cmd)
-    #os.system(cmd)
+    cmd = "rm " + os.path.join(dir1, cache_dir1, file1)
+    print(cmd)
+    os.system(cmd)
+
+    cmd = "rm " + os.path.join(dir1, cache_dir1, file2)
+    print(cmd)
+    os.system(cmd)
+
+    cmd = "rm " + os.path.join(dir2, cache_dir2, file2)
+    print(cmd)
+    os.system(cmd)
+
+    cmd = "rm " + os.path.join(dir2, cache_dir2, file1)
+    print(cmd)
+    os.system(cmd)
 
     sd_old = None
     for i in range(100):
