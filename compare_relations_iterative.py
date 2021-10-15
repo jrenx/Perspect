@@ -5,14 +5,14 @@ from relations import *
 def parse(f):
     with open(f, 'r') as ff:
         simple_relation_groups = SimpleRelationGroups.fromJSON(json.load(ff))
-    print(simple_relation_groups)
+    #print(simple_relation_groups)
     return simple_relation_groups
 
 def compare(f1, f2):
     rs1 = parse(f1)
-    print(rs1)
+    #print(rs1)
     rs2 = parse(f2)
-    print(rs2)
+    #print(rs2)
     
     diff = []
     for rg in set(rs1.relations_map.values()):
@@ -20,7 +20,7 @@ def compare(f1, f2):
         key = rs2.indices.get_indices2(file, line, total_count, index)
         unique = False
         if key is None:
-            print(str(rg.index_quad) + " not found in other set of relations.")
+            #print(str(rg.index_quad) + " not found in other set of relations.")
             #continue
             d = rg.group_weight
             unique = True
@@ -34,7 +34,7 @@ def compare(f1, f2):
         file, line, index, total_count = Indices.parse_index_quad(rg.index_quad)
         key = rs1.indices.get_indices2(file, line, total_count, index)
         if key is None:
-            print(str(rg.index_quad) + " not found in other set of relations.")
+            #print(str(rg.index_quad) + " not found in other set of relations.")
             #continue
             d = rg.group_weight
             d = round(d)
@@ -82,6 +82,7 @@ if __name__ == "__main__":
         cmd = "python3 relation_analysis.py  > rel_" + str(i)+ " 2>&1"
         print(cmd)
         os.system(cmd)
+        print("===========================================================")
         sd = compare(f1, f2)
         if sd_old is not None and sd_old == sd:
             break
