@@ -524,6 +524,8 @@ class ParallelizableRelationAnalysis:
                                                                            rgroup, wavefront,
                                                                             use_weight, base_weight, prog, indices_not_found)
 
+            if indices_not_found is True:
+                continue
             for p in static_node.cf_predes:
                 worklist.append(p)
             for p in static_node.df_predes:
