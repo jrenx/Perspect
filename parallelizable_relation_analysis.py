@@ -274,7 +274,7 @@ class ParallelizableRelationAnalysis:
 
     @staticmethod
     def build_relation_with_predecessor(dgraph, starting_node, prede_node, rgroup, wavefront,
-                                                 use_weight, base_weight, prog, indices_not_found):
+                                                 use_weight, base_weight, prog, indices_not_found, timestamp):
         #insn = prede_node.insn
         #hex_insn = prede_node.hex_insn
         if DEBUG: print("-------")
@@ -376,6 +376,7 @@ class ParallelizableRelationAnalysis:
 
         ################ build relations ################
         relation = rgroup.get_or_make_relation(prede_node, len(dgraph.insn_to_dyn_nodes[prede_node.insn]), weight, prog)
+        relation.timestamp = timestamp
         ############ detect forward relations ############
         if Invariance.is_invariant(output_set_counts):
             if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " is forward invariant with the output event")
@@ -522,7 +523,8 @@ class ParallelizableRelationAnalysis:
 
             ParallelizableRelationAnalysis.build_relation_with_predecessor(dgraph, starting_node, static_node,
                                                                            rgroup, wavefront,
-                                                                            use_weight, base_weight, prog, indices_not_found)
+                                                                            use_weight, base_weight, prog, indices_not_found,
+                                                                           node_avg_timestamps[static_node.insn] if node_avg_timestamps is not None else 0)
 
             if indices_not_found is True:
                 continue

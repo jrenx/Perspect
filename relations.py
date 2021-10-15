@@ -175,7 +175,8 @@ class Relation:
         s = ""
         s += "  >>> " + str(self.key) + " "
         if self.prede_node is not None:
-            s += self.prede_node.hex_insn + "@" + self.prede_node.function + " <<<\n"
+            s += self.prede_node.hex_insn + "@" + self.prede_node.function
+        s += " timestamp: " + str(self.timestamp) + "<<<\n"
         s += "  " + str(self.weight) + "\n"
         s += "  => forward:  " + str(self.forward)
         s += "  => backward: " + str(self.backward)
