@@ -31,6 +31,7 @@ class RelationAnalysis:
         self.prede_node_to_invariant_rel = {}
         self.static_node_to_weight = {}
         self.other_indices_map = None
+        self.other_indices_map_inner = None
         self.other_simple_relation_groups = None
         self.relation_groups = []  # results
 
@@ -60,6 +61,10 @@ class RelationAnalysis:
         if other_indices_file is not None:
             other_indices_file_path = os.path.join(self.path, "cache", self.prog, other_indices_file)
             self.other_indices_map = self.load_indices(other_indices_file_path)
+
+        if other_indices_file_inner is not None:
+            other_indices_file_path_inner = os.path.join(self.path, "cache", self.prog, other_indices_file_inner)
+            self.other_indices_map_inner = self.load_indices(other_indices_file_path_inner)
 
         if other_relations_file is not None:
             other_relations_file_path = os.path.join(self.path, "cache", self.prog, other_relations_file)
@@ -226,6 +231,7 @@ class RelationAnalysis:
                                           (0 if curr_weight is None else curr_weight.total_weight), \
                                                                        curr_max_contrib, self.prog, \
                                                                              self.other_indices_map, \
+                                                                             self.other_indices_map_inner,
                                                                              self.other_simple_relation_groups,\
                                                                              self.node_avg_timestamps)
             print("[ra] Got results for: " + hex(starting_node.insn))

@@ -431,7 +431,7 @@ class ParallelizableRelationAnalysis:
 
     @staticmethod
     def one_pass(dgraph, starting_node, starting_weight, max_contrib, prog, \
-                 indices_map=None, other_simple_relation_groups=None, node_avg_timestamps=None):
+                 indices_map=None, indices_map_inner=None, other_simple_relation_groups=None, node_avg_timestamps=None):
         a = time.time()
         print("Starting forward and backward pass")
         wavefront = []
@@ -507,13 +507,15 @@ class ParallelizableRelationAnalysis:
             # assert insn in dgraph.insn_to_dyn_nodes, hex(insn)
             if indices_map is not None:
                 if indices_map.indices_not_found(static_node):
+                    print("\n" + hex(static_node.insn) + "@" + static_node.function + " is not found in the other repro's static slice...")
                     prede_explained = False
-                    for p in itertools.chain(static_node.df_predes, static_node.cf_predes):
-                        if indices_map.get_indices(p) is not None:
-                            prede_explained = True
-                            break
+                    if indices_map_inner is not None:
+                        for p in itertools.chain(static_node.df_predes, static_node.cf_predes):
+                            if indices_map_inner.get_indices(p) is not None:
+                                prede_explained = True
+                                break
                     if prede_explained is False:
-                        print("\n" + hex(static_node.insn) + "@" + static_node.function + " is not found in the other repro's static slice...")
+                        print("\n" + hex(static_node.insn) + "@" + static_node.function + "'s predes are also not found in the other repro's inner static slice...")
                         continue
 
             ParallelizableRelationAnalysis.build_relation_with_predecessor(dgraph, starting_node, static_node,
