@@ -1591,6 +1591,7 @@ class StaticDepGraph:
 
     @staticmethod
     def output_indices_mapping(result_file):
+        indices_map = {}
         indices = []
         for graph in StaticDepGraph.func_to_graph.values():
             for node in itertools.chain(graph.none_df_starting_nodes, \
@@ -1599,8 +1600,21 @@ class StaticDepGraph:
                 if node.explained is False:
                     continue
                 indices.append([node.file, node.line, node.index, node.total_count])
+                key = node.file + "_" + str(node.line) + "_" + str(node.index) + "_" + str(node.total_count)
+                predes = indices_map.get(key, None)
+                if predes is not None:
+                    print("Duplicate index? " + key)
+                else:
+                    predes = []
+                    indices_map[key] = predes
+                for p in itertools.chain(node.df_predes, node.cf_predes):
+                    predes.append([p.file, p.line, p.index, p.total_count])
+
         with open(result_file, 'w') as f:
             json.dump(indices, f, indent=4)
+
+        with open(result_file + "_predes", 'w') as f:
+            json.dump(indices_map, f, indent=4)
 
     @staticmethod
     def get_indices(prog):
