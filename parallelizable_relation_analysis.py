@@ -368,11 +368,11 @@ class ParallelizableRelationAnalysis:
         if weight.perc_contrib < 1:
             if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " only has a "
                             + str(weight.perc_contrib) + "% contribution to the output event, ignore ...")
-            return
+            return False
 
         if Invariance.is_irrelevant(output_set_counts) and Invariance.is_irrelevant(input_set_counts):
             if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " is irrelevant  the output event, ignore ...")
-            return
+            return False
 
         ################ build relations ################
         relation = rgroup.get_or_make_relation(prede_node, len(dgraph.insn_to_dyn_nodes[prede_node.insn]), weight, prog)
@@ -429,6 +429,8 @@ class ParallelizableRelationAnalysis:
                         break
                 if duplicate is False and indices_not_found is False:
                     wavefront.append(prede_node)
+
+        return True
 
     @staticmethod
     def one_pass(dgraph, starting_node, starting_weight, max_contrib, prog, \
@@ -521,12 +523,12 @@ class ParallelizableRelationAnalysis:
                         print("\n" + hex(static_node.insn) + "@" + static_node.function + "'s predes are also not found in the other repro's inner static slice...")
                         continue
 
-            ParallelizableRelationAnalysis.build_relation_with_predecessor(dgraph, starting_node, static_node,
+            analyzed = ParallelizableRelationAnalysis.build_relation_with_predecessor(dgraph, starting_node, static_node,
                                                                            rgroup, wavefront,
                                                                             use_weight, base_weight, prog, indices_not_found,
                                                                            node_avg_timestamps[static_node.insn] if node_avg_timestamps is not None else 0)
 
-            if indices_not_found is True:
+            if indices_not_found is True or analyzed is False:
                 continue
             for p in static_node.cf_predes:
                 worklist.append(p)
