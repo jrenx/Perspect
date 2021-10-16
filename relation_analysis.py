@@ -279,7 +279,8 @@ class RelationAnalysis:
 
         for rg in self.relation_groups:
             if rg.use_weight is False:
-                if rg.weight < self.static_node_to_weight[rg.starting_node]:
+                if rg.weight < self.static_node_to_weight[rg.starting_node].total_weight:
+                    print("[ra] Updating for group: " + rg.starting_node.hex_insn)
                     rg.add_base_weight(self.static_node_to_weight[rg.starting_node].total_weight)
         self.relation_groups = sorted(self.relation_groups, key=lambda rg: rg.weight)
         self.relation_groups = self.relation_groups[::-1] #reverse the list
