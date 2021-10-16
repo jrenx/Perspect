@@ -140,18 +140,25 @@ class RelationAnalysis:
             else:
                 self.static_node_to_weight[prede_node] = weight
 
-    def get_weighted_wavefront(self, curr_wavefront):
+    def get_weighted_wavefront(self, curr_wavefront, rgroup):
         unique_wavefront = set()
         curr_weighted_wavefront = []
         for wavelet in curr_wavefront:
             if wavelet in unique_wavefront:
                 continue
             unique_wavefront.add(wavelet)
-            if wavelet not in self.static_node_to_weight:
-                print("[ra][warn] no weight " + str(wavelet.hex_insn))
-            else:
+
+            if wavelet in rgroup.relations:
+                print("[ra][warn] used original weight " + str(wavelet.hex_insn))
+                weight = rgroup.relations[wavelet].weight
+                curr_weighted_wavefront.append((weight, wavelet))
+            elif wavelet in self.static_node_to_weight:
+                print("[ra][warn] used cached weight " + str(wavelet.hex_insn))
                 weight = self.static_node_to_weight[wavelet]
                 curr_weighted_wavefront.append((weight, wavelet))
+            else:
+                print("[ra][warn] no weight " + str(wavelet.hex_insn))
+
         curr_weighted_wavefront = sorted(curr_weighted_wavefront, key=lambda weight_and_node: weight_and_node[0])
         return curr_weighted_wavefront
 
@@ -243,6 +250,7 @@ class RelationAnalysis:
                 updated_weight = self.static_node_to_weight[starting_node].total_weight
                 if rgroup.weight is None: # or rgroup.weight != self.static_node_to_weight[starting_node].total_weight:
                     #TODO print
+                    print("[ra] Updating base weight...")
                     rgroup.add_base_weight(self.static_node_to_weight[starting_node].total_weight)
 
             if key is None and updated_weight < (max_contrib * 0.01):
@@ -257,7 +265,7 @@ class RelationAnalysis:
             self.update_weights(rgroup)
             if rgroup.weight > max_contrib: max_contrib = rgroup.weight
 
-            curr_weighted_wavefront = self.get_weighted_wavefront(curr_wavefront)
+            curr_weighted_wavefront = self.get_weighted_wavefront(curr_wavefront, rgroup)
             print("=======================================================================")
             for weight, wavelet in curr_weighted_wavefront:
                 if wavelet in visited:
