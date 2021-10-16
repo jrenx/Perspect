@@ -64,31 +64,32 @@ def compare_relations(parent_d, parent_key, left, right):
         if key is None:
             if r.weight.perc_contrib < 5:
                 continue
-            diff.append((r.weight.perc_contrib, r, None))
+            diff.append((r.weight.perc_contrib, r.timestamp, r, None))
             continue
         pair = right.relations_map.get(key) #TODO
         r2 = pair[0]
         if r.relaxed_equals(r2):
             continue
         d = abs(r2.weight.perc_contrib - r.weight.perc_contrib) #TODO diff by contribution
-        if d < 5:
-            continue
-        diff.append((d, r, r2))
+        avg_timestamp = (r2.timestamp + r.timestamp)/2
+        #if d < 5:
+        #    continue
+        diff.append((d, avg_timestamp, r, r2))
     for pair in right.relations:
         r = pair[0]
         prede = pair[1]
         file, line, index, total_count = Indices.parse_index_quad(prede)
         key = left.predes.get_indices2(file, line, total_count, index)
         if key is None:
-            if r.weight.perc_contrib < 5:
-                continue
-            diff.append((r.weight.perc_contrib, None, r))
-    sorted_diff = sorted(diff, key=lambda e: e[0])
+            #if r.weight.perc_contrib < 5:
+            #    continue
+            diff.append((r.weight.perc_contrib, r.timestamp, None, r))
+    sorted_diff = sorted(diff, key=lambda e: (e[1], e[0]))
     for p in sorted_diff:
         print("-----------------------------------------")
-        print(str(p[0]))
-        print(str(p[1]))
+        print(str(p[0]) + " " + str(p[1]))
         print(str(p[2]))
+        print(str(p[3]))
 
 if __name__ == "__main__":
     #f1 = sys.argv[1]
