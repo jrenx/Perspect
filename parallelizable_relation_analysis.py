@@ -365,7 +365,7 @@ class ParallelizableRelationAnalysis:
                         + " input set counts: " + str(input_set_counts)
                         + " " + str(input_set_count_list))
 
-        key = other_predes.get_indices(prede_node)
+        key = other_predes.get_indices(prede_node) if other_predes is not None else None
         if key is None and weight.perc_contrib < 1:
             if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " only has a "
                             + str(weight.perc_contrib) + "% contribution to the output event, ignore ...")
