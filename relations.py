@@ -140,6 +140,7 @@ class Relation:
         self.forward = None
         self.backward = None
         self.timestamp = None
+        self.insn = None
 
         if lines is not None:
             self.lines = lines
@@ -176,6 +177,8 @@ class Relation:
         s += "  >>> " + str(self.key) + " "
         if self.prede_node is not None:
             s += self.prede_node.hex_insn + "@" + self.prede_node.function
+        elif self.insn is not None:
+            s += hex(self.insn)
         s += " timestamp: " + str(self.timestamp) + "<<<\n"
         s += "  " + str(self.weight) + "\n"
         s += "  => forward:  " + str(self.forward)
@@ -193,6 +196,7 @@ class Relation:
         data["backward"] = self.backward.toJSON() if self.backward is not None else None
         data["lines"] = self.lines
         data["file"] = self.file
+        data["timestamp"] = self.timestamp
         return data
 
     @staticmethod
@@ -217,6 +221,9 @@ class Relation:
         backward = data["backward"]
         if backward is not None:
             rel.backward = Proportion.fromJSON(backward) if backward["is_invariant"] is False else Invariance.fromJSON(backward)
+
+        if "timestamp" in data:
+            rel.timestamp = data["timestamp"]
         return rel
 
 class RelationGroup:
@@ -385,6 +392,8 @@ class SimpleRelationGroup:
             relation_data["weight"] = r.weight.toJSON()
             relation_data["forward"] = r.forward.toJSON() if r.forward is not None else None
             relation_data["backward"] = r.backward.toJSON() if r.backward is not None else None
+            relation_data["timestamp"] = r.timestamp
+            relation_data["insn"] = r.prede_node.insn if r.prede_node is not None else r.insn
             relations.append(relation_data)
         data["relations"] = relations
 
@@ -431,6 +440,8 @@ class SimpleRelationGroup:
                 weight = Weight.fromJSON(relation_data["weight"])
                 print(weight)
                 relation = Relation(None, None, None, weight, None, lines=line, file=file)
+                if "timestamp" in relation_data: relation.timestamp = relation_data["timestamp"]
+                if "insn" in relation_data: relation.insn = relation_data["insn"]
                 forward = relation_data["forward"]
                 if forward is not None:
                     relation.forward = Proportion.fromJSON(forward) \
