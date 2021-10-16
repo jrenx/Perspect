@@ -369,7 +369,13 @@ class SimpleRelationGroup:
         self.relations = relations
         self.relations_map = relations_map
         self.group_weight = group_weight
+        self.insn = None
 
+    def __str__(self):
+        if self.insn is not None:
+            return hex(self.insn)
+        return "Relation Group"
+    
     @staticmethod
     def toJSON(relation_group):
         data = {}
@@ -385,6 +391,7 @@ class SimpleRelationGroup:
             prede_insns.append(n.hex_insn)
         data["predes"] = predes
         data["predes_insns"] = prede_insns
+        data["insn"] = relation_group.starting_node.insn
 
         relations = []
         for r in relation_group.relations.values():
@@ -467,6 +474,8 @@ class SimpleRelationGroup:
         key_short = file + "_" + str(line)
         simple_relation_group = SimpleRelationGroup(json_simple_relation_group["starting_node"], key, key_short, \
                                                     use_weight, predes, wavefront, relations, relations_map, group_weight)
+        if "insn" in json_simple_relation_group:
+            simple_relation_group.insn = json_simple_relation_group["insn"]
         return simple_relation_group
 
 class SimpleRelationGroups:
