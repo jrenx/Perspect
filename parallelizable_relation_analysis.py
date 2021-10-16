@@ -274,7 +274,7 @@ class ParallelizableRelationAnalysis:
 
     @staticmethod
     def build_relation_with_predecessor(dgraph, starting_node, prede_node, rgroup, wavefront,
-                                                 use_weight, base_weight, prog, indices_not_found, timestamp):
+                                                 use_weight, base_weight, prog, indices_not_found, timestamp, other_predes):
         #insn = prede_node.insn
         #hex_insn = prede_node.hex_insn
         if DEBUG: print("-------")
@@ -365,7 +365,8 @@ class ParallelizableRelationAnalysis:
                         + " input set counts: " + str(input_set_counts)
                         + " " + str(input_set_count_list))
 
-        if weight.perc_contrib < 1:
+        key = other_predes.get_indices(prede_node)
+        if key is None and weight.perc_contrib < 1:
             if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " only has a "
                             + str(weight.perc_contrib) + "% contribution to the output event, ignore ...")
             return False
@@ -526,7 +527,8 @@ class ParallelizableRelationAnalysis:
             analyzed = ParallelizableRelationAnalysis.build_relation_with_predecessor(dgraph, starting_node, static_node,
                                                                            rgroup, wavefront,
                                                                             use_weight, base_weight, prog, indices_not_found,
-                                                                           node_avg_timestamps[static_node.insn] if node_avg_timestamps is not None else 0)
+                                                                           node_avg_timestamps[static_node.insn] if node_avg_timestamps is not None else 0,
+                                                                                      other_predes)
 
             if indices_not_found is True or analyzed is False:
                 continue
