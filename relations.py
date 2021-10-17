@@ -125,13 +125,14 @@ class Proportion:
                 self.w_mu == other.w_mu and \
                 self.w_std == other.w_std
 
-    def relaxed_equal(self, other):
+    def relaxed_equals(self, other):
         if not isinstance(other, Proportion):
             return False
         result = ks_2samp(self.distribution, other.distribution)
         if result.pvalue > 0.95:
             return True
-        if self.weighted_distribution is None or other.weighted_distribution is None:
+        if self.weighted_distribution is None or len(self.weighted_distribution) == 0 or\
+                other.weighted_distribution is None or len(other.weighted_distribution) == 0:
             return False
         result = ks_2samp(self.weighted_distribution, other.weighted_distribution)
         if result.pvalue > 0.95:
@@ -184,6 +185,7 @@ class Relation:
             file, line = get_line(prede_node.insn, prog)
         self.file = file
         self.key = str(self.file) + ":" + str(self.lines)
+        self.duplicate = False
 
     def __eq__(self, other):
         if not isinstance(other, Relation):
@@ -195,10 +197,11 @@ class Relation:
     def relaxed_equals(self, other):
         if not isinstance(other, Relation):
             return False
-        return self.weight.perc_contrib == other.weight.perc_contrib and \
+        diff = abs(self.weight.perc_contrib == other.weight.perc_contrib)/self.weight.perc_contrib
+        return diff < 0.1 and \
                self.weight.corr == other.weight.corr and \
-               self.forward == other.forward and \
-                self.backward == other.backward
+               self.forward.relaxed_equals(other.forward) and \
+                self.backward.relaxed_equals(other.backward)
 
     def __str__(self):
         s = ""
@@ -207,7 +210,10 @@ class Relation:
             s += self.prede_node.hex_insn + "@" + self.prede_node.function
         elif self.insn is not None:
             s += hex(self.insn)
-        s += " timestamp: " + str(self.timestamp) + "<<<\n"
+        s += " timestamp: " + str(self.timestamp)
+        if self.duplicate is True:
+            s += " Duplicate "
+        s += "<<<\n"
         s += "  " + str(self.weight) + "\n"
         s += "  => forward:  " + str(self.forward)
         s += "  => backward: " + str(self.backward)
@@ -225,6 +231,7 @@ class Relation:
         data["lines"] = self.lines
         data["file"] = self.file
         data["timestamp"] = self.timestamp
+        data["duplicate"] = self.duplicate
         return data
 
     @staticmethod
@@ -252,6 +259,9 @@ class Relation:
 
         if "timestamp" in data:
             rel.timestamp = data["timestamp"]
+
+        if "duplicate" in data:
+            rel.duplicate = data["duplicate"]
         return rel
 
 class RelationGroup:
@@ -429,6 +439,7 @@ class SimpleRelationGroup:
             relation_data["backward"] = r.backward.toJSON() if r.backward is not None else None
             relation_data["timestamp"] = r.timestamp
             relation_data["insn"] = r.prede_node.insn if r.prede_node is not None else r.insn
+            relation_data["duplicate"] = r.duplicate
             relations.append(relation_data)
         data["relations"] = relations
 
@@ -477,6 +488,7 @@ class SimpleRelationGroup:
                 relation = Relation(None, None, None, weight, None, lines=line, file=file)
                 if "timestamp" in relation_data: relation.timestamp = relation_data["timestamp"]
                 if "insn" in relation_data: relation.insn = relation_data["insn"]
+                if "duplicate" in relation_data: relation.duplicate = relation_data["duplicate"]
                 forward = relation_data["forward"]
                 if forward is not None:
                     relation.forward = Proportion.fromJSON(forward) \

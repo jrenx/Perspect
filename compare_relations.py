@@ -66,12 +66,20 @@ def compare_relations(parent_d, parent_key, left, right):
         key = right.predes.get_indices2(file, line, total_count, index)
         if key is None:
             if r.weight.perc_contrib < 5:
+                print("[ra] Contribution is too low, ignore the relations")
+                continue
+            if r.duplicate is True:
+                print("[ra] Relation is too duplicate, ignore...")
                 continue
             diff.append((r.weight.perc_contrib, r.timestamp, r, None))
             continue
         pair = right.relations_map.get(key) #TODO
         r2 = pair[0]
         if r.relaxed_equals(r2):
+            continue
+        avg_contrib = (r2.weight.perc_contrib + r.weight.perc_contrib)/2
+        if avg_contrib < 5:
+            print("[ra] Average contribution is too low, ignore the relations")
             continue
         d = abs(r2.weight.perc_contrib - r.weight.perc_contrib) #TODO diff by contribution
         avg_timestamp = (r2.timestamp + r.timestamp)/2
@@ -84,8 +92,12 @@ def compare_relations(parent_d, parent_key, left, right):
         file, line, index, total_count = Indices.parse_index_quad(prede)
         key = left.predes.get_indices2(file, line, total_count, index)
         if key is None:
-            #if r.weight.perc_contrib < 5:
-            #    continue
+            if r.weight.perc_contrib < 5:
+                print("[ra] Contribution is too low, ignore the relations")
+                continue
+            if r.duplicate is True:
+                print("[ra] Relation is too duplicate, ignore...")
+                continue
             diff.append((r.weight.perc_contrib, r.timestamp, None, r))
     sorted_diff = sorted(diff, key=lambda e: (e[1], e[0]))
     for p in sorted_diff:
