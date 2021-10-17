@@ -39,9 +39,9 @@ def compare(f1, f2):
             d = rg.group_weight
             d = round(d)
             diff.append((d, rg.index_quad, True, "right"))
-    print(diff)
+    #print(diff)
     sorted_diff = sorted(diff, key=lambda pair: (pair[0], pair[1]))
-    print(sorted_diff)
+    #print(sorted_diff)
     for p in sorted_diff:
         print(p)
     return sorted_diff
@@ -64,6 +64,7 @@ if __name__ == "__main__":
     f1 = os.path.join(dir1, cache_dir1, file1)
     f2 = os.path.join(dir2, cache_dir2, file2)
 
+    """
     cmd = "rm " + os.path.join(dir1, cache_dir1, file1)
     print(cmd)
     os.system(cmd)
@@ -79,6 +80,7 @@ if __name__ == "__main__":
     cmd = "rm " + os.path.join(dir2, cache_dir2, file1)
     print(cmd)
     os.system(cmd)
+    """
 
     sd_old = None
     for i in range(100):
@@ -87,6 +89,9 @@ if __name__ == "__main__":
         cmd = "python3 relation_analysis.py  > rel_" + str(i)+ " 2>&1"
         print(cmd)
         os.system(cmd)
+
+        if i%2 == 0:
+            continue
         os.chdir(dir2)
         cmd = "python3 relation_analysis.py  > rel_" + str(i)+ " 2>&1"
         print(cmd)
