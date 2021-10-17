@@ -45,16 +45,19 @@ def compare_relation_groups(f1, f2):
     print("========================================")
     for p in sorted_diff:
         print()
-        print(p)
+        print(str(p[0]) + " " + str(p[1]) + " " + str(p[2]) + " " + str(p[3]))
         print()
         compare_relations(p[0], p[1], p[2], p[3])
         print()
-        print(p)
+        print(str(p[0]) + " " + str(p[1]) + " " + str(p[2]) + " " + str(p[3]))
         print()
         print("========================================")
     return sorted_diff
 
 def compare_relations(parent_d, parent_key, left, right):
+    if left is None or right is None:
+        print("[warn] One relation group is None")
+        return
     diff = []
     for pair in left.relations:
         r = pair[0]
