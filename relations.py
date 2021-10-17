@@ -1,4 +1,5 @@
 from scipy.stats import norm
+from scipy.stats import ks_2samp
 from dynamic_dep_graph import *
 import sys, traceback
 
@@ -35,6 +36,20 @@ class Invariance:
         return self.ratio == other.ratio and \
                 self.is_conditional == other.is_conditional and \
                 self.conditional_proportion == other.conditional_proportion
+
+    def relaxed_equals(self, other):
+        if not isinstance(other, Invariance):
+            return False
+        if self.ratio != other.ratio:
+            return False
+        if self.is_conditional != other.is_conditional:
+            return False
+        if self.conditional_proportion == other.conditional_proportion:
+            return True
+        diff = abs(self.conditional_proportion - other.conditional_proportion)/self.conditional_proportion
+        if diff < 0.1:
+            return True
+        return False
 
     def __str__(self):
         s = "INVARIANT with ratio: " + str(self.ratio)
@@ -109,6 +124,19 @@ class Proportion:
                 self.std == other.std and \
                 self.w_mu == other.w_mu and \
                 self.w_std == other.w_std
+
+    def relaxed_equal(self, other):
+        if not isinstance(other, Proportion):
+            return False
+        result = ks_2samp(self.distribution, other.distribution)
+        if result.pvalue > 0.95:
+            return True
+        if self.weighted_distribution is None or other.weighted_distribution is None:
+            return False
+        result = ks_2samp(self.weighted_distribution, other.weighted_distribution)
+        if result.pvalue > 0.95:
+            return True
+        return False
 
     def __str__(self):
         s = "VARIABLE "
@@ -375,7 +403,7 @@ class SimpleRelationGroup:
         if self.insn is not None:
             return hex(self.insn)
         return "Relation Group"
-    
+
     @staticmethod
     def toJSON(relation_group):
         data = {}
