@@ -261,11 +261,11 @@ class RelationAnalysis:
             print("=======================================================================")
             for weight, wavelet in curr_weighted_wavefront:
                 if wavelet in visited:
-                    print("\n" + hex(wavelet.insn) + "@" + wavelet.function + " already visited...")
+                    print("\nwavelet " + hex(wavelet.insn) + "@" + wavelet.function + " already visited...")
                     continue
                 visited.add(wavelet)
                 if self.explained_by_invariant_relation(wavelet):
-                    print("\n" + hex(wavelet.insn) + "@" + wavelet.function + " has a node forward and backward invariant already explained...")
+                    print("\nwavelet " + hex(wavelet.insn) + "@" + wavelet.function + " has a node forward and backward invariant already explained...")
                     continue
 
                 wavefront.append((weight, wavelet, max_contrib))
