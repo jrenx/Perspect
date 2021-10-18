@@ -59,6 +59,8 @@ def compare_relations(parent_d, parent_key, left, right):
         print("[warn] One relation group is None")
         return
     diff = []
+    left_over_left = {}
+    left_over_right = {}
     for pair in left.relations:
         r = pair[0]
         prede = pair[1]
@@ -71,7 +73,8 @@ def compare_relations(parent_d, parent_key, left, right):
             if r.duplicate is True:
                 print("[ra] Relation is too duplicate, ignore...")
                 continue
-            diff.append((r.weight.perc_contrib, r.timestamp, r, None))
+            left_over_left[prede[0] + "_" + str(prede[1])] = (r.weight.perc_contrib, r.timestamp, r, None)
+            #diff.append((r.weight.perc_contrib, r.timestamp, r, None))
             continue
         pair = right.relations_map.get(key) #TODO
         r2 = pair[0]
@@ -98,7 +101,22 @@ def compare_relations(parent_d, parent_key, left, right):
             if r.duplicate is True:
                 print("[ra] Relation is too duplicate, ignore...")
                 continue
-            diff.append((r.weight.perc_contrib, r.timestamp, None, r))
+            left_over_right[prede[0] + "_" + str(prede[1])] = (r.weight.perc_contrib, r.timestamp, None, r)
+            #diff.append((r.weight.perc_contrib, r.timestamp, None, r))
+    for key_short in left_over_left:
+        triple_left = left_over_left[key_short]
+        r = triple_left[2]
+        if key_short in left_over_right:
+            triple_right = left_over_right[key_short]
+            r_right = triple_right[3]
+            if r.relaxed_equals(r_right):
+                del left_over_right[key_short]
+                continue
+        diff.append((r.weight.perc_contrib, r.timestamp, r, None))
+    for triple in left_over_right.values():
+        r = triple[3]
+        diff.append((r.weight.perc_contrib, r.timestamp, None, r))
+
     sorted_diff = sorted(diff, key=lambda e: (e[1], e[0]))
     for p in sorted_diff:
         print("-----------------------------------------")
