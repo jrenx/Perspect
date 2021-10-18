@@ -63,6 +63,12 @@ def compare_relations(parent_d, parent_key, left, right):
     diff = []
     left_over_left = {}
     left_over_right = {}
+    extra_weight = None
+    for pair in left.relations:
+        r = pair[0]
+        if r.insn == 0x40744b:
+            extra_weight = r.weight.perc_contrib
+            print("Extra weight is " + str(extra_weight))
     for pair in left.relations:
         r = pair[0]
         prede = pair[1]
@@ -101,7 +107,10 @@ def compare_relations(parent_d, parent_key, left, right):
         if avg_contrib < 5:
             print("[ra] Average contribution is too low, ignore the relations")
             continue
-        d = abs(r2.weight.perc_contrib - r.weight.perc_contrib) #TODO diff by contribution
+        if r.insn == 0x4072e5 and extra_weight is not None:
+            d = abs(r2.weight.perc_contrib - extra_weight - r.weight.perc_contrib)
+        else:
+            d = abs(r2.weight.perc_contrib - r.weight.perc_contrib) #TODO diff by contribution
         avg_timestamp = (r2.timestamp + r.timestamp)/2
         #if d < 5:
         #    continue
@@ -151,7 +160,7 @@ def compare_relations(parent_d, parent_key, left, right):
         r_right = quad[3]
         weighted_diff.append((weight/max_weight*100, avg_timestamp/max_timestamp*100, weight, avg_timestamp, r_left, r_right))
 
-    sorted_diff = sorted(weighted_diff, key=lambda e: (e[1], e[0]))
+    sorted_diff = sorted(weighted_diff, key=lambda e: ((e[1] + e[0])/2))
     for p in sorted_diff:
         print("-----------------------------------------")
         print(str(p[0]) + " " + str(p[1]))
