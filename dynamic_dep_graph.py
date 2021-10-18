@@ -1389,6 +1389,7 @@ class DynamicGraph:
                                 if bit_insn in bit_insn_to_operand:
                                     del bit_insn_to_operand[bit_insn]
                         continue
+            hasPrevValues = False
 
             if insn not in self.insn_to_id:
                 self.insn_to_id[insn] = insn_id
