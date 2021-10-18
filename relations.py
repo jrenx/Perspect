@@ -46,8 +46,8 @@ class Invariance:
             return False
         if self.conditional_proportion == other.conditional_proportion:
             return True
-        diff = abs(self.conditional_proportion - other.conditional_proportion)/self.conditional_proportion
-        if diff < 0.1:
+        diff = abs(self.conditional_proportion - other.conditional_proportion)
+        if diff/self.conditional_proportion < 0.1 or diff < 0.01:
             return True
         return False
 
