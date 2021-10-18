@@ -501,8 +501,17 @@ class SimpleRelationGroup:
 
                 child_key = Indices.build_key_from_index_quad(index_quad)
                 relations_map[child_key] = (relation, index_quad)
-                child_key_short = file + "_" + str(line)
-                relations_map[child_key_short] = (relation, index_quad)
+                if total_count == 0:
+                    child_key_short = file + "_" + str(line)
+                    relations_map[child_key_short] = (relation, index_quad)
+                else:
+                    child_key_short = file + "_" + str(line)
+                    inner_map = relations_map.get(child_key_short, {})
+                    if len(inner_map) == 0:
+                        relations_map[child_key_short] = inner_map
+                    ratio = index/max(total_count,1)
+                    inner_map[ratio] = (relation, index_quad)
+                    #relations_map[child_key_short] = (relation, index_quad)
         wavefront = None
         if "wavefront" in json_simple_relation_group:
             wavefront = []

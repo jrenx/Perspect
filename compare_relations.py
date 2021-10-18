@@ -58,6 +58,8 @@ def compare_relations(parent_d, parent_key, left, right):
     if left is None or right is None:
         print("[warn] One relation group is None")
         return
+    max_timestamp = 0
+    max_weight = 0
     diff = []
     left_over_left = {}
     left_over_right = {}
@@ -76,7 +78,22 @@ def compare_relations(parent_d, parent_key, left, right):
             left_over_left[prede[0] + "_" + str(prede[1])] = (r.weight.perc_contrib, r.timestamp, r, None)
             #diff.append((r.weight.perc_contrib, r.timestamp, r, None))
             continue
-        pair = right.relations_map.get(key) #TODO
+        val = right.relations_map.get(key) #TODO
+        if isinstance(val, dict):
+            our_ratio = (index if index is not None else 0)/ max(total_count, 1)
+            min_diff_ratio = 1
+            for their_ratio in val:
+                ratio_diff = abs(their_ratio-our_ratio)
+                if ratio_diff < min_diff_ratio:
+                    min_diff_ratio = their_ratio
+            if abs(min_diff_ratio-our_ratio) > 0.05:
+                left_over_left[prede[0] + "_" + str(prede[1])] = (r.weight.perc_contrib, r.timestamp, r, None)
+                # diff.append((r.weight.perc_contrib, r.timestamp, r, None))
+                continue
+
+            pair = val[min_diff_ratio]
+        else:
+            pair = val
         r2 = pair[0]
         if r.relaxed_equals(r2):
             continue
@@ -89,6 +106,8 @@ def compare_relations(parent_d, parent_key, left, right):
         #if d < 5:
         #    continue
         diff.append((d, avg_timestamp, r, r2))
+        max_timestamp = max(max_timestamp, avg_timestamp)
+        max_weight = max(max_weight, d)
     for pair in right.relations:
         r = pair[0]
         prede = pair[1]
@@ -113,16 +132,32 @@ def compare_relations(parent_d, parent_key, left, right):
                 del left_over_right[key_short]
                 continue
         diff.append((r.weight.perc_contrib, r.timestamp, r, None))
+        max_timestamp = max(max_timestamp, r.timestamp)
+        max_weight = max(max_weight, r.weight.perc_contrib)
     for triple in left_over_right.values():
         r = triple[3]
         diff.append((r.weight.perc_contrib, r.timestamp, None, r))
+        max_timestamp = max(max_timestamp, r.timestamp)
+        max_weight = max(max_weight, r.weight.perc_contrib)
 
-    sorted_diff = sorted(diff, key=lambda e: (e[1], e[0]))
+    max_timestamp = max(max_timestamp, 1)
+    max_weight = max(max_weight, 1)
+
+    weighted_diff = []
+    for quad in diff:
+        weight = quad[0]
+        avg_timestamp = quad[1]
+        r_left = quad[2]
+        r_right = quad[3]
+        weighted_diff.append((weight/max_weight*100, avg_timestamp/max_timestamp*100, weight, avg_timestamp, r_left, r_right))
+
+    sorted_diff = sorted(weighted_diff, key=lambda e: (e[1], e[0]))
     for p in sorted_diff:
         print("-----------------------------------------")
         print(str(p[0]) + " " + str(p[1]))
-        print(str(p[2]))
-        print(str(p[3]))
+        print(str(p[2]) + " " + str(p[3]))
+        print(str(p[4]))
+        print(str(p[5]))
 
 if __name__ == "__main__":
     #f1 = sys.argv[1]
