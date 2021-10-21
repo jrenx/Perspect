@@ -454,7 +454,7 @@ void handlePassByReference(AbsRegion targetReg, Address startAddr,
     if (!foundDef) checked.insert(bb);
   }
 }
-
+/*
 // TODO, is this the right name?
 void getReversePostOrderListHelper(Node::Ptr node,
                                    std::vector<Node::Ptr> *list,
@@ -482,7 +482,7 @@ void getReversePostOrderList(GraphPtr slice,
     getReversePostOrderListHelper(*it, list, visited);
   }
 }
-
+*/
 std::string findMatchingOpExprStr(Assignment::Ptr assign, AbsRegion region) {
   AbsRegion curr;
   AbsRegionConverter arc(true, false);
