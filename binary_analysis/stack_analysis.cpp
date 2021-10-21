@@ -1,5 +1,6 @@
 #include "stack_analysis.hpp"
 #include "bitvar_analysis.hpp"
+#include "util.hpp"
 
 #include <stdio.h>
 #include <iostream>

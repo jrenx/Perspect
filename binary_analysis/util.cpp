@@ -432,6 +432,7 @@ std::string getLoadRegName(Instruction insn) {
     return regStr;
 }
 
+#ifdef USE_BPATCH
 cJSON *printBBIdsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs) {
   cJSON *json_bbs  = cJSON_CreateArray();
   for (int i=0; i<bbs.size(); i++) {
@@ -443,7 +444,6 @@ cJSON *printBBIdsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs) {
   return json_bbs;
 }
 
-#ifdef USE_BPATCH
 
 cJSON *printBBsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs,
                             boost::unordered_map<BPatch_basicBlock *, BPatch_Vector<BPatch_basicBlock *>> *backEdges) {
@@ -496,8 +496,17 @@ cJSON *printBBsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs,
   }
   return json_bbs;
 }
-
 #else
+cJSON *printBBIdsToJsonHelper(vector<Block *> &bbs, boost::unordered_map<Block *, int> &blockIds) {
+  cJSON *json_bbs  = cJSON_CreateArray();
+  for (int i=0; i<bbs.size(); i++) {
+    Block *bb = bbs[i];
+    cJSON *json_bb  = cJSON_CreateObject();
+    cJSON_AddNumberToObject(json_bb, "id", blockIds[bb]);
+    cJSON_AddItemToArray(json_bbs, json_bb);
+  }
+  return json_bbs;
+}
 
 cJSON *printBBsToJsonHelper(vector<Block *> &bbs,
                             boost::unordered_map<Block *, vector<Block *>> &backEdges,
@@ -583,6 +592,7 @@ cJSON *printBBsToJsonHelper(vector<Block *> &bbs,
   }
   return json_bbs;
 }
+#endif
 
 // TODO, is this the right name?
 void getReversePostOrderListHelper(Node::Ptr node,
@@ -611,4 +621,3 @@ void getReversePostOrderList(GraphPtr slice,
     getReversePostOrderListHelper(*it, list, visited);
   }
 }
-#endif

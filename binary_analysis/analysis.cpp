@@ -48,7 +48,7 @@ extern "C" {
 
 void getAllPredes(char *progName, char *funcName, long unsigned int addr){
   if(DEBUG) cout << "[sa] ================================" << endl;
-  if(DEBUG) cout << "[sa] Getting all control flow predecessors: " << endl;
+  if(DEBUG) cout << "[sa] Getting all control flow predecessors using bpatch: " << endl;
   if(DEBUG) cout << "[sa] prog: " << progName << endl;
   if(DEBUG) cout << "[sa] func: " << funcName << endl;
   if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr  <<  std::dec << endl;
@@ -72,7 +72,7 @@ void getAllPredes(char *progName, char *funcName, long unsigned int addr){
 
 void getAllBBs(vector<Function *> *allFuncs, char *progName, char *funcName, long unsigned int addr){
   if(DEBUG) cout << "[sa] ================================" << endl;
-  if(DEBUG) cout << "[sa] Getting all control flow predecessors: " << endl;
+  if(DEBUG) cout << "[sa] Getting all control flow predecessors using bpatch: " << endl;
   if(DEBUG) cout << "[sa] prog: " << progName << endl;
   if(DEBUG) cout << "[sa] func: " << funcName << endl;
   if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr <<  std::dec << endl;
@@ -165,6 +165,17 @@ void getAllBBs(vector<Function *> *allFuncs, char *progName, char *funcName, lon
   }
 
   std::ofstream out("getAllBBs_result");
+
+
+  SymtabAPI::Symtab *symTab;
+  string binaryPathStr(progName);
+  bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
+  if (isParsable == false) {
+    fprintf(stderr, "File cannot be parsed.\n");
+    delete symTab;
+    return;
+  }
+	
   cJSON *json_bbs = printBBsToJsonHelper(bbs, backEdges, f, symTab);
 
   char *rendered = cJSON_Print(json_bbs);
@@ -173,6 +184,7 @@ void getAllBBs(vector<Function *> *allFuncs, char *progName, char *funcName, lon
   out.close();
   if(DEBUG) cout << "[sa] all results saved to \"getAllPredes_result\"";
   if(DEBUG) cout << endl;
+  delete symTab;
   return;
 }
 
@@ -883,7 +895,7 @@ void backwardSlice(vector<Function *> *allFuncs, char *funcName, long unsigned i
   if(DEBUG) cout << endl;
 }
 
-void setup(char *progName) {
+vector<Function *> *setup(char *progName) {
   SymtabCodeSource *stcs = new SymtabCodeSource((char *) progName);
   CodeObject *co = new CodeObject(stcs);
   co->parse();
@@ -899,7 +911,7 @@ void setup(char *progName) {
   os.open("pointers");
   os << fs << endl;
   os.close();
-  return;
+  return fs;
 }
 }
 
