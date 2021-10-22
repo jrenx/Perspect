@@ -1,7 +1,7 @@
 #ifndef UTIL_HPP
 #define UTIL_HPP
 
-#define USE_BPATCH
+//#define USE_BPATCH
 
 #include <stdio.h>
 #include <iostream>
