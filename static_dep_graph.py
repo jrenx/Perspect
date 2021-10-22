@@ -19,6 +19,7 @@ VERBOSE = False
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 TRACKS_DIRECT_CALLER = False
 GENERATE_INSN_MAPPING = True
+USE_BPATCH = True
 HOST, PORT = "localhost", 9999
 
 class BasicBlock:
@@ -630,9 +631,15 @@ class CFG:
         for i in range(0,5):
             try:
                 self.built = True
-                json_bbs = getAllBBs(StaticDepGraph.binary_ptr, insn, self.func, self.prog, \
+                if USE_BPATCH is True:
+                    json_bbs = getAllBBs(StaticDepGraph.binary_ptr, insn, self.func, self.prog, \
                                      bb_result_cache=StaticDepGraph.bb_result_cache, \
                                      overwrite_cache=False if i == 0 else True)
+                else:
+                    json_bbs = getAllBBs(StaticDepGraph.binary_ptr2, StaticDepGraph.binary_ptr, insn, self.func, self.prog, \
+                                     bb_result_cache=StaticDepGraph.bb_result_cache, \
+                                     overwrite_cache=False if i == 0 else True)
+
 
                 for json_bb in json_bbs:
                     bb_id = int(json_bb['id'])
@@ -1491,6 +1498,8 @@ class StaticDepGraph:
         try:
             StaticDepGraph.func_to_callsites = get_func_to_callsites(prog)
             StaticDepGraph.binary_ptr = setup(prog)
+            if USE_BPATCH is False:
+                StaticDepGraph.binary_ptr2 = setup2(prog)
             #print(StaticDepGraph.func_to_callsites)
             iteration = 0
             worklist = deque()

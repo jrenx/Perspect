@@ -129,7 +129,7 @@ void getAllBBs(vector<Function *> *allFuncs, char *progName, char *funcName, lon
 
 #else
 
-void getAllBBs(vector<Function *> *allFuncs, char *progName, char *funcName, long unsigned int addr){
+void getAllBBs2(SymtabAPI::Symtab *symTab, vector<Function *> *allFuncs, char *progName, char *funcName, long unsigned int addr){
   if(DEBUG) cout << "[sa] ================================" << endl;
   if(DEBUG) cout << "[sa] Getting all control flow predecessors: " << endl;
   if(DEBUG) cout << "[sa] func: " << funcName << endl;
@@ -165,16 +165,6 @@ void getAllBBs(vector<Function *> *allFuncs, char *progName, char *funcName, lon
   }
 
   std::ofstream out("getAllBBs_result");
-
-
-  SymtabAPI::Symtab *symTab;
-  string binaryPathStr(progName);
-  bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
-  if (isParsable == false) {
-    fprintf(stderr, "File cannot be parsed.\n");
-    delete symTab;
-    return;
-  }
 	
   cJSON *json_bbs = printBBsToJsonHelper(bbs, backEdges, f, symTab);
 
@@ -184,10 +174,27 @@ void getAllBBs(vector<Function *> *allFuncs, char *progName, char *funcName, lon
   out.close();
   if(DEBUG) cout << "[sa] all results saved to \"getAllPredes_result\"";
   if(DEBUG) cout << endl;
-  delete symTab;
   return;
 }
 
+void getAllBBs(vector<Function *> *allFuncs, char *progName, char *funcName, long unsigned int addr){
+  if(DEBUG) cout << "[sa] ================================" << endl;
+  if(DEBUG) cout << "[sa] Getting all control flow predecessors: " << endl;
+  if(DEBUG) cout << "[sa] func: " << funcName << endl;
+  if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr <<  std::dec << endl;
+  if(DEBUG) cout << endl;
+
+  SymtabAPI::Symtab *symTab;
+  string binaryPathStr(progName);
+  bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
+  if (isParsable == false) {
+    fprintf(stderr, "File cannot be parsed.\n");
+    SymtabAPI::Symtab::closeSymtab(symTab);
+    return;
+  }
+  getAllBBs2(symTab, allFuncs, progName, funcName, addr);
+  SymtabAPI::Symtab::closeSymtab(symTab);
+}
 #endif
 
 long unsigned int getImmedDom(vector<Function *> *allFuncs, char *funcName, long unsigned int addr){
@@ -912,6 +919,23 @@ vector<Function *> *setup(char *progName) {
   os << fs << endl;
   os.close();
   return fs;
+}
+
+SymtabAPI::Symtab *setup2(char *progName) {
+  SymtabAPI::Symtab *symTab;
+  string binaryPathStr(progName);
+  bool isParsable = SymtabAPI::Symtab::openFile(symTab, binaryPathStr);
+  if (isParsable == false) {
+    fprintf(stderr, "File cannot be parsed.\n");
+    SymtabAPI::Symtab::closeSymtab(symTab);
+    return NULL;
+  }
+  
+  ofstream os;
+  os.open("pointers");
+  os << symTab << endl;
+  os.close();
+  return symTab;
 }
 }
 
