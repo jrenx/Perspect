@@ -529,6 +529,10 @@ cJSON *printBBsToJsonHelper(vector<Block *> &bbs,
 
     Block::Insns insns;
     bb->getInsns(insns);
+    if (insns.rbegin() == insns.rend()) {
+      cout << "[sa/warn] BB is empty for function: " << f->name() << " skipping... " << endl;
+      continue;
+    }
     Instruction ret = insns.rbegin()->second;
     int isBranch = (ret.getCategory() == InsnCategory::c_BranchInsn) ? 1 : 0;
     cJSON_AddNumberToObject(json_bb, "ends_in_branch", isBranch);
@@ -573,12 +577,14 @@ cJSON *printBBsToJsonHelper(vector<Block *> &bbs,
     set<unsigned int> allLines;
     // TODO: optimize this by putting it into one string?
     cJSON *json_lines = cJSON_CreateArray();
-    for (auto iit = insns.begin(); iit != insns.end(); iit++) {
-      Address addr = (*iit).first;
-      vector<SymtabAPI::Statement::Ptr> lines;
-      symTab->getSourceLines(lines, addr - symTab->getBaseOffset());
-      for (auto lit = lines.begin(); lit != lines.end(); lit++) {
-        allLines.insert((*lit)->getLine());
+    if (symTab != NULL) {
+      for (auto iit = insns.begin(); iit != insns.end(); iit++) {
+        Address addr = (*iit).first;
+        vector<SymtabAPI::Statement::Ptr> lines;
+        symTab->getSourceLines(lines, addr - symTab->getBaseOffset());
+        for (auto lit = lines.begin(); lit != lines.end(); lit++) {
+          allLines.insert((*lit)->getLine());
+        }
       }
     }
 

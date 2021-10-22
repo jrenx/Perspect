@@ -503,7 +503,7 @@ def getAllPredes(insn_addr, func, prog):
     if DEBUG_CTYPE: print( "[main] predes: " + str(json_bbs))
     return json_bbs
 
-def getAllBBs(binary_ptr, insn_addr, func, prog, bb_result_cache={}, overwrite_cache=False):
+def getAllBBs(binary_ptr2, binary_ptr, insn_addr, func, prog, bb_result_cache={}, overwrite_cache=False):
     print()
     print( "[main] getting all basic blocks: ")
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
@@ -516,7 +516,30 @@ def getAllBBs(binary_ptr, insn_addr, func, prog, bb_result_cache={}, overwrite_c
     func_name = c_char_p(str.encode(func))
     prog_name = c_char_p(str.encode(prog))
     t1 = time.time()
-    lib.getAllBBs(c_ulong(binary_ptr), prog_name, func_name, c_ulong(insn_addr))
+    lib.getAllBBs2(c_ulong(binary_ptr2), c_ulong(binary_ptr), prog_name, func_name, c_ulong(insn_addr))
+    t2 = time.time()
+    print("getAllBBs took: " + str(t2 - t1))
+    f = open(os.path.join(curr_dir, 'getAllBBs_result'))
+    json_bbs = json.load(f)
+    f.close()
+    if DEBUG_CTYPE: print( "[main] bbs: " )#+ str(json_bbs))
+    bb_result_cache[key] = json_bbs
+    return json_bbs
+
+def getAllBBs2(binary_ptr, insn_addr, func, prog, bb_result_cache={}, overwrite_cache=False):
+    print()
+    print( "[main] getting all basic blocks: ")
+    if DEBUG_CTYPE: print( "[main] prog: " + prog)
+    if DEBUG_CTYPE: print( "[main] func: " + func)
+    if DEBUG_CTYPE: print( "[main] insn_addr: " + hex(insn_addr), flush=True)
+    key = str(insn_addr) + "_" + str(func)
+    if overwrite_cache is False and key in bb_result_cache:
+        return bb_result_cache[key]
+
+    func_name = c_char_p(str.encode(func))
+    prog_name = c_char_p(str.encode(prog))
+    t1 = time.time()
+    lib.getAllBBs2(c_ulong(binary_ptr), prog_name, func_name, c_ulong(insn_addr))
     t2 = time.time()
     print("getAllBBs took: " + str(t2 - t1))
     f = open(os.path.join(curr_dir, 'getAllBBs_result'))
@@ -567,3 +590,13 @@ def setup(prog):
         binary_ptr = int(lines[0], 16)
     return binary_ptr
 
+def setup2(prog):
+    print()
+    print( "[main] Setting up analysis: ")
+    prog_name = c_char_p(str.encode(prog))
+    if DEBUG_CTYPE: print( "[main] prog: " + prog)
+    lib.setup2(prog_name)
+    with open('pointers', 'r') as f:
+        lines = f.readlines()
+        binary_ptr = int(lines[0], 16)
+    return binary_ptr
