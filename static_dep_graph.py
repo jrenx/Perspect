@@ -636,7 +636,7 @@ class CFG:
                                      bb_result_cache=StaticDepGraph.bb_result_cache, \
                                      overwrite_cache=False if i == 0 else True)
                 else:
-                    json_bbs = getAllBBs(StaticDepGraph.binary_ptr2, StaticDepGraph.binary_ptr, insn, self.func, self.prog, \
+                    json_bbs = getAllBBs2(StaticDepGraph.binary_ptr2, StaticDepGraph.binary_ptr, insn, self.func, self.prog, \
                                      bb_result_cache=StaticDepGraph.bb_result_cache, \
                                      overwrite_cache=False if i == 0 else True)
 
@@ -2538,13 +2538,20 @@ def main():
     parser.set_defaults(parallelize_rr=False)
     parser.add_argument('--use_cached_static_graph', dest='use_cached_static_graph', action='store_true')
     parser.set_defaults(use_cached_static_graph=False)
+    parser.add_argument('-s', '--starting_event_file')
+    parser.set_defaults(starting_event_file=None)
     args = parser.parse_args()
-
     starting_events = []
-    starting_events.append(["rdi", 0x409daa, "sweep"])
-    starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
-    starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
-    starting_events.append(["rcx", 0x40764c, "runtime.free"])
+    if args.starting_event_file is not None:
+        with open(args.starting_event_file, "r") as f:
+            for l in f.readlines():
+                starting_events.append(["", int(l.split()[0], 16), l.split()[1]])
+    else:
+        starting_events.append(["rdi", 0x409daa, "sweep"])
+        starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
+        starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
+        starting_events.append(["rcx", 0x40764c, "runtime.free"])
+    print(starting_events)
     StaticDepGraph.build_dependencies(starting_events, "909_ziptest_exe9",
                                       limit=10000, use_cached_static_graph=(False if args.parallelize_rr is True else args.use_cached_static_graph),
                                       parallelize_rr=args.parallelize_rr)
