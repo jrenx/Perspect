@@ -136,6 +136,7 @@ def parseLoadsOrStores(json_exprs):
         reg = None
         shift = "0"
         off = "0"
+        off1 = None
         off_reg = None
 
         #if DEBUG: print("Parsing expression: " + expr)
@@ -176,14 +177,20 @@ def parseLoadsOrStores(json_exprs):
             if reg is not None:
                 off_reg = ssegs[ri].strip()
                 if ssegs[ni].strip() != "1":
-                    assert off == "0", str(expr)
-                    off = ssegs[ni].strip()
+                    #assert off == "0", str(expr)
+                    if off == "0":
+                        off = ssegs[ni].strip()
+                    else:
+                        off1 = off
+                        off = ssegs[ni].strip()
             else:
                 reg = ssegs[ri].strip()
                 shift = ssegs[ni].strip()
 
         shift = int(shift, 16)
         off = int(off, 16)
+        if off1 is not None:
+            off1 = int(off1, 16)
         dst = None
         intermediate_def = False
         if 'dst' in json_expr:
@@ -197,7 +204,7 @@ def parseLoadsOrStores(json_exprs):
                         " shift " + str(shift) + " off " + str(off) + " insn addr: " + str(insn_addr))
         #TODO, in the future use a map instead of a list...
         data_points.append([insn_addr, reg, shift, off, off_reg, 
-                            read_same_as_write, is_bit_var, type, func, dst, bit_operationses, intermediate_def])
+                            read_same_as_write, is_bit_var, type, func, dst, bit_operationses, intermediate_def, off1])
     return data_points
 
 #FIXME: call instructions insns and not addrs
