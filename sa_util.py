@@ -539,7 +539,7 @@ def getAllBBs(binary_ptr, insn_addr, func, prog, bb_result_cache={}, overwrite_c
     func_name = c_char_p(str.encode(func))
     prog_name = c_char_p(str.encode(prog))
     t1 = time.time()
-    lib.getAllBBs2(c_ulong(binary_ptr), prog_name, func_name, c_ulong(insn_addr))
+    lib.getAllBBs(c_ulong(binary_ptr), prog_name, func_name, c_ulong(insn_addr))
     t2 = time.time()
     print("getAllBBs took: " + str(t2 - t1))
     f = open(os.path.join(curr_dir, 'getAllBBs_result'))
