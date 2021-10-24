@@ -175,8 +175,9 @@ def parseLoadsOrStores(json_exprs):
 
             if reg is not None:
                 off_reg = ssegs[ri].strip()
-                assert off == "0", str(expr)
-                off = ssegs[ni].strip()
+                if ssegs[ni].strip() != "1":
+                    assert off == "0", str(expr)
+                    off = ssegs[ni].strip()
             else:
                 reg = ssegs[ri].strip()
                 shift = ssegs[ni].strip()
