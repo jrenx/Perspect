@@ -1343,8 +1343,8 @@ class StaticDepGraph:
 
     @staticmethod
     def make_or_get_df_node(insn, bb, function): #TODO: think this through again
-        if node.insn in StaticDepGraph.insn_to_node:
-            node = StaticDepGraph.insn_to_node[node.insn]
+        if insn in StaticDepGraph.insn_to_node:
+            node = StaticDepGraph.insn_to_node[insn]
         else:
             node = StaticDepGraph.make_node(insn, bb, function)
         if node.explained is True:
@@ -1361,8 +1361,8 @@ class StaticDepGraph:
 
     @staticmethod
     def make_or_get_cf_node(insn, bb, function):
-        if node.insn in StaticDepGraph.insn_to_node:
-            node = StaticDepGraph.insn_to_node[node.insn]
+        if insn in StaticDepGraph.insn_to_node:
+            node = StaticDepGraph.insn_to_node[insn]
         else:
             node = StaticDepGraph.make_node(insn, bb, function)
         node = StaticDepGraph.make_node(insn, bb, function)
