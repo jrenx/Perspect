@@ -221,9 +221,18 @@ def get_func_to_callsites(prog):
         func_name = json_func_to_callsites['func'] #FIXME unify the field names..
         json_callsites = json_func_to_callsites['callsites']
         callsites = []
+        func_names = set()
+        for json_callsite in json_callsites:
+            caller = json_callsite['func_name']
+            func_names.add(caller)
         for json_callsite in json_callsites:
             call_insn = json_callsite['insn_addr']
             caller = json_callsite['func_name']
+            segs = caller.split(".cold.")
+            if segs[0] in callsites:
+                assert int(segs[1]) != 0, caller
+                print("[sa/warn] Ignore cold path function: " + caller)
+                continue
             callsites.append([call_insn, caller])
         data_points[func_name] = callsites
     f.close()
