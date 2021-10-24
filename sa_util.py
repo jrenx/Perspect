@@ -210,9 +210,10 @@ def get_func_to_callsites(prog):
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
     if DEBUG_CTYPE: print( "[main] : " + "Calling C", flush=True)
 
-    prog_name = c_char_p(str.encode(prog))
-    lib.getCalleeToCallsites(prog_name)
-    if DEBUG_CTYPE: print( "[main] : Back from C")
+    if not os.path.exists(os.path.join(curr_dir, 'functionToCallSites_result')):
+        prog_name = c_char_p(str.encode(prog))
+        lib.getCalleeToCallsites(prog_name)
+        if DEBUG_CTYPE: print( "[main] : Back from C")
 
     f = open(os.path.join(curr_dir, 'functionToCallSites_result'))
     json_func_to_callsites_array = json.load(f)
@@ -228,11 +229,12 @@ def get_func_to_callsites(prog):
         for json_callsite in json_callsites:
             call_insn = json_callsite['insn_addr']
             caller = json_callsite['func_name']
-            segs = caller.split(".cold.")
-            if segs[0] in callsites:
-                assert int(segs[1]) != 0, caller
-                print("[sa/warn] Ignore cold path function: " + caller)
-                continue
+            if ".cold." in caller:
+                segs = caller.split(".cold.")
+                if segs[0] in func_names:
+                    assert int(segs[1]) >= 0, caller
+                    print("[sa/warn] Ignore cold path function: " + caller + " callee " + func_name)
+                    continue
             callsites.append([call_insn, caller])
         data_points[func_name] = callsites
     f.close()
