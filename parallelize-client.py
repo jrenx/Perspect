@@ -11,7 +11,7 @@ import queue
 import threading
 import traceback
 
-worker_addresses = [("10.1.0.21", 12000), ("10.1.0.22", 12000), ("10.1.0.23", 12000), ("10.1.0.24", 12000)]
+worker_addresses = [("10.1.0.17", 12000), ("10.1.0.18", 12000), ("10.1.0.19", 12000), ("10.1.0.20", 12000)]
 #worker_addresses = [("10.1.0.21", 12000)]
 
 HOST, PORT = "localhost", 9999
@@ -31,7 +31,7 @@ restart_static_slicing = False
 rr_result_cache_lock = threading.Lock()
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 rr_result_cache = {}
-prog = '909_ziptest_exe9'
+prog = 'mongod_4.0.13'
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         prog = sys.argv[1]
