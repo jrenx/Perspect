@@ -1726,6 +1726,9 @@ class DynamicGraph:
             else:
                 off_reg_address = off_reg_value #int(off_reg_value, 16)
                 addr = addr + off * off_reg_address
+
+        if expr.off1 is not None:
+            addr = addr + expr.off1
         #if off_reg_value is not None:
         #    print("[build] Calculated " + hex(addr))
         #print("Calculating " + str(reg_value) + " " + str(off_reg_value) + " " + str(expr) + " to " + hex(addr))
