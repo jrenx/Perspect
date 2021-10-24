@@ -1444,7 +1444,7 @@ class StaticDepGraph:
         return self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
     @staticmethod
-    def build_dependencies(starting_events, prog, limit=10000, use_cached_static_graph=True, parallelize_rr=False):
+    def build_dependencies(starting_events, prog, limit=5000, use_cached_static_graph=True, parallelize_rr=False):
         start = time.time()
         result_dir = os.path.join(curr_dir, 'cache', prog)
         if not os.path.exists(result_dir):
