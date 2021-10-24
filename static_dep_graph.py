@@ -739,7 +739,7 @@ class BitOperation:
         return bo
 
 class MemoryAccess:
-    def __init__(self, reg, shift, off, off_reg, is_bit_var):
+    def __init__(self, reg, shift, off, off_reg, is_bit_var, off1=None):
         self.reg = reg.lower() if reg is not None else reg
         self.shift = shift
         self.off = off
@@ -747,6 +747,7 @@ class MemoryAccess:
         self.is_bit_var = is_bit_var
         self.bit_operations = None
         self.read_same_as_write = False
+        self.off1 = off1
 
     def add_bit_operationses(self, bit_operationses):
         if bit_operationses is None:
@@ -789,6 +790,7 @@ class MemoryAccess:
         data["reg"] = self.reg
         data["shift"] = self.shift
         data["off"] = self.off
+        data["off1"] = self.off1
         data["off_reg"] = self.off_reg
         data["is_bit_var"] = self.is_bit_var
         if self.bit_operations is not None:
@@ -803,7 +805,7 @@ class MemoryAccess:
 
     @staticmethod
     def fromJSON(data):
-        ma = MemoryAccess(data['reg'], data['shift'], data['off'], data['off_reg'], data['is_bit_var'])
+        ma = MemoryAccess(data['reg'], data['shift'], data['off'], data['off_reg'], data['is_bit_var'], data['off1'] if 'off1' in data else None)
         ma.read_same_as_write = False if data['read_same_as_write'] == 0 else True
         if "bit_operations" in data:
             bit_operations = []
@@ -2105,6 +2107,8 @@ class StaticDepGraph:
                         off_reg = None
                     else:
                         off_reg = load[3]
+                if len(load) >= 13:
+                    off1 = load[12]
 
                 #print(hex(prede_insn))
                 prede = self.make_or_get_df_node(prede_insn, None, curr_func)
