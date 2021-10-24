@@ -1365,7 +1365,6 @@ class StaticDepGraph:
             node = StaticDepGraph.insn_to_node[insn]
         else:
             node = StaticDepGraph.make_node(insn, bb, function)
-        node = StaticDepGraph.make_node(insn, bb, function)
         if node.explained is True:
             if node.is_cf is True:
                 return node
