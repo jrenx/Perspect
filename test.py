@@ -119,10 +119,11 @@ class TestRR(unittest.TestCase):
 
 class TestSA(unittest.TestCase):
     def test_general(self):
-        prog = "mongod"
+        prog = "mongod_4.2.1"
         ptr1 = setup(prog)
         ptr2 = setup2(prog)
-        getAllBBs(ptr2, ptr1, 43266968, "_fini", prog)
+        getAllBBs2(ptr2, ptr1, 0x101ce1b, "__wt_las_sweep", prog)
+
     def test_get_all_bb(self):
         results = getAllBBs(0x416a91, 'bytes.*Buffer·Read', '909_ziptest_exe9')
         print(len(results))
