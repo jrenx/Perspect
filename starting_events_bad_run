@@ -1,0 +1,8 @@
+0xfa54b0 __wt_buf_grow_worker 2.8979999999999997
+0xfeca60 __wt_cell_unpack_dsk 2.9259999999999997
+0x1012420 __wt_row_leaf_key_work 71.38600000000001
+0x1070070 __wt_cell_unpack_dsk 2.9259999999999997
+0x10710f0 __rec_cell_build_leaf_key 12.515999999999998
+0x1076410 __wt_rec_row_leaf 15.665999999999999
+0x107bf20 __wt_rec_upd_select 4.046
+0x2905970 _ZN8tcmalloc11ThreadCache21ReleaseToCentralCacheEPNS0_8FreeListEji 0.23800000000000002
