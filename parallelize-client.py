@@ -11,7 +11,7 @@ import queue
 import threading
 import traceback
 
-worker_addresses = [("10.1.0.17", 13000), ("10.1.0.18", 13000), ("10.1.0.19", 13000), ("10.1.0.20", 13000)]
+worker_addresses = [("10.1.0.17", 12000), ("10.1.0.18", 12000), ("10.1.0.19", 12000), ("10.1.0.20", 12000)]
 #worker_addresses = [("10.1.0.21", 12000)]
 
 HOST, PORT = "localhost", 9999
