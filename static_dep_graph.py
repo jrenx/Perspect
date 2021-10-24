@@ -1444,7 +1444,7 @@ class StaticDepGraph:
         return self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
     @staticmethod
-    def build_dependencies(starting_events, prog, limit=5000, use_cached_static_graph=True, parallelize_rr=False):
+    def build_dependencies(starting_events, prog, limit=2000, use_cached_static_graph=True, parallelize_rr=False):
         start = time.time()
         result_dir = os.path.join(curr_dir, 'cache', prog)
         if not os.path.exists(result_dir):
@@ -2542,8 +2542,10 @@ def main():
     parser.set_defaults(starting_event_file=None)
     args = parser.parse_args()
     starting_events = []
-    if args.starting_event_file is not None:
-        with open(args.starting_event_file, "r") as f:
+    starting_event_file = args.starting_event_file
+    starting_event_file = "starting_events_bad_run"
+    if starting_event_file is not None:
+        with open(starting_event_file, "r") as f:
             for l in f.readlines():
                 starting_events.append(["", int(l.split()[0], 16), l.split()[1]])
     else:
@@ -2553,7 +2555,7 @@ def main():
         starting_events.append(["rcx", 0x40764c, "runtime.free"])
     print(starting_events)
     StaticDepGraph.build_dependencies(starting_events, "mongod_4.2.1",
-                                      limit=10000, use_cached_static_graph=(False if args.parallelize_rr is True else args.use_cached_static_graph),
+                                      limit=2000, use_cached_static_graph=(False if args.parallelize_rr is True else args.use_cached_static_graph),
                                       parallelize_rr=args.parallelize_rr)
     """
     print("HERERERE")
