@@ -1569,7 +1569,10 @@ class StaticDepGraph:
                 StaticDepGraph.print_graph_info()
         except Exception as e:
             print("Caught exception: " + str(e))
-            raise e
+            print(str(e))
+            print("-" * 60)
+            traceback.print_exc(file=sys.stdout)
+            print("-" * 60)
         except AssertionError as ae:
             print("Failed assertion: " + str(ae))
         except KeyboardInterrupt:
