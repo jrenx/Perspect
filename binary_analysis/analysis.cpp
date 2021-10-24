@@ -137,6 +137,13 @@ void getAllBBs2(SymtabAPI::Symtab *symTab, vector<Function *> *allFuncs, char *p
   if(DEBUG) cout << endl;
 
   Function *f = getFunction2(allFuncs, funcName);
+  if (f == NULL) {
+    cout << "[sa/warn] Function not found: " << funcName << endl;
+    std::ofstream out("getAllBBs_result");
+    out << "";
+    out.close();
+    return;
+  }
 
   vector<Block *> bbs;
   boost::unordered_map<Block *, vector<Block *>> backEdges;
