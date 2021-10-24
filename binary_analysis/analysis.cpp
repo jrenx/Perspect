@@ -140,7 +140,7 @@ void getAllBBs2(SymtabAPI::Symtab *symTab, vector<Function *> *allFuncs, char *p
   if (f == NULL) {
     cout << "[sa/warn] Function not found: " << funcName << endl;
     std::ofstream out("getAllBBs_result");
-    out << "";
+    out << "{}";
     out.close();
     return;
   }
