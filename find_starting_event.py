@@ -23,6 +23,9 @@ def parse(lines, trace):
         trace[func] = perc
         ordered_trace.append([func,perc])
     ordered_trace = ordered_trace[::-1]
+    print("ordered trace:")
+    for ot in ordered_trace:
+        print(ot)
     return ordered_trace
 
 def get_highly_ranked(t, s, w):
@@ -72,8 +75,9 @@ def run():
     get_highly_ranked(ordered_trace1, highly_ranked, w1)
     get_highly_ranked(ordered_trace2, highly_ranked, w2)
     print(highly_ranked)
+    print("Got highly ranked")
     print("=============")
-
+    # if is not highly ranked and exist in both repros, delete
     common = set()
     for f in trace1:
         if f in trace2:
@@ -86,7 +90,7 @@ def run():
     print(len(trace1))
     print(len(trace2))
     print("=============")
-
+    # remove starting events regardless of its uniqueness if it contributes to less than 0.1
     sorted_trace1 = []
     remove_set = set()
     for f in trace1:
@@ -117,6 +121,7 @@ def run():
 
     trace1 = {}
     names1 = {}
+    weights1 = {}
     sorted_trace1 = sorted(sorted_trace1, key=lambda pair: pair[1])
     #print(sorted_trace1)
     for i in range(0, 20):
@@ -126,9 +131,11 @@ def run():
         trace1[pair[0]] = pair[1]
         fname = '<' + pair[0] + '>:'
         names1[fname] = pair[0]
+        weights1[fname] = pair[1]
 
     trace2 = {}
     names2 = {}
+    weights2 = {}
     sorted_trace2 = sorted(sorted_trace2, key=lambda pair: pair[1])
     for i in range(0, 20):
         if len(sorted_trace2) == 0:
@@ -137,6 +144,7 @@ def run():
         trace2[pair[0]] = pair[1]
         fname = '<' + pair[0] + '>:'
         names2[fname] = pair[0]
+        weights2[fname] = pair[1]
 
     print(len(trace1))
     print(len(trace2))
@@ -159,7 +167,7 @@ def run():
                 if f == segs[1]:
                     #print(l)
                     addr = int(segs[0], 16)
-                    result = hex(addr) + " " + names1[f]
+                    result = hex(addr) + " " + names1[f] + " " + str(weights1[f]*time1/100)
                     print(result)
                     output1.append(result)
 
@@ -180,7 +188,7 @@ def run():
                 if f == segs[1]:
                     #print(l)
                     addr = int(segs[0], 16)
-                    result = hex(addr) + " " + names2[f]
+                    result = hex(addr) + " " + names2[f] + " " + str(weights2[f]*time2/100)
                     print(result)
                     output2.append(result)
 

@@ -503,7 +503,7 @@ def getAllPredes(insn_addr, func, prog):
     if DEBUG_CTYPE: print( "[main] predes: " + str(json_bbs))
     return json_bbs
 
-def getAllBBs(binary_ptr2, binary_ptr, insn_addr, func, prog, bb_result_cache={}, overwrite_cache=False):
+def getAllBBs2(binary_ptr2, binary_ptr, insn_addr, func, prog, bb_result_cache={}, overwrite_cache=False):
     print()
     print( "[main] getting all basic blocks: ")
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
@@ -526,7 +526,7 @@ def getAllBBs(binary_ptr2, binary_ptr, insn_addr, func, prog, bb_result_cache={}
     bb_result_cache[key] = json_bbs
     return json_bbs
 
-def getAllBBs2(binary_ptr, insn_addr, func, prog, bb_result_cache={}, overwrite_cache=False):
+def getAllBBs(binary_ptr, insn_addr, func, prog, bb_result_cache={}, overwrite_cache=False):
     print()
     print( "[main] getting all basic blocks: ")
     if DEBUG_CTYPE: print( "[main] prog: " + prog)
