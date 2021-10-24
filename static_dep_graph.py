@@ -2552,7 +2552,7 @@ def main():
         starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
         starting_events.append(["rcx", 0x40764c, "runtime.free"])
     print(starting_events)
-    StaticDepGraph.build_dependencies(starting_events, "909_ziptest_exe9",
+    StaticDepGraph.build_dependencies(starting_events, "mongod_4.2.1",
                                       limit=10000, use_cached_static_graph=(False if args.parallelize_rr is True else args.use_cached_static_graph),
                                       parallelize_rr=args.parallelize_rr)
     """
