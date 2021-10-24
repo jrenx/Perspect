@@ -17,9 +17,9 @@ DEBUG_SIMPLIFY = False
 DEBUG_SLICE = False
 VERBOSE = False
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-TRACKS_DIRECT_CALLER = False
+TRACKS_DIRECT_CALLER = True
 GENERATE_INSN_MAPPING = True
-USE_BPATCH = True
+USE_BPATCH = False
 HOST, PORT = "localhost", 9999
 
 class BasicBlock:
