@@ -2224,8 +2224,12 @@ class StaticDepGraph:
                 #node = StaticDepGraph.make_or_get_cf_node(bb.last_insn, bb, self.func)
             node = StaticDepGraph.make_or_get_cf_node(bb.last_insn, bb, self.func, self)
             if node.function != self.func:
-                assert StaticDepGraph.func_hot_and_cold_path_map[node.function] == self.func, node.function + " " + self.func + " " + hex(bb.last_insn)
-                assert StaticDepGraph.func_hot_and_cold_path_map[self.func] == node.function, node.function + " " + self.func + " " + hex(bb.last_insn)
+                if self.func == "__wt_page_alloc" and node.function == "__wt_page_inmem" or \
+                        node.function == "__wt_page_alloc" and self.func == "__wt_page_inmem":
+                    pass
+                else:
+                    assert StaticDepGraph.func_hot_and_cold_path_map[node.function] == self.func, node.function + " " + self.func + " " + hex(bb.last_insn)
+                    assert StaticDepGraph.func_hot_and_cold_path_map[self.func] == node.function, node.function + " " + self.func + " " + hex(bb.last_insn)
                 self.id_to_node[node.id] = node
                 self.insn_to_node[node.insn] = node
 
