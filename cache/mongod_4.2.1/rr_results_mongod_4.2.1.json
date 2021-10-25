@@ -3232,5 +3232,66 @@
             "rdx"
         ]
     ],
-    "mongod_4.2.1_None_None_*0x10752b3_r15_0x0_0x3c0_None": []
+    "mongod_4.2.1_None_None_*0x10752b3_r15_0x0_0x3c0_None": [],
+    "mongod_4.2.1_*0x100b68f_*0x100b409_*0x100b675_r9_0x0_0x10_None": [
+        [
+            [
+                "R8",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            16204529,
+            "__realloc_func",
+            "r12"
+        ]
+    ],
+    "mongod_4.2.1_None_None_*0x10737d3_r13_0x0_0x30_None": [
+        [
+            [
+                "R12",
+                0,
+                136,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            16279416,
+            "__rec_write_wrapup",
+            "rax"
+        ],
+        [
+            [
+                "RAX",
+                0,
+                48,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            16153905,
+            "__wt_evict",
+            "rdx"
+        ]
+    ]
 }
