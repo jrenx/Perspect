@@ -287,7 +287,7 @@ class CFG:
         raise Exception
         #return None
 
-    def containsBB(self, insn):
+    def contains_insn(self, insn):
         for bb in self.ordered_bbs:
             if bb.start_insn <= insn <= bb.last_insn:
                 return True
@@ -1272,8 +1272,8 @@ class StaticDepGraph:
     def writeJSON(json_file):
         out_result = []
         out_pending = []
-        for func in StaticDepGraph.func_to_graph:
-            out_result.append(StaticDepGraph.func_to_graph[func].toJSON())
+        for graph in StaticDepGraph.func_to_graph.values():
+            out_result.append(graph.toJSON())
         for func in StaticDepGraph.pending_nodes:
             pending = {}
             pending['func'] = func
@@ -1314,19 +1314,28 @@ class StaticDepGraph:
         func_to_graph = {}
         for json_graph in in_result["out_result"]:
             graph = StaticDepGraph.fromJSON(json_graph, all_id_to_node)
-            func_to_graph[graph.func] = graph
-        for func in func_to_graph:
-            StaticDepGraph.fromJSON_finish(func_to_graph[func], all_id_to_node)
+            if graph.func not in func_to_graph:
+                func_to_graph[graph.func] = graph
+            else:
+                func_to_graph[graph.func + "DUPLICATE"] = graph
+        for graph in func_to_graph.values():
+            StaticDepGraph.fromJSON_finish(graph, all_id_to_node)
         to_remove = set()
         for func in pending_nodes:
             for node in pending_nodes[func].values():
                 StaticNode.fromJSON_finish(node, all_id_to_node)
 
             if func in func_to_graph:
+                if func not in pending_nodes:
+                    continue
                 to_remove.add(func)
                 for pending_node in pending_nodes[func].values():
-                    func_to_graph[graph].id_to_node[pending_node.id] = pending_node
-                    func_to_graph[graph].insn_to_node[pending_node.insn] = pending_node
+                    if func_to_graph[func].cfg.contains_insn(pending_node.insn):
+                        func_to_graph[func].id_to_node[pending_node.id] = pending_node
+                        func_to_graph[func].insn_to_node[pending_node.insn] = pending_node
+                    else:
+                        func_to_graph[func + "DUPLICATE"].id_to_node[pending_node.id] = pending_node
+                        func_to_graph[func + "DUPLICATE"].insn_to_node[pending_node.insn] = pending_node
 
         for func in to_remove:
             del pending_nodes[func]
@@ -1387,8 +1396,11 @@ class StaticDepGraph:
 
     @staticmethod
     def make_node(insn, bb, function):
-        if function in StaticDepGraph.func_to_graph:
-            graph = StaticDepGraph.func_to_graph[function]
+        graph = StaticDepGraph.func_to_graph.get(function, None)
+        if graph is not None and graph.cfg.contains_insn(insn) is False:
+            graph = StaticDepGraph.func_to_graph.get(function + "DUPLICATE", None)
+
+        if graph is not None:
             if insn in graph.insn_to_node:
                 return graph.insn_to_node[insn]
         elif function in StaticDepGraph.pending_nodes:
@@ -1401,8 +1413,7 @@ class StaticDepGraph:
         assert insn not in StaticDepGraph.insn_to_node
         StaticDepGraph.insn_to_node[insn] = node
 
-        if function in StaticDepGraph.func_to_graph:
-            graph = StaticDepGraph.func_to_graph[function]
+        if graph is not None:
             graph.id_to_node[node.id] = node
             graph.insn_to_node[insn] = node
             assert function not in StaticDepGraph.pending_nodes
@@ -1554,8 +1565,7 @@ class StaticDepGraph:
                     worklist.append([new_node.insn, new_node.function, prog, new_node]) #FIMXE, ensure there is no duplicate work
             print("[static_dep] No more events to analyze.")
             if parallelize_rr is False:
-                for func in StaticDepGraph.func_to_graph:
-                    graph = StaticDepGraph.func_to_graph[func]
+                for graph in StaticDepGraph.func_to_graph.values():
                     if graph.changed is False:
                         continue
                     graph.build_control_flow_dependencies(set(), final=True)
@@ -1708,8 +1718,11 @@ class StaticDepGraph:
         print("[static_dep] " + str(initial_node))
         target_bbs = set()
 
-        if func in StaticDepGraph.func_to_graph:
-            graph = StaticDepGraph.func_to_graph[func]
+        graph = StaticDepGraph.func_to_graph.get(func, None)
+        if graph is not None and graph.cfg.contains_insn(insn) is False:
+            graph = StaticDepGraph.func_to_graph.get(func + "DUPLICATE", None)
+                
+        if graph is not None: 
             # cf nodes are not merged, they are discarded after info is pasted in!
             if initial_node.is_df is False:
                 bb = graph.cfg.getBB(insn)
@@ -1717,18 +1730,25 @@ class StaticDepGraph:
                 graph.build_control_flow_dependencies(target_bbs)
         else:
             graph = StaticDepGraph(func, prog)
-            StaticDepGraph.func_to_graph[func] = graph
-            if func in StaticDepGraph.pending_nodes:
-                print("Adding pending nodes for function: " + func)
-                for pending_node in StaticDepGraph.pending_nodes[func].values():
-                    graph.id_to_node[pending_node.id] = pending_node
-                    graph.insn_to_node[pending_node.insn] = pending_node
+            if func not in StaticDepGraph.func_to_graph:
+                StaticDepGraph.func_to_graph[func] = graph
+            else:
+                StaticDepGraph.func_to_graph[func + "DUPLICATE"] = graph
 
             graph.build_control_flow_nodes(insn)
             if len(graph.cfg.ordered_bbs) == 0:
                 print("[static_dep][warn] Failed to load the cfg for function: "
                       + func + " ignoring the function...")
                 return new_nodes
+
+            if func in StaticDepGraph.pending_nodes:
+                print("Adding pending nodes for function: " + func)
+                for pending_node in StaticDepGraph.pending_nodes[func].values():
+                    if not graph.cfg.contains_insn(pending_node.insn):
+                        continue
+                    graph.id_to_node[pending_node.id] = pending_node
+                    graph.insn_to_node[pending_node.insn] = pending_node
+
             target_bbs.add(graph.cfg.ordered_bbs[0])
             graph.build_control_flow_dependencies(target_bbs)
 
@@ -1867,7 +1887,7 @@ class StaticDepGraph:
             is_bit_var = True
         type = load[7]
         curr_func = load[8]
-        if len(StaticDepGraph.func_hot_and_cold_path_map) > 0 and self.cfg.containsBB(prede_insn) is False:
+        if len(StaticDepGraph.func_hot_and_cold_path_map) > 0 and self.cfg.contains_insn(prede_insn) is False:
             if curr_func in StaticDepGraph.func_hot_and_cold_path_map:
                 new_curr_func = StaticDepGraph.func_hot_and_cold_path_map[curr_func]
                 print("[sg/warn] Changing the function name from " + curr_func + " to " + new_curr_func)
@@ -2297,9 +2317,11 @@ class StaticDepGraph:
             worklist.append(node)
             while len(worklist) > 0:
                 curr = worklist.popleft()
-                if curr.function not in StaticDepGraph.func_to_graph:
+                graph = StaticDepGraph.func_to_graph.get(curr.function, None)
+                if graph is not None and graph.cfg.contains_insn(curr.insn) is False:
+                    graph = StaticDepGraph.func_to_graph.get(curr.function + "DUPLICATE", None)
+                if graph is None:
                     continue
-                graph = StaticDepGraph.func_to_graph[curr.function]
                 print(curr)
                 if len(curr.cf_succes) == 0 and len(curr.df_succes) == 0:
                     if curr.insn in targets:
@@ -2330,9 +2352,8 @@ class StaticDepGraph:
         print("[static_dep] Finding the entry and exit nodes.")
         assert len(StaticDepGraph.entry_nodes) == 0
         assert len(StaticDepGraph.exit_nodes) == 0
-        for f in StaticDepGraph.func_to_graph:
-            graph = StaticDepGraph.func_to_graph[f]
-            pending = StaticDepGraph.pending_nodes[f] if f in StaticDepGraph.pending_nodes else []
+        for graph in StaticDepGraph.func_to_graph.values():
+            pending = StaticDepGraph.pending_nodes[graph.func] if graph.func in StaticDepGraph.pending_nodes else []
             for node in itertools.chain(graph.id_to_node.values(), pending):
                 if node.explained and node not in graph.nodes_in_df_slice and node not in graph.nodes_in_cf_slice:
                     continue
@@ -2508,6 +2529,7 @@ class StaticDepGraph:
                         for new_func in new_funcs.difference(visited_funcs):
                             if new_func not in worklist:
                                 worklist.append(new_func)
+                                worklist.append(new_func + "DUPLICATE")
         #print("[static_dep] total number of nodes in the postorder list: "
         #      + str(len(StaticDepGraph.postorder_list)))
 
@@ -2515,8 +2537,7 @@ class StaticDepGraph:
     def sanity_check():
         print("[static_dep] Performing sanity check.")
         bad_count = 0
-        for func in StaticDepGraph.func_to_graph:
-            graph = StaticDepGraph.func_to_graph[func]
+        for graph in StaticDepGraph.func_to_graph.values():
             assert (len(graph.insn_to_node) == len(graph.id_to_node)), \
                 str(len(graph.insn_to_node)) + " " \
                 + str(len(graph.id_to_node)) + " " + graph.func

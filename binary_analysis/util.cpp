@@ -289,6 +289,27 @@ Function *getFunction2(vector<Function *> *allFuncs, const char *funcName) {
   return NULL;
 }
 
+Function *getFunction2(vector<Function *> *allFuncs, const char *funcName, long unsigned int addr) {
+  string funcNameStr(funcName);
+  if (allFuncs->size() == 0) {
+    fprintf(stderr, "No function in file.\n");
+    return NULL;
+  }
+  for (auto fit = allFuncs->begin(); fit != allFuncs->end(); ++fit) {
+    Function *f = *fit;
+    if (f->name().compare(funcNameStr) != 0) {
+      continue;
+    }
+    for (auto bit = f->blocks().begin(); bit != f->blocks().end(); ++bit) {
+      Block *block = *bit;
+      if (addr >= block->start() && addr < block->end()) {
+        return f;
+      }
+    }
+  }
+  return NULL;
+}
+
 Instruction getIfCondition2(Block *b) {
   // Decode the instruction
   const unsigned char *buf = (const unsigned char *) b->obj()->cs()->getPtrToInstruction(b->last());
