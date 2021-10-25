@@ -1158,6 +1158,7 @@ class StaticDepGraph:
     bb_result_cache = {}
 
     func_to_callsites = None
+    func_hot_and_cold_path_map = None
 
     starting_nodes = []
     reverse_postorder_list = []
@@ -1511,7 +1512,7 @@ class StaticDepGraph:
                 bb_result_size = len(StaticDepGraph.bb_result_cache)
 
         try:
-            StaticDepGraph.func_to_callsites = get_func_to_callsites(prog)
+            StaticDepGraph.func_to_callsites, StaticDepGraph.func_hot_and_cold_path_map = get_func_to_callsites(prog)
             StaticDepGraph.binary_ptr = setup(prog)
             if USE_BPATCH is False:
                 StaticDepGraph.binary_ptr2 = setup2(prog)
@@ -1866,12 +1867,11 @@ class StaticDepGraph:
             is_bit_var = True
         type = load[7]
         curr_func = load[8]
-        if curr_func == func and ".cold." in func:
-            segs = func.split(".cold.")
-            assert(int(segs[1]) >= 0)
-            if self.cfg.containsBB(prede_insn) is False:
-                print("[sg/warn] Changing the function name from " + curr_func + " to " + seg[0])
-                curr_func = segs[0]
+        if len(StaticDepGraph.func_hot_and_cold_path_map) > 0 and self.cfg.containsBB(prede_insn) is False:
+            if curr_func in StaticDepGraph.func_hot_and_cold_path_map:
+                new_curr_func = StaticDepGraph.func_hot_and_cold_path_map[curr_func]
+                print("[sg/warn] Changing the function name from " + curr_func + " to " + new_curr_func)
+                curr_func = new_curr_func
         #if len(load) >= 10 and load[9] is not None and load[9] != '':
         dst_reg = load[9]
         #else:
