@@ -136,7 +136,7 @@ void getAllBBs2(SymtabAPI::Symtab *symTab, vector<Function *> *allFuncs, char *p
   if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr <<  std::dec << endl;
   if(DEBUG) cout << endl;
 
-  Function *f = getFunction2(allFuncs, funcName);
+  Function *f = getFunction2(allFuncs, funcName, addr);
   if (f == NULL) {
     cout << "[sa/warn] Function not found: " << funcName << endl;
     std::ofstream out("getAllBBs_result");
