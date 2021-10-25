@@ -548,7 +548,13 @@ std::string getMemReadStrIfNotRegReadStr(Instruction insn, bool *memReadFound, b
   insn.getMemoryReadOperands(memReads);
   if (memReads.size() > 0) { // prioritize reads from memory
     *memReadFound = true;
-    assert (memReads.size() == 1);
+    if (CRASH_ON_ERROR) assert(memReads.size() == 1);
+    else {
+      if (memReads.size() > 1) {
+        cout << "[sa/warn] Instruction has multiple reads, just handling one for now: ";
+        cout << insn.format() << endl;	
+      }
+    }
     Expression::Ptr read = *memReads.begin();
     if (INFO) cout << "[sa] Memory read: " << read->format() << endl;
     readStr.append("memread|");
