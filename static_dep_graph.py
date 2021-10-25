@@ -17,9 +17,9 @@ DEBUG_SIMPLIFY = False
 DEBUG_SLICE = False
 VERBOSE = False
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-TRACKS_DIRECT_CALLER = False
-GENERATE_INSN_MAPPING = True
-USE_BPATCH = True
+TRACKS_DIRECT_CALLER = True
+GENERATE_INSN_MAPPING = False
+USE_BPATCH = False
 HOST, PORT = "localhost", 9999
 
 class BasicBlock:
@@ -1193,11 +1193,11 @@ class StaticDepGraph:
 
         self.pending_callsite_nodes = []
 
-        if func in StaticDepGraph.pending_nodes:
-            for n in StaticDepGraph.pending_nodes[func].values():
-                self.id_to_node[n.id] = n
-                self.insn_to_node[n.insn] = n
-            del StaticDepGraph.pending_nodes[func]
+        #if func in StaticDepGraph.pending_nodes:
+        #    for n in StaticDepGraph.pending_nodes[func].values():
+        #        self.id_to_node[n.id] = n
+        #        self.insn_to_node[n.insn] = n
+        #    del StaticDepGraph.pending_nodes[func]
         self.changed = True
 
     def toJSON(self):
@@ -1379,11 +1379,12 @@ class StaticDepGraph:
         return node
 
     @staticmethod
-    def make_or_get_cf_node(insn, bb, function):
+    def make_or_get_cf_node(insn, bb, function, graph=None):
+        #TODO: refactor these complicated logic ...
         if insn in StaticDepGraph.insn_to_node:
             node = StaticDepGraph.insn_to_node[insn]
         else:
-            node = StaticDepGraph.make_node(insn, bb, function)
+            node = StaticDepGraph.make_node(insn, bb, function, graph)
         if node.explained is True:
             if node.is_cf is True:
                 return node
@@ -1395,33 +1396,38 @@ class StaticDepGraph:
         return node
 
     @staticmethod
-    def make_node(insn, bb, function):
-        graph = StaticDepGraph.func_to_graph.get(function, None)
-        if graph is not None and graph.cfg.contains_insn(insn) is False:
-            graph = StaticDepGraph.func_to_graph.get(function + "DUPLICATE", None)
+    def make_node(insn, bb, function, graph=None):
+        #print("Making node for insn: " + hex(insn) + "@" + function)
+        if graph is None:
+            graph = StaticDepGraph.func_to_graph.get(function, None)
+            if graph is not None and graph.cfg.contains_insn(insn) is False:
+                graph = StaticDepGraph.func_to_graph.get(function + "DUPLICATE", None)
 
+        pending = None
         if graph is not None:
-            if insn in graph.insn_to_node:
-                return graph.insn_to_node[insn]
-        elif function in StaticDepGraph.pending_nodes:
-            pending = StaticDepGraph.pending_nodes[function]
-            if insn in pending:
+            node = graph.insn_to_node.get(insn, None)
+            if node is not None:
+                return node
+        else:
+            pending = StaticDepGraph.pending_nodes.get(function, None)
+            if pending is not None and insn in pending:
                 return pending[insn]
 
         node = StaticNode(insn, bb, function)
-        #print("Creating node: " + str(node))
+        #print("Creating node: " + str(node.id))
         assert insn not in StaticDepGraph.insn_to_node
         StaticDepGraph.insn_to_node[insn] = node
 
         if graph is not None:
             graph.id_to_node[node.id] = node
             graph.insn_to_node[insn] = node
-            assert function not in StaticDepGraph.pending_nodes
+            #assert function not in StaticDepGraph.pending_nodes
         else:
-            if function not in StaticDepGraph.pending_nodes:
-                StaticDepGraph.pending_nodes[function] = {}
-            StaticDepGraph.pending_nodes[function][node.insn] = node
-            assert function not in StaticDepGraph.func_to_graph
+            if pending is None:
+                pending = {}
+                StaticDepGraph.pending_nodes[function] = pending
+            pending[node.insn] = node
+            #assert function not in StaticDepGraph.func_to_graph
         return node
 
     def get_closest_dep_branch(self, node): #TODO, is getting the farthest one
@@ -1712,7 +1718,7 @@ class StaticDepGraph:
         if initial_node.is_df is True:
             df_node = initial_node
         iter = 0
-        print("[static_dep] ")
+        print("[static_dep] ", flush=True)
         print("[static_dep] Building dependencies for function: " + str(func))
         print("[static_dep] Existing node: ")
         print("[static_dep] " + str(initial_node))
@@ -1742,12 +1748,13 @@ class StaticDepGraph:
                 return new_nodes
 
             if func in StaticDepGraph.pending_nodes:
-                print("Adding pending nodes for function: " + func)
+                print("[static_dep] Adding pending nodes for function: " + func)
                 for pending_node in StaticDepGraph.pending_nodes[func].values():
                     if not graph.cfg.contains_insn(pending_node.insn):
                         continue
                     graph.id_to_node[pending_node.id] = pending_node
                     graph.insn_to_node[pending_node.insn] = pending_node
+                    #FIXME: remoe after?
 
             target_bbs.add(graph.cfg.ordered_bbs[0])
             graph.build_control_flow_dependencies(target_bbs)
@@ -1755,6 +1762,7 @@ class StaticDepGraph:
             if TRACKS_DIRECT_CALLER:
                 if func in StaticDepGraph.func_to_callsites:
                     callsites = StaticDepGraph.func_to_callsites[func]
+                    print("[static_dep] Instantiating callsites for: " + func)
                     for c in callsites:
                         new_node = StaticDepGraph.make_or_get_cf_node(c[0], None, c[1])
                         new_nodes.add(new_node)
@@ -1808,6 +1816,7 @@ class StaticDepGraph:
         return new_nodes
 
     def merge_callsite_nodes(self):
+        print("[static_dep] Merging callsites nodes for graph: " + self.func)
         for entry_bb in self.cfg.entry_bbs:
             n = self.id_to_node[self.bb_id_to_node_id[entry_bb.id]]
             for callsite in self.pending_callsite_nodes:
@@ -1818,6 +1827,7 @@ class StaticDepGraph:
 
     #FIXME, think about if this makes sense
     def merge_nodes(self, nodes, final=False):
+        print("[static_dep] Merging nodes for graph: " + self.func)
         if len(self.cfg.ordered_bbs) == 0:
             print("[static_dep][warn] Failed to load the cfg, ignoring merging the datanode...")
             return
@@ -2192,10 +2202,10 @@ class StaticDepGraph:
         return defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func
 
     def build_control_flow_nodes(self, insn):
+        print("[static_dep] Building control flow nodes for graph: " + self.func + " starting from: " + hex(insn))
         self.cfg = CFG(self.func, self.prog)
         # Build the control flow graph for the entire function then slice
         self.cfg.build(insn)  # FIXME: for now, order the BBs such that the one that contains insn appears first
-
         #first = True
         # FIXME, make the logic less awkward?
         for bb in self.cfg.ordered_bbs:
@@ -2204,13 +2214,18 @@ class StaticDepGraph:
                 #first = False
             #else:
                 #node = StaticDepGraph.make_or_get_cf_node(bb.last_insn, bb, self.func)
-            node = StaticDepGraph.make_or_get_cf_node(bb.last_insn, bb, self.func)
+            node = StaticDepGraph.make_or_get_cf_node(bb.last_insn, bb, self.func, self)
+            if node.function != self.func:
+                assert StaticDepGraph.func_hot_and_cold_path_map[node.function] == self.func, node.function + " " + self.func + " " + hex(bb.last_insn)
+                assert StaticDepGraph.func_hot_and_cold_path_map[self.func] == node.function, node.function + " " + self.func + " " + hex(bb.last_insn)
+                self.id_to_node[node.id] = node
+                self.insn_to_node[node.insn] = node
+
             if node is None:
                 continue
             self.bb_id_to_node_id[bb.id] = node.id
             if bb.id in self.cfg.id_to_bb_in_slice:
                 self.nodes_in_cf_slice[node] = node
-
 
         print("[static_dep] Total initial number of nodes in control flow slice: " + str(len(self.nodes_in_cf_slice)) + " " + \
               str([hex(self.id_to_node[node_id].insn) for node_id in self.id_to_node]))

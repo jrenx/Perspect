@@ -53,7 +53,7 @@ void backwardSliceHelper(vector<Function *> *allFuncs,
   }
   visited.insert(addr);
 
-  Function *func = getFunction2(allFuncs, funcName);
+  Function *func = getFunction2(allFuncs, funcName, addr);
   Block *bb = getBasicBlock2(func, addr);
   Instruction insn = bb->getInsn(addr);
 
