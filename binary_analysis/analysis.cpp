@@ -313,7 +313,7 @@ void getAddrIndices(vector<Function *> *allFuncs, char *funcName, long unsigned 
   }
 
 
-  Function *f = getFunction2(allFuncs, funcName);
+  Function *f = getFunction2(allFuncs, funcName, startAddr);
   std::map<long unsigned int, Block *> bs;
   for (auto bit = f->blocks().begin(); bit != f->blocks().end(); ++bit) {
     Block *b = *bit;
@@ -470,7 +470,7 @@ void getMemWrites(vector<Function *> *allFuncs, char *addrToFuncNames) {
     if (INFO) cout << endl << "[sa] addr: 0x" << std::hex << addr << std::dec << endl;
     if (INFO) cout << "[sa] func: " << funcName << endl;
 
-    Function *func = getFunction2(allFuncs, funcName);
+    Function *func = getFunction2(allFuncs, funcName, addr);
     Block *bb = getBasicBlock2(func, addr);
     Instruction insn = bb->getInsn(addr);
     long unsigned int trueAddr = 0;
@@ -752,7 +752,7 @@ void getRegsReadOrWritten(vector<Function *> *allFuncs, char *addrToFuncNames, b
     if (INFO) cout << endl << "[sa] addr: 0x" << std::hex << addr << std::dec << endl;
     if (INFO) cout << "[sa] func: " << funcName << endl;
 
-    Function *func = getFunction2(allFuncs, funcName);
+    Function *func = getFunction2(allFuncs, funcName, addr);
     Block *bb = getBasicBlock2(func, addr);
     Instruction insn = bb->getInsn(addr);
 
@@ -804,7 +804,7 @@ void getRegsWritten(vector<Function *> *allFuncs, char *funcName, long unsigned 
   if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << std::dec << endl;
   if(DEBUG) cout << endl;
 
-  Function *func = getFunction2(allFuncs, funcName);
+  Function *func = getFunction2(allFuncs, funcName, addr);
   Block *bb = getBasicBlock2(func, addr);
   Instruction insn = bb->getInsn(addr);
 
@@ -866,7 +866,7 @@ void backwardSlices(vector<Function *> *allFuncs, char *addrToRegNames) {
     cJSON *json_reads = cJSON_CreateArray();
     boost::unordered_set<Address> visited;
 
-    Function *func = getFunction2(allFuncs, funcName);
+    Function *func = getFunction2(allFuncs, funcName, addr);
     Block *bb = getBasicBlock2(func, addr);
     Instruction insn = bb->getInsn(addr);
 
