@@ -287,6 +287,13 @@ class CFG:
         raise Exception
         #return None
 
+    def containsBB(self, insn):
+        for bb in self.ordered_bbs:
+            if bb.start_insn <= insn <= bb.last_insn:
+                return True
+        return False
+
+
     def postorderTraversal(self, bb, visited):
         #print(" Traversing bb: " + str(bb.id))
         if DEBUG_SIMPLIFY: print("[Postorder] Current bb: " + str(bb.id) + " " + str(bb.lines))
@@ -1859,6 +1866,12 @@ class StaticDepGraph:
             is_bit_var = True
         type = load[7]
         curr_func = load[8]
+        if curr_func == func and ".cold." in func:
+            segs = func.split(".cold.")
+            assert(int(segs[1]) >= 0)
+            if self.cfg.containsBB(prede_insn) is False:
+                print("[sg/warn] Changing the function name from " + curr_func + " to " + seg[0])
+                curr_func = segs[0]
         #if len(load) >= 10 and load[9] is not None and load[9] != '':
         dst_reg = load[9]
         #else:
