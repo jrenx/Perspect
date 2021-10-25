@@ -225,29 +225,55 @@ def get_func_to_callsites(prog):
     f = open(os.path.join(curr_dir, 'functionToCallSites_result'))
     json_func_to_callsites_array = json.load(f)
     data_points = {}
+    functions = set()
+    functions_map = {}
     for json_func_to_callsites in json_func_to_callsites_array:
         func_name = json_func_to_callsites['func'] #FIXME unify the field names..
         json_callsites = json_func_to_callsites['callsites']
         callsites = []
-        func_names = set()
-        for json_callsite in json_callsites:
-            caller = json_callsite['func_name']
-            func_names.add(caller)
+        functions.add(func_name)
+        callsites_map = {}
         for json_callsite in json_callsites:
             call_insn = json_callsite['insn_addr']
             caller = json_callsite['func_name']
-            if ".cold." in caller:
-                segs = caller.split(".cold.")
-                if segs[0] in func_names:
-                    assert int(segs[1]) >= 0, caller
+            if call_insn not in callsites_map:
+                callsites_map[call_insn] = set()
+            callsites_map[call_insn].add(caller)
+        for json_callsite in json_callsites:
+            call_insn = json_callsite['insn_addr']
+            caller = json_callsite['func_name']
+            functions.add(caller)
+            if len(callsites_map[call_insn]) == 2:
+                if ".cold." in caller:
+                    #segs = caller.split(".cold.")
+                    #assert segs[0] in callsites_map[call_insn], str(callsites_map[call_insn])
+                    #assert int(segs[1]) >= 0, caller
+                    caller_pair = list(callsites_map[call_insn])
+                    if caller_pair[0] not in functions_map:
+                        functions_map[caller_pair[0]] = caller_pair[1]
+                    if caller_pair[1] not in functions_map:
+                        functions_map[caller_pair[1]] = caller_pair[0]
                     print("[sa/warn] Ignore cold path function: " + caller + " callee " + func_name)
                     continue
             callsites.append([call_insn, caller])
         data_points[func_name] = callsites
     f.close()
 
+    for f in functions:
+        if ".cold." in f:
+            segs = f.split(".cold.")
+            if segs[0] not in functions:
+                continue
+            try:
+                if int(segs[1]) < 0:
+                    continue
+            except Exception as e:
+                continue
+            if segs[0] not in functions_map: functions_map[segs[0]] = f
+            if f not in functions_map: functions_map[f] = segs[0]
+
     #if DEBUG_CTYPE: print( "[main] sa returned  " + str(data_points))
-    return data_points
+    return data_points, functions_map
 
 #FIXME: call instructions insns and not addrs
 def get_mem_writes_to_static_addrs(binary_ptr):
