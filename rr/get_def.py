@@ -460,6 +460,8 @@ def get_def(binary_ptr, branch, target, read, reg, shift='0x0', offset='0x0', of
             addr = line[0]
             insn = int(line[1], 16)
             func = line[2]
+            if func is None:
+                continue
             if insn in all_unique_writes:
                 continue
             all_unique_writes.add(insn)
