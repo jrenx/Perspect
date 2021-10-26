@@ -83,7 +83,7 @@ def main():
     print("[server] Setting up sockets")
     listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     listener.bind((socket.gethostname(), port))
-    listener.listen(16)
+    listener.listen(num_processor)
 
 
 
