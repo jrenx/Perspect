@@ -121,6 +121,12 @@ void backwardSliceHelper(vector<Function *> *allFuncs,
 
           bool foundMemRead = false;
           Block *newBB = getBasicBlock2(newFunc, newAddr);
+	  if (!CRASH_ON_ERROR) {
+	    if (newBB == NULL) {
+	      cout << "[sa/warn] BB is not found for addr: " << hex << newAddr << dec << endl;
+	      return;
+	    }
+	  }
           Instruction newInsn = newBB->getInsn(newAddr);
           std::set<Expression::Ptr> memReads;
           newInsn.getMemoryReadOperands(memReads);
