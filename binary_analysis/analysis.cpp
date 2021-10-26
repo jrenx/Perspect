@@ -462,16 +462,26 @@ void getMemWrites(vector<Function *> *allFuncs, char *addrToFuncNames) {
       cout << " Encountered error " << errno << " while parsing " << json_addr->valuestring << endl;
     char *funcName = json_funcName->valuestring;
 
-    cJSON *json_insn  = cJSON_CreateObject();
-    cJSON_AddNumberToObject(json_insn, "addr", addr);
-    cJSON_AddStringToObject(json_insn, "func_name", funcName);
-
     // parse string here, can the string be a json?
     if (INFO) cout << endl << "[sa] addr: 0x" << std::hex << addr << std::dec << endl;
     if (INFO) cout << "[sa] func: " << funcName << endl;
 
     Function *func = getFunction2(allFuncs, funcName, addr);
+    if (func == NULL) {
+      cout << "[sa] In getMemWrites, function name not found: " << funcName << endl;
+      continue;
+    }
+
     Block *bb = getBasicBlock2(func, addr);
+    if (bb == NULL) {
+      cout << "[sa] In getMemWrites, bb not found, function: " << funcName << " addr: " << addr << endl;
+      continue;
+    }
+
+    cJSON *json_insn  = cJSON_CreateObject();
+    cJSON_AddNumberToObject(json_insn, "addr", addr);
+    cJSON_AddStringToObject(json_insn, "func_name", funcName);
+
     Instruction insn = bb->getInsn(addr);
     long unsigned int trueAddr = 0;
     int isLoopInsn = 0; //TODO: fix the casings
