@@ -17,7 +17,8 @@ worker_addresses = [("10.1.0.21", 12000), ("10.1.0.22", 12000), ("10.1.0.23", 12
 HOST, PORT = "localhost", 9999
 q = queue.Queue()
 DEBUG = True
-num_processor = 64
+num_server = 4
+num_processor = 16
 
 num_new_unique_inputs_received = 0
 handled = set()
@@ -125,7 +126,7 @@ def main():
 
         sockets = []
         for addr in worker_addresses:
-            for _ in range(16):
+            for _ in range(num_processor):
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 print("[client] Connecting to {}".format(addr), flush=True)
                 s.connect(addr)
@@ -195,7 +196,7 @@ def main():
 
                 #print("[client] Decreased pending count")
                 print("[client] pending count is: " + str(pending_count_local))
-                if pending_count_local <= num_processor:
+                if pending_count_local <= (num_processor * num_server):
 
                     restart_static_slicing_local = False
                     restart_static_slicing_lock.acquire()
