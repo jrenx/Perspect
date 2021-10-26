@@ -18,7 +18,7 @@ HOST, PORT = "localhost", 9999
 q = queue.Queue()
 DEBUG = True
 num_server = 4
-num_processor = 16
+num_processor = 8
 
 num_new_unique_inputs_received = 0
 handled = set()

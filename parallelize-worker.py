@@ -46,7 +46,7 @@ def run_task(id, pipe, prog):
 
 def main():
     curr_dir = os.path.dirname(os.path.realpath(__file__))
-    num_processor = 16
+    num_processor = 8
     prog = 'mongod_4.0.13'
     if len(sys.argv) > 1:
         prog = sys.argv[1]
