@@ -2398,5 +2398,6 @@ if __name__ == '__main__':
     dd = DynamicDependence(starting_events, "mongod_4.0.13", "--dbpath /home/renxian2/eval_mongodb_44991/repro/4.0.13/db --logpath /home/renxian2/eval_mongodb_44991/repro/4.0.13/db.log --wiredTigerCacheSizeGB 10", "/home/renxian2/eval_mongodb_44991/repro/4.0.13/bin/")
     dd.prepare_to_build_dynamic_dependencies(2000)
 
-    dg = dd.build_dynamic_dependencies(0x409418 if args.starting_insn is None else int(args.starting_insn, 16), args.pa_id) #0x409418
-    verify_0x409418_result(dg)
+    for event in starting_events:
+        dg = dd.build_dynamic_dependencies(event[1] if args.starting_insn is None else int(args.starting_insn, 16), args.pa_id) #0x409418
+    #verify_0x409418_result(dg)
