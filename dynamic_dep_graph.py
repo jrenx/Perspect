@@ -2397,5 +2397,6 @@ if __name__ == '__main__':
     dd = DynamicDependence(starting_events, "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
     dd.prepare_to_build_dynamic_dependencies(10000)
 
-    dg = dd.build_dynamic_dependencies(0x409418 if args.starting_insn is None else int(args.starting_insn, 16), args.pa_id) #0x409418
-    verify_0x409418_result(dg)
+    for event in starting_events:
+        dg = dd.build_dynamic_dependencies(event[1] if args.starting_insn is None else int(args.starting_insn, 16), args.pa_id) #0x409418
+    #verify_0x409418_result(dg)
