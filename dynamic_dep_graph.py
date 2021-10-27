@@ -2377,15 +2377,22 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--parallelize_id', dest='pa_id', type=int)
     parser.add_argument('--starting_instruction', dest='starting_insn')
+    parser.add_argument('-s', '--starting_event_file')
+    parser.set_defaults(starting_event_file=None)
     args = parser.parse_args()
     print(args.pa_id)
     print(args.starting_insn)
-
     starting_events = []
-    starting_events.append(["rdi", 0x409daa, "sweep"])
-    starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
-    starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
-    starting_events.append(["rcx", 0x40764c, "runtime.free"])
+    starting_event_file = args.starting_event_file
+    if starting_event_file is not None:
+        with open(starting_event_file, "r") as f:
+            for l in f.readlines():
+                starting_events.append(["", int(l.split()[0], 16), l.split()[1]])
+    else:
+        starting_events.append(["rdi", 0x409daa, "sweep"])
+        starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
+        starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
+        starting_events.append(["rcx", 0x40764c, "runtime.free"])
 
     dd = DynamicDependence(starting_events, "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
     dd.prepare_to_build_dynamic_dependencies(10000)
