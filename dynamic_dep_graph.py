@@ -2384,6 +2384,7 @@ if __name__ == '__main__':
     print(args.starting_insn)
     starting_events = []
     starting_event_file = args.starting_event_file
+    starting_event_file = "starting_events_good_run"
     if starting_event_file is not None:
         with open(starting_event_file, "r") as f:
             for l in f.readlines():
@@ -2394,8 +2395,8 @@ if __name__ == '__main__':
         starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
         starting_events.append(["rcx", 0x40764c, "runtime.free"])
 
-    dd = DynamicDependence(starting_events, "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
-    dd.prepare_to_build_dynamic_dependencies(10000)
+    dd = DynamicDependence(starting_events, "mongod_4.0.13", "--dbpath /home/renxian2/eval_mongodb_44991/repro/4.0.13/db --logpath /home/renxian2/eval_mongodb_44991/repro/4.0.13/db.log --wiredTigerCacheSizeGB 10", "/home/renxian2/eval_mongodb_44991/repro/4.0.13/bin/")
+    dd.prepare_to_build_dynamic_dependencies(2000)
 
     dg = dd.build_dynamic_dependencies(0x409418 if args.starting_insn is None else int(args.starting_insn, 16), args.pa_id) #0x409418
     verify_0x409418_result(dg)
