@@ -33,7 +33,7 @@ class InsRegTrace:
         pin_program_list.append('--')
         pin_program_list.extend(self.program)
         pin_cmd = ' '.join(pin_program_list)
-        print(pin_cmd)
+        print(pin_cmd, flush=True)
         subprocess.call(pin_cmd, shell=True)
 
     def parse_break_points(self, branch, target):
