@@ -1320,7 +1320,8 @@ class StaticDepGraph:
         for func in pending_nodes:
             for node in pending_nodes[func].values():
                 StaticNode.fromJSON_finish(node, all_id_to_node)
-
+            if func not in StaticDepGraph.func_to_graph:
+                continue
             for curr_func in itertools.chain(StaticDepGraph.get_duplicate_names(func), [func]):
                 graph = StaticDepGraph.func_to_graph[curr_func]
                 #to_remove.add(graph.func)
