@@ -1241,7 +1241,6 @@ class StaticDepGraph:
         for key in data["bb_id_to_node_id"]:
             sg.bb_id_to_node_id[int(key)] = data["bb_id_to_node_id"][key]
 
-        #print("Current function: " + func)
         for n in data["id_to_node"]:
             sn = StaticNode.fromJSON(n)
             sg.id_to_node[sn.id] = sn
@@ -1724,6 +1723,8 @@ class StaticDepGraph:
         print("[static_dep] " + str(initial_node))
         target_bbs = set()
 
+        #make sure to find map the instruction to the function that contains it
+        # in case there is a duplicate copy of the function in the binary
         graph = StaticDepGraph.func_to_graph.get(func, None)
         if graph is not None and graph.cfg.contains_insn(insn) is False:
             graph = StaticDepGraph.func_to_graph.get(func + "DUPLICATE", None)
@@ -1876,6 +1877,9 @@ class StaticDepGraph:
             prede, group_size = self.build_single_local_data_flow_dependency(load, succe, func, group, group_size,
                                                                              defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func,
                                                                              prog)
+            if prede is None:
+                assert group_size is None
+                continue
             nodes.append(prede)
         if group is True:
             print("Creating new group id: " + str(StaticNode.group_id) + " size " + str(group_size) + " parent " + hex(
@@ -1897,11 +1901,15 @@ class StaticDepGraph:
             is_bit_var = True
         type = load[7]
         curr_func = load[8]
-        if len(StaticDepGraph.func_hot_and_cold_path_map) > 0 and self.cfg.contains_insn(prede_insn) is False:
-            if curr_func in StaticDepGraph.func_hot_and_cold_path_map:
+        # move definition to a different function if necessary
+        if curr_func == func and self.cfg.contains_insn(prede_insn) is False:
+            if len(StaticDepGraph.func_hot_and_cold_path_map) > 0 and  curr_func in StaticDepGraph.func_hot_and_cold_path_map:
                 new_curr_func = StaticDepGraph.func_hot_and_cold_path_map[curr_func]
                 print("[sg/warn] Changing the function name from " + curr_func + " to " + new_curr_func)
                 curr_func = new_curr_func
+            else:
+                print("[sg/warn] Ignoring definition " + hex(prede_insn) + " which likely belongs to a duplicate of  " + curr_func)
+                return None, None
         #if len(load) >= 10 and load[9] is not None and load[9] != '':
         dst_reg = load[9]
         #else:
