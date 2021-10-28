@@ -390,9 +390,13 @@ class DynamicDependence:
 
             i += 1
             self.code_to_insn[i] = insn
-            instructions.append([hex(insn), reg, i])
-            self.insns_with_regs.append(insn)
-            self.insn_to_reg_count[insn] = 1
+            if reg != "":
+                instructions.append([hex(insn), reg, i])
+                self.insns_with_regs.append(insn)
+                self.insn_to_reg_count[insn] = 1
+            else:
+                instructions.append([hex(insn), "pc", i])
+
 
         #go through every dataflow node to find the bit vars first
 
@@ -480,7 +484,7 @@ class DynamicDependence:
             return
 
         # invoke PIN. get output of a sequence of insn
-        trace = InsRegTrace(path + prog + ' ' + path + arg,
+        trace = InsRegTrace(path + prog + ' ' + arg,
                             pin='~/pin-3.11/pin', out=trace_name)
         print("[dyn_dep] Total number of instructions watched: " + str(len(instructions)))
         print(instructions)
