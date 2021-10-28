@@ -998,7 +998,7 @@ class StaticNode:
             line = data["line"]
 
         sn = StaticNode(insn, bb, function, id, file, line)
-        StaticDepGraph.insn_to_node[sn.insn] = sn
+        #StaticDepGraph.insn_to_node[sn.insn] = sn
 
         if "index" in data:
             sn.index = data["index"]
@@ -1150,6 +1150,8 @@ class StaticNode:
 
 class StaticDepGraph:
     func_to_graph = {}
+    func_to_duplicate_count = {}
+
     pending_nodes = {}
 
     result_file = None
@@ -1232,7 +1234,7 @@ class StaticDepGraph:
     def fromJSON(data, all_id_to_node):
         func = data["func"]
         prog = data["prog"]
-        sg = StaticDepGraph(func, prog)
+        sg = StaticDepGraph.make_graph(func, prog)
         sg.changed = False
         if "cfg" in data:
             sg.cfg = CFG.fromJSON(data["cfg"])
@@ -1310,34 +1312,25 @@ class StaticDepGraph:
                 all_id_to_node[node.id] = node
             pending_nodes[func] = nodes
 
-        func_to_graph = {}
         for json_graph in in_result["out_result"]:
             graph = StaticDepGraph.fromJSON(json_graph, all_id_to_node)
-            if graph.func not in func_to_graph:
-                func_to_graph[graph.func] = graph
-            else:
-                func_to_graph[graph.func + "DUPLICATE"] = graph
-        for graph in func_to_graph.values():
+        for graph in StaticDepGraph.func_to_graph.values():
             StaticDepGraph.fromJSON_finish(graph, all_id_to_node)
         to_remove = set()
         for func in pending_nodes:
             for node in pending_nodes[func].values():
                 StaticNode.fromJSON_finish(node, all_id_to_node)
 
-            if func in func_to_graph:
-                if func not in pending_nodes:
-                    continue
-                to_remove.add(func)
+            for curr_func in itertools.chain(StaticDepGraph.get_duplicate_names(func), [func]):
+                graph = StaticDepGraph.func_to_graph[curr_func]
+                #to_remove.add(graph.func)
                 for pending_node in pending_nodes[func].values():
-                    if func_to_graph[func].cfg.contains_insn(pending_node.insn):
-                        func_to_graph[func].id_to_node[pending_node.id] = pending_node
-                        func_to_graph[func].insn_to_node[pending_node.insn] = pending_node
-                    else:
-                        func_to_graph[func + "DUPLICATE"].id_to_node[pending_node.id] = pending_node
-                        func_to_graph[func + "DUPLICATE"].insn_to_node[pending_node.insn] = pending_node
+                    if graph.cfg.contains_insn(pending_node.insn):
+                        graph.id_to_node[pending_node.id] = pending_node
+                        graph.insn_to_node[pending_node.insn] = pending_node
 
-        for func in to_remove:
-            del pending_nodes[func]
+        #for func in to_remove:
+        #    del pending_nodes[func]
 
         postorder_list = []
         for json_node in in_result["graph_postorder_list"]:
@@ -1352,7 +1345,6 @@ class StaticDepGraph:
             for n_id in in_result["starting_nodes"]:
                 starting_nodes.append(all_id_to_node[n_id])
 
-        StaticDepGraph.func_to_graph = func_to_graph
         StaticDepGraph.pending_nodes = pending_nodes
         StaticDepGraph.postorder_list = postorder_list
         StaticDepGraph.reverse_postorder_list = reverse_postorder_list
@@ -1361,10 +1353,10 @@ class StaticDepGraph:
 
     @staticmethod
     def make_or_get_df_node(insn, bb, function): #TODO: think this through again
-        if insn in StaticDepGraph.insn_to_node:
-            node = StaticDepGraph.insn_to_node[insn]
-        else:
-            node = StaticDepGraph.make_node(insn, bb, function)
+        #if insn in StaticDepGraph.insn_to_node:
+        #    node = StaticDepGraph.insn_to_node[insn]
+        #else:
+        node = StaticDepGraph.make_node(insn, bb, function)
         if node.explained is True:
             if node.is_df is True:
                 #assert node.is_cf is False, str(node)
@@ -1380,10 +1372,10 @@ class StaticDepGraph:
     @staticmethod
     def make_or_get_cf_node(insn, bb, function, graph=None):
         #TODO: refactor these complicated logic ...
-        if insn in StaticDepGraph.insn_to_node:
-            node = StaticDepGraph.insn_to_node[insn]
-        else:
-            node = StaticDepGraph.make_node(insn, bb, function, graph)
+        #if insn in StaticDepGraph.insn_to_node:
+        #    node = StaticDepGraph.insn_to_node[insn]
+        #else:
+        node = StaticDepGraph.make_node(insn, bb, function, graph)
         if node.explained is True:
             if node.is_cf is True:
                 return node
@@ -1397,25 +1389,25 @@ class StaticDepGraph:
     @staticmethod
     def make_node(insn, bb, function, graph=None):
         #print("Making node for insn: " + hex(insn) + "@" + function)
-        if graph is None:
-            graph = StaticDepGraph.func_to_graph.get(function, None)
-            if graph is not None and graph.cfg.contains_insn(insn) is False:
-                graph = StaticDepGraph.func_to_graph.get(function + "DUPLICATE", None)
 
-        pending = None
+        node = None
+        if graph is None:
+            graph = StaticDepGraph.get_graph(function, insn)
+
         if graph is not None:
             node = graph.insn_to_node.get(insn, None)
             if node is not None:
                 return node
-        else:
-            pending = StaticDepGraph.pending_nodes.get(function, None)
-            if pending is not None and insn in pending:
-                return pending[insn]
 
-        node = StaticNode(insn, bb, function)
-        #print("Creating node: " + str(node.id))
-        assert insn not in StaticDepGraph.insn_to_node
-        StaticDepGraph.insn_to_node[insn] = node
+        pending = StaticDepGraph.pending_nodes.get(function, None)
+        if pending is not None:
+            node = pending.get(insn, None)
+
+        if node is None:
+            node = StaticNode(insn, bb, function)
+            print("Creating node id: " + str(node.id))
+            #assert insn not in StaticDepGraph.insn_to_node
+            #StaticDepGraph.insn_to_node[insn] = node
 
         if graph is not None:
             graph.id_to_node[node.id] = node
@@ -1428,6 +1420,41 @@ class StaticDepGraph:
             pending[node.insn] = node
             #assert function not in StaticDepGraph.func_to_graph
         return node
+
+    @staticmethod
+    def get_graph(func, insn):
+        graph = StaticDepGraph.func_to_graph.get(func, None)
+        if graph is not None and graph.cfg.contains_insn(insn) is False:
+            dup_count = 1
+            while True:
+                graph = StaticDepGraph.func_to_graph.get(func + "DUPLICATE_" + str(dup_count), None)
+                if graph is None:
+                    break
+                if graph.cfg.contains_insn(insn) is True:
+                    break
+                dup_count += 1
+        return graph
+
+    @staticmethod
+    def make_graph(func, prog):
+        graph = StaticDepGraph(func, prog)
+        count = StaticDepGraph.func_to_duplicate_count.get(func, -1)
+        count += 1
+        StaticDepGraph.func_to_duplicate_count[func] = count
+
+        if count == 0:
+            StaticDepGraph.func_to_graph[func] = graph
+        else:
+            StaticDepGraph.func_to_graph[func + "DUPLICATE_" + str(count)] = graph
+        return graph
+
+    @staticmethod
+    def get_duplicate_names(func):
+        duplicate_names = []
+        if func in StaticDepGraph.func_to_duplicate_count:
+            for i in range(StaticDepGraph.func_to_duplicate_count[func]):
+                duplicate_names.append(func + "DUPLICATE_" + str(i + 1))
+        return duplicate_names
 
     def get_closest_dep_branch(self, node): #TODO, is getting the farthest one
         # TODO, what if has no direct cf predecessor, is that possible?
@@ -1725,22 +1752,16 @@ class StaticDepGraph:
 
         #make sure to find map the instruction to the function that contains it
         # in case there is a duplicate copy of the function in the binary
-        graph = StaticDepGraph.func_to_graph.get(func, None)
-        if graph is not None and graph.cfg.contains_insn(insn) is False:
-            graph = StaticDepGraph.func_to_graph.get(func + "DUPLICATE", None)
-                
-        if graph is not None: 
+        graph = StaticDepGraph.get_graph(func, insn)
+        if graph is not None:
+            assert (graph.cfg.contains_insn(insn) is True)
             # cf nodes are not merged, they are discarded after info is pasted in!
             if initial_node.is_df is False:
                 bb = graph.cfg.getBB(insn)
                 target_bbs.add(bb)
                 graph.build_control_flow_dependencies(target_bbs)
         else:
-            graph = StaticDepGraph(func, prog)
-            if func not in StaticDepGraph.func_to_graph:
-                StaticDepGraph.func_to_graph[func] = graph
-            else:
-                StaticDepGraph.func_to_graph[func + "DUPLICATE"] = graph
+            graph = StaticDepGraph.make_graph(func, prog)
 
             graph.build_control_flow_nodes(insn)
             if len(graph.cfg.ordered_bbs) == 0:
@@ -2166,7 +2187,10 @@ class StaticDepGraph:
                 if prede.explained is False:
                     prede.mem_store = MemoryAccess(prede_reg, shift, off, off_reg, node.mem_load.is_bit_var)
                     prede.reg_load = src_reg  # TODO put actual register name here
-                    if curr_func != func:
+                    if curr_func != func :
+                        defs_in_diff_func.add(prede)
+                    elif self.cfg.contains_insn(prede_insn) is False:
+                        print("[static_dep][warn] Found a remote definition in the duplicate of the same function: " + hex(prede_insn))
                         defs_in_diff_func.add(prede)
                     else:
                         intermediate_defs_in_same_func.add(prede)
@@ -2344,9 +2368,7 @@ class StaticDepGraph:
             worklist.append(node)
             while len(worklist) > 0:
                 curr = worklist.popleft()
-                graph = StaticDepGraph.func_to_graph.get(curr.function, None)
-                if graph is not None and graph.cfg.contains_insn(curr.insn) is False:
-                    graph = StaticDepGraph.func_to_graph.get(curr.function + "DUPLICATE", None)
+                graph = StaticDepGraph.get_graph(curr.function, curr.insn)
                 if graph is None:
                     continue
                 print(curr)
@@ -2556,7 +2578,9 @@ class StaticDepGraph:
                         for new_func in new_funcs.difference(visited_funcs):
                             if new_func not in worklist:
                                 worklist.append(new_func)
-                                worklist.append(new_func + "DUPLICATE")
+                                for duplicate_name in StaticDepGraph.get_duplicate_names(new_func):
+                                    worklist.append(duplicate_name)
+
         #print("[static_dep] total number of nodes in the postorder list: "
         #      + str(len(StaticDepGraph.postorder_list)))
 
