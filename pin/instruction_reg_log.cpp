@@ -265,6 +265,7 @@ int main (INT32 argc, CHAR *argv[])
     reg_map["ebp"] = REG_EBP;
     reg_map["rsp"] = REG_RSP;
     reg_map["esp"] = REG_ESP;
+    reg_map["rip"] = REG_RIP;
     reg_map["rdx"] = REG_RDX;
     reg_map["edx"] = REG_EDX;
     reg_map["rbx"] = REG_RBX;
