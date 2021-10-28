@@ -2398,7 +2398,7 @@ if __name__ == '__main__':
         starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
         starting_events.append(["rcx", 0x40764c, "runtime.free"])
 
-    dd = DynamicDependence(starting_events, "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool/")
+    dd = DynamicDependence(starting_events, "909_ziptest_exe9", "/home/anygroup/perf_debug_tool/test.zip", "/home/anygroup/perf_debug_tool/")
     dd.prepare_to_build_dynamic_dependencies(10000)
 
     for event in starting_events:
