@@ -2388,7 +2388,7 @@ if __name__ == '__main__':
     print(args.starting_insn)
     starting_events = []
     starting_event_file = args.starting_event_file
-    starting_event_file = "starting_events_good_run"
+    starting_event_file = "starting_events_bad_run"
     if starting_event_file is not None:
         with open(starting_event_file, "r") as f:
             for l in f.readlines():
