@@ -13,7 +13,7 @@ def start(mongo_dir="~/mongoDB/4.2.1"):
     os.system("{} --dbpath {} --logpath {} --wiredTigerCacheSizeGB 10 --fork".format(mongod, db, log))
 
 def update(idd):
-    mod = 100
+    mod = 1000
     
     client = MongoClient()
     db = client['database']
