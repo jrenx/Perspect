@@ -69,7 +69,10 @@ VOID record_reg(ADDRINT pc, ADDRINT reg)
 {
     //TraceFile.write((char*)&delim, sizeof(char));
     PIN_GetLock(&lock, 0);
-
+    sigset_t x;
+    sigemptyset(&x);
+    sigaddset(&x, SIGQUIT);
+    sigprocmask(SIG_BLOCK, &x, NULL);
     if (stop == 1) {
         std::cout << "exiting now.." << endl;
         PIN_Detach();
@@ -115,6 +118,7 @@ VOID record_reg(ADDRINT pc, ADDRINT reg)
       TraceFile.open(KnobOutputFile.Value().c_str());
       TraceFile.setf(ios::out | ios::binary);
     }*/
+    sigprocmask(SIG_UNBLOCK, &x, NULL);
     PIN_ReleaseLock(&lock);
 }
 
@@ -199,7 +203,7 @@ int main (INT32 argc, CHAR *argv[])
 {
     // Initialize pin
     if (PIN_Init(argc, argv)) return 0;
-    PIN_UnblockSignal(SIGQUIT, true);
+    PIN_UnblockSignal(SIGQUIT, false);
     PIN_InterceptSignal(SIGQUIT, callbackSignals, 0);
     PIN_InitLock(&lock);
     std::ifstream infile("instruction_reg_log_arg"); // TODO change the file name
