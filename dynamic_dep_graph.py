@@ -385,6 +385,10 @@ class DynamicDependence:
         for start_event in self.starting_events:
             reg = start_event[0]
             insn = start_event[1]
+            func = start_event[2]
+            if StaticDepGraph.get_graph(func, insn) is None:
+                print("[dg/warn] starting event not found: " + hex(insn))
+                continue
             assert insn not in unique_insns
             unique_insns.add(insn)
 
