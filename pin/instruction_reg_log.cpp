@@ -34,7 +34,7 @@ long curr_count = 0;
 long file_count = 0;
 
 PIN_LOCK lock;
-
+static volatile int stop = 0;
 /* ===================================================================== */
 /* Commandline Switches */
 /* ===================================================================== */
@@ -69,6 +69,14 @@ VOID record_reg(ADDRINT pc, ADDRINT reg)
 {
     //TraceFile.write((char*)&delim, sizeof(char));
     PIN_GetLock(&lock, 0);
+
+    if (stop == 1) {
+        std::cout << "exiting now.." << endl;
+        PIN_Detach();
+        PIN_ReleaseLock(&lock);
+        return;
+    }
+
     short code = insn_to_code[pc];
     if (no_reg_list.find(pc) == no_reg_list.end()) {
       TraceFile.write((char*)&reg, sizeof(ADDRINT));
@@ -171,6 +179,19 @@ VOID Fini(INT32 code, VOID *v)
     //out.close();
 }
 
+VOID Detach(VOID *v)
+{
+    //TraceFile << "# eof" << endl;
+    //out << "# eof" << endl;
+    TraceFile.close();
+    //out.close();
+    exit(0);
+}
+
+static bool callbackSignals(unsigned int threadId, int sig, CONTEXT* ctx, bool hasHandler, const EXCEPTION_INFO* pExceptInfo, void* v) {
+  stop = 1;
+  return false;
+}
 /* ===================================================================== */
 /* Main                                                                  */
 /* ===================================================================== */
@@ -178,6 +199,8 @@ int main (INT32 argc, CHAR *argv[])
 {
     // Initialize pin
     if (PIN_Init(argc, argv)) return 0;
+    PIN_UnblockSignal(SIGQUIT, true);
+    PIN_InterceptSignal(SIGQUIT, callbackSignals, 0);
     PIN_InitLock(&lock);
     std::ifstream infile("instruction_reg_log_arg"); // TODO change the file name
     std::string line;
@@ -309,6 +332,7 @@ int main (INT32 argc, CHAR *argv[])
     IMG_AddInstrumentFunction(ImageLoad, 0);
 
     PIN_AddFiniFunction(Fini, 0);
+    PIN_AddDetachFunction(Detach, 0);
 
     // Start the program, never returns
     //
