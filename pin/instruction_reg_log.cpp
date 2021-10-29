@@ -5,6 +5,7 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <signal.h>
 //#include <boost/iostreams/filtering_stream.hpp>
 //#include <boost/iostreams/filtering_streambuf.hpp>
 //#include <boost/iostreams/copy.hpp>
@@ -31,6 +32,7 @@ std::map<unsigned long, u_int16_t> insn_to_code;
 char delim = ':';
 long curr_count = 0;
 long file_count = 0;
+static volatile int stop = 0;
 
 /* ===================================================================== */
 /* Commandline Switches */
@@ -64,6 +66,10 @@ VOID start_log()
 
 VOID record_reg(ADDRINT pc, ADDRINT reg)
 {
+    if (stop == 1) {
+      TraceFile.close();
+      exit(0);
+    } 
     //TraceFile.write((char*)&delim, sizeof(char));
     short code = insn_to_code[pc];
     if (no_reg_list.find(pc) == no_reg_list.end()) {
@@ -166,6 +172,10 @@ VOID Fini(INT32 code, VOID *v)
     //out.close();
 }
 
+void Int_Handler(int dummy) {
+    stop = 1;
+}
+
 /* ===================================================================== */
 /* Main                                                                  */
 /* ===================================================================== */
@@ -173,7 +183,7 @@ int main (INT32 argc, CHAR *argv[])
 {
     // Initialize pin
     if (PIN_Init(argc, argv)) return 0;
-
+    signal(SIGINT, Int_Handler);
     std::ifstream infile("instruction_reg_log_arg"); // TODO change the file name
     std::string line;
     std::vector<string> addrs;
