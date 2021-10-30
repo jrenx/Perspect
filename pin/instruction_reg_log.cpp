@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <signal.h>
+#include <unistd.h>
 //#include <boost/iostreams/filtering_stream.hpp>
 //#include <boost/iostreams/filtering_streambuf.hpp>
 //#include <boost/iostreams/copy.hpp>
@@ -39,6 +40,10 @@ static volatile int stop = 0;
 int size = 0;
 #define blimit 1024*1024*1024
 char buffer[blimit];
+#define max_t 1028636
+u_int8_t tids[max_t];
+u_int8_t curr_tid = 1;
+//cat /proc/sys/kernel/threads-max
 /* ===================================================================== */
 /* Commandline Switches */
 /* ===================================================================== */
@@ -104,6 +109,16 @@ VOID record_reg(ADDRINT pc, ADDRINT reg)
       TraceFile.write((char*)&code, sizeof(short));
       //curr_count += 1;
     }*/
+    pid_t tid = gettid();
+    assert(tid < max_t); 
+    u_int8_t local_tid = tids[tid];
+    if (local_tid  == 0) {
+      local_tid = curr_tid;
+      tids[tid] = local_tid;
+      curr_tid++;
+    }
+    memcpy(buffer + size, (char*)&local_tid, sizeof(u_int8_t));
+    size += sizeof(u_int8_t);
     //TraceFile.write((char*)&code, sizeof(u_int16_t));
     memcpy(buffer + size, (char*)&code, sizeof(u_int16_t));
     size += sizeof(u_int16_t);
@@ -229,6 +244,7 @@ int main (INT32 argc, CHAR *argv[])
     PIN_UnblockSignal(SIGQUIT, false);
     PIN_InterceptSignal(SIGQUIT, callbackSignals, 0);
     PIN_InitLock(&lock);
+    for (int i = 0; i < max_t; i++) tids[i] = 0;
     std::ifstream infile("instruction_reg_log_arg"); // TODO change the file name
     std::string line;
     std::vector<string> addrs;
