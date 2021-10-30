@@ -1602,9 +1602,12 @@ class StaticDepGraph:
                     if graph.changed is False:
                         continue
                     graph.build_control_flow_dependencies(set(), final=True)
-                    graph.merge_nodes(graph.nodes_in_df_slice, True)
-                    graph.merge_nodes(graph.none_df_starting_nodes, True)
+                    graph.merge_nodes(graph.nodes_in_df_slice, final=True)
                     if TRACKS_DIRECT_CALLER: graph.merge_callsite_nodes()
+                for graph in StaticDepGraph.func_to_graph.values():
+                    if graph.changed is False:
+                        continue
+                    graph.merge_nodes(graph.none_df_starting_nodes, final=True, interprocedural_set=([e[1] for e in starting_events]))
                     for n in graph.nodes_in_cf_slice.keys():
                         print(str(n))
                     for n in graph.nodes_in_df_slice.keys():
@@ -1849,7 +1852,7 @@ class StaticDepGraph:
                     n.cf_predes.append(callsite)
 
     #FIXME, think about if this makes sense
-    def merge_nodes(self, nodes, final=False):
+    def merge_nodes(self, nodes, final=False, interprocedural_set=set()):
         print("[static_dep] Merging nodes for graph: " + self.func)
         if len(self.cfg.ordered_bbs) == 0:
             print("[static_dep][warn] Failed to load the cfg, ignoring merging the datanode...")
@@ -1877,6 +1880,18 @@ class StaticDepGraph:
                     node.cf_predes.append(prede_node)
                 if node not in prede_node.cf_succes:
                     prede_node.cf_succes.append(node)
+            #This is specifically for the case of merging none df starting nodes
+            # where the node is a starting event, ie first insn of a function
+            # it needs to inherit the non local cf predes of the node created for the same BB
+            # ie. the caller sites.
+            if node.insn in interprocedural_set:
+                twin_node_id = self.bb_id_to_node_id[bb.id]
+                twin_node = self.id_to_node[twin_node_id]
+                for prede_node in twin_node.cf_predes:
+                    if prede_node not in node.cf_predes:
+                        node.cf_predes.append(prede_node)
+                    if node not in prede_node.cf_succes:
+                        prede_node.cf_succes.append(node)
             """
             for succe in bb.succes:
                 if succe in bb.backedge_targets:
