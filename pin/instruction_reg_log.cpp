@@ -7,6 +7,7 @@
 #include <string>
 #include <signal.h>
 #include <unistd.h>
+#include <sys/syscall.h>
 //#include <boost/iostreams/filtering_stream.hpp>
 //#include <boost/iostreams/filtering_streambuf.hpp>
 //#include <boost/iostreams/copy.hpp>
@@ -109,7 +110,7 @@ VOID record_reg(ADDRINT pc, ADDRINT reg)
       TraceFile.write((char*)&code, sizeof(short));
       //curr_count += 1;
     }*/
-    pid_t tid = gettid();
+    pid_t tid = syscall(SYS_gettid);
     assert(tid < max_t); 
     u_int8_t local_tid = tids[tid];
     if (local_tid  == 0) {
