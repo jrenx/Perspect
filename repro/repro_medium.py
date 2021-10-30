@@ -37,3 +37,4 @@ if __name__ == '__main__':
         t.start()
     for i in range(nthreads):
         threads[i].join()
+    os.system("kill -3 ")
