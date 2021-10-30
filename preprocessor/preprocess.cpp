@@ -591,6 +591,7 @@ int main(int argc, char *argv[])
     if (code == 0) {
       i -= 4;	    
       std::memcpy(&threadId, buffer + i, sizeof(int));
+      continue;
     }
 
     //if (code == 2 || code == 3) {
