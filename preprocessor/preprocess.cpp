@@ -574,6 +574,7 @@ int main(int argc, char *argv[])
   // Note: the same instruction executed will have multiple UIDs if multiple regs are printed at the instrustion
   unsigned short code;
   long regValue;
+  int threadId;
   StaticNode *sn;
   bool loadsMemory;
   int regCount2;
@@ -586,7 +587,11 @@ int main(int argc, char *argv[])
     i-=2;
     std::memcpy(&code, buffer+i, sizeof(unsigned short));
     assert(code <= CodeCount);
-    assert(code > 0);
+    assert(code >= 0);
+    if (code == 0) {
+      i -= 4;	    
+      std::memcpy(&threadId, buffer + i, sizeof(int));
+    }
 
     //if (code == 2 || code == 3) {
     //  cout << "HERE " <<uid << endl;
