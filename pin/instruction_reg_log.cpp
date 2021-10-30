@@ -39,11 +39,11 @@ PIN_LOCK lock;
 static volatile int stop = 0;
 
 int size = 0;
+int prev_size = 0;
 #define blimit 1024*1024*1024
 char buffer[blimit];
-#define max_t 1028636
-u_int8_t tids[max_t];
-u_int8_t curr_tid = 1;
+short place_holder_code = 0;
+int32_t curr_tid = -1;
 //cat /proc/sys/kernel/threads-max
 /* ===================================================================== */
 /* Commandline Switches */
@@ -77,12 +77,8 @@ VOID start_log()
 
 VOID record_reg(ADDRINT pc, ADDRINT reg)
 {
-    //TraceFile.write((char*)&delim, sizeof(char));
     PIN_GetLock(&lock, 0);
-    sigset_t x;
-    sigemptyset(&x);
-    sigaddset(&x, SIGQUIT);
-    sigprocmask(SIG_BLOCK, &x, NULL);
+    prev_size = size;
     if (stop == 1) {
         std::cout << "exiting now.." << endl;
         PIN_Detach();
@@ -90,64 +86,39 @@ VOID record_reg(ADDRINT pc, ADDRINT reg)
         return;
     }
     if ((size + sizeof(ADDRINT) + sizeof(u_int16_t)) >= blimit) {
-       TraceFile.write(buffer, size);
-       TraceFile.flush();
-       size = 0;
+        sigset_t x;
+        sigemptyset(&x);
+        sigaddset(&x, SIGQUIT);
+        sigprocmask(SIG_BLOCK, &x, NULL);
+
+        TraceFile.write(buffer, size);
+        TraceFile.flush();
+        size = 0;
+        sigprocmask(SIG_UNBLOCK, &x, NULL);
     }
+
+    // wnly log the tid after a thread context switch
+    pid_t tid = syscall(SYS_gettid);
+    if (tid != curr_tid) {
+	curr_tid = tid;
+        memcpy(buffer + size, (char*)&curr_tid, sizeof(u_int32_t));
+        size += sizeof(u_int32_t);
+ 
+        memcpy(buffer + size, (char*)&place_holder_code, sizeof(u_int16_t));
+        size += sizeof(u_int16_t);
+    }
+
     short code = insn_to_code[pc];
+
     if (no_reg_list.find(pc) == no_reg_list.end()) {
-      //TraceFile.write((char*)&reg, sizeof(ADDRINT));
       memcpy(buffer + size, (char*)&reg, sizeof(ADDRINT));
       size += sizeof(ADDRINT);
-
-      //std::cout << sizeof(u_int16_t) << endl;
-      //std::cout << sizeof(short) << endl;
-      //TraceFile.write((char*)&code, sizeof(short));
-      //curr_count += 2;
-      //TraceFile << pc << ":" << reg << "\n";
-    } /*else {
-      //TraceFile << pc << ":" << "\n";
-      TraceFile.write((char*)&code, sizeof(short));
-      //curr_count += 1;
-    }*/
-    pid_t tid = syscall(SYS_gettid);
-    assert(tid < max_t); 
-    u_int8_t local_tid = tids[tid];
-    if (local_tid  == 0) {
-      local_tid = curr_tid;
-      tids[tid] = local_tid;
-      curr_tid++;
     }
-    memcpy(buffer + size, (char*)&local_tid, sizeof(u_int8_t));
-    size += sizeof(u_int8_t);
-    //TraceFile.write((char*)&code, sizeof(u_int16_t));
+
     memcpy(buffer + size, (char*)&code, sizeof(u_int16_t));
     size += sizeof(u_int16_t);
-
-    //out << pc << ": " << reg << endl;
-    /*
-    if (curr_count < 0) {
-      curr_count = 0;
-      TraceFile.close();
-      std::stringstream s("tar -zcvf log");
-      s << file_count;
-      file_count += 1;
-      s << ".tar.gz ";
-      s << KnobOutputFile.Value();
-      std::string cmd = s.str();
-      std::cout << "__" << cmd << "__" << endl;
-      system(cmd.c_str());
-
-      std::stringstream s1("rm ");
-      s1 << KnobOutputFile.Value();
-      std::string cmd1 = s1.str();
-      std::cout << "__" << cmd1 << "__" << endl;
-      system(cmd1.c_str());
-
-      TraceFile.open(KnobOutputFile.Value().c_str());
-      TraceFile.setf(ios::out | ios::binary);
-    }*/
-    sigprocmask(SIG_UNBLOCK, &x, NULL);
+    // If got interrupted in the middle, do not use the newly logged data.
+    if (stop == 1) size = prev_size;
     PIN_ReleaseLock(&lock);
 }
 
@@ -206,9 +177,6 @@ VOID ImageLoad(IMG img, VOID *v)
 
 VOID Fini(INT32 code, VOID *v)
 {
-    //TraceFile << "# eof" << endl;
-    //out << "# eof" << endl;
-    //out.close();
     PIN_GetLock(&lock, 0);
     TraceFile.write(buffer, size);    
     size = 0;
@@ -219,9 +187,6 @@ VOID Fini(INT32 code, VOID *v)
 
 VOID Detach(VOID *v)
 {
-    //TraceFile << "# eof" << endl;
-    //out << "# eof" << endl;
-    //out.close();
     PIN_GetLock(&lock, 0);
     TraceFile.write(buffer, size);    
     size = 0;
@@ -245,7 +210,6 @@ int main (INT32 argc, CHAR *argv[])
     PIN_UnblockSignal(SIGQUIT, false);
     PIN_InterceptSignal(SIGQUIT, callbackSignals, 0);
     PIN_InitLock(&lock);
-    for (int i = 0; i < max_t; i++) tids[i] = 0;
     std::ifstream infile("instruction_reg_log_arg"); // TODO change the file name
     std::string line;
     std::vector<string> addrs;
