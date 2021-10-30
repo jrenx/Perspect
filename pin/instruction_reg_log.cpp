@@ -35,6 +35,10 @@ long file_count = 0;
 
 PIN_LOCK lock;
 static volatile int stop = 0;
+
+int size = 0;
+#define blimit 1024*1024*1024
+char buffer[blimit];
 /* ===================================================================== */
 /* Commandline Switches */
 /* ===================================================================== */
@@ -80,9 +84,15 @@ VOID record_reg(ADDRINT pc, ADDRINT reg)
         return;
     }
 
+    if ((size + sizeof(ADDRINT) + sizeof(u_int16_t)) >= blimit) {
+       TraceFile.write(buffer, size);    
+       size = 0;
+    }
     short code = insn_to_code[pc];
     if (no_reg_list.find(pc) == no_reg_list.end()) {
-      TraceFile.write((char*)&reg, sizeof(ADDRINT));
+      //TraceFile.write((char*)&reg, sizeof(ADDRINT));
+      memcpy(buffer + size, (char*)&reg, sizeof(ADDRINT));
+      size += sizeof(ADDRINT);
 
       //std::cout << sizeof(u_int16_t) << endl;
       //std::cout << sizeof(short) << endl;
@@ -94,7 +104,10 @@ VOID record_reg(ADDRINT pc, ADDRINT reg)
       TraceFile.write((char*)&code, sizeof(short));
       //curr_count += 1;
     }*/
-    TraceFile.write((char*)&code, sizeof(u_int16_t));
+    //TraceFile.write((char*)&code, sizeof(u_int16_t));
+    memcpy(buffer + size, (char*)&code, sizeof(u_int16_t));
+    size += sizeof(u_int16_t);
+
     //out << pc << ": " << reg << endl;
     /*
     if (curr_count < 0) {
@@ -179,16 +192,19 @@ VOID Fini(INT32 code, VOID *v)
 {
     //TraceFile << "# eof" << endl;
     //out << "# eof" << endl;
-    TraceFile.close();
     //out.close();
+
+    TraceFile.write(buffer, size);    
+    TraceFile.close();
 }
 
 VOID Detach(VOID *v)
 {
     //TraceFile << "# eof" << endl;
     //out << "# eof" << endl;
-    TraceFile.close();
     //out.close();
+    TraceFile.write(buffer, size);    
+    TraceFile.close();
     exit(0);
 }
 
