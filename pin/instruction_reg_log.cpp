@@ -83,7 +83,6 @@ VOID record_reg(ADDRINT pc, ADDRINT reg)
         PIN_ReleaseLock(&lock);
         return;
     }
-
     if ((size + sizeof(ADDRINT) + sizeof(u_int16_t)) >= blimit) {
        TraceFile.write(buffer, size);    
        size = 0;
@@ -193,9 +192,11 @@ VOID Fini(INT32 code, VOID *v)
     //TraceFile << "# eof" << endl;
     //out << "# eof" << endl;
     //out.close();
-
+    PIN_GetLock(&lock, 0);
     TraceFile.write(buffer, size);    
+    size = 0;
     TraceFile.close();
+    PIN_ReleaseLock(&lock);
 }
 
 VOID Detach(VOID *v)
@@ -203,8 +204,11 @@ VOID Detach(VOID *v)
     //TraceFile << "# eof" << endl;
     //out << "# eof" << endl;
     //out.close();
+    PIN_GetLock(&lock, 0);
     TraceFile.write(buffer, size);    
+    size = 0;
     TraceFile.close();
+    PIN_ReleaseLock(&lock);
     exit(0);
 }
 
