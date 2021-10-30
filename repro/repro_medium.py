@@ -31,10 +31,12 @@ if __name__ == '__main__':
 
     nthreads = 5
     threads = []
+    time.sleep(120)
+    print("Starting test...")
     for i in range(nthreads):
         t = multiprocessing.Process(target=update, args=(i,))
         threads.append(t)
         t.start()
     for i in range(nthreads):
         threads[i].join()
-    os.system("kill -3 ")
+    os.system("kill -3 3257")
