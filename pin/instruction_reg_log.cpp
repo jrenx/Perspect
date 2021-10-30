@@ -84,7 +84,8 @@ VOID record_reg(ADDRINT pc, ADDRINT reg)
         return;
     }
     if ((size + sizeof(ADDRINT) + sizeof(u_int16_t)) >= blimit) {
-       TraceFile.write(buffer, size);    
+       TraceFile.write(buffer, size);
+       TraceFile.flush();
        size = 0;
     }
     short code = insn_to_code[pc];
@@ -195,6 +196,7 @@ VOID Fini(INT32 code, VOID *v)
     PIN_GetLock(&lock, 0);
     TraceFile.write(buffer, size);    
     size = 0;
+    TraceFile.flush();
     TraceFile.close();
     PIN_ReleaseLock(&lock);
 }
@@ -207,6 +209,7 @@ VOID Detach(VOID *v)
     PIN_GetLock(&lock, 0);
     TraceFile.write(buffer, size);    
     size = 0;
+    TraceFile.flush();
     TraceFile.close();
     PIN_ReleaseLock(&lock);
     exit(0);
