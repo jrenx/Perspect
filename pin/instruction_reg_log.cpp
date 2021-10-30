@@ -44,6 +44,9 @@ int prev_size = 0;
 char buffer[blimit];
 short place_holder_code = 0;
 int32_t curr_tid = -1;
+u_int8_t max_short_tid = 1;
+#define max_t 1028636
+u_int8_t tids[max_t];
 //cat /proc/sys/kernel/threads-max
 /* ===================================================================== */
 /* Commandline Switches */
@@ -101,8 +104,14 @@ VOID record_reg(ADDRINT pc, ADDRINT reg)
     pid_t tid = syscall(SYS_gettid);
     if (tid != curr_tid) {
 	curr_tid = tid;
-        memcpy(buffer + size, (char*)&curr_tid, sizeof(u_int32_t));
-        size += sizeof(u_int32_t);
+	u_int8_t short_tid = tids[tid];
+	if (short_tid  == 0) {
+	    short_tid = max_short_tid;
+	    tids[tid] = max_short_tid;
+	    max_short_tid ++;
+	}
+        memcpy(buffer + size, (char*)&short_tid, sizeof(u_int8_t));
+        size += sizeof(u_int8_t);
  
         memcpy(buffer + size, (char*)&place_holder_code, sizeof(u_int16_t));
         size += sizeof(u_int16_t);
@@ -210,6 +219,7 @@ int main (INT32 argc, CHAR *argv[])
     PIN_UnblockSignal(SIGQUIT, false);
     PIN_InterceptSignal(SIGQUIT, callbackSignals, 0);
     PIN_InitLock(&lock);
+    for (int i = 0; i < max_t; i++) tids[i] = 0;
     std::ifstream infile("instruction_reg_log_arg"); // TODO change the file name
     std::string line;
     std::vector<string> addrs;
