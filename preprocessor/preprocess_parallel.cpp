@@ -191,7 +191,7 @@ public:
     }
   }
 
-  static char *readFile(char *filename, long &length) {
+  static char *readFile(char *filename, unsigned long &length) {
     ifstream is;
     is.open(filename, ios::in);
     is.seekg (0, is.end);
@@ -239,7 +239,7 @@ public:
   }
 
   void parseStaticNode(char *filename) {
-    long length;
+    unsigned long length;
     char *buffer = Parser::readFile(filename, length);
     cJSON *data = cJSON_Parse(buffer);
     delete[] buffer;
@@ -361,7 +361,7 @@ public:
   }
 
   void initData(int pa_id) {
-    long length;
+    unsigned long length;
     string preprocessDataFile((char *)"preprocess_data");
     if (pa_id >= 0) {
       preprocessDataFile += "_";
@@ -543,7 +543,7 @@ public:
     // TODO free json data lol
   }
 
-  int parse(int pa_id, long length, char *buffer)
+  int parse(int pa_id, unsigned long length, char *buffer)
   {
     cout << pa_id << endl;
     std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
@@ -582,7 +582,7 @@ public:
 
     short *bitOps;
     bool otherRegsParsed = false;
-    for (long i = length; i > 0;) {
+    for (unsigned long i = length; i > 0;) {
       regValue = 0;
       uid ++;
       i-=2;
@@ -888,7 +888,7 @@ bool *conditions;
 mutex *ms;
 int *open_sockets;
 char *OK =  (char *)"OK";
-void reparse_worker(int pa_id, long length, char *buffer) {
+void reparse_worker(int pa_id, unsigned long length, char *buffer) {
   while (true) {
     unique_lock<mutex> lk(ms[pa_id]);
     while(!conditions[pa_id]) cvs[pa_id].wait(lk);
@@ -908,7 +908,7 @@ int main(int argc, char *argv[]) {
   char *inputFile = (char *) argv[1];
   cout << inputFile << endl;
 
-  long length;
+  unsigned long length;
   std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
   char *buffer = Parser::readFile(inputFile, length);
   cout << "Read " << length << " characters... " << endl;
