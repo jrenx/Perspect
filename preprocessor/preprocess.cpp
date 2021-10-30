@@ -178,7 +178,7 @@ void parseJsonMapOfLists(cJSON *json_Map, unordered_map<long, unordered_set<long
   }
 }
 
-char *readFile(char *filename, long &length) {
+char *readFile(char *filename, unsigned long &length) {
   ifstream is;
   is.open(filename, ios::in);
   is.seekg (0, is.end);
@@ -226,7 +226,7 @@ MemAccess *parseMemoryAccess(cJSON *json_memAccess) {
 }
 
 void parseStaticNode(char *filename) {
-  long length;
+  unsigned long length;
   char *buffer = readFile(filename, length);
   cJSON *data = cJSON_Parse(buffer);
   delete[] buffer;
@@ -348,7 +348,7 @@ void parseStaticNode(char *filename) {
 }
 
 void initData(int pa_id) {
-  long length;
+  unsigned long length;
   string preprocessDataFile((char *)"preprocess_data");
   if (pa_id >= 0) {
     preprocessDataFile += "_";
@@ -543,7 +543,7 @@ int main(int argc, char *argv[])
   std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
   std::cout << "Init data took = " << std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count() << "[s]" << std::endl;
 
-  long length;
+  unsigned long length;
   char *buffer = readFile(traceFile, length);
   cout << "Reading " << length << " characters... " << endl;
   std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
@@ -580,7 +580,7 @@ int main(int argc, char *argv[])
 
   short *bitOps;
   bool otherRegsParsed = false;
-  for (long i = length; i > 0;) {
+  for (unsigned long i = length; i > 0;) {
     regValue = 0;
     uid ++;
     i-=2;
