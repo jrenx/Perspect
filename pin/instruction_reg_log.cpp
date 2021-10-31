@@ -30,6 +30,7 @@ std::vector<string> registers;
 std::map<unsigned long, std::vector<string> > addr_to_regs;
 std::map<string, REG> reg_map;
 std::map<unsigned long, unsigned long> no_reg_list;
+bool *no_reg_array;
 std::map<unsigned long, u_int16_t> insn_to_code;
 char delim = ':';
 long curr_count = 0;
@@ -119,7 +120,7 @@ VOID record_reg(ADDRINT pc, ADDRINT reg)
 
     short code = insn_to_code[pc];
 
-    if (no_reg_list.find(pc) == no_reg_list.end()) {
+    if (!no_reg_array[code]) {
       memcpy(buffer + size, (char*)&reg, sizeof(ADDRINT));
       size += sizeof(ADDRINT);
     }
@@ -171,6 +172,8 @@ VOID ImageLoad(IMG img, VOID *v)
                   if (reg == "pc") {
                     INS_InsertCall(ins, IPOINT_BEFORE, AFUNPTR(record_reg), IARG_INST_PTR, IARG_INST_PTR, IARG_END);
                     no_reg_list[addr] = addr;
+                    u_int16_t code = insn_to_code[addr];
+		    no_reg_array[code] = true; 
                   } else {
 		    //std::cout << reg << endl;
                     INS_InsertCall(ins, IPOINT_BEFORE, AFUNPTR(record_reg), IARG_INST_PTR, IARG_REG_VALUE, reg_map[reg], IARG_END);
@@ -265,7 +268,7 @@ int main (INT32 argc, CHAR *argv[])
 
     std::vector<std::pair<unsigned long, string> > inputs;
     //Initialize global variables
-
+    u_int16_t max_short_count = 0;
     for (u_int i = 0; i < addrs.size(); ++i) {
         unsigned long addr;
         std::istringstream iss(addrs[i]);
@@ -280,9 +283,13 @@ int main (INT32 argc, CHAR *argv[])
         iss2 >> count;
         u_int16_t short_count = (u_int16_t)count;
         insn_to_code[addr] = short_count;
+	if (short_count > max_short_count) max_short_count = short_count;
 
         std::cout << "TEST insn " << addr << " " << short_count << endl;
     }
+
+    no_reg_array = new bool[max_short_count + 1];
+    for (u_int i = 0; i < max_short_count + 1; i++) no_reg_array[i] = false;
 
   for (u_int i = 0; i < regs.size(); ++i) {
         string reg = regs[i];
