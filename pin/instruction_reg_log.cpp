@@ -289,7 +289,7 @@ int main (INT32 argc, CHAR *argv[])
     }
 
     no_reg_array = new bool[max_short_count + 1];
-    for (u_int i = 0; i < max_short_count + 1; i++) no_reg_array[i] = false;
+    for (u_int16_t i = 0; i < max_short_count + 1; i++) no_reg_array[i] = false;
 
   for (u_int i = 0; i < regs.size(); ++i) {
         string reg = regs[i];
