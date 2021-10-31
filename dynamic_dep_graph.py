@@ -61,6 +61,7 @@ class DynamicNode(JSONEncoder):
         self.forward_weight_paths = []
         self.is_valid_weight = False
         self.is_aggregate_weight = False
+        self.thread_id = None
 
     def __str__(self):
         s = "===============================================\n"
@@ -102,6 +103,8 @@ class DynamicNode(JSONEncoder):
         s += "    weight: " + str(self.weight) + "\n"
         s += "    is valid weight: " + str(self.is_valid_weight) + "\n"
         s += "    is aggregate weight: " + str(self.is_aggregate_weight) + "\n"
+        if self.thread_id != None:
+            s += "    thread id: " + str(self.thread_id)
         return s
 
     def toJSON(self):
@@ -153,6 +156,8 @@ class DynamicNode(JSONEncoder):
             data["input_sets"] = self.input_sets
         data["output_set_count"] = self.output_set_count
         data["output_weight"] = self.output_weight
+        if self.thread_id != None:
+            data["thread_id"] = self.thread_id
         return data
 
     @staticmethod
@@ -196,6 +201,9 @@ class DynamicNode(JSONEncoder):
             json_input_sets = data["input_sets"]
             for k in json_input_sets:
                 dn.input_sets[int(k)] = json_input_sets[k]
+
+        if "thread_id" in data:
+            dn.thread_id = data["thread_id"]
         return dn
 
 
@@ -695,6 +703,20 @@ class DynamicDependence:
         print("[TIME] Invoking PIN took: ",
               str(time_record["invoke_pin"] - time_record["static_slice"]), flush=True)
         self.init_graph = self.build_dynamic_dependencies()
+class ParsingContext:
+    def __init__(self):
+        pending_reg_count = 0
+        pending_regs = None #TODO, actually can have at most one pending reg????
+
+        hasPrevValues = False
+        prev_pending_regs = None
+        prev_reg_value = None
+
+        #TODO
+        cf_prede_insn_to_succe_node = {}
+        local_df_prede_insn_to_succe_node = {}
+        bit_insn_to_operand = {}
+        bit_insn_to_node = {}
 
 class DynamicGraph:
     # TODO: restructure DynamicGraph
@@ -1201,49 +1223,55 @@ class DynamicGraph:
         insn_id = 2
 
         addr_to_df_succe_node = {}
-        cf_prede_insn_to_succe_node = {}
-        local_df_prede_insn_to_succe_node = {}
         remote_df_prede_insn_to_succe_node = {}
 
-        bit_insn_to_operand = {}
         load_bit_insns = set()
         for bit_insns in load_insn_to_bit_ops.values():
             for bit_insn in bit_insns:
                 load_bit_insns.add(bit_insn)
 
-        bit_insn_to_node = {}
         store_bit_insns = set()
         for bit_insns in store_insn_to_bit_ops.values():
             for bit_insn in bit_insns:
                 store_bit_insns.add(bit_insn)
 
-        # traverse
-        prev_insn = None
-        pending_reg_count = 0
-        pending_regs = None #TODO, actually can have at most one pending reg????
-
-        hasPrevValues = False
-        prev_pending_regs = None
-        prev_reg_value = None
-
         index = 0
         length = len(byte_seq)
-        ii = 0
 
         other_regs_parsed = False
         print("START: " + str(starting_insns))
+        thread_id = None
+        ctxt = ParsingContext()
+        ctxt_map = {}
         while index < length:
             code = int.from_bytes(byte_seq[index:index + 2], byteorder='little')
+            index += 2
+            if code == 0:
+                prev_thread_id = thread_id
+                thread_id = int.from_bytes(byte_seq[index:index + 1], byteorder='little')
+                index += 1
+
+                # In order to be backward-compatible with single threaded traces,
+                # always make a context by default in the first place,
+                # only save the context to the map when we get to a new thread.
+                if prev_thread_id is None: continue
+                ctxt_map[prev_thread_id] = ctxt
+                if thread_id in ctxt_map:
+                    ctxt = ctxt_map[thread_id]
+                else:
+                    ctxt = ParsingContext()
+                continue
+
             #print("Code: " + str(code))
             insn = code_to_insn[code]
             #print("Addr " + str(insn) + " " + hex(insn))
-            index += 2
+
 
             ok = False
             if insn in starting_insns:
                 ok = True
-            elif insn in cf_prede_insn_to_succe_node \
-                    or insn in local_df_prede_insn_to_succe_node \
+            elif insn in ctxt.cf_prede_insn_to_succe_node \
+                    or insn in ctxt.local_df_prede_insn_to_succe_node \
                     or insn in remote_df_prede_insn_to_succe_node: #TODO, could optiimze
                 ok = True
             if code in codes_to_ignore:
@@ -1255,13 +1283,13 @@ class DynamicGraph:
                 index += 8 #for uid
                 if insn in insns_with_regs:
                     index += 8
-                if insn in bit_insn_to_node:
-                    del bit_insn_to_node[insn]
+                if insn in ctxt.bit_insn_to_node:
+                    del ctxt.bit_insn_to_node[insn]
 
                 if insn in load_insn_to_bit_ops:
                     for bit_insn in load_insn_to_bit_ops[insn]:
-                        if bit_insn in bit_insn_to_operand:
-                            del bit_insn_to_operand[bit_insn]
+                        if bit_insn in ctxt.bit_insn_to_operand:
+                            del ctxt.bit_insn_to_operand[bit_insn]
                 continue
 
             uid = int.from_bytes(byte_seq[index:index + 8], byteorder='little')
@@ -1278,10 +1306,10 @@ class DynamicGraph:
                 if other_regs_parsed is True or insn not in insns_with_regs:
                     other_regs_parsed = False
                     if insn in load_bit_insns:
-                        bit_insn_to_operand[insn] = reg_value
+                        ctxt.bit_insn_to_operand[insn] = reg_value
                     if insn in store_bit_insns:
-                        if insn in bit_insn_to_node:
-                            parent_node = bit_insn_to_node[insn]
+                        if insn in ctxt.bit_insn_to_node:
+                            parent_node = ctxt.bit_insn_to_node[insn]
                             if parent_node.bit_ops is None:
                                 parent_node.bit_ops = {}
                             # Only save to the closest store
@@ -1319,91 +1347,92 @@ class DynamicGraph:
                                                     addr_to_df_succe_node[succe.mem_load_addr].remove(succe)
                                                     if len(addr_to_df_succe_node[succe.mem_load_addr]) == 0:
                                                         del addr_to_df_succe_node[succe.mem_load_addr]
-                            #del bit_insn_to_node[insn]
+                            #del ctxt.bit_insn_to_node[insn]
                     continue
 
-            if insn in bit_insn_to_node:
-                del bit_insn_to_node[insn]
+            if insn in ctxt.bit_insn_to_node:
+                del ctxt.bit_insn_to_node[insn]
 
             #assert (byte_seq[index] == 58)
             #index -= 1
             static_node = self.insn_to_static_node[insn]
 
-            #print(" pending " + str(pending_reg_count))
-            if hasPrevValues is False and insn in insn_to_reg_count2:
+            #print(" pending " + str(ctxt.pending_reg_count))
+            if ctxt.hasPrevValues is False and insn in insn_to_reg_count2:
                 #print(insn_line)
                 #print("has a load and a store : " + hex(insn))
                 if insn_to_reg_count2[insn] > 1:
                     #print("has more than one reg ")
-                    if pending_reg_count == 0:
-                        pending_reg_count = insn_to_reg_count2[insn]
-                        pending_regs = []
+                    if ctxt.pending_reg_count == 0:
+                        ctxt.pending_reg_count = insn_to_reg_count2[insn]
+                        ctxt.pending_regs = []
                         #print(" first encountering the insn")
-                    if len(pending_regs) + 1 < pending_reg_count:
-                        pending_regs.append(reg_value)
+                    if len(ctxt.pending_regs) + 1 < ctxt.pending_reg_count:
+                        ctxt.pending_regs.append(reg_value)
                         #print(" not all regs of the insn are accounted for")
                         continue
-                    pending_reg_count = 0
+                    ctxt.pending_reg_count = 0
                 else:
                     #print("has just one reg ")
-                    pending_regs = None
-                #print(" all regs of the insn are accounted for " + str(pending_regs))
-                hasPrevValues = True
-                prev_reg_value = reg_value
-                prev_pending_regs = None if pending_regs is None else list(pending_regs)
+                    ctxt.pending_regs = None
+                #print(" all regs of the insn are accounted for " + str(ctxt.pending_regs))
+                ctxt.hasPrevValues = True
+                ctxt.prev_reg_value = reg_value
+                ctxt.prev_pending_regs = None if ctxt.pending_regs is None else list(ctxt.pending_regs)
                 continue
             else:
                 #print("just one load and a store : " + hex(insn))
                 if insn in insn_to_reg_count and insn_to_reg_count[insn] > 1:
                     #print("has more than one reg ")
-                    if pending_reg_count == 0:
-                        pending_reg_count = insn_to_reg_count[insn]
-                        pending_regs = []
+                    if ctxt.pending_reg_count == 0:
+                        ctxt.pending_reg_count = insn_to_reg_count[insn]
+                        ctxt.pending_regs = []
                         # print(" first encountering the insn")
-                    if len(pending_regs) + 1 < pending_reg_count:
-                        pending_regs.append(reg_value)
+                    if len(ctxt.pending_regs) + 1 < ctxt.pending_reg_count:
+                        ctxt.pending_regs.append(reg_value)
                         # print(" not all regs of the insn are accounted for")
                         continue
-                    # print(" all regs of the insn are accounted for " + str(pending_regs))
-                    pending_reg_count = 0
+                    # print(" all regs of the insn are accounted for " + str(ctxt.pending_regs))
+                    ctxt.pending_reg_count = 0
                 else:
                     #print("has just one reg ")
-                    pending_regs = None
+                    ctxt.pending_regs = None
 
             if contains_bit_op: other_regs_parsed = True
 
             if insn in remote_df_prede_insn_to_succe_node:
                 mem_store_addr = 0
                 if static_node.mem_store is not None:
-                    if hasPrevValues is True:
-                        hasPrevValues = False
-                        mem_store_addr = self.calculate_mem_addr(prev_reg_value, static_node.mem_store,
-                                                                 None if prev_pending_regs is None else prev_pending_regs[0])
+                    if ctxt.hasPrevValues is True:
+                        ctxt.hasPrevValues = False
+                        mem_store_addr = self.calculate_mem_addr(ctxt.prev_reg_value, static_node.mem_store,
+                                                                 None if ctxt.prev_pending_regs is None else ctxt.prev_pending_regs[0])
                         #This is a ugly solution for rep mov when the length is zero, therefore load addr can be zero
                         if reg_value == 0:
                             print("[warn] a rep mov %ds:(%rsi),%es:(%rdi) with dst addr of 0x0? ignore insn " + hex(insn))
                             continue
                     else:
                         mem_store_addr = self.calculate_mem_addr(reg_value, static_node.mem_store,
-                                                         None if pending_regs is None else pending_regs[0])
-                hasPrevValues = False
+                                                         None if ctxt.pending_regs is None else ctxt.pending_regs[0])
+                ctxt.hasPrevValues = False
                 #print("[build] Store " + hex(insn) + " to " + hex(mem_store_addr))
                 if (insn not in starting_insns) and (mem_store_addr not in addr_to_df_succe_node):
-                    if insn not in local_df_prede_insn_to_succe_node:
-                        hasPrevValues = False
+                    if insn not in ctxt.local_df_prede_insn_to_succe_node:
+                        ctxt.hasPrevValues = False
 
                         if insn in load_insn_to_bit_ops:
                             for bit_insn in load_insn_to_bit_ops[insn]:
-                                if bit_insn in bit_insn_to_operand:
-                                    del bit_insn_to_operand[bit_insn]
+                                if bit_insn in ctxt.bit_insn_to_operand:
+                                    del ctxt.bit_insn_to_operand[bit_insn]
                         continue
-            hasPrevValues = False
+            ctxt.hasPrevValues = False
 
             if insn not in self.insn_to_id:
                 self.insn_to_id[insn] = insn_id
                 insn_id += 1
 
             dynamic_node = DynamicNode(self.insn_to_id[insn], static_node, id=uid)
+            dynamic_node.thread_id = thread_id
             assert dynamic_node.id not in self.dynamic_nodes
             self.dynamic_nodes[dynamic_node.id] = dynamic_node
             if insn not in self.insn_to_dyn_nodes:
@@ -1425,13 +1454,13 @@ class DynamicGraph:
                 #assert dynamic_node.bit_ops is None
                 dynamic_node.bit_ops = {}
                 for bit_insn in load_insn_to_bit_ops[insn]:
-                    if bit_insn in bit_insn_to_operand:
-                        dynamic_node.bit_ops[bit_insn] = bit_insn_to_operand[bit_insn]
-                        del bit_insn_to_operand[bit_insn] #TODO
+                    if bit_insn in ctxt.bit_insn_to_operand:
+                        dynamic_node.bit_ops[bit_insn] = ctxt.bit_insn_to_operand[bit_insn]
+                        del ctxt.bit_insn_to_operand[bit_insn] #TODO
                 dynamic_node.calculate_load_bit_mask()
             if insn in store_insn_to_bit_ops:
                 for bit_insn in store_insn_to_bit_ops[insn]:
-                    bit_insn_to_node[bit_insn] = dynamic_node
+                    ctxt.bit_insn_to_node[bit_insn] = dynamic_node
 
             if insn in self.starting_insn_to_reg:
                 dynamic_node.weight = reg_value
@@ -1444,9 +1473,9 @@ class DynamicGraph:
                 self.node_frequencies[insn] = 0
             self.node_frequencies[insn] = self.node_frequencies[insn] + 1
             """
-            if insn in cf_prede_insn_to_succe_node:
+            if insn in ctxt.cf_prede_insn_to_succe_node:
                 to_remove = set()
-                for succe in cf_prede_insn_to_succe_node[insn]:
+                for succe in ctxt.cf_prede_insn_to_succe_node[insn]:
                     assert succe.id != dynamic_node.id
                     succe.cf_predes.append(dynamic_node)
                     dynamic_node.cf_succes.append(succe)
@@ -1458,19 +1487,19 @@ class DynamicGraph:
                     for cf_pred in succe.static_node.cf_predes:
                         ni = cf_pred.insn
                         #assert cf_pred.hex_insn == hex(cf_pred.insn)
-                        # if ni in cf_prede_insn_to_succe_node and succe in cf_prede_insn_to_succe_node[ni]:
-                        #    cf_prede_insn_to_succe_node[ni].remove(succe)
+                        # if ni in ctxt.cf_prede_insn_to_succe_node and succe in ctxt.cf_prede_insn_to_succe_node[ni]:
+                        #    ctxt.cf_prede_insn_to_succe_node[ni].remove(succe)
                         to_remove.add(ni)
-                if insn in cf_prede_insn_to_succe_node:
+                if insn in ctxt.cf_prede_insn_to_succe_node:
                     assert insn in to_remove
                 for ni in to_remove:
-                    if ni in cf_prede_insn_to_succe_node:
-                        del cf_prede_insn_to_succe_node[ni]
-                # del cf_prede_insn_to_succe_node[insn]
+                    if ni in ctxt.cf_prede_insn_to_succe_node:
+                        del ctxt.cf_prede_insn_to_succe_node[ni]
+                # del ctxt.cf_prede_insn_to_succe_node[insn]
 
-            if insn in local_df_prede_insn_to_succe_node:
+            if insn in ctxt.local_df_prede_insn_to_succe_node:
                 to_remove = set()
-                for succe in local_df_prede_insn_to_succe_node[insn]:
+                for succe in ctxt.local_df_prede_insn_to_succe_node[insn]:
                     assert succe.id != dynamic_node.id
                     succe.df_predes.append(dynamic_node)
                     dynamic_node.df_succes.append(succe)
@@ -1484,8 +1513,8 @@ class DynamicGraph:
                         #    df_prede_insn_to_succe_node[ni].remove(succe)
 
                 for ni in to_remove:
-                    if ni in local_df_prede_insn_to_succe_node:
-                        del local_df_prede_insn_to_succe_node[ni]
+                    if ni in ctxt.local_df_prede_insn_to_succe_node:
+                        del ctxt.local_df_prede_insn_to_succe_node[ni]
 
 
             if insn in remote_df_prede_insn_to_succe_node:
@@ -1549,10 +1578,10 @@ class DynamicGraph:
                     # When we encounter a dataflow predecessor later,
                     # know which successors to connect to
                     if loads_memory is False:
-                        if node_insn not in local_df_prede_insn_to_succe_node:
-                            local_df_prede_insn_to_succe_node[node_insn] = {dynamic_node}
+                        if node_insn not in ctxt.local_df_prede_insn_to_succe_node:
+                            ctxt.local_df_prede_insn_to_succe_node[node_insn] = {dynamic_node}
                         else:
-                            local_df_prede_insn_to_succe_node[node_insn].add(dynamic_node)
+                            ctxt.local_df_prede_insn_to_succe_node[node_insn].add(dynamic_node)
                     else:
                         if node_insn not in remote_df_prede_insn_to_succe_node:
                             remote_df_prede_insn_to_succe_node[node_insn] = {dynamic_node}
@@ -1562,7 +1591,7 @@ class DynamicGraph:
                 if loads_memory is True:
                     #reg_value = result[1].rstrip('\n')
                     mem_load_addr = self.calculate_mem_addr(reg_value, static_node.mem_load,
-                                                            None if pending_regs is None else pending_regs[0])
+                                                            None if ctxt.pending_regs is None else ctxt.pending_regs[0])
                     dynamic_node.mem_load_addr = mem_load_addr
                     # TODO, do all addresses make sense?
                     if mem_load_addr not in addr_to_df_succe_node:
@@ -1578,10 +1607,10 @@ class DynamicGraph:
                         continue
                         # When we encounter a control predecessor later,
                         # know which successors to connect to
-                    if node_insn not in cf_prede_insn_to_succe_node:
-                        cf_prede_insn_to_succe_node[node_insn] = {dynamic_node}
+                    if node_insn not in ctxt.cf_prede_insn_to_succe_node:
+                        ctxt.cf_prede_insn_to_succe_node[node_insn] = {dynamic_node}
                     else:
-                        cf_prede_insn_to_succe_node[node_insn].add(dynamic_node)
+                        ctxt.cf_prede_insn_to_succe_node[node_insn].add(dynamic_node)
             if DEBUG:
                 print("[dyn_dep] created Dynamic Node id: " + str(dynamic_node.id) \
                   + " static cf predes: " + str([p.id for p in dynamic_node.static_node.cf_predes]) \
