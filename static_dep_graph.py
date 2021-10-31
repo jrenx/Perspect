@@ -1080,7 +1080,7 @@ class StaticNode:
     def __eq__(self, other):
         if not isinstance(other, StaticNode):
             return NotImplemented
-        return self.insn == other.insn #FIXME: should be good enough right cuz insns are unique
+        return self.insn == other.insn and self.function == other.function #FIXME: should be good enough right cuz insns are unique
 
     def __hash__(self):
         # necessary for instances to behave sanely in dicts and sets.
@@ -1594,6 +1594,7 @@ class StaticDepGraph:
                     print("[static_dep] Node already explained, skipping ...")
                     print ("[static_dep] " + str(curr_node))
                     continue
+
                 node_count_before = 0
                 graph = StaticDepGraph.get_graph(curr_func, curr_insn)
                 if graph is not None:
@@ -2432,7 +2433,7 @@ class StaticDepGraph:
         assert len(StaticDepGraph.exit_nodes) == 0
         for graph in StaticDepGraph.func_to_graph.values():
             pending = StaticDepGraph.pending_nodes[graph.func] if graph.func in StaticDepGraph.pending_nodes else []
-            for node in itertools.chain(graph.id_to_node.values(), pending):
+            for node in itertools.chain(graph.id_to_node.values(), pending.values()):
                 if node.explained and node not in graph.nodes_in_df_slice and node not in graph.nodes_in_cf_slice:
                     continue
                 if len(node.cf_predes) == 0 and len(node.df_predes) == 0 and \
