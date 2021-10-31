@@ -2437,7 +2437,10 @@ class StaticDepGraph:
         assert len(StaticDepGraph.exit_nodes) == 0
         for graph in StaticDepGraph.func_to_graph.values():
             pending = StaticDepGraph.pending_nodes[graph.func] if graph.func in StaticDepGraph.pending_nodes else []
+            nodes = set()
             for node in itertools.chain(graph.id_to_node.values(), pending.values()):
+                nodes.add(node)
+            for node in nodes:
                 if node.explained and node not in graph.nodes_in_df_slice and node not in graph.nodes_in_cf_slice:
                     continue
                 if len(node.cf_predes) == 0 and len(node.df_predes) == 0 and \
