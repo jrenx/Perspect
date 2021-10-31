@@ -603,7 +603,7 @@ public:
         //if ((code > 0 && code <= MaxStartCode) || PendingCodes[code]) {
         parse = true;
       }
-      if (OccurrencesPerCode[code] > 50000) parse = false;
+      //if (OccurrencesPerCode[code] > 50000) parse = false;
 
       bool isBitOp = isBitOpCode[code];
       bool containsReg = CodesWithRegs[code];
@@ -878,7 +878,7 @@ public:
       long count = OccurrencesPerCode[i];
       if (count <= 50000) continue;
       //cout << "LARGE " << i << "\n";
-      osl << std::hex << CodeToInsn[i] << std::dec << " " << i << " occurrences: " << count << "\n";
+      //osl << std::hex << CodeToInsn[i] << std::dec << " " << i << " occurrences: " << count << "\n";
     }
     osl.close();
     cout << "total nodes: " << nodeCount << endl;
