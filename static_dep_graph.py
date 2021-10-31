@@ -1556,6 +1556,7 @@ class StaticDepGraph:
                 bb_result_size = len(StaticDepGraph.bb_result_cache)
 
         try:
+            total_node_count = 0
             StaticDepGraph.func_to_callsites, StaticDepGraph.func_hot_and_cold_path_map = get_func_to_callsites(prog)
             StaticDepGraph.binary_ptr = setup(prog)
             if USE_BPATCH is False:
@@ -1593,9 +1594,25 @@ class StaticDepGraph:
                     print("[static_dep] Node already explained, skipping ...")
                     print ("[static_dep] " + str(curr_node))
                     continue
+                node_count_before = 0
+                graph = StaticDepGraph.get_graph(curr_func, curr_insn)
+                if graph is not None:
+                    node_count_before += len(graph.nodes_in_cf_slice)
+                    node_count_before += len(graph.nodes_in_df_slice)
+
                 new_nodes = StaticDepGraph.build_dependencies_in_function(curr_insn, curr_func, curr_prog, curr_node)
                 for new_node in new_nodes:
                     worklist.append([new_node.insn, new_node.function, prog, new_node]) #FIMXE, ensure there is no duplicate work
+
+                node_count_after = 0
+                graph = StaticDepGraph.get_graph(curr_func, curr_insn)
+                if graph is not None:
+                    node_count_after += len(graph.nodes_in_cf_slice)
+                    node_count_after += len(graph.nodes_in_df_slice)
+                total_node_count += (node_count_after - node_count_before)
+                print("[static_dep] Current node count: " + str(total_node_count))
+                if total_node_count > limit:
+                    break
             print("[static_dep] No more events to analyze.")
             if parallelize_rr is False:
                 for graph in StaticDepGraph.func_to_graph.values():
