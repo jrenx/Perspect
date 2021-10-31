@@ -573,13 +573,14 @@ public:
     // Note: the same instruction executed will have multiple UIDs if multiple regs are printed at the instrustion
     unsigned short code;
     long regValue;
-    u_int8_t threadId;
+    u_int8_t threadId = 0;
     StaticNode *sn;
     bool loadsMemory;
     int regCount2;
 
     short *bitOps;
-    Context *ctxt = new Context(CodeCount);
+    boost::unordered_map<u_int8_t, Context *> ctxtMap;
+    Context *ctxt = new Context(CodeCount); // In order to be backward-compatible with single threaded traces.
     for (unsigned long i = length; i > 0;) {
       regValue = 0;
       uid ++;
@@ -589,7 +590,22 @@ public:
       assert(code >= 0);
       if (code == 0) {
         i -= sizeof(u_int8_t);
+        u_int8_t prevThreadId = threadId;
         std::memcpy(&threadId, buffer + i, sizeof(u_int8_t));
+
+        os.write((char*)&code, sizeof(unsigned short));
+        os.write((char*)&threadId, sizeof(u_int8_t));
+
+        // In order to be backward-compatible with single threaded traces,
+        // always make a context by default in the first place,
+        // only save the context to the map when we get to a new thread.
+        if (prevThreadId == 0) continue; // first thread seen
+        ctxtMap[prevThreadId] = ctxt;
+        if (ctxtMap.find(threadId) == ctxtMap.end()) {
+          ctxt = new Context(CodeCount);
+        } else {
+          ctxt = ctxtMap[threadId];
+        }
         continue;
       }
 
