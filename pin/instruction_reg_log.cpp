@@ -47,6 +47,7 @@ int32_t curr_tid = -1;
 u_int8_t max_short_tid = 1;
 #define max_t 1028636
 u_int8_t tids[max_t];
+int max_update_size = sizeof(ADDRINT) + sizeof(u_int16_t) + sizeof(u_int16_t) + sizeof(u_int8_t);
 //cat /proc/sys/kernel/threads-max
 /* ===================================================================== */
 /* Commandline Switches */
@@ -81,35 +82,34 @@ VOID start_log()
 VOID record_reg(ADDRINT pc, ADDRINT reg)
 {
     PIN_GetLock(&lock, 0);
-    prev_size = size;
     if (stop == 1) {
         std::cout << "exiting now.." << endl;
         PIN_Detach();
         PIN_ReleaseLock(&lock);
         return;
     }
-    if ((size + sizeof(ADDRINT) + sizeof(u_int16_t)) >= blimit) {
+    if ((size + max_update_size) >= blimit) {
         sigset_t x;
         sigemptyset(&x);
         sigaddset(&x, SIGQUIT);
         sigprocmask(SIG_BLOCK, &x, NULL);
-
         TraceFile.write(buffer, size);
         TraceFile.flush();
         size = 0;
         sigprocmask(SIG_UNBLOCK, &x, NULL);
     }
 
+    prev_size = size;
     // wnly log the tid after a thread context switch
     pid_t tid = syscall(SYS_gettid);
     if (tid != curr_tid) {
-	curr_tid = tid;
-	u_int8_t short_tid = tids[tid];
-	if (short_tid  == 0) {
-	    short_tid = max_short_tid;
-	    tids[tid] = max_short_tid;
-	    max_short_tid ++;
-	}
+        curr_tid = tid;
+        u_int8_t short_tid = tids[tid];
+        if (short_tid  == 0) {
+            short_tid = max_short_tid;
+            tids[tid] = max_short_tid;
+            max_short_tid ++;
+        }
         memcpy(buffer + size, (char*)&short_tid, sizeof(u_int8_t));
         size += sizeof(u_int8_t);
  
