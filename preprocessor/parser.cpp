@@ -180,6 +180,9 @@ public:
   unordered_map<int, long> StaticNodeIdToInsn;
 
   long *OccurrencesPerCode;
+#ifdef COUNT_ONLY
+  unsigned long *AverageTimeStampPerCode;
+#endif 
 
   long GetFileSize(std::string filename)
   {
@@ -415,6 +418,11 @@ public:
     }
     OccurrencesPerCode = new long[CodeCount];
     for (int i = 0; i < CodeCount; i++) OccurrencesPerCode[i] = 0;
+ 
+#ifdef COUNT_ONLY
+    AverageTimeStampPerCode = new unsigned long[CodeCount];
+    for (int i = 0; i < CodeCount; i++) AverageTimeStampPerCode[i] = 0;
+#endif
 
     cJSON *json_startInsns = cJSON_GetObjectItem(data, "starting_insns");
     if (json_startInsns != NULL) {
@@ -559,6 +567,7 @@ public:
   {
     cout << pa_id << endl;
     std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
+#ifndef COUNT_ONLY    
     string outTraceFile(traceFile);
     outTraceFile += ".parsed";
     if (pa_id >= 0) {
@@ -567,8 +576,9 @@ public:
     }
     ofstream os;
     os.open(outTraceFile.c_str(), ios::out);
-
+#endif
     int nodeCount = 0;
+    unsigned long occurrences;
     long uid = -1;
     // Note: the same instruction executed will have multiple UIDs if multiple regs are printed at the instrustion
     unsigned short code;
@@ -593,8 +603,10 @@ public:
         u_int8_t prevThreadId = threadId;
         std::memcpy(&threadId, buffer + i, sizeof(u_int8_t));
 
+#ifndef COUNT_ONLY    
         os.write((char*)&code, sizeof(unsigned short));
         os.write((char*)&threadId, sizeof(u_int8_t));
+#endif
 
         // In order to be backward-compatible with single threaded traces,
         // always make a context by default in the first place,
@@ -613,10 +625,14 @@ public:
       //  cout << "HERE " <<uid << endl;
       //}
 
+#ifndef COUNT_ONLY
       bool parse = false;
       if (CodeOfStartInsns[code] || PendingRemoteDefCodes[code] || ctxt->PendingCodes[code]) {
         parse = true;
       }
+#else
+      bool parse = true;
+#endif 
       //if (OccurrencesPerCode[code] > 50000) parse = false;
 
       bool isBitOp = isBitOpCode[code];
@@ -648,9 +664,11 @@ public:
           for (int j = 0; j < count; j++) {
             if (ctxt->CodeWithLaterBitOpsExecuted[parentOfBitOps[j]]) {
               if (DEBUG) cout << "[store]  " << code << " " << parentOfBitOps[j] << " " << std::bitset<64>(regValue) << endl;
+#ifndef COUNT_ONLY 
               os.write((char *) &code, sizeof(unsigned short));
               os.write((char *) &uid, sizeof(long));
               os.write((char *) &regValue, sizeof(long));
+#endif
               //ctxt->CodeWithLaterBitOpsExecuted[parentOfBitOps[j]] = false;
             }
           }
@@ -742,14 +760,17 @@ public:
           short bitOpCode = bitOps[j];
           if (ctxt->codeToBitOperandIsValid[bitOpCode]) {
             if (DEBUG) cout << "[load] " << bitOpCode << " " << count << " " << std::bitset<64>(ctxt->codeToBitOperand[bitOpCode]) << endl;
+#ifndef COUNT_ONLY
             os.write((char *) &bitOpCode, sizeof(unsigned short));
             os.write((char *) &uid, sizeof(long));
             os.write((char *) &ctxt->codeToBitOperand[bitOpCode], sizeof(long));
+#endif
             ctxt->codeToBitOperandIsValid[bitOpCode] = false;
           }
         }
       }
 
+#ifndef COUNT_ONLY
       if (regCount2 > 1) {
         if (DEBUG) cout << "Persisting1 " << code << endl;
         os.write((char*)&code, sizeof(unsigned short));
@@ -777,13 +798,23 @@ public:
         if (DEBUG) cout << "Persisting5 " << code << endl;
         os.write((char*)&regValue, sizeof(long));
       }
-
+#endif
       //cout << "====" << nodeCount << "\n";
       //cout << "curr code" << code << " index: "<< i <<endl;
       //cout << std::hex << CodeToInsn[code] << std::dec << "\n";
-      OccurrencesPerCode[code] = OccurrencesPerCode[code] + 1;
-
+      occurrences = OccurrencesPerCode[code] + 1;
+      OccurrencesPerCode[code] = occurrences;
+#ifdef COUNT_ONLY
+      if (occurrences == 1) AverageTimeStampPerCode[code] = uid;
+      else {
+        unsigned long avg = AverageTimeStampPerCode[code];
+        avg += (uid - avg)/occurrences;
+        AverageTimeStampPerCode[code] = avg;
+      }
+#endif
+      
       nodeCount ++;
+#ifndef COUNT_ONLY
 
       if (ctxt->PendingCfPredeCodes[code]) {
         std::vector<unsigned short> toRemove;
@@ -858,6 +889,7 @@ public:
           ctxt->PendingCodes[currCode] = true;
         }
       }
+#endif
       ctxt->CodeWithLaterBitOpsExecuted[code] = true;
       continue;
 
@@ -875,10 +907,13 @@ public:
         }
       }
     }
+#ifndef COUNT_ONLY    
     os.close();
+#endif
     std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
     std::cout << "Parsing took = " << std::chrono::duration_cast<std::chrono::seconds>(t4 - t3).count() << "[s]" << std::endl;
 
+#ifndef COUNT_ONLY    
     string outLargeFile(traceFile);
     outLargeFile += ".large";
     if (pa_id >= 0) {
@@ -894,6 +929,30 @@ public:
       //osl << std::hex << CodeToInsn[i] << std::dec << " " << i << " occurrences: " << count << "\n";
     }
     osl.close();
+#else
+    string outLargeFile(traceFile);
+    outLargeFile += ".count";
+    ofstream osl;
+    osl.open(outLargeFile.c_str());
+    for (int i = 1; i < CodeCount; i++) {
+      unsigned long count = OccurrencesPerCode[i];
+      osl << std::hex << CodeToInsn[i] << std::dec << " " << count << "\n";
+    }
+    osl.close();
+#endif
+
     cout << "total nodes: " << nodeCount << endl;
+ 
+#ifdef COUNT_ONLY
+    string outAvgTimeStampFile(traceFile);
+    outAvgTimeStampFile += ".avg_timestamp";
+    ofstream osa;
+    osa.open(outAvgTimeStampFile.c_str());
+    for (int i = 1; i < CodeCount; i++) {
+      unsigned long avg = AverageTimeStampPerCode[i];
+      osa << std::hex << CodeToInsn[i] << std::dec << " " << avg << "\n";
+    }
+    osa.close();
+#endif
   }
 };
