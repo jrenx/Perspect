@@ -16,7 +16,7 @@ dd = None
 
 def run_task(id, pipe, prog, arg, path, starting_events):
     dd = DynamicDependence(starting_events, prog, arg, path)
-    dd.prepare_to_build_dynamic_dependencies(2000)
+    dd.prepare_to_build_dynamic_dependencies(10000)
     #StaticDepGraph.build_postorder_list()
     #StaticDepGraph.build_postorder_ranks()
     while True:
@@ -66,12 +66,13 @@ def run_task(id, pipe, prog, arg, path, starting_events):
 
 
 def main():
-    prog = "mongod_4.2.1"
-    arg = "--dbpath /home/renxian2/eval_mongodb_44991/repro/4.2.1/db --logpath /home/renxian2/eval_mongodb_44991/repro/4.2.1/db.log --wiredTigerCacheSizeGB 10"
-    path = "/home/renxian2/eval_mongodb_44991/repro/4.2.1/bin/"
+    prog = "909_ziptest_exe9"
+    arg = "test.zip"
+    path = "/home/renxian2/perf_debug_tool/"
 
     starting_events = []
-    starting_event_file = "starting_events_bad_run"
+    #starting_event_file = "starting_events_bad_run"
+    starting_event_file = None
     starting_insn_to_weight = {}
     if starting_event_file is not None:
         with open(starting_event_file, "r") as f:
@@ -90,7 +91,7 @@ def main():
     pipes = []
 
     dd = DynamicDependence(starting_events, prog, arg, path, starting_insn_to_weight)
-    dd.prepare_to_build_dynamic_dependencies(2000)
+    dd.prepare_to_build_dynamic_dependencies(10000)
     preparse_cmd = "./preprocessor/preprocess_parallel " + dd.trace_path + " > preparser_out &"
     print("Starting preparser with command: " + preparse_cmd)
     os.system(preparse_cmd)
