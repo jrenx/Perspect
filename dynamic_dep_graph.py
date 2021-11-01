@@ -707,18 +707,18 @@ class DynamicDependence:
         self.init_graph = self.build_dynamic_dependencies()
 class ParsingContext:
     def __init__(self):
-        pending_reg_count = 0
-        pending_regs = None #TODO, actually can have at most one pending reg????
+        self.pending_reg_count = 0
+        self.pending_regs = None #TODO, actually can have at most one pending reg????
 
-        hasPrevValues = False
-        prev_pending_regs = None
-        prev_reg_value = None
+        self.hasPrevValues = False
+        self.prev_pending_regs = None
+        self.prev_reg_value = None
 
         #TODO
-        cf_prede_insn_to_succe_node = {}
-        local_df_prede_insn_to_succe_node = {}
-        bit_insn_to_operand = {}
-        bit_insn_to_node = {}
+        self.cf_prede_insn_to_succe_node = {}
+        self.local_df_prede_insn_to_succe_node = {}
+        self.bit_insn_to_operand = {}
+        self.bit_insn_to_node = {}
 
 class DynamicGraph:
     # TODO: restructure DynamicGraph
