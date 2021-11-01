@@ -1903,10 +1903,11 @@ class DynamicGraph:
                         continue
                     if succe.is_valid_weight is False:
                         continue
-                    if (node.static_node.hex_insn + "@" + node.static_node.function) in succe.weight_paths:
-                        print("[weight] At " + node.static_node.hex_insn + " " + str(node.id) +
+                    if DEBUG_WEIGHT_PROPOGATION:
+                        if (node.static_node.hex_insn + "@" + node.static_node.function) in succe.weight_paths:
+                            print("[weight] At " + node.static_node.hex_insn + " " + str(node.id) +
                               " ignore weight from " + succe.static_node.hex_insn + " " + str(succe.id) + " for cycles1")
-                        continue
+                            continue
                     weights.add(succe.weight)
                     if DEBUG_WEIGHT_PROPOGATION: weight_origins = weight_origins.union(succe.weight_origins)
                     if DEBUG_WEIGHT_PROPOGATION: weight_paths = weight_paths.union(succe.weight_paths)
