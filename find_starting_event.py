@@ -1,7 +1,7 @@
 import sys
 import json
 import os
-
+CUT_OFF = 5
 def parse(lines, trace):
     ordered_trace = []
     for l in lines:
@@ -92,25 +92,44 @@ def run():
     print("=============")
     # remove starting events regardless of its uniqueness if it contributes to less than 0.1
     sorted_trace1 = []
-    remove_set = set()
+    remove_set1 = set()
     for f in trace1:
+        #More aggressive event trimming - begin
+        if f in trace2:
+            if round((trace1[f] + trace2[f])/2) <= 5:
+                remove_set1.add(f)
+        elif round(trace1[f]) <= 5:
+            remove_set1.add(f)
+        #More aggressive event trimming - end
+
         if f in highly_ranked:
             continue
-        if trace1[f] < 0.1:
-            remove_set.add(f)
-    for f in remove_set:
+        if round(trace1[f]) <= 5:
+            remove_set1.add(f)
+
+    sorted_trace2 = []
+    remove_set2 = set()
+    for f in trace2:
+        #More aggressive event trimming - begin
+        if f in trace1:
+            if round((trace1[f] + trace2[f])/2) <= 5:
+                remove_set2.add(f)
+        elif round(trace2[f]) <= 5:
+            remove_set2.add(f)
+        #More aggressive event trimming - end
+
+        if f in highly_ranked:
+            continue
+        if round(trace2[f]) <= 5:
+            remove_set2.add(f)
+
+
+    for f in remove_set1:
         del trace1[f]
     for f in trace1:
         sorted_trace1.append([f, trace1[f]])
 
-    sorted_trace2 = []
-    remove_set = set()
-    for f in trace2:
-        if f in highly_ranked:
-            continue
-        if trace2[f] < 0.1:
-            remove_set.add(f)
-    for f in remove_set:
+    for f in remove_set2:
         del trace2[f]
     for f in trace2:
         sorted_trace2.append([f, trace2[f]])
@@ -167,13 +186,13 @@ def run():
                 if f == segs[1]:
                     #print(l)
                     addr = int(segs[0], 16)
-                    result = hex(addr) + " " + names1[f] + " " + str(weights1[f]*time1/100)
+                    result = hex(addr) + " " + names1[f] + " " + str(weights1[f]*time1/100) + " " + str(weights1[f])
                     print(result)
-                    output1.append(result)
+                    output1.append([result, weights1[f]])
 
     with open("starting_events_good_run", "w") as f:
-        for l in output1:
-            f.write(l+"\n")
+        for l in reversed(sorted(output1, key=lambda pair: pair[1])):
+            f.write(l[0]+"\n")
 
     print()
     binary2 = sys.argv[6]
@@ -188,13 +207,14 @@ def run():
                 if f == segs[1]:
                     #print(l)
                     addr = int(segs[0], 16)
-                    result = hex(addr) + " " + names2[f] + " " + str(weights2[f]*time2/100)
+                    result = hex(addr) + " " + names2[f] + " " + str(weights2[f]*time2/100) + " " + str(weights2[f])
+
                     print(result)
-                    output2.append(result)
+                    output2.append([result, weights2[f]])
 
     with open("starting_events_bad_run", "w") as f:
-        for l in output2:
-            f.write(l+"\n")
+        for l in reversed(sorted(output2, key=lambda pair: pair[1])):
+            f.write(l[0]+"\n")
 
 
 if __name__ == "__main__":
