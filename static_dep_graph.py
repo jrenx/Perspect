@@ -2447,11 +2447,11 @@ class StaticDepGraph:
                     len(node.cf_succes) == 0 and len(node.df_succes) == 0:
                     continue
                 if len(node.cf_predes) == 0 and len(node.df_predes) == 0:
-                    assert node not in StaticDepGraph.entry_nodes
+                    if node in StaticDepGraph.entry_nodes: continue
                     assert node not in StaticDepGraph.exit_nodes
                     StaticDepGraph.entry_nodes.add(node)
                 if len(node.cf_succes) == 0 and len(node.df_succes) == 0:
-                    assert node not in StaticDepGraph.exit_nodes
+                    if node in StaticDepGraph.exit_nodes: continue
                     assert node not in StaticDepGraph.entry_nodes, node
                     StaticDepGraph.exit_nodes.add(node)
 
