@@ -578,7 +578,7 @@ class DynamicDependence:
             if pa_id is not None and PARALLEL_PREPARSE is True:
                 print("Sending request to preparser")
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.connect(("localhost", 8080))
+                s.connect(("localhost", 8999))
                 s.send(pa_id.to_bytes(1, 'big'))
                 s.send("F".encode())
                 print("Waiting for reply from preparser")
