@@ -66,12 +66,12 @@ def run_task(id, pipe, prog, arg, path, starting_events):
 
 
 def main():
-    prog = "mongod_4.2.1"
-    arg = "--dbpath /home/renxian2/eval_mongodb_44991/repro/4.2.1/db --logpath /home/renxian2/eval_mongodb_44991/repro/4.2.1/db.log --wiredTigerCacheSizeGB 10"
-    path = "/home/renxian2/eval_mongodb_44991/repro/4.2.1/bin/"
+    prog = "mongod_4.0.13"
+    arg = "--dbpath /home/renxian2/eval_mongodb_44991/repro/4.0.13/db --logpath /home/renxian2/eval_mongodb_44991/repro/4.0.13/db.log --wiredTigerCacheSizeGB 10"
+    path = "/home/renxian2/eval_mongodb_44991/repro/4.0.13/bin/"
 
     starting_events = []
-    starting_event_file = "starting_events_bad_run"
+    starting_event_file = "starting_events_good_run"
     starting_insn_to_weight = {}
     if starting_event_file is not None:
         with open(starting_event_file, "r") as f:

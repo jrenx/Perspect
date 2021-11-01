@@ -342,7 +342,7 @@ if __name__ == "__main__":
 
     starting_events = []
     starting_event_file = args.starting_event_file
-    starting_event_file = "starting_events_bad_run"
+    starting_event_file = "starting_events_good_run"
     starting_insn_to_weight = {}
     if starting_event_file is not None:
         with open(starting_event_file, "r") as f:
@@ -357,5 +357,5 @@ if __name__ == "__main__":
         starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
         starting_events.append(["rcx", 0x40764c, "runtime.free"])
 
-    ra = RelationAnalysis(starting_events, "mongod_4.2.1", "--dbpath /home/renxian2/eval_mongodb_44991/repro/4.2.1/db --logpath /home/renxian2/eval_mongodb_44991/repro/4.2.1/db.log --wiredTigerCacheSizeGB 10", "/home/renxian2/eval_mongodb_44991/repro/4.2.1/bin/", 2000, starting_insn_to_weight=starting_insn_to_weight)
+    ra = RelationAnalysis(starting_events, "mongod_4.0.13", "--dbpath /home/renxian2/eval_mongodb_44991/repro/4.0.13/db --logpath /home/renxian2/eval_mongodb_44991/repro/4.0.13/db.log --wiredTigerCacheSizeGB 10", "/home/renxian2/eval_mongodb_44991/repro/4.0.13/bin/", 2000, starting_insn_to_weight=starting_insn_to_weight)
     ra.analyze(args.use_cache)
