@@ -104,6 +104,7 @@ class RelationAnalysis:
         self.path = path
         self.prede_node_to_invariant_rel = {}
         self.node_counts = {}
+        self.steps = steps
         self.static_node_to_weight = {}
 
         self.received_results = queue.Queue()
@@ -208,7 +209,7 @@ class RelationAnalysis:
         sender_receiver_t.start()
 
         try:
-            self.dd.prepare_to_build_dynamic_dependencies(10000)
+            #self.dd.prepare_to_build_dynamic_dependencies(self.steps)
             #TODO, do below in the static graph logic
             #StaticDepGraph.build_postorder_list()
             #StaticDepGraph.build_postorder_ranks()
