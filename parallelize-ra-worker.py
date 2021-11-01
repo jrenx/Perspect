@@ -14,9 +14,9 @@ import time
 PORT = 15000
 dd = None
 
-def run_task(id, pipe, prog, arg, path, starting_events, starting_insn_to_weight):
+def run_task(id, pipe, prog, arg, path, starting_events, starting_insn_to_weight, steps):
     dd = DynamicDependence(starting_events, prog, arg, path, starting_insn_to_weight)
-    dd.prepare_to_build_dynamic_dependencies(10000)
+    dd.prepare_to_build_dynamic_dependencies(steps)
     #StaticDepGraph.build_postorder_list()
     #StaticDepGraph.build_postorder_ranks()
     while True:
@@ -69,6 +69,7 @@ def main():
     prog = "909_ziptest_exe9"
     arg = "test.zip"
     path = "/home/renxian2/perf_debug_tool/"
+    steps = 10000
 
     starting_events = []
     #starting_event_file = "starting_events_bad_run"
@@ -91,7 +92,7 @@ def main():
     pipes = []
 
     dd = DynamicDependence(starting_events, prog, arg, path, starting_insn_to_weight)
-    dd.prepare_to_build_dynamic_dependencies(10000)
+    dd.prepare_to_build_dynamic_dependencies(steps)
     preparse_cmd = "./preprocessor/preprocess_parallel " + dd.trace_path + " > preparser_out &"
     print("Starting preparser with command: " + preparse_cmd)
     os.system(preparse_cmd)
@@ -100,7 +101,7 @@ def main():
     num_processor = 8
     for i in range(num_processor):
         parent_conn, child_conn = mp.Pipe(duplex=True)
-        p = mp.Process(target=run_task, args=(i, child_conn, prog, arg, path, starting_events, starting_insn_to_weight))
+        p = mp.Process(target=run_task, args=(i, child_conn, prog, arg, path, starting_events, starting_insn_to_weight, steps))
         p.start()
         processes.append(p)
         pipes.append(parent_conn)
