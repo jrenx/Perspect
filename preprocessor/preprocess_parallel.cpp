@@ -20,7 +20,7 @@
 #include <netinet/in.h>
 #include <string.h>
 #include "parser.cpp"
-#define PORT 8080
+#define PORT 8999
 
 using namespace std;
 using namespace boost;
@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  // Forcefully attaching socket to the port 8080
+  // Forcefully attaching socket to the port 8999
   if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT,
                  &opt, sizeof(opt)))
   {
@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
   address.sin_addr.s_addr = INADDR_ANY;
   address.sin_port = htons( PORT );
 
-  // Forcefully attaching socket to the port 8080
+  // Forcefully attaching socket to the port 8999
   if (bind(server_fd, (struct sockaddr *)&address,
            sizeof(address))<0)
   {
