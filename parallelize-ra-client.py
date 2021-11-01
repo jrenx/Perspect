@@ -19,7 +19,7 @@ from relations import *
 DEBUG = True
 Weight_Threshold = 0
 #worker_addresses = [("10.1.0.23", 15000)]
-worker_addresses = [("10.1.0.21", 15000), ("10.1.0.22", 15000), ("10.1.0.23", 15000)]
+worker_addresses = [("10.1.0.17", 15000), ("10.1.0.18", 15000), ("10.1.0.19", 15000), ("10.1.0.20", 15000)]
 
 def sender_receiver_worker(s, q, results_q):
     try:
