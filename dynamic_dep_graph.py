@@ -660,10 +660,10 @@ class DynamicDependence:
             print("[TIME] Reverse postorder traversal took: ",
                   str(time_record["reverse_postorder"] - time_record["postorder"]), flush=True)
 
-            if self.init_graph is None:
-                dynamic_graph.propogate_initial_graph_weight()
-            else:
-                dynamic_graph.propogate_weight(self.init_graph)
+            #if self.init_graph is None:
+            #    dynamic_graph.propogate_initial_graph_weight()
+            #else:
+            #    dynamic_graph.propogate_weight(self.init_graph)
 
             time_record["propogate_weight"] = time.time()
             print("[TIME] Propogating weight took: ",
