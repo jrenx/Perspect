@@ -24,6 +24,7 @@ time_record = {}
 DEBUG_POST_ORDER = False
 DEBUG = False
 PARALLEL_PREPARSE = True
+DEBUG_WEIGHT_PROPOGATION = False
 
 class DynamicNode(JSONEncoder):
     id = 0
@@ -1889,8 +1890,8 @@ class DynamicGraph:
                 if succe.is_valid_weight is False:
                     continue
                 weights.add(succe.weight)
-                weight_origins = weight_origins.union(succe.weight_origins)
-                weight_paths = weight_paths.union(succe.weight_paths)
+                if DEBUG_WEIGHT_PROPOGATION: weight_origins = weight_origins.union(succe.weight_origins)
+                if DEBUG_WEIGHT_PROPOGATION: weight_paths = weight_paths.union(succe.weight_paths)
 
             assert -1 not in weights
             if len(weights) > 1:
@@ -1907,18 +1908,18 @@ class DynamicGraph:
                               " ignore weight from " + succe.static_node.hex_insn + " " + str(succe.id) + " for cycles1")
                         continue
                     weights.add(succe.weight)
-                    weight_origins = weight_origins.union(succe.weight_origins)
-                    weight_paths = weight_paths.union(succe.weight_paths)
+                    if DEBUG_WEIGHT_PROPOGATION: weight_origins = weight_origins.union(succe.weight_origins)
+                    if DEBUG_WEIGHT_PROPOGATION: weight_paths = weight_paths.union(succe.weight_paths)
 
-            weight_paths.add(node.static_node.hex_insn + "@" + node.static_node.function)
+            if DEBUG_WEIGHT_PROPOGATION: weight_paths.add(node.static_node.hex_insn + "@" + node.static_node.function)
             if len(weights) > 1:
                 node.static_node.print_node("Do not aggregate weights: " + str(weights))
                 is_aggregate_weight = True
             if is_aggregate_weight is True:
                 node.is_aggregate_weight = True
                 continue
-            node.weight_origins = weight_origins
-            node.weight_paths = weight_paths
+            if DEBUG_WEIGHT_PROPOGATION: node.weight_origins = weight_origins
+            if DEBUG_WEIGHT_PROPOGATION: node.weight_paths = weight_paths
             for w in weights:
                 assert w != -1
                 node.weight = w
@@ -2135,13 +2136,14 @@ class DynamicGraph:
                     succe_or_prede.id) + " for cycles")
                     continue
             weights.add(succe_or_prede.weight)
-            weight_origins = weight_origins.union(succe_or_prede.weight_origins)
-            weight_paths = weight_paths.union(succe_or_prede.weight_paths)
-            if forward_weight_paths is None:
-                forward_weight_paths = list(succe_or_prede.forward_weight_paths)
-            elif len(succe_or_prede.forward_weight_paths) < len(forward_weight_paths):
-                forward_weight_paths = list(succe_or_prede.forward_weight_paths)
-            #forward_weight_paths = forward_weight_paths.union(succe_or_prede.forward_weight_paths)
+            if DEBUG_WEIGHT_PROPOGATION:
+                weight_origins = weight_origins.union(succe_or_prede.weight_origins)
+                weight_paths = weight_paths.union(succe_or_prede.weight_paths)
+                if forward_weight_paths is None:
+                    forward_weight_paths = list(succe_or_prede.forward_weight_paths)
+                elif len(succe_or_prede.forward_weight_paths) < len(forward_weight_paths):
+                    forward_weight_paths = list(succe_or_prede.forward_weight_paths)
+                #forward_weight_paths = forward_weight_paths.union(succe_or_prede.forward_weight_paths)
         return weights, weight_origins, weight_paths, forward_weight_paths
 
     def propogate_weight(self, reference):
@@ -2164,9 +2166,9 @@ class DynamicGraph:
                 #print("has valid weight")
                 ref_node = reference.id_to_node[node.id]
                 node.weight = ref_node.weight
-                node.weight_origins = set(ref_node.weight_origins)
-                node.weight_paths = set(ref_node.weight_paths)
-                node.forward_weight_paths.append(node.static_node.hex_insn + "@" + node.static_node.function + "_" + str(node.id))
+                if DEBUG_WEIGHT_PROPOGATION: node.weight_origins = set(ref_node.weight_origins)
+                if DEBUG_WEIGHT_PROPOGATION: node.weight_paths = set(ref_node.weight_paths)
+                if DEBUG_WEIGHT_PROPOGATION: node.forward_weight_paths.append(node.static_node.hex_insn + "@" + node.static_node.function + "_" + str(node.id))
                 node.is_valid_weight = True
                 assert node.weight != -1
 
@@ -2184,7 +2186,7 @@ class DynamicGraph:
                     node.is_aggregate_weight = True
                     aggregate_static_node_ids.add(node.static_node.id)
                 #else:
-                #    node.weight_paths = weight_paths
+                #    if DEBUG_WEIGHT_PROPOGATION: node.weight_paths = weight_paths
                 #else:
                 #    for w in weights:
                 #        assert w != -1
@@ -2223,11 +2225,11 @@ class DynamicGraph:
                     node.static_node.print_node("Do not aggregate weights: " + str(node.id) + " " + str(weights))
                     continue
                 if len(weights) > 0:
-                    #weight_paths.add(node.static_node.hex_insn + "@" + node.static_node.function)
-                    forward_weight_paths.append(node.static_node.hex_insn + "@" + node.static_node.function + "_" + str(node.id))
-                    node.weight_origins = weight_origins
-                    node.weight_paths = weight_paths
-                    node.forward_weight_paths = forward_weight_paths
+                    #if DEBUG_WEIGHT_PROPOGATION: weight_paths.add(node.static_node.hex_insn + "@" + node.static_node.function)
+                    if DEBUG_WEIGHT_PROPOGATION: forward_weight_paths.append(node.static_node.hex_insn + "@" + node.static_node.function + "_" + str(node.id))
+                    if DEBUG_WEIGHT_PROPOGATION: node.weight_origins = weight_origins
+                    if DEBUG_WEIGHT_PROPOGATION: node.weight_paths = weight_paths
+                    if DEBUG_WEIGHT_PROPOGATION: node.forward_weight_paths = forward_weight_paths
                 for w in weights:
                     assert w != -1  # TODO remove
                     node.weight = w
