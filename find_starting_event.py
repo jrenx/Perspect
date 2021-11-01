@@ -198,4 +198,5 @@ def run():
 
 
 if __name__ == "__main__":
+    print("Usage: perf report (no call graph) of the fast run, duration of the fast run, perf report (no call graph) of the slow run, duration of the slow run, binary of the fast run, binry of the slow run.")
     run()
