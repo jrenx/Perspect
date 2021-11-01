@@ -677,15 +677,15 @@ class DynamicDependence:
                   str(time_record["save_dynamic_graph_as_json"] - time_record["propogate_weight"]), flush=True)
 
 
-        if self.init_graph is None:
-            #pass
-            #dynamic_graph.verify_initial_graph_weight()
-            dynamic_graph.propogate_initial_graph_weight()
-        else:
-            dynamic_graph.propogate_weight(self.init_graph)
-            #dynamic_graph.verify_weight(self.init_graph)
-            #with open(result_file, 'w') as f:
-            #    json.dump(dynamic_graph.toJSON(), f, indent=4, ensure_ascii=False)
+        #if self.init_graph is None:
+        #    #pass
+        #    #dynamic_graph.verify_initial_graph_weight()
+        #    dynamic_graph.propogate_initial_graph_weight()
+        #else:
+        #    dynamic_graph.propogate_weight(self.init_graph)
+        #    #dynamic_graph.verify_weight(self.init_graph)
+        #    #with open(result_file, 'w') as f:
+        #    #    json.dump(dynamic_graph.toJSON(), f, indent=4, ensure_ascii=False)
 
         print("[dyn_dep] total number of dynamic nodes: " + str(len(dynamic_graph.dynamic_nodes)))
         print("[dyn_dep] total number of target nodes: " + str(len(dynamic_graph.target_nodes)))
