@@ -452,8 +452,7 @@ class ParallelizableRelationAnalysis:
         other_used_weight = True
         other_predes = None
         other_wavefront = None
-        curr_key = starting_node.file + "_" + str(starting_node.line) + "_" + str(starting_node.total_count) + "_" + str(
-            starting_node.index)
+        curr_key = str(starting_node.file) + "_" + str(starting_node.line) + "_" + str(starting_node.total_count) + "_" + str(starting_node.index)
         if other_simple_relation_groups is not None:
             key = other_simple_relation_groups.indices.get_indices(starting_node)
             if key is not None:
