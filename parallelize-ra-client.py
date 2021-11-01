@@ -98,7 +98,7 @@ def sender_receiver(q, results_q):
 
 class RelationAnalysis:
     #negative_event_map = {}
-    def __init__(self, starting_events, prog, arg, path, steps, starting_event_to_weight={}):
+    def __init__(self, starting_events, prog, arg, path, steps, starting_insn_to_weight={}):
         self.starting_events = starting_events
         self.prog = prog
         self.path = path
@@ -110,7 +110,7 @@ class RelationAnalysis:
         self.received_cache = {}
         self.pending_inputs = queue.Queue()
 
-        self.dd = DynamicDependence(starting_events, prog, arg, path, starting_event_to_weight)
+        self.dd = DynamicDependence(starting_events, prog, arg, path, starting_insn_to_weight)
         self.dd.prepare_to_build_dynamic_dependencies(steps)
         print("[ra] Getting the counts of each unique node in the dynamic trace")
         if not os.path.exists(self.dd.trace_path + ".count"):
