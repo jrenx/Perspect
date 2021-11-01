@@ -14,8 +14,8 @@ import time
 PORT = 15000
 dd = None
 
-def run_task(id, pipe, prog, arg, path, starting_events):
-    dd = DynamicDependence(starting_events, prog, arg, path)
+def run_task(id, pipe, prog, arg, path, starting_events, starting_insn_to_weight):
+    dd = DynamicDependence(starting_events, prog, arg, path, starting_insn_to_weight)
     dd.prepare_to_build_dynamic_dependencies(2000)
     #StaticDepGraph.build_postorder_list()
     #StaticDepGraph.build_postorder_ranks()
@@ -99,7 +99,7 @@ def main():
     num_processor = 8
     for i in range(num_processor):
         parent_conn, child_conn = mp.Pipe(duplex=True)
-        p = mp.Process(target=run_task, args=(i, child_conn, prog, arg, path, starting_events))
+        p = mp.Process(target=run_task, args=(i, child_conn, prog, arg, path, starting_events, starting_insn_to_weight))
         p.start()
         processes.append(p)
         pipes.append(parent_conn)
