@@ -36,7 +36,7 @@ cJSON.o: cJSON.c
 	$(CC) -g -c -fPIC $(CFLAGS) cJSON.c #-std=c++11
 
 clean:
-	rm cJSON.o preprocess.o preprocess count_node.o count_node
+	rm cJSON.o preprocess.o preprocess count_node.o count_node preprocess_parallel.o preprocess_parallel
 
 #clean:
 #	rm static_preprocess.so
