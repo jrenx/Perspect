@@ -224,7 +224,10 @@ class RelationAnalysis:
             for starting_event in self.starting_events:
                 insn = starting_event[1]
                 func = starting_event[2]
-                wavefront.append((None, StaticDepGraph.func_to_graph[func].insn_to_node[insn]))
+                graph = StaticDepGraph.get_graph(func, insn)
+                if graph is None:
+                    continue
+                wavefront.append((None, graph.insn_to_node[insn]))
                 self.pending_inputs.put(hex(insn) + "|" + func + "|" + str(0) + "|" + str(0))
             while len(wavefront) > 0:
                 curr_weight, starting_node = wavefront.popleft()
