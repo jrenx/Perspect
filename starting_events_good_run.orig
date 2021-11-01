@@ -1,4 +1,6 @@
 0xe8bf80 __wt_buf_grow_worker 0.05580105822000001
+0xeb95f0 __wt_bt_write 0.000998067708
+0xebb300 __wt_page_inmem 0.025859026980000005
 0xee2bb0 __wt_row_leaf_key_work 0.000181466856
 0xf3a4b0 __rec_cell_build_leaf_key 0.255051666108
 0xf3dd30 __wt_rec_row_leaf 0.25087792842
