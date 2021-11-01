@@ -23,7 +23,8 @@ Weight_Threshold = 0
 
 class RelationAnalysis:
     #negative_event_map = {}
-    def __init__(self, starting_events, prog, arg, path, steps, other_indices_file=None, other_relations_file=None):
+    def __init__(self, starting_events, starting_insn_to_weight,
+                 prog, arg, path, steps, other_indices_file=None, other_relations_file=None):
         self.starting_events = starting_events
         self.prog = prog
         self.path = path
@@ -34,7 +35,7 @@ class RelationAnalysis:
         self.other_simple_relation_groups = None
         self.relation_groups = []  # results
 
-        self.dd = DynamicDependence(starting_events, prog, arg, path)
+        self.dd = DynamicDependence(starting_events, starting_insn_to_weight, prog, arg, path)
         self.dd.prepare_to_build_dynamic_dependencies(steps)
 
         print("[ra] Getting the counts of each unique node in the dynamic trace")
@@ -308,15 +309,29 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--use_cache', dest='use_cache', action='store_true')
     parser.set_defaults(use_cache=False)
+
+    parser.add_argument('-s', '--starting_event_file')
+    parser.set_defaults(starting_event_file=None)
     args = parser.parse_args()
 
     starting_events = []
-    starting_events.append(["rdi", 0x409daa, "sweep"])
-    starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
-    starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
-    starting_events.append(["rcx", 0x40764c, "runtime.free"])
+    starting_event_file = args.starting_event_file
+    starting_event_file = "starting_events_bad_run"
+    starting_insn_to_weight = {}
+    if starting_event_file is not None:
+        with open(starting_event_file, "r") as f:
+            for l in f.readlines():
+                segs = l.split()
+                insn = int(segs[0], 16)
+                starting_events.append(["", insn, segs[1]])
+                starting_insn_to_weight[insn] = float(segs[2])
+    else:
+        starting_events.append(["rdi", 0x409daa, "sweep"])
+        starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
+        starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
+        starting_events.append(["rcx", 0x40764c, "runtime.free"])
 
-    ra = RelationAnalysis(starting_events, "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool_dev_jenny/", 2000,
+    ra = RelationAnalysis(starting_events, starting_insn_to_weight, "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool_dev_jenny/", 2000,
                           other_indices_file='indices_esi_0x8050c16_ebx_0x804e41c_eax_0x804e5fb_eax_0x804e804',
                           other_relations_file='rgroups_simple_esi_0x8050c16_ebx_0x804e41c_eax_0x804e5fb_eax_0x804e804.json')
     ra.analyze(args.use_cache)
