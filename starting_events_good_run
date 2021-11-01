@@ -1,6 +1,3 @@
-0xe8bf80 __wt_buf_grow_worker 0.02513588355
-0xee2bb0 __wt_row_leaf_key_work 0.00038716315
-0xf3a4b0 __rec_cell_build_leaf_key 0.33021868491
-0xf3dd30 __wt_rec_row_leaf 445.609109094
-0xf41f90 __wt_rec_txn_read 0
-0x2535270 _ZN8tcmalloc11ThreadCache21ReleaseToCentralCacheEPNS0_8FreeListEmi 0
+0xf3a4b0 __rec_cell_build_leaf_key 0.255051666108 28.11
+0xf3dd30 __wt_rec_row_leaf 0.25087792842 27.65
+0xee2bb0 __wt_row_leaf_key_work 0.000181466856 0.02
