@@ -292,7 +292,7 @@ class DynamicNode(JSONEncoder):
 
 
 class DynamicDependence:
-    def __init__(self, starting_events, prog, arg, path):
+    def __init__(self, starting_events, prog, arg, path, starting_insn_to_weight={}):
         self.prog = prog
         self.arg = arg
         self.path = path
@@ -320,6 +320,7 @@ class DynamicDependence:
             self.starting_insns.add(p[1]) #FIXME: change start to starting?
         self.starting_events = list(starting_events)
         print("[dg] Starting events are: " + str(self.starting_events))
+        self.starting_insn_to_weight = starting_insn_to_weight
 
         key = ""
         for i in range(len(self.starting_events)):
@@ -624,7 +625,8 @@ class DynamicDependence:
                                               set(self.insn_of_cf_nodes), set(self.insn_of_df_nodes),
                                               set(self.insn_of_local_df_nodes), set(self.insn_of_remote_df_nodes),
                                               self.insn_to_reg_count, self.insn_to_reg_count2,
-                                              self.load_insn_to_bit_ops, self.store_insn_to_bit_ops)
+                                              self.load_insn_to_bit_ops, self.store_insn_to_bit_ops,
+                                              self.start_insn_to_weight)
             time_record["build_finish"] = time.time()
             print("[TIME] Building dynamic graph took: ", str(time_record["build_finish"] - time_record["read_preparse"]), flush=True)
 
@@ -674,15 +676,15 @@ class DynamicDependence:
                   str(time_record["save_dynamic_graph_as_json"] - time_record["propogate_weight"]), flush=True)
 
 
-        #if self.init_graph is None:
-        #    #pass
-        #    dynamic_graph.verify_initial_graph_weight()
-        #    #dynamic_graph.propogate_initial_graph_weight()
-        #else:
-        #    #dynamic_graph.propogate_weight(self.init_graph)
-        #    dynamic_graph.verify_weight(self.init_graph)
-        #    #with open(result_file, 'w') as f:
-        #    #    json.dump(dynamic_graph.toJSON(), f, indent=4, ensure_ascii=False)
+        if self.init_graph is None:
+            #pass
+            #dynamic_graph.verify_initial_graph_weight()
+            dynamic_graph.propogate_initial_graph_weight()
+        else:
+            dynamic_graph.propogate_weight(self.init_graph)
+            #dynamic_graph.verify_weight(self.init_graph)
+            #with open(result_file, 'w') as f:
+            #    json.dump(dynamic_graph.toJSON(), f, indent=4, ensure_ascii=False)
 
         print("[dyn_dep] total number of dynamic nodes: " + str(len(dynamic_graph.dynamic_nodes)))
         print("[dyn_dep] total number of target nodes: " + str(len(dynamic_graph.target_nodes)))
@@ -1204,7 +1206,7 @@ class DynamicGraph:
 
     def build_dynamic_graph(self, byte_seq, codes_to_ignore, starting_insns, code_to_insn, insns_with_regs, insn_to_static_node,
                             insn_of_cf_nodes, insn_of_df_nodes, insn_of_local_df_nodes, insn_of_remote_df_nodes,
-                            insn_to_reg_count, insn_to_reg_count2, load_insn_to_bit_ops, store_insn_to_bit_ops):
+                            insn_to_reg_count, insn_to_reg_count2, load_insn_to_bit_ops, store_insn_to_bit_ops, starting_insn_to_weight):
         # reverse the executetable, and remove insns beyond the start insn
         self.insn_to_static_node = dict(insn_to_static_node)
 
@@ -1463,7 +1465,7 @@ class DynamicGraph:
                     ctxt.bit_insn_to_node[bit_insn] = dynamic_node
 
             if insn in self.starting_insn_to_reg:
-                dynamic_node.weight = reg_value
+                dynamic_node.weight = reg_value if insn not in starting_insn_to_weight else starting_insn_to_weight[insn]
                 dynamic_node.is_valid_weight = True
                 dynamic_node.weight_origins.add(dynamic_node.id)
                 dynamic_node.weight_paths.add(dynamic_node.static_node.hex_insn + "@" + dynamic_node.static_node.function)
@@ -2421,17 +2423,22 @@ if __name__ == '__main__':
     print(args.starting_insn)
     starting_events = []
     starting_event_file = args.starting_event_file
+    starting_event_file = "starting_events_good_run"
+    starting_insn_to_weight = {}
     if starting_event_file is not None:
         with open(starting_event_file, "r") as f:
             for l in f.readlines():
-                starting_events.append(["", int(l.split()[0], 16), l.split()[1]])
+                segs = l.split()
+                insn = int(segs[0], 16)
+                starting_events.append(["", insn, segs[1]])
+                starting_insn_to_weight[insn] = float(segs[2])
     else:
         starting_events.append(["rdi", 0x409daa, "sweep"])
         starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
         starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
         starting_events.append(["rcx", 0x40764c, "runtime.free"])
 
-    dd = DynamicDependence(starting_events, "909_ziptest_exe9", "/home/anygroup/perf_debug_tool/test.zip", "/home/anygroup/perf_debug_tool/")
+    dd = DynamicDependence(starting_events, "909_ziptest_exe9", "/home/anygroup/perf_debug_tool/test.zip", "/home/anygroup/perf_debug_tool/", starting_insn_to_weight=starting_insn_to_weight)
     dd.prepare_to_build_dynamic_dependencies(10000)
 
     for event in starting_events:
