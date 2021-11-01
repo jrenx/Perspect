@@ -16,7 +16,7 @@ dd = None
 
 def run_task(id, pipe, prog, arg, path, starting_events):
     dd = DynamicDependence(starting_events, prog, arg, path)
-    dd.prepare_to_build_dynamic_dependencies(10000)
+    dd.prepare_to_build_dynamic_dependencies(2000)
     #StaticDepGraph.build_postorder_list()
     #StaticDepGraph.build_postorder_ranks()
     while True:
@@ -66,20 +66,31 @@ def run_task(id, pipe, prog, arg, path, starting_events):
 
 
 def main():
-    prog = "909_ziptest_exe9"
-    arg = "test.zip"
-    path = "/home/renxian2/perf_debug_tool/"
+    prog = "mongod_4.2.1"
+    arg = "--dbpath /home/renxian2/eval_mongodb_44991/repro/4.2.1/db --logpath /home/renxian2/eval_mongodb_44991/repro/4.2.1/db.log --wiredTigerCacheSizeGB 10"
+    path = "/home/renxian2/eval_mongodb_44991/repro/4.2.1/bin/"
+
     starting_events = []
-    starting_events.append(["rdi", 0x409daa, "sweep"])
-    starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
-    starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
-    starting_events.append(["rcx", 0x40764c, "runtime.free"])
+    starting_event_file = "starting_events_bad_run"
+    starting_insn_to_weight = {}
+    if starting_event_file is not None:
+        with open(starting_event_file, "r") as f:
+            for l in f.readlines():
+                segs = l.split()
+                insn = int(segs[0], 16)
+                starting_events.append(["", insn, segs[1]])
+                starting_insn_to_weight[insn] = float(segs[2])
+    else:
+        starting_events.append(["rdi", 0x409daa, "sweep"])
+        starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
+        starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
+        starting_events.append(["rcx", 0x40764c, "runtime.free"])
 
     processes = []
     pipes = []
 
-    dd = DynamicDependence(starting_events, prog, arg, path)
-    dd.prepare_to_build_dynamic_dependencies(10000)
+    dd = DynamicDependence(starting_events, prog, arg, path, starting_insn_to_weight)
+    dd.prepare_to_build_dynamic_dependencies(2000)
     preparse_cmd = "./preprocessor/preprocess_parallel " + dd.trace_path + " > preparser_out &"
     print("Starting preparser with command: " + preparse_cmd)
     os.system(preparse_cmd)
