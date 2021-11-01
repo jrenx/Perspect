@@ -626,7 +626,7 @@ class DynamicDependence:
                                               set(self.insn_of_local_df_nodes), set(self.insn_of_remote_df_nodes),
                                               self.insn_to_reg_count, self.insn_to_reg_count2,
                                               self.load_insn_to_bit_ops, self.store_insn_to_bit_ops,
-                                              self.start_insn_to_weight)
+                                              self.starting_insn_to_weight)
             time_record["build_finish"] = time.time()
             print("[TIME] Building dynamic graph took: ", str(time_record["build_finish"] - time_record["read_preparse"]), flush=True)
 
