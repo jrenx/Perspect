@@ -23,9 +23,8 @@ Weight_Threshold = 0
 
 class RelationAnalysis:
     #negative_event_map = {}
-    def __init__(self, starting_events, insn, func, prog, arg, path, other_indices_file=None, other_relations_file=None):
-        self.starting_insn = insn
-        self.starting_func = func
+    def __init__(self, starting_events, prog, arg, path, steps, other_indices_file=None, other_relations_file=None):
+        self.starting_events = starting_events
         self.prog = prog
         self.path = path
         self.prede_node_to_invariant_rel = {}
@@ -36,7 +35,7 @@ class RelationAnalysis:
         self.relation_groups = []  # results
 
         self.dd = DynamicDependence(starting_events, prog, arg, path)
-        self.dd.prepare_to_build_dynamic_dependencies(10000)
+        self.dd.prepare_to_build_dynamic_dependencies(steps)
 
         print("[ra] Getting the counts of each unique node in the dynamic trace")
         if not os.path.exists(self.dd.trace_path + ".count"):
@@ -177,15 +176,16 @@ class RelationAnalysis:
         #print(len(StaticDepGraph.postorder_list))
         #print(len(StaticDepGraph.postorder_ranks))
 
-        insn = self.starting_insn
-        func = self.starting_func
         visited = set()
         wavefront = deque()
 
         iteration = 0
         max_contrib = 0
 
-        wavefront.append((None, StaticDepGraph.func_to_graph[func].insn_to_node[insn], 0))
+        for starting_event in self.starting_events:
+            insn = starting_event[1]
+            func = starting_event[2]
+            wavefront.append((None, StaticDepGraph.func_to_graph[func].insn_to_node[insn], 0))
         while len(wavefront) > 0:
             curr_weight, starting_node, curr_max_contrib = wavefront.popleft()
             if starting_node is not None:
@@ -316,7 +316,7 @@ if __name__ == "__main__":
     starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
     starting_events.append(["rcx", 0x40764c, "runtime.free"])
 
-    ra = RelationAnalysis(starting_events, 0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool_dev_jenny/",
+    ra = RelationAnalysis(starting_events, "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool_dev_jenny/", 2000,
                           other_indices_file='indices_esi_0x8050c16_ebx_0x804e41c_eax_0x804e5fb_eax_0x804e804',
                           other_relations_file='rgroups_simple_esi_0x8050c16_ebx_0x804e41c_eax_0x804e5fb_eax_0x804e804.json')
     ra.analyze(args.use_cache)

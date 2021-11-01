@@ -98,9 +98,8 @@ def sender_receiver(q, results_q):
 
 class RelationAnalysis:
     #negative_event_map = {}
-    def __init__(self, starting_events, insn, func, prog, arg, path):
-        self.starting_insn = insn
-        self.starting_func = func
+    def __init__(self, starting_events, prog, arg, path, steps, starting_event_to_weight={}):
+        self.starting_events = starting_events
         self.prog = prog
         self.path = path
         self.prede_node_to_invariant_rel = {}
@@ -111,8 +110,8 @@ class RelationAnalysis:
         self.received_cache = {}
         self.pending_inputs = queue.Queue()
 
-        self.dd = DynamicDependence(starting_events, prog, arg, path)
-        self.dd.prepare_to_build_dynamic_dependencies(10000)
+        self.dd = DynamicDependence(starting_events, prog, arg, path, starting_event_to_weight)
+        self.dd.prepare_to_build_dynamic_dependencies(steps)
         print("[ra] Getting the counts of each unique node in the dynamic trace")
         if not os.path.exists(self.dd.trace_path + ".count"):
             preprocessor_file = os.path.join(curr_dir, 'preprocessor', 'count_node')
@@ -216,16 +215,16 @@ class RelationAnalysis:
             #print(len(StaticDepGraph.postorder_list))
             #print(len(StaticDepGraph.postorder_ranks))
 
-            insn = self.starting_insn
-            func = self.starting_func
             visited = set()
             wavefront = deque()
 
             iteration = 0
             max_contrib = 0
-
-            wavefront.append((None, StaticDepGraph.func_to_graph[func].insn_to_node[insn]))
-            self.pending_inputs.put(hex(insn) + "|" + func + "|" + str(0) + "|" + str(0))
+            for starting_event in self.starting_events:
+                insn = starting_event[1]
+                func = starting_event[2]
+                wavefront.append((None, StaticDepGraph.func_to_graph[func].insn_to_node[insn]))
+                self.pending_inputs.put(hex(insn) + "|" + func + "|" + str(0) + "|" + str(0))
             while len(wavefront) > 0:
                 curr_weight, starting_node = wavefront.popleft()
                 if starting_node is not None:
@@ -336,13 +335,27 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--use_cache', dest='use_cache', action='store_true')
     parser.set_defaults(use_cache=False)
+
+    parser.add_argument('-s', '--starting_event_file')
+    parser.set_defaults(starting_event_file=None)
     args = parser.parse_args()
 
     starting_events = []
-    starting_events.append(["rdi", 0x409daa, "sweep"])
-    starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
-    starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
-    starting_events.append(["rcx", 0x40764c, "runtime.free"])
+    starting_event_file = args.starting_event_file
+    starting_event_file = "starting_events_bad_run"
+    starting_insn_to_weight = {}
+    if starting_event_file is not None:
+        with open(starting_event_file, "r") as f:
+            for l in f.readlines():
+                segs = l.split()
+                insn = int(segs[0], 16)
+                starting_events.append(["", insn, segs[1]])
+                starting_insn_to_weight[insn] = float(segs[2])
+    else:
+        starting_events.append(["rdi", 0x409daa, "sweep"])
+        starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
+        starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
+        starting_events.append(["rcx", 0x40764c, "runtime.free"])
 
-    ra = RelationAnalysis(starting_events, 0x409daa, "sweep", "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool_dev_jenny/")
+    ra = RelationAnalysis(starting_events, "mongod_4.2.1", "--dbpath /home/renxian2/eval_mongodb_44991/repro/4.2.1/db --logpath /home/renxian2/eval_mongodb_44991/repro/4.2.1/db.log --wiredTigerCacheSizeGB 10", "/home/renxian2/eval_mongodb_44991/repro/4.2.1/bin/", 2000, starting_insn_to_weight=starting_insn_to_weight)
     ra.analyze(args.use_cache)
