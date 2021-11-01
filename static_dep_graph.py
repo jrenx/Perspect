@@ -2447,11 +2447,11 @@ class StaticDepGraph:
                     len(node.cf_succes) == 0 and len(node.df_succes) == 0:
                     continue
                 if len(node.cf_predes) == 0 and len(node.df_predes) == 0:
-                    assert node not in StaticDepGraph.entry_nodes
+                    if node in StaticDepGraph.entry_nodes: continue
                     assert node not in StaticDepGraph.exit_nodes
                     StaticDepGraph.entry_nodes.add(node)
                 if len(node.cf_succes) == 0 and len(node.df_succes) == 0:
-                    assert node not in StaticDepGraph.exit_nodes
+                    if node in StaticDepGraph.exit_nodes: continue
                     assert node not in StaticDepGraph.entry_nodes, node
                     StaticDepGraph.exit_nodes.add(node)
 
@@ -2690,7 +2690,7 @@ def main():
         starting_events.append(["rcx", 0x40764c, "runtime.free"])
     print(starting_events)
     StaticDepGraph.build_dependencies(starting_events, "mongod_4.2.1",
-                                      limit=2000, use_cached_static_graph=(False if args.parallelize_rr is True else args.use_cached_static_graph),
+                                      limit=5000, use_cached_static_graph=(False if args.parallelize_rr is True else args.use_cached_static_graph),
                                       parallelize_rr=args.parallelize_rr)
     """
     print("HERERERE")
