@@ -749,24 +749,24 @@ class MemoryAccess:
     def __init__(self, reg, shift, off, off_reg, is_bit_var, off1=None):
         self.reg = reg.lower() if reg is not None else reg
         self.shift = shift
-        self.off = convert_offset(off) if off is not None else None
+        self.off = MemoryAccess.convert_offset(off) if off is not None else None
         self.off_reg = off_reg.lower() if off_reg is not None else off_reg
         self.is_bit_var = is_bit_var
         self.bit_operations = None
         self.read_same_as_write = False
-        self.off1 = convert_offset(off1) if off1 is not None else None
+        self.off1 = MemoryAccess.convert_offset(off1) if off1 is not None else None
 
     @staticmethod
     def convert_offset(off):
         off_str = hex(off)
         if off_str.startswith("0xf"):
             if len(off_str) == 10: #32bit
-                new_off = -(~off+1)&0xffffffff
-                print("[rr] " + hex(off) + " Likely a negative offset, convert it to " + hex(new_off))
+                new_off = -((~off+1)&0xffffffff)
+                print("[rr] " + str(off) + " Likely a negative offset, convert it to " + str(new_off))
                 return new_off
             if len(off_str) == 18: #64bit
-                new_off = -(~off+1)&0xffffffffffffffff
-                print("[rr] " + hex(off) + " Likely a negative offset, convert it to " + hex(new_off))
+                new_off = -((~off+1)&0xffffffffffffffff)
+                print("[rr] " + str(off) + " Likely a negative offset, convert it to " + str(new_off))
                 return new_off
         return off
 
