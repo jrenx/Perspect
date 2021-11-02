@@ -84,8 +84,11 @@ void backwardSliceHelper(vector<Function *> *allFuncs,
     inputInsnReadsFromStack = readsFromStack(insn, addr, &stackReadReg, &stackReadOff);
     cout << "[sa] input instruction reads from stack? " << inputInsnReadsFromStack << endl;
 
-    // Handle pass by reference
+    // Handle register definitions in other functions.
     if (!inputInsnReadsFromStack) {
+      // If 1. a valid register name is passed,
+      //    2. we have not been able to find a definition locally
+      //    3. and the stop slicing flag has not been set
       if (strcmp(regName, "") != 0 && !madeProgress && !atEndPoint) {
         AssignmentConverter ac(true, false);
         vector <Assignment::Ptr> assignments;
@@ -109,35 +112,50 @@ void backwardSliceHelper(vector<Function *> *allFuncs,
         }
         boost::unordered_map < Address, Function * > ret;
         boost::unordered_set <Address> visitedAddrs;
-        handlePassByReference(targetRegion, addr, bb, func, ret, visitedAddrs);
-        cout << "[sa]  found " << ret.size() << " pass by reference defs " << endl;
+        handleRegDefInCallees(targetRegion, addr, bb, func, ret, visitedAddrs);
+        cout << "[sa]  found " << ret.size() << " defs in callees" << endl;
+
+        int old_ret_size = ret.size();
+        if (USE_X86_CALLING_CONVENTION) {
+          cout << "[sa] Is using x86 calling convention, checking the definition of the register in caller function." << endl;
+          if (strcmp(regName, "[x86_64::rdi]") == 0  ||
+              strcmp(regName, "[x86_64::rsi]") == 0 ||
+              strcmp(regName, "[x86_64::rdx]") == 0 ||
+              strcmp(regName, "[x86_64::rcx]") == 0 ||
+              strcmp(regName, "[x86_64::r8]") == 0 ||
+              strcmp(regName, "[x86_64::r9]") == 0) {
+              visitedAddrs.clear();
+              handleRegDefInCallers(targetRegion, addr, bb, func, ret, visitedAddrs, false);
+          }
+        }
+        cout << "[sa]  found " << (ret.size() - old_ret_size) << " defs in callers" << endl;
         if (!reversedOnce) {
           for (auto rit = ret.begin(); rit != ret.end(); rit++) {
-          Function *newFunc = (*rit).second;
-          char *newFuncName = (char *) newFunc->name().c_str();
-          bool atEndPoint = strcmp(newFuncName, funcName) != 0;
-          //TODO, in the future just return the instructions as well...
-          Address newAddr = (*rit).first;
+            Function *newFunc = (*rit).second;
+            char *newFuncName = (char *) newFunc->name().c_str();
+            bool atEndPoint = strcmp(newFuncName, funcName) != 0;
+            //TODO, in the future just return the instructions as well...
+            Address newAddr = (*rit).first;
 
-          bool foundMemRead = false;
-          Block *newBB = getBasicBlock2(newFunc, newAddr);
-	  if (!CRASH_ON_ERROR) {
-	    if (newBB == NULL) {
-	      cout << "[sa/warn] BB is not found for addr: " << hex << newAddr << dec << endl;
-	      return;
-	    }
-	  }
-          Instruction newInsn = newBB->getInsn(newAddr);
-          std::set<Expression::Ptr> memReads;
-          newInsn.getMemoryReadOperands(memReads);
-          if (memReads.size() > 0) foundMemRead = true;
+            bool foundMemRead = false;
+            Block *newBB = getBasicBlock2(newFunc, newAddr);
+	        if (!CRASH_ON_ERROR) {
+	          if (newBB == NULL) {
+	            cout << "[sa/warn] BB is not found for addr: " << hex << newAddr << dec << endl;
+	            return;
+	          }
+	        }
+            Instruction newInsn = newBB->getInsn(newAddr);
+            std::set<Expression::Ptr> memReads;
+            newInsn.getMemoryReadOperands(memReads);
+            if (memReads.size() > 0) foundMemRead = true;
 
-          std::string newRegStr = getLoadRegName(newInsn);
-          if (foundMemRead) atEndPoint = true;
-          char *newRegName = (char *) newRegStr.c_str();
-          // TODO, in the future even refactor the signature of the backwardSliceHelper function ...
-          backwardSliceHelper(allFuncs, json_reads, visited, newFuncName, newAddr, newRegName, true, isKnownBitVar, atEndPoint);
-        }
+            std::string newRegStr = getLoadRegName(newInsn);
+            if (foundMemRead) atEndPoint = true;
+            char *newRegName = (char *) newRegStr.c_str();
+            // TODO, in the future even refactor the signature of the backwardSliceHelper function ...
+            backwardSliceHelper(allFuncs, json_reads, visited, newFuncName, newAddr, newRegName, true, isKnownBitVar, atEndPoint);
+          }
           return;
         } else {
           cout << "[sa]  persisting intermediate results instead of pass by reference defs " << endl;
@@ -362,14 +380,16 @@ GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsign
   return slice;
 }
 
-void handlePassByReference(AbsRegion targetReg, Address startAddr,
+void handleRegDefInCallers(AbsRegion targetReg, Address startAddr,
                            Block *startBb, Function *startFunc,
                            boost::unordered_map<Address, Function*> &ret,
-                           boost::unordered_set<Address> &visitedAddrs) { // TODO add to declaration
+                           boost::unordered_set<Address> &visitedAddrs,
+                           bool recursedOnce) { // TODO add to declaration
 
-  if (DEBUG) cout << "[pass-by-ref] Checking for pass by reference def in function " << startFunc->name() << endl;
+  //if (DEBUG)
+  cout << "[def-in-caller] Checking for defs in function " << startFunc->name() << endl;
   if (visitedAddrs.find(startAddr) != visitedAddrs.end()) {
-    if (DEBUG) cout << "[pass-by-ref] Already visited, returning " << endl;
+    if (DEBUG) cout << "[def-in-caller] Already visited, returning " << endl;
     return;
   }
   visitedAddrs.insert(startAddr);
@@ -427,7 +447,116 @@ void handlePassByReference(AbsRegion targetReg, Address startAddr,
       for (auto ait = assignments.begin(); ait != assignments.end(); ++ait) {
         Assignment::Ptr assign = *ait;
         if (assign->out() == targetReg) {
-          if (DEBUG) cout << "[pass-by-ref] Found matching def " << assign->format() << endl;
+          //if (DEBUG)
+          cout << "[def-in-caller] Found matching def " << assign->format() << endl;
+          ret.insert({assign->addr(), startFunc});
+          foundDef = true;
+        }
+      }
+      if (foundDef) break;
+    }
+    if (foundDef) continue;
+    Block::edgelist sources = bb->sources();
+    for (auto it = sources.begin(); it != sources.end(); it++) {
+      if ((*it)->type() == RET || (*it)->type() == CATCH || (*it)->type() == FALLTHROUGH ||
+          (*it)->type() == CALL_FT)
+        continue;
+      Block *src = (*it)->src();
+      std::vector<Function *> funcs;
+      src->getFuncs(funcs);
+      for (auto fit = funcs.begin(); fit != funcs.end(); fit++) {
+        Function *caller = *fit;
+        boost::unordered_set<Address> CallsiteAddrs;
+        getAllInvokes(caller, startFunc, CallsiteAddrs); // TODO verify this
+        cout << CallsiteAddrs.size() << endl;
+        for (auto cait = CallsiteAddrs.begin(); cait != CallsiteAddrs.end(); cait++) {
+          Address CallsiteAddr = *cait;
+          Block *CallsiteBlock = getBasicBlock2(caller, CallsiteAddr);
+          int old_size = ret.size();
+          handleRegDefInCallers(targetReg, CallsiteAddr, CallsiteBlock, caller, ret, visitedAddrs, true);
+          int new_size = ret.size();
+          if (new_size > old_size) foundDef = true;
+          else assert(new_size == old_size);
+        }
+      }
+    }
+    if (!foundDef) checked.insert(bb);
+  }
+}
+
+// Check for instructions that define a given register represented by targetReg
+// If the definition is not found, follow returns in the current function
+// to recursively check callee functions for definitions.
+// Inside each function, essentially does a backward traversal from the use point, or the return statement.
+// To ensure any definition found is reachable by the use point or return statement,
+// Only check predecessors of the basic block containing the use point or return statement.
+// Once a definition is found, stop checking any control flow predecessor of the basic block containing the definition.
+void handleRegDefInCallees(AbsRegion targetReg, Address startAddr,
+                           Block *startBb, Function *startFunc,
+                           boost::unordered_map<Address, Function*> &ret,
+                           boost::unordered_set<Address> &visitedAddrs) { // TODO add to declaration
+
+  if (DEBUG) cout << "[def-in-callee] Checking for pass by reference def in function " << startFunc->name() << endl;
+  if (visitedAddrs.find(startAddr) != visitedAddrs.end()) {
+    if (DEBUG) cout << "[def-in-callee] Already visited, returning " << endl;
+    return;
+  }
+  visitedAddrs.insert(startAddr);
+
+  std::vector<Block *> list;
+  boost::unordered_set<Block *> visited;
+  getReversePostOrderListHelper(startFunc->entry(), list, visited);
+  //std::reverse(list.begin(), list.end());
+
+  boost::unordered_set<Block *> checked;
+  AssignmentConverter ac(true, false);
+  for (auto bit = list.begin(); bit != list.end(); bit++) {
+    bool checkBB = false;
+    Block *bb = *bit;
+    if (bb == startBb) {
+      checkBB = true;
+    } else {
+      if (checked.size() == 0) continue;
+
+      Block::edgelist targets = bb->targets();
+      for (auto it = targets.begin(); it != targets.end(); it++) {
+        if ((*it)->type() == CALL || (*it)->type() == RET || (*it)->type() == CATCH)
+          continue;
+        Block* src = (*it)->src();
+        Block* trg = (*it)->trg();
+        if (checked.find(trg) != checked.end()) {
+          checkBB = true;
+          break;
+        }
+      }
+    }
+
+    if (!checkBB) continue;
+
+    Block::Insns insns;
+    bb->getInsns(insns);
+    auto it = insns.rbegin();
+    if (bb == startBb) {
+      for (; it != insns.rend(); it++) {
+        Address addr = (*it).first;
+        Instruction insn = (*it).second;
+        if (addr == startAddr) {
+          it++;
+          break;
+        }
+      }
+    }
+    bool foundDef = false;
+    for (; it != insns.rend(); it++) {
+      Address addr = (*it).first;
+      Instruction insn = (*it).second;
+      // if assignment assigns the register, stop here, return the assignment
+      vector<Assignment::Ptr> assignments;
+      ac.convert(insn, addr, startFunc, bb, assignments);
+      for (auto ait = assignments.begin(); ait != assignments.end(); ++ait) {
+        Assignment::Ptr assign = *ait;
+        if (assign->out() == targetReg) {
+          if (DEBUG) cout << "[def-in-callee] Found matching def " << assign->format() << endl;
           ret.insert({assign->addr(), startFunc});
           foundDef = true;
         }
@@ -449,7 +578,7 @@ void handlePassByReference(AbsRegion targetReg, Address startAddr,
           getAllRets(func, retInsns);
           for (auto rit = retInsns.begin(); rit != retInsns.end(); rit++) {
             int old_size = ret.size();
-            handlePassByReference(targetReg, (*rit).first, (*rit).second, func, ret, visitedAddrs);
+            handleRegDefInCallees(targetReg, (*rit).first, (*rit).second, func, ret, visitedAddrs);
             int new_size = ret.size();
             if (new_size > old_size) foundDef = true;
             else assert(new_size == old_size);

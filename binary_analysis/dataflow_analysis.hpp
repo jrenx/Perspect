@@ -158,10 +158,16 @@ void backwardSliceHelper(vector<Function *> *allFuncs, cJSON *json_reads, boost:
 GraphPtr buildBackwardSlice(Function *f, Block *b, Instruction insn, long unsigned int addr, char *regName, bool *madeProgress,
                             bool atEndPoint = false);
 
-void handlePassByReference(AbsRegion targetReg, Address startAddr,
+void handleRegDefInCallees(AbsRegion targetReg, Address startAddr,
                            Block *startBb, Function *startFunc,
                            boost::unordered_map<Address, Function*> &ret,
                            boost::unordered_set<Address> &visitedAddrs);
+
+void handleRegDefInCallers(AbsRegion targetReg, Address startAddr,
+                           Block *startBb, Function *startFunc,
+                           boost::unordered_map<Address, Function*> &ret,
+                           boost::unordered_set<Address> &visitedAddrs,
+                           bool recursedOnce);
 
 std::string findMatchingOpExprStr(Assignment::Ptr assign, AbsRegion region);
 

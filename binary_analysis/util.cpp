@@ -41,6 +41,7 @@ bool DEBUG_SLICE = false;
 bool DEBUG_BIT = false;
 bool DEBUG_STACK = false;
 bool CRASH_ON_ERROR = false;
+bool USE_X86_CALLING_CONVENTION = true;
 
 
 boost::unordered_map<std::string, std::string> regMap =
