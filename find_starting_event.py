@@ -173,9 +173,10 @@ def run():
     print(trace2)
     print("=============")
 
-
+    
+    all_output = {}
     binary1 = sys.argv[5]
-    output1 = []
+    output1 = {}
     with open(binary1, 'r') as f1:
         lines = f1.readlines()
         for l in lines:
@@ -188,15 +189,16 @@ def run():
                     addr = int(segs[0], 16)
                     result = hex(addr) + " " + names1[f] + " " + str(weights1[f]*time1/100) + " " + str(weights1[f])
                     print(result)
-                    output1.append([result, weights1[f]])
+                    output1[addr] = result
+                    if addr in all_output:
+                        all_output[addr] += weights1[f]
+                    else:
+                        all_output[addr] = weights1[f]
 
-    with open("starting_events_good_run", "w") as f:
-        for l in reversed(sorted(output1, key=lambda pair: pair[1])):
-            f.write(l[0]+"\n")
 
     print()
     binary2 = sys.argv[6]
-    output2 = []
+    output2 = {}
     with open(binary2, 'r') as f2:
         lines = f2.readlines()
         for l in lines:
@@ -208,14 +210,25 @@ def run():
                     #print(l)
                     addr = int(segs[0], 16)
                     result = hex(addr) + " " + names2[f] + " " + str(weights2[f]*time2/100) + " " + str(weights2[f])
-
                     print(result)
-                    output2.append([result, weights2[f]])
+                    output2[addr] = result
+                    if addr in all_output:
+                        all_output[addr] += weights2[f]
+                    else:
+                        all_output[addr] = weights2[f]
+    all_output_l = []
+    for addr in all_output:
+        all_output_l.append([addr, all_output[addr]])
+    all_output_l = reversed(sorted(all_output_l, key=lambda pair:pair[1]))
+    with open("starting_events_good_run", "w") as f:
+        for (addr, weight) in all_output_l:
+            if addr in output1:
+                f.write(output1[addr]+"\n")
 
     with open("starting_events_bad_run", "w") as f:
-        for l in reversed(sorted(output2, key=lambda pair: pair[1])):
-            f.write(l[0]+"\n")
-
+        for (addr, weight) in all_output_l:
+            if addr in output2:
+                f.write(output2[addr]+"\n")
 
 if __name__ == "__main__":
     print("Usage: perf report (no call graph) of the fast run, duration of the fast run, perf report (no call graph) of the slow run, duration of the slow run, binary of the fast run, binry of the slow run.")
