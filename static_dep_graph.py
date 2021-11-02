@@ -756,6 +756,20 @@ class MemoryAccess:
         self.read_same_as_write = False
         self.off1 = off1
 
+    @staticmethod
+    def convert_offset(off):
+        off_str = hex(off)
+        if off_str.startswith("0xf"):
+            if len(off_str) == 10: #32bit
+                new_off = -(~off+1)&0xffffffff
+                print("[rr] " + hex(off) + " Likely a negative offset, convert it to " + hex(new_off))
+                return new_off
+            if len(off_str) == 18: #64bit
+                new_off = -(~off+1)&0xffffffffffffffff
+                print("[rr] " + hex(off) + " Likely a negative offset, convert it to " + hex(new_off))
+                return new_off
+        return off
+
     def add_bit_operationses(self, bit_operationses):
         if bit_operationses is None:
             return
@@ -2690,7 +2704,7 @@ def main():
         starting_events.append(["rcx", 0x40764c, "runtime.free"])
     print(starting_events)
     StaticDepGraph.build_dependencies(starting_events, "mongod_4.0.13",
-                                      limit=2000, use_cached_static_graph=(False if args.parallelize_rr is True else args.use_cached_static_graph),
+                                      limit=15000, use_cached_static_graph=(False if args.parallelize_rr is True else args.use_cached_static_graph),
                                       parallelize_rr=args.parallelize_rr)
     """
     print("HERERERE")
