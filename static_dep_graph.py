@@ -756,6 +756,20 @@ class MemoryAccess:
         self.read_same_as_write = False
         self.off1 = off1
 
+    @staticmethod
+    def convert_offset(off):
+        off_str = hex(off)
+        if off_str.startswith("0xf"):
+            if len(off_str) == 10: #32bit
+                new_off = -(~off+1)&0xffffffff
+                print("[rr] " + hex(off) + " Likely a negative offset, convert it to " + hex(new_off))
+                return new_off
+            if len(off_str) == 18: #64bit
+                new_off = -(~off+1)&0xffffffffffffffff
+                print("[rr] " + hex(off) + " Likely a negative offset, convert it to " + hex(new_off))
+                return new_off
+        return off
+
     def add_bit_operationses(self, bit_operationses):
         if bit_operationses is None:
             return
