@@ -44,6 +44,7 @@ extern bool DEBUG_SLICE;
 extern bool DEBUG_BIT;
 extern bool DEBUG_STACK;
 extern bool CRASH_ON_ERROR;
+extern bool USE_X86_CALLING_CONVENTION;
 
 #ifdef USE_BPATCH
 typedef enum {

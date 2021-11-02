@@ -139,6 +139,14 @@ class TestSA(unittest.TestCase):
         ret = get_addr_indices(binary_ptr, 'memcopy', 0x40fab2, 0x40fab7, [4258482])
         print(ret)
 
+class TestStaticSlicingNew(unittest.TestCase):
+    def test1(self):
+        ptr = setup('mongod_4.2.1')
+        slice_starts = []
+        slice_starts.append(['rcx', 0x1014b1a, '__wt_row_leaf_key_copy', False])
+        results = static_backslices(ptr, slice_starts, 'mongod_4.2.1', {})
+        print(results)
+
 
 class TestStaticSlicing(unittest.TestCase):
     def test_basic(self):

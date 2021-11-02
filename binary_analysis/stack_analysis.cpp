@@ -150,7 +150,7 @@ boost::unordered_map<Address, Function *> checkAndGetStackWritesHelper(boost::un
               continue;
             }
             if (caller == f) {
-              cout << "[stack] Still in the same function, ignore ... " << endl;
+              cout << "[stack/FIXME] Still in the same function, could be recursive call?... " << endl;
             }
             allCallers.insert(caller);
           }
