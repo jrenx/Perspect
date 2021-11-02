@@ -749,12 +749,12 @@ class MemoryAccess:
     def __init__(self, reg, shift, off, off_reg, is_bit_var, off1=None):
         self.reg = reg.lower() if reg is not None else reg
         self.shift = shift
-        self.off = off
+        self.off = convert_offset(off) if off is not None else None
         self.off_reg = off_reg.lower() if off_reg is not None else off_reg
         self.is_bit_var = is_bit_var
         self.bit_operations = None
         self.read_same_as_write = False
-        self.off1 = off1
+        self.off1 = convert_offset(off1) if off1 is not None else None
 
     @staticmethod
     def convert_offset(off):
