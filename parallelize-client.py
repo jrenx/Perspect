@@ -11,9 +11,6 @@ import queue
 import threading
 import traceback
 
-worker_addresses = [("10.1.0.17", 12000), ("10.1.0.18", 12000), ("10.1.0.19", 12000), ("10.1.0.20", 12000)]
-#worker_addresses = [("10.1.0.21", 12000)]
-
 HOST, PORT = "localhost", 9999
 q = queue.Queue()
 DEBUG = True
@@ -125,6 +122,12 @@ def main():
         print("[client] Execution of iteration 0 starts at {}".format(datetime.datetime.strftime(start_time, "%Y/%m/%d, %H:%M:%S")), flush=True)
 
         sockets = []
+        port = 12000
+        worker_addresses = []
+        with open("servers.config", "r") as f:
+            for l in f.readlines:
+                worker_addresses.append((l.strip(), port))
+ 
         for addr in worker_addresses:
             for _ in range(num_processor):
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
