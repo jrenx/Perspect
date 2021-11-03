@@ -10,6 +10,7 @@ import traceback
 from dynamic_dep_graph import *
 from parallelizable_relation_analysis import *
 import time
+from util import *
 
 PORT = 15000
 dd = None
@@ -66,32 +67,13 @@ def run_task(id, pipe, prog, arg, path, starting_events, starting_insn_to_weight
 
 
 def main():
-    prog = "mongod_4.2.1"
-    arg = "--dbpath /home/renxian2/eval_mongodb_44991/repro/4.2.1/db --logpath /home/renxian2/eval_mongodb_44991/repro/4.2.1/db.log --wiredTigerCacheSizeGB 10"
-    path = "/home/renxian2/eval_mongodb_44991/repro/4.2.1/bin/"
-    steps = 2000
-
-    starting_events = []
-    starting_event_file = "starting_events_bad_run"
-    starting_insn_to_weight = {}
-    if starting_event_file is not None:
-        with open(starting_event_file, "r") as f:
-            for l in f.readlines():
-                segs = l.split()
-                insn = int(segs[0], 16)
-                starting_events.append(["", insn, segs[1]])
-                starting_insn_to_weight[insn] = float(segs[2])
-    else:
-        starting_events.append(["rdi", 0x409daa, "sweep"])
-        starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
-        starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
-        starting_events.append(["rcx", 0x40764c, "runtime.free"])
+    limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
 
     processes = []
     pipes = []
 
-    dd = DynamicDependence(starting_events, prog, arg, path, starting_insn_to_weight)
-    dd.prepare_to_build_dynamic_dependencies(steps)
+    dd = DynamicDependence(starting_events, program, program_args, program_path, starting_insn_to_weight)
+    dd.prepare_to_build_dynamic_dependencies(limit)
     preparse_cmd = "./preprocessor/preprocess_parallel " + dd.trace_path + " > preparser_out &"
     print("Starting preparser with command: " + preparse_cmd)
     os.system(preparse_cmd)
@@ -100,7 +82,7 @@ def main():
     num_processor = 8
     for i in range(num_processor):
         parent_conn, child_conn = mp.Pipe(duplex=True)
-        p = mp.Process(target=run_task, args=(i, child_conn, prog, arg, path, starting_events, starting_insn_to_weight, steps))
+        p = mp.Process(target=run_task, args=(i, child_conn, program, program_args, program_path, starting_events, starting_insn_to_weight, limit))
         p.start()
         processes.append(p)
         pipes.append(parent_conn)

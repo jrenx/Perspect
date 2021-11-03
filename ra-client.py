@@ -15,6 +15,7 @@ import json
 import traceback
 from dynamic_dep_graph import *
 from relations import *
+from util import *
 
 DEBUG = True
 Weight_Threshold = 0
@@ -343,27 +344,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--use_cache', dest='use_cache', action='store_true')
     parser.set_defaults(use_cache=False)
-
-    parser.add_argument('-s', '--starting_event_file')
-    parser.set_defaults(starting_event_file=None)
     args = parser.parse_args()
 
-    starting_events = []
-    starting_event_file = args.starting_event_file
-    starting_event_file = "starting_events_bad_run"
-    starting_insn_to_weight = {}
-    if starting_event_file is not None:
-        with open(starting_event_file, "r") as f:
-            for l in f.readlines():
-                segs = l.split()
-                insn = int(segs[0], 16)
-                starting_events.append(["", insn, segs[1]])
-                starting_insn_to_weight[insn] = float(segs[2])
-    else:
-        starting_events.append(["rdi", 0x409daa, "sweep"])
-        starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
-        starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
-        starting_events.append(["rcx", 0x40764c, "runtime.free"])
+    limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
 
-    ra = RelationAnalysis(starting_events, "mongod_4.2.1", "--dbpath /home/renxian2/eval_mongodb_44991/repro/4.2.1/db --logpath /home/renxian2/eval_mongodb_44991/repro/4.2.1/db.log --wiredTigerCacheSizeGB 10", "/home/renxian2/eval_mongodb_44991/repro/4.2.1/bin/", 2000, starting_insn_to_weight=starting_insn_to_weight)
+    ra = RelationAnalysis(starting_events, program, program_args, program_path, limit, starting_insn_to_weight=starting_insn_to_weight)
     ra.analyze(args.use_cache)

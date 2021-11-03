@@ -2,6 +2,7 @@ from dynamic_dep_graph import *
 from relations import *
 import itertools
 import time
+from util import *
 
 class ParallelizableRelationAnalysis:
 
@@ -574,18 +575,11 @@ class ParallelizableRelationAnalysis:
             return trimmed_wavefront, rgroup
 
 if __name__ == "__main__":
-    starting_events = []
-    starting_events.append(["rdi", 0x409daa, "sweep"])
-    starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
-    starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
-    starting_events.append(["rcx", 0x40764c, "runtime.free"])
-    prog = "909_ziptest_exe9"
-    arg = "test.zip"
-    path = "/home/anygroup/perf_debug_tool/"
-    dd = DynamicDependence(starting_events, prog, arg, path)
-    dd.prepare_to_build_dynamic_dependencies(10000)
+    limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
+    dd = DynamicDependence(starting_events, program, program_args, program_path)
+    dd.prepare_to_build_dynamic_dependencies(limit)
     dgraph = dd.build_dynamic_dependencies(insn=0x409daa, pa_id=0)
     node = StaticDepGraph.func_to_graph["sweep"].insn_to_node[0x409daa]
-    wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, node, 0, 0, prog)
+    wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, node, 0, 0, program)
     print([(str(w.insn) + "@" + w.function) for w in wavefront], rgroup.toJSON())
     print(rgroup)
