@@ -1,0 +1,4 @@
+rdi 0x409daa sweep
+rbx 0x407240 runtime.mallocgc
+rdx 0x40742b runtime.mallocgc
+rcx 0x40764c runtime.free
