@@ -10,6 +10,7 @@ import socketserver
 import queue
 import threading
 import traceback
+from util import *
 
 HOST, PORT = "localhost", 9999
 q = queue.Queue()
@@ -29,11 +30,9 @@ restart_static_slicing = False
 rr_result_cache_lock = threading.Lock()
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 rr_result_cache = {}
-prog = '909_ziptest_exe9'
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        prog = sys.argv[1]
-rr_result_file = os.path.join(curr_dir, 'cache', prog, 'rr_results_{}.json'.format(prog))
+    _, program, _, _, _, _ = parse_inputs()
+rr_result_file = os.path.join(curr_dir, 'cache', program, 'rr_results_{}.json'.format(program))
 # for rr_result_cache
 
 it_lock = threading.Lock()

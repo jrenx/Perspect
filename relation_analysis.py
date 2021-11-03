@@ -17,6 +17,7 @@ from dynamic_dep_graph import *
 from parallelizable_relation_analysis import *
 from relations import *
 import itertools
+from util import *
 
 DEBUG = True
 Weight_Threshold = 0
@@ -314,24 +315,9 @@ if __name__ == "__main__":
     parser.set_defaults(starting_event_file=None)
     args = parser.parse_args()
 
-    starting_events = []
-    starting_event_file = args.starting_event_file
-    #starting_event_file = "starting_events_bad_run"
-    starting_insn_to_weight = {}
-    if starting_event_file is not None:
-        with open(starting_event_file, "r") as f:
-            for l in f.readlines():
-                segs = l.split()
-                insn = int(segs[0], 16)
-                starting_events.append(["", insn, segs[1]])
-                starting_insn_to_weight[insn] = float(segs[2])
-    else:
-        starting_events.append(["rdi", 0x409daa, "sweep"])
-        starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
-        starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
-        starting_events.append(["rcx", 0x40764c, "runtime.free"])
+    limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
 
-    ra = RelationAnalysis(starting_events, starting_insn_to_weight, "909_ziptest_exe9", "test.zip", "/home/anygroup/perf_debug_tool_dev_jenny/", 10000,
+    ra = RelationAnalysis(starting_events, starting_insn_to_weight, program, program_args, program_path, limit,
                           other_indices_file='indices_esi_0x8050c16_ebx_0x804e41c_eax_0x804e5fb_eax_0x804e804',
                           other_relations_file='rgroups_simple_esi_0x8050c16_ebx_0x804e41c_eax_0x804e5fb_eax_0x804e804.json')
     ra.analyze(args.use_cache)

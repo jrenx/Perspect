@@ -7,6 +7,7 @@ import socket
 import json
 import datetime
 import traceback
+from util import *
 
 port = 12000
 
@@ -41,15 +42,11 @@ def run_task(id, pipe, prog):
     print("[worker] Process {} finished execution.".format(id),flush=True)
     pipe.send("Shutdown")
 
-
-
-
 def main():
     curr_dir = os.path.dirname(os.path.realpath(__file__))
     num_processor = 16
-    prog = '909_ziptest_exe9'
-    if len(sys.argv) > 1:
-        prog = sys.argv[1]
+
+    _, program, _, _, _, _ = parse_inputs()
 
     print("[server] Setting up parallel environment")
     for iter in range(num_processor):
@@ -62,12 +59,11 @@ def main():
         shutil.copytree('rr', rr_dir, ignore=shutil.ignore_patterns('.*', '_*'))
         shutil.copy('rr_util.py', process_dir)
         shutil.copy('sa_util.py', process_dir)
-        shutil.copy(prog, process_dir)
+        shutil.copy(program, process_dir)
         binary_dir = os.path.join(process_dir, 'binary_analysis')
         if os.path.exists(binary_dir):
             shutil.rmtree(binary_dir)
         shutil.copytree('binary_analysis', binary_dir, ignore=shutil.ignore_patterns('.*', '_*'))
-
 
     processes = []
     pipes = []
@@ -75,7 +71,7 @@ def main():
     mp.set_start_method('spawn')
     for i in range(num_processor):
         parent_conn, child_conn = mp.Pipe(duplex=True)
-        p = mp.Process(target = run_task, args=(i, child_conn, prog))
+        p = mp.Process(target = run_task, args=(i, child_conn, program))
         p.start()
         processes.append(p)
         pipes.append(parent_conn)
@@ -84,8 +80,6 @@ def main():
     listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     listener.bind((socket.gethostname(), port))
     listener.listen(num_processor)
-
-
 
     while True:
         (client, addr) = listener.accept()
@@ -99,8 +93,8 @@ def main():
                     pipes.append(pipe)
                     return
                 
-                if line.startswith(prog):
-                    line = line[len(prog):]
+                if line.startswith(program):
+                    line = line[len(program):]
                 segs = line.split('_')
                 a0 = None if segs[0].strip() == "None" else segs[0].strip()
                 a1 = None if segs[1].strip() == "None" else segs[1].strip() 
@@ -111,18 +105,16 @@ def main():
                 a6 = None if segs[6].strip() == "None" else segs[6].strip() 
                 a7 = None if segs[7].strip() == "None" else segs[7].strip() 
                 print("[server] Sending task {}".format(line), flush=True)
-                pipe.send((prog, a1, a2, a3, a4, a5, a6, a7))
+                pipe.send((program, a1, a2, a3, a4, a5, a6, a7))
                 print("[server] Sent task {}".format(line), flush=True)
 
                 ret = pipe.recv()
                 print("[server] Receiving result for task {}".format(line), flush=True)
                 socket.send(json.dumps(ret).encode())
 
-
         if len(pipes) > 0:
             pipe = pipes.pop()
             threading.Thread(target=connect_bridge, args=(client, pipe)).start()
-
 
     for i in range(num_processor):
         processes[i].join()

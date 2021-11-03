@@ -2,6 +2,7 @@ import json
 import os
 import select
 import time
+from util import *
 from sa_util import *
 from rr_util import *
 from pin_util import *
@@ -2416,31 +2417,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--parallelize_id', dest='pa_id', type=int)
     parser.add_argument('--starting_instruction', dest='starting_insn')
-    parser.add_argument('-s', '--starting_event_file')
-    parser.set_defaults(starting_event_file=None)
     args = parser.parse_args()
-    print(args.pa_id)
-    print(args.starting_insn)
-    starting_events = []
-    starting_event_file = args.starting_event_file
-    starting_event_file = "starting_events_good_run"
-    starting_insn_to_weight = {}
-    if starting_event_file is not None:
-        with open(starting_event_file, "r") as f:
-            for l in f.readlines():
-                segs = l.split()
-                insn = int(segs[0], 16)
-                starting_events.append(["", insn, segs[1]])
-                starting_insn_to_weight[insn] = float(segs[2])
-    else:
-        starting_events.append(["rdi", 0x409daa, "sweep"])
-        starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
-        starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
-        starting_events.append(["rcx", 0x40764c, "runtime.free"])
+    print("Parallel execution id is: " + str(args.pa_id))
+    print("Optional starting instruction is: " + str(args.starting_insn))
 
-    dd = DynamicDependence(starting_events, "909_ziptest_exe9", "/home/anygroup/perf_debug_tool/test.zip", "/home/anygroup/perf_debug_tool/", starting_insn_to_weight=starting_insn_to_weight)
-    dd.prepare_to_build_dynamic_dependencies(10000)
+    limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
+
+    dd = DynamicDependence(starting_events, program, program_args, program_path, starting_insn_to_weight=starting_insn_to_weight)
+    dd.prepare_to_build_dynamic_dependencies(limit)
 
     for event in starting_events:
-        dg = dd.build_dynamic_dependencies(event[1] if args.starting_insn is None else int(args.starting_insn, 16), args.pa_id) #0x409418
-    #verify_0x409418_result(dg)
+        dg = dd.build_dynamic_dependencies(event[1] if args.starting_insn is None else int(args.starting_insn, 16), args.pa_id)
