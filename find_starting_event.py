@@ -223,12 +223,12 @@ def run():
     with open("starting_events_good_run", "w") as f:
         for (addr, weight) in all_output_l:
             if addr in output1:
-                f.write(output1[addr]+"\n")
+                f.write("_ " + output1[addr]+"\n")
 
     with open("starting_events_bad_run", "w") as f:
         for (addr, weight) in all_output_l:
             if addr in output2:
-                f.write(output2[addr]+"\n")
+                f.write("_ " + output2[addr]+"\n")
 
 if __name__ == "__main__":
     print("Usage: perf report (no call graph) of the fast run, duration of the fast run, perf report (no call graph) of the slow run, duration of the slow run, binary of the fast run, binry of the slow run.")
