@@ -27,7 +27,7 @@ __init__.py
 graph
 *result
 *results
-preprocess_data
+preprocess_data*
 instruction_reg_log_arg
 binary_dump_*
 .vscode/*
