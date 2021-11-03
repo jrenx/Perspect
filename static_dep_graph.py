@@ -1,6 +1,7 @@
 import json
 import os
 import os.path
+from util import *
 from sa_util import *
 from rr_util import *
 from pin_util import *
@@ -2651,6 +2652,7 @@ class StaticDepGraph:
                             continue
                         bad_count += 1
                         print("************ Type 1 ******************")
+                        print (" Error: control flow predecessor not not connected to successor")
                         print("**************************************")
                         print(node)
                         print(p)
@@ -2659,6 +2661,7 @@ class StaticDepGraph:
                     if node not in p.df_succes:
                         bad_count += 1
                         print("************ Type 2 ******************")
+                        print (" Error: dataflow flow predecessor not not connected to successor")
                         print("**************************************")
                         print(node)
                         print(p)
@@ -2667,6 +2670,7 @@ class StaticDepGraph:
                     if node not in s.cf_predes:
                         bad_count += 1
                         print("************ Type 3  *****************")
+                        print (" Error: control flow successor not not connected to predecessor")
                         print("**************************************")
                         print(node)
                         print(s)
@@ -2675,47 +2679,19 @@ class StaticDepGraph:
                     if node not in s.df_predes:
                         bad_count += 1
                         print("************ Type 4  *****************")
+                        print (" Error: data flow successor not not connected to predecessor")
                         print("**************************************")
                         print(node)
                         print(s)
                     #assert node in node.df_predes, str(node) + str(s)
+                #if node is explained and node.mem_load is not None and len(node.df_predes) == 0:
+                #    print("************ Type 5  *****************")
+                #    print(" Warn: node loads from memory but has not dataflow predecessors")
+                #    print("**************************************")
+                #    print(node)
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--parallelize_rr', dest='parallelize_rr', action='store_true')
-    parser.set_defaults(parallelize_rr=False)
-    parser.add_argument('--use_cached_static_graph', dest='use_cached_static_graph', action='store_true')
-    parser.set_defaults(use_cached_static_graph=False)
-    parser.add_argument('-s', '--starting_event_file')
-    parser.set_defaults(starting_event_file=None)
-    args = parser.parse_args()
-    starting_events = []
-    starting_event_file = args.starting_event_file
-    starting_event_file = "starting_events_good_run"
-    if starting_event_file is not None:
-        with open(starting_event_file, "r") as f:
-            for l in f.readlines():
-                starting_events.append(["", int(l.split()[0], 16), l.split()[1]])
-    else:
-        starting_events.append(["rdi", 0x409daa, "sweep"])
-        starting_events.append(["rbx", 0x407240, "runtime.mallocgc"])
-        starting_events.append(["rdx", 0x40742b, "runtime.mallocgc"])
-        starting_events.append(["rcx", 0x40764c, "runtime.free"])
-    print(starting_events)
-    StaticDepGraph.build_dependencies(starting_events, "mongod_4.0.13",
-                                      limit=15000, use_cached_static_graph=(False if args.parallelize_rr is True else args.use_cached_static_graph),
-                                      parallelize_rr=args.parallelize_rr)
-    """
-    print("HERERERE")
-    for func in StaticDepGraph.func_to_graph:
-        graph = StaticDepGraph.func_to_graph[func]
-        for node in graph.id_to_node.values():
-            if node.mem_load is not None and len(node.df_predes) == 0:
-                print(node)
-    """
-    # StaticDepGraph.build_dependencies(0x409418, "scanblock", "909_ziptest_exe9")
-    """
+def json_sanity_check():
     json_file = os.path.join(curr_dir, 'static_graph_result')
     StaticDepGraph.writeJSON(json_file)
     func_to_graph, pending_nodes = StaticDepGraph.loadJSON(json_file)
@@ -2730,7 +2706,20 @@ def main():
         assert len(func_to_graph[func].bb_id_to_node_id) == len(StaticDepGraph.func_to_graph[func].bb_id_to_node_id)
         assert len(func_to_graph[func].nodes_in_cf_slice) == len(StaticDepGraph.func_to_graph[func].nodes_in_cf_slice)
         assert len(func_to_graph[func].nodes_in_df_slice) == len(StaticDepGraph.func_to_graph[func].nodes_in_df_slice)
-    """
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--parallelize_rr', dest='parallelize_rr', action='store_true')
+    parser.set_defaults(parallelize_rr=False)
+    parser.add_argument('--use_cached_static_graph', dest='use_cached_static_graph', action='store_true')
+    parser.set_defaults(use_cached_static_graph=False)
+    args = parser.parse_args()
+
+    limit, program, _, _, starting_events, _ = parse_inputs()
+
+    StaticDepGraph.build_dependencies(starting_events, program,
+                                      limit=limit, use_cached_static_graph=(False if args.parallelize_rr is True else args.use_cached_static_graph),
+                                      parallelize_rr=args.parallelize_rr)
 
 
 if __name__ == "__main__":
