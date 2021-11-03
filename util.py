@@ -8,7 +8,7 @@ def parse_inputs():
         for l in f.readlines():
             segs = l.split("=")
             if segs[0] == "limit":
-                limit = segs[1].strip()
+                limit = int(segs[1].strip())
             elif segs[0] == "program":
                 program = segs[1].strip()
             elif segs[0] == "program_args":
