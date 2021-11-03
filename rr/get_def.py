@@ -11,6 +11,7 @@ SMALL_READ_POINT_COUNT = 2000
 LARGE_READ_POINT_COUNT = 10000
 SMALL_ADDR_COUNT = 250
 SMALL_IRRELEVANT_WATCH_POINT_RATIO = 10
+USE_X86_CALLING_CONVENTION = True #will recognizes rbp which is the frame pointer
 pid = str(os.getpid())
 
 def count_point_in_bp_trace(target, bp_trace):
@@ -328,7 +329,7 @@ def get_def(binary_ptr, branch, target, read, reg, shift='0x0', offset='0x0', of
     if branch is not None and target is not None:
         branch_target = [branch, target]
     timeout = None
-    if reg.lower() == 'rsp' or reg.lower() == 'esp':
+    if reg.lower() == 'rsp' or reg.lower() == 'esp' or (USE_X86_CALLING_CONVENTION is True and reg.lower() == 'rbp'):
         timeout = 150
     for i in range(0,2):
         success, bp_pass_duration = run_breakpoint(branch_target, reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, False, False,
@@ -343,7 +344,7 @@ def get_def(binary_ptr, branch, target, read, reg, shift='0x0', offset='0x0', of
         print("[rr][" + pid + "] COUNT Total number of read points " + str(read_point_count))
 
         if len(taken_indices) == 0:
-            if reg.lower() == 'rsp' or reg.lower() == 'esp':
+            if reg.lower() == 'rsp' or reg.lower() == 'esp' or (USE_X86_CALLING_CONVENTION is True and reg.lower() == 'rbp'):
                 timeout += 150
                 continue
             if len(branch_target) != 0:
@@ -412,7 +413,8 @@ def get_def(binary_ptr, branch, target, read, reg, shift='0x0', offset='0x0', of
     addr_to_def_to_ignore = {}
     pos_pass = True
     do_breakpoints = read_point_count < SMALL_READ_POINT_COUNT \
-                     or (read_point_count < LARGE_READ_POINT_COUNT and (reg.lower() == 'rsp' or reg.lower() == 'esp'))
+                     or (read_point_count < LARGE_READ_POINT_COUNT and \
+                         ((reg.lower() == 'rsp' or reg.lower() == 'esp') or (USE_X86_CALLING_CONVENTION is True and reg.lower() == 'rbp')))
     do_thirdpass = True
     print("[rr][" + pid + "] Do breakpoints? " + str(do_breakpoints))
     print("[rr][" + pid + "] Total iters: " + str(iter))
