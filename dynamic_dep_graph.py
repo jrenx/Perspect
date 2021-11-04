@@ -547,8 +547,8 @@ class DynamicDependence:
             with open(result_file, 'r') as f:
                 in_result = json.load(f)
                 static_id_to_node = {}
-                for func in StaticDepGraph.func_to_graph:
-                    for sn in StaticDepGraph.func_to_graph[func].id_to_node.values():
+                for graph in StaticDepGraph.func_to_graph.values():
+                    for sn in graph.id_to_node.values():
                         static_id_to_node[sn.id] = sn
                 dynamic_graph = DynamicGraph.fromJSON(in_result, static_id_to_node)
                 dynamic_graph.result_file = result_file
@@ -831,6 +831,7 @@ class DynamicGraph:
             
         dg.node_frequencies = data["node_frequencies"]
 
+        #Fixme: is this obselete?
         if "insn_to_static_node" in data:
             dg.insn_to_static_node = {}
             for func in func_to_graph:
@@ -2370,7 +2371,7 @@ def verify_0x409418_result(dg):
         print("MISSING: " + addr)
 
     print("==============================")
-    sn = StaticDepGraph.func_to_graph['scanblock'].insn_to_node[4232057]
+    sn = StaticDepGraph.get_graph('scanblock').insn_to_node[4232057]
     """
     predes = []
     for p in sn.df_predes:
