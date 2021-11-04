@@ -579,8 +579,8 @@ if __name__ == "__main__":
     dd = DynamicDependence(starting_events, program, program_args, program_path)
     dd.prepare_to_build_dynamic_dependencies(limit)
 
-    func = "sweep"
-    insn = 0x409daa
+    func = "__wt_row_leaf_key_work"
+    insn = 0xee2bb0
     dgraph = dd.build_dynamic_dependencies(insn=insn, pa_id=0)
     graph = StaticDepGraph.get_graph(func, insn)
     node = graph.insn_to_node[insn]
