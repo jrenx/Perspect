@@ -20,6 +20,10 @@
 #include <netinet/in.h>
 #include <string.h>
 
+#define SAMPLE
+#define SAMPLE_THRESHOLD 50
+#define LARGE_THRESOLD  100000
+
 using namespace std;
 using namespace boost;
 //TODO: fix all the weird casings in this file.
@@ -180,6 +184,7 @@ public:
   unordered_map<int, long> StaticNodeIdToInsn;
 
   long *OccurrencesPerCode;
+  long *OccurrencesPerStartingCode;
 #ifdef COUNT_ONLY
   unsigned long *AverageTimeStampPerCode;
 #endif 
@@ -438,6 +443,9 @@ public:
       cout << "Max start code is " << MaxStartCode << endl;
     }
 
+    OccurrencesPerStartingCode = new long[MaxStartCode + 1];
+    for (int i = 0; i < MaxStartCode + 1; i++) OccurrencesPerStartingCode[i] = 0;
+
     cJSON *json_insnsWithRegs = cJSON_GetObjectItem(data, "insns_with_regs");
     parseJsonList(json_insnsWithRegs, InsnsWithRegs);
     CodesWithRegs = new bool[CodeCount];
@@ -578,6 +586,7 @@ public:
     os.open(outTraceFile.c_str(), ios::out);
 #endif
     int nodeCount = 0;
+    int prevNodeCount = 0;
     unsigned long occurrences;
     long uid = -1;
     // Note: the same instruction executed will have multiple UIDs if multiple regs are printed at the instrustion
@@ -600,6 +609,8 @@ public:
       assert(code >= 0);
       if (code == 0) {
         i -= sizeof(u_int8_t);
+        if (prevNodeCount == nodeCount) continue;
+        prevNodeCount = nodeCount;
         u_int8_t prevThreadId = threadId;
         std::memcpy(&threadId, buffer + i, sizeof(u_int8_t));
 
@@ -629,11 +640,20 @@ public:
       bool parse = false;
       if (CodeOfStartInsns[code] || PendingRemoteDefCodes[code] || ctxt->PendingCodes[code]) {
         parse = true;
+#ifdef SAMPLE
+        if(CodeOfStartInsns[code]) {
+          long startingCodeOcurrences = OccurrencesPerStartingCode[code];
+          if (startingCodeOcurrences % SAMPLE_THRESHOLD != 0) {
+            parse = false;
+	        }
+	        OccurrencesPerStartingCode[code] = startingCodeOcurrences + 1;
+	      }
+#endif	
       }
+      if (OccurrencesPerCode[code] > LARGE_THRESOLD) parse = false;
 #else
       bool parse = true;
-#endif 
-      //if (OccurrencesPerCode[code] > 50000) parse = false;
+#endif
 
       bool isBitOp = isBitOpCode[code];
       bool containsReg = CodesWithRegs[code];
@@ -924,9 +944,10 @@ public:
     osl.open(outLargeFile.c_str());
     for (int i = 1; i < CodeCount; i++) {
       long count = OccurrencesPerCode[i];
-      if (count <= 50000) continue;
-      //cout << "LARGE " << i << "\n";
-      //osl << std::hex << CodeToInsn[i] << std::dec << " " << i << " occurrences: " << count << "\n";
+      if (count <= LARGE_THRESOLD) continue;
+      //cout << "LARGE_THRESOLD " << i << "\n";
+      osl << std::hex << CodeToInsn[i] << std::dec << " " << i << " occurrences: " << count << "\n";
+      nodeCount -= count;
     }
     osl.close();
 #else
