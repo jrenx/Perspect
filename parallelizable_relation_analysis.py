@@ -578,8 +578,12 @@ if __name__ == "__main__":
     limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
     dd = DynamicDependence(starting_events, program, program_args, program_path)
     dd.prepare_to_build_dynamic_dependencies(limit)
-    dgraph = dd.build_dynamic_dependencies(insn=0x409daa, pa_id=0)
-    node = StaticDepGraph.func_to_graph["sweep"].insn_to_node[0x409daa]
+
+    func = "sweep"
+    insn = 0x409daa
+    dgraph = dd.build_dynamic_dependencies(insn=insn, pa_id=0)
+    graph = StaticDepGraph.get_graph(func, insn)
+    node = graph.insn_to_node[insn]
     wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, node, 0, 0, program)
     print([(str(w.insn) + "@" + w.function) for w in wavefront], rgroup.toJSON())
     print(rgroup)

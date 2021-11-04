@@ -30,7 +30,8 @@ def run_task(id, pipe, prog, arg, path, starting_events, starting_insn_to_weight
         segs = obj.split("|")
         insn = int(segs[0], 16)
         func = segs[1]
-        node = StaticDepGraph.func_to_graph[func].insn_to_node[insn]
+        graph = StaticDepGraph.get_graph(func)
+        node = graph.insn_to_node[insn]
         starting_weight = float(segs[2])
         max_contrib = float(segs[3])
         try:
