@@ -237,11 +237,11 @@ class Relation:
     @staticmethod
     def fromJSON(data, prog):
         segs = data["target_node"].split("@")
-        graph = StaticDepGraph.get_graph(segs[1])
+        graph = StaticDepGraph.get_graph(segs[1], int(segs[0]))
         target_node = graph.insn_to_node[int(segs[0])]
 
         segs = data["prede_node"].split("@")
-        graph = StaticDepGraph.get_graph(segs[1])
+        graph = StaticDepGraph.get_graph(segs[1], int(segs[0]))
         prede_node = graph.insn_to_node[int(segs[0])]
 
         prede_count = data["prede_count"]
@@ -319,7 +319,7 @@ class RelationGroup:
     @staticmethod
     def fromJSON(data, prog):
         segs = data["starting_node"].split("@")
-        graph = StaticDepGraph.get_graph(segs[1])
+        graph = StaticDepGraph.get_graph(segs[1], int(segs[0]))
         starting_node = graph.insn_to_node[int(segs[0])]
         weight = data["weight"]
         rgroup = RelationGroup(starting_node, weight, prog)

@@ -261,7 +261,7 @@ class RelationAnalysis:
                         if value[0] is not None and value[1] is not None:
                             for node_str in value[0]:
                                 segs = node_str.split("@")
-                                graph = StaticDepGraph.get_graph(segs[1])
+                                graph = StaticDepGraph.get_graph(segs[1], int(segs[0]))
                                 wavelet = graph.insn_to_node[int(segs[0])]
                                 curr_wavefront.append(wavelet)
                             rgroup = RelationGroup.fromJSON(value[1], self.prog)

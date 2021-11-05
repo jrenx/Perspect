@@ -187,7 +187,7 @@ class RelationAnalysis:
         for starting_event in self.starting_events:
             insn = starting_event[1]
             func = starting_event[2]
-            graph = StaticDepGraph.get_graph(func)
+            graph = StaticDepGraph.get_graph(func, insn)
             wavefront.append((None, graph.insn_to_node[insn], 0))
         while len(wavefront) > 0:
             curr_weight, starting_node, curr_max_contrib = wavefront.popleft()
