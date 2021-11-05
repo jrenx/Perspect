@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     nthreads = 5
     threads = []
-    time.sleep(120)
+    time.sleep(60)
     print("Starting test...")
     for i in range(nthreads):
         t = multiprocessing.Process(target=update, args=(i,))
