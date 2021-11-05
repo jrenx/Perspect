@@ -617,12 +617,18 @@ class DynamicDependence:
                 codes_to_ignore = set()
                 for l in large:
                     codes_to_ignore.add(int(l.split()[1]))
+
+            thread_id_byte_seq = None
+            if os.path.exists(self.trace_path + ".parsed_thread_ids" + ('' if pa_id is None else ('_' + str(pa_id)))):
+                with open(self.trace_path + ".parsed_thread_ids" + ('' if pa_id is None else ('_' + str(pa_id))), 'rb') as f:
+                    thread_id_byte_seq = f.read() #more than twice faster than readlines!
+
             print("[dyn_graph] Codes to ignore are: " + str(codes_to_ignore))
             time_record["read_preparse"] = time.time()
             print("[TIME] Loading preparsed trace took: ", str(time_record["read_preparse"] - time_record["preparse"]), flush=True)
 
             dynamic_graph = DynamicGraph(self.starting_events)
-            dynamic_graph.build_dynamic_graph(byte_seq, codes_to_ignore, self.starting_insns if insn is None else set([insn]),
+            dynamic_graph.build_dynamic_graph(byte_seq, thread_id_byte_seq, codes_to_ignore, self.starting_insns if insn is None else set([insn]),
                                               self.code_to_insn, set(self.insns_with_regs), self.insn_to_static_node,
                                               set(self.insn_of_cf_nodes), set(self.insn_of_df_nodes),
                                               set(self.insn_of_local_df_nodes), set(self.insn_of_remote_df_nodes),
@@ -1207,7 +1213,7 @@ class DynamicGraph:
         print("[dyn_dep]Total inconsistent node count: " + str(bad_count))
         """
 
-    def build_dynamic_graph(self, byte_seq, codes_to_ignore, starting_insns, code_to_insn, insns_with_regs, insn_to_static_node,
+    def build_dynamic_graph(self, byte_seq, thread_id_byte_seq, codes_to_ignore, starting_insns, code_to_insn, insns_with_regs, insn_to_static_node,
                             insn_of_cf_nodes, insn_of_df_nodes, insn_of_local_df_nodes, insn_of_remote_df_nodes,
                             insn_to_reg_count, insn_to_reg_count2, load_insn_to_bit_ops, store_insn_to_bit_ops, starting_insn_to_weight):
         # reverse the executetable, and remove insns beyond the start insn
@@ -1242,6 +1248,7 @@ class DynamicGraph:
 
         index = 0
         length = len(byte_seq)
+        thread_id_index = 0
 
         other_regs_parsed = False
         print("START: " + str(starting_insns))
@@ -1253,8 +1260,8 @@ class DynamicGraph:
             index += 2
             if code == 0:
                 prev_thread_id = thread_id
-                thread_id = int.from_bytes(byte_seq[index:index + 1], byteorder='little')
-                index += 1
+                thread_id = int.from_bytes(thread_id_byte_seq[thread_id_index:thread_id_index + 1], byteorder='little')
+                thread_id_index += 1
 
                 # In order to be backward-compatible with single threaded traces,
                 # always make a context by default in the first place,

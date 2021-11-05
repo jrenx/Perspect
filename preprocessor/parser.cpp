@@ -21,8 +21,9 @@
 #include <string.h>
 
 #define SAMPLE
-#define SAMPLE_THRESHOLD 50
+#define SAMPLE_THRESHOLD 500
 #define LARGE_THRESOLD  100000
+#define CHECK_ALL_COUNTS
 
 using namespace std;
 using namespace boost;
@@ -584,6 +585,15 @@ public:
     }
     ofstream os;
     os.open(outTraceFile.c_str(), ios::out);
+
+    string outTraceThreadIdFile(traceFile);
+    outTraceThreadIdFile += ".parsed_thread_ids";
+    if (pa_id >= 0) {
+      outTraceThreadIdFile += "_";
+      outTraceThreadIdFile += std::to_string(pa_id);
+    }
+    ofstream osti;
+    osti.open(outTraceThreadIdFile.c_str(), ios::out);
 #endif
     int nodeCount = 0;
     int prevNodeCount = 0;
@@ -599,6 +609,10 @@ public:
 
     short *bitOps;
     boost::unordered_map<u_int8_t, Context *> ctxtMap;
+#ifndef COUNT_ONLY
+    // Because the parse is read in reverse by the python logic, make sure to always print a place holder of thread first.
+    os.write((char*)&code, sizeof(unsigned short));
+#endif
     Context *ctxt = new Context(CodeCount); // In order to be backward-compatible with single threaded traces.
     for (unsigned long i = length; i > 0;) {
       regValue = 0;
@@ -616,7 +630,7 @@ public:
 
 #ifndef COUNT_ONLY    
         os.write((char*)&code, sizeof(unsigned short));
-        os.write((char*)&threadId, sizeof(u_int8_t));
+        osti.write((char*)&threadId, sizeof(u_int8_t));
 #endif
 
         // In order to be backward-compatible with single threaded traces,
@@ -927,8 +941,13 @@ public:
         }
       }
     }
-#ifndef COUNT_ONLY    
+#ifndef COUNT_ONLY
+    // print a placeholder thread id in the end
+    // the smallest legal thread id is 1 (determined by my PIN logic)
+    threadId = 0;
+    std::memcpy(&threadId, buffer + i, sizeof(u_int8_t));
     os.close();
+    osti.close();
 #endif
     std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
     std::cout << "Parsing took = " << std::chrono::duration_cast<std::chrono::seconds>(t4 - t3).count() << "[s]" << std::endl;
@@ -950,6 +969,21 @@ public:
       nodeCount -= count;
     }
     osl.close();
+#ifdef CHECK_ALL_COUNTS
+    string outDebugFile(traceFile);
+    outDebugFile += ".debug";
+    if (pa_id >= 0) {
+      outDebugFile += "_";
+      outDebugFile += std::to_string(pa_id);
+    }
+    ofstream osd;
+    osd.open(outDebugFile.c_str());
+    for (int i = 1; i < CodeCount; i++) {
+      long count = OccurrencesPerCode[i];
+      osd << std::hex << CodeToInsn[i] << std::dec << " " << i << " occurrences: " << count << "\n";
+    }
+    osd.close();
+#endif
 #else
     string outLargeFile(traceFile);
     outLargeFile += ".count";
@@ -957,6 +991,9 @@ public:
     osl.open(outLargeFile.c_str());
     for (int i = 1; i < CodeCount; i++) {
       unsigned long count = OccurrencesPerCode[i];
+#ifdef SAMPLE
+      count = (count / SAMPLE_THRESHOLD) + 1;
+#endif
       osl << std::hex << CodeToInsn[i] << std::dec << " " << count << "\n";
     }
     osl.close();
