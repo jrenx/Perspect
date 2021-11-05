@@ -595,8 +595,8 @@ public:
     ofstream osti;
     osti.open(outTraceThreadIdFile.c_str(), ios::out);
 #endif
-    int nodeCount = 0;
-    int prevNodeCount = 0;
+    long nodeCount = 0;
+    long prevNodeCount = 0;
     unsigned long occurrences;
     long uid = -1;
     // Note: the same instruction executed will have multiple UIDs if multiple regs are printed at the instrustion
@@ -986,18 +986,18 @@ public:
     osd.close();
 #endif
 #else
-    string outLargeFile(traceFile);
-    outLargeFile += ".count";
-    ofstream osl;
-    osl.open(outLargeFile.c_str());
+    string outCountFile(traceFile);
+    outCountFile += ".count";
+    ofstream osc;
+    osc.open(outCountFile.c_str());
     for (int i = 1; i < CodeCount; i++) {
       unsigned long count = OccurrencesPerCode[i];
 #ifdef SAMPLE
       count = (count / SAMPLE_THRESHOLD) + 1;
 #endif
-      osl << std::hex << CodeToInsn[i] << std::dec << " " << count << "\n";
+      osc << std::hex << CodeToInsn[i] << std::dec << " " << count << "\n";
     }
-    osl.close();
+    osc.close();
 #endif
 
     cout << "total nodes: " << nodeCount << endl;
