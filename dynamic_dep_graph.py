@@ -2398,7 +2398,7 @@ def verify_0x409418_result(dg):
         print("MISSING: " + addr)
 
     print("==============================")
-    sn = StaticDepGraph.get_graph('scanblock').insn_to_node[4232057]
+    sn = StaticDepGraph.get_graph('scanblock', 4232057).insn_to_node[4232057]
     """
     predes = []
     for p in sn.df_predes:
