@@ -946,7 +946,7 @@ public:
     // print a placeholder thread id in the end
     // the smallest legal thread id is 1 (determined by my PIN logic)
     threadId = 0;
-    std::memcpy(&threadId, buffer + i, sizeof(u_int8_t));
+    osti.write((char*)&threadId, sizeof(u_int8_t));
     os.close();
     osti.close();
 #endif
