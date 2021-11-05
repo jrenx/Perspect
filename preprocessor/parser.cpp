@@ -600,7 +600,7 @@ public:
     unsigned long occurrences;
     long uid = -1;
     // Note: the same instruction executed will have multiple UIDs if multiple regs are printed at the instrustion
-    unsigned short code;
+    unsigned short code = 0;
     long regValue;
     u_int8_t threadId = 0;
     StaticNode *sn;
