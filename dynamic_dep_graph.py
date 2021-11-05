@@ -397,7 +397,9 @@ class DynamicDependence:
             reg = start_event[0]
             insn = start_event[1]
             func = start_event[2]
-            if StaticDepGraph.get_graph(func, insn) is None:
+            graph = StaticDepGraph.get_graph(func, insn)
+            node = graph.insn_to_node[insn] if graph is not None else None
+            if node is None:
                 print("[dg/warn] starting event not found: " + hex(insn))
                 continue
             assert insn not in unique_insns
@@ -405,6 +407,14 @@ class DynamicDependence:
 
             i += 1
             self.code_to_insn[i] = insn
+            
+            if self.insn_to_static_node[insn].mem_load is not None:
+                self.insn_to_static_node[insn].mem_load = None
+                print("[warn] Ignoring the mem load of a starting node")
+            if self.insn_to_static_node[insn].mem_store is not None:
+                self.insn_to_static_node[insn].mem_store = None
+                print("[warn] Ignoring the mem store of a starting node")
+ 
             if reg != "":
                 instructions.append([hex(insn), reg, i])
                 self.insns_with_regs.append(insn)
@@ -485,6 +495,13 @@ class DynamicDependence:
             self.code_to_insn[i] = node.insn
             instructions.append([node.hex_insn, 'pc', i])
 
+            if self.insn_to_static_node[node.insn].mem_load is not None:
+                self.insn_to_static_node[node.insn].mem_load = None
+                print("[warn] Ignoring the mem load of a CF node")
+            if self.insn_to_static_node[node.insn].mem_store is not None:
+                self.insn_to_static_node[node.insn].mem_store = None
+                print("[warn] Ignoring the mem store of a CF node")
+ 
         self.max_code_with_static_node = i
 
         for insn in insn_to_bit_operand:
