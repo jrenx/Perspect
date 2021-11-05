@@ -1,4 +1,5 @@
 #!/bin/bash
+git push
 ips=()
 while read -r line; do
     ips+=($line)
