@@ -9,5 +9,5 @@ done < servers.config
 for ip in "${ips[@]}"
 do
     echo "Updating "$ip
-    ssh $ip $SDIR"/"compile.sh
+    ssh $ip source ~/.bashrc; source ~/.profile; $SDIR"/"compile.sh
 done
