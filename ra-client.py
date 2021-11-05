@@ -76,7 +76,7 @@ def sender_receiver(q, results_q):
     port = 15000
     worker_addresses = []
     with open("servers.config", "r") as f:
-        for l in f.readlines:
+        for l in f.readlines():
             worker_addresses.append((l.strip(), port))
     for addr in worker_addresses:
         for _ in range(num_processor):
