@@ -614,7 +614,8 @@ public:
     os.write((char*)&code, sizeof(unsigned short));
 #endif
     Context *ctxt = new Context(CodeCount); // In order to be backward-compatible with single threaded traces.
-    for (unsigned long i = length; i > 0;) {
+    unsigned long i = length;
+    for (; i > 0;) {
       regValue = 0;
       uid ++;
       i -= sizeof(unsigned short);
