@@ -312,9 +312,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--use_cache', dest='use_cache', action='store_true')
     parser.set_defaults(use_cache=False)
-
-    parser.add_argument('-s', '--starting_event_file')
-    parser.set_defaults(starting_event_file=None)
     args = parser.parse_args()
 
     limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
