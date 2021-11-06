@@ -1322,6 +1322,10 @@ class StaticDepGraph:
             json_nodes = json_func_to_nodes["nodes"]
             nodes = {}
             for json_node in json_nodes:
+                if 'bb' in json_node and json_node['bb'] is not None:
+                    #FIXME: eventually remove this,
+                    # any merged node which have a bb should have been removed from the pending map
+                    continue
                 node = StaticNode.fromJSON(json_node)
                 nodes[node.insn] = node
                 all_id_to_node[node.id] = node
@@ -1414,10 +1418,11 @@ class StaticDepGraph:
             node = graph.insn_to_node.get(insn, None)
             if node is not None:
                 return node
-
+        node_from_pending = False
         pending = StaticDepGraph.pending_nodes.get(function, None)
         if pending is not None:
             node = pending.get(insn, None)
+            node_from_pending = node is not None
 
         if node is None:
             node = StaticNode(insn, bb, function)
@@ -1428,6 +1433,8 @@ class StaticDepGraph:
         if graph is not None:
             graph.id_to_node[node.id] = node
             graph.insn_to_node[insn] = node
+            if node_from_pending:
+                del pending[node.insn]
             #assert function not in StaticDepGraph.pending_nodes
         else:
             if pending is None:
@@ -1544,7 +1551,7 @@ class StaticDepGraph:
             print("[static_dep] Finished loading graph, took: " + str(b-a))
             #StaticDepGraph.binary_ptr = setup(prog)
             #StaticDepGraph.get_indices(prog)
-            #StaticDepGraph.writeJSON(result_file)
+            StaticDepGraph.writeJSON(result_file)
             #StaticDepGraph.output_indices_mapping(indice_file)
             StaticDepGraph.print_graph_info()
             return True
@@ -1813,6 +1820,7 @@ class StaticDepGraph:
                         continue
                     graph.id_to_node[pending_node.id] = pending_node
                     graph.insn_to_node[pending_node.insn] = pending_node
+                    del pending_nodes[pending_node.insn]
                     #FIXME: remoe after?
 
             target_bbs.add(graph.cfg.ordered_bbs[0])
@@ -2707,7 +2715,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--parallelize_rr', dest='parallelize_rr', action='store_true')
     parser.set_defaults(parallelize_rr=False)
-    parser.add_argument('--use_cached_static_graph', dest='use_cached_static_graph', action='store_true')
+    parser.add_argument('-c', '--use_cached_static_graph', dest='use_cached_static_graph', action='store_true')
     parser.set_defaults(use_cached_static_graph=False)
     args = parser.parse_args()
 
