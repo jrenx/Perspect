@@ -21,6 +21,7 @@ from util import *
 
 DEBUG = True
 Weight_Threshold = 0
+curr_dir = os.path.dirname(os.path.realpath(__file__))
 
 class RelationAnalysis:
     #negative_event_map = {}
@@ -60,15 +61,15 @@ class RelationAnalysis:
         print("[ra] Finished getting the average timestamp of each unique node in the dynamic trace")
 
         if other_indices_file is not None:
-            other_indices_file_path = os.path.join(self.path, "cache", self.prog, other_indices_file)
+            other_indices_file_path = os.path.join(curr_dir, "cache", self.prog, other_indices_file)
             self.other_indices_map = self.load_indices(other_indices_file_path)
 
         if other_indices_file is not None:
-            other_indices_file_path_inner = os.path.join(self.path, "cache", self.prog, other_indices_file + "_inner")
+            other_indices_file_path_inner = os.path.join(curr_dir, "cache", self.prog, other_indices_file + "_inner")
             self.other_indices_map_inner = self.load_indices(other_indices_file_path_inner)
 
         if other_relations_file is not None:
-            other_relations_file_path = os.path.join(self.path, "cache", self.prog, other_relations_file)
+            other_relations_file_path = os.path.joincurr_dir, "cache", self.prog, other_relations_file)
             self.other_simple_relation_groups = RelationAnalysis.load_simple_relations(other_relations_file_path)
 
     def add_to_explained_variant_relation(self, rgroup):
@@ -159,7 +160,7 @@ class RelationAnalysis:
     def analyze(self, use_cache=False):
         print(use_cache)
         a = time.time()
-        cache_file = os.path.join(self.path, "cache", self.prog, "rgroups_" + self.dd.key + ".json")
+        cache_file = os.path.join(curr_dir, "cache", self.prog, "rgroups_" + self.dd.key + ".json")
         print(cache_file)
         if use_cache is True:
             if os.path.exists(cache_file):
@@ -295,7 +296,7 @@ class RelationAnalysis:
         json_rgroups_simple = []
         for relation_group in self.relation_groups:
             json_rgroups_simple.append(SimpleRelationGroup.toJSON(relation_group))
-        with open(os.path.join(self.path, "cache", self.prog, "rgroups_simple_" + self.dd.key + ".json"), 'w') as f:
+        with open(os.path.join(curr_dir, "cache", self.prog, "rgroups_simple_" + self.dd.key + ".json"), 'w') as f:
             json.dump(json_rgroups_simple, f, indent=4)
 
     def print_rgroups(self, relation_groups):
