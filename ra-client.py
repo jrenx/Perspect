@@ -20,6 +20,7 @@ from util import *
 DEBUG = True
 Weight_Threshold = 0
 #worker_addresses = [("10.1.0.23", 15000)]
+curr_dir = os.path.dirname(os.path.realpath(__file__))
 
 def sender_receiver_worker(s, q, results_q):
     try:
@@ -198,7 +199,7 @@ class RelationAnalysis:
     def analyze(self, use_cache=False):
         print(use_cache)
         a = time.time()
-        cache_file = os.path.join(self.path, "cache", self.prog, "rgroups.json")
+        cache_file = os.path.join(curr_dir, 'cache', self.prog, "rgroups.json")
         print(cache_file)
         if use_cache is True:
             if os.path.exists(cache_file):
