@@ -37,3 +37,5 @@ logs/*
 pointers
 *log*
 run_*
+cache/mongod_4.0.13/dynamic*
+cache/mongod_4.2.1/dynamic*
