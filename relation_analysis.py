@@ -37,7 +37,7 @@ class RelationAnalysis:
         self.other_simple_relation_groups = None
         self.relation_groups = []  # results
 
-        self.dd = DynamicDependence(starting_events, starting_insn_to_weight, prog, arg, path)
+        self.dd = DynamicDependence(starting_events, prog, arg, path, starting_insn_to_weight)
         self.dd.prepare_to_build_dynamic_dependencies(steps)
 
         print("[ra] Getting the counts of each unique node in the dynamic trace")
