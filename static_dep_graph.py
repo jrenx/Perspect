@@ -1551,7 +1551,7 @@ class StaticDepGraph:
             print("[static_dep] Finished loading graph, took: " + str(b-a))
             #StaticDepGraph.binary_ptr = setup(prog)
             #StaticDepGraph.get_indices(prog)
-            StaticDepGraph.writeJSON(result_file)
+            #StaticDepGraph.writeJSON(result_file)
             #StaticDepGraph.output_indices_mapping(indice_file)
             StaticDepGraph.print_graph_info()
             return True
