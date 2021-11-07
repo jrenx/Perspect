@@ -8,9 +8,8 @@ for insn in "${insns[@]}"
 do
     addr2line -e $2 $insn
 done
-echo "FIN" >> $1"_DONE"
+echo "FIN" >> $1"_DONE.1"
 mv $1".out" $1".out.1"
-mv $1"_DONE" $1"_DONE.1"
 scp $1".out.1" $3$1".out"
 scp $1"_DONE.1" $3$1"_DONE"
 rm $1
