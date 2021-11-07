@@ -81,8 +81,7 @@ def execute_cmd_in_parallel(all_inputs, script_name, prefix, num_processor, prog
             for l in f.readlines():
                 ret.append(l)
         os.remove(file_name + "_DONE")
-        #os.remove(file_name + ".out")
-        #os.remove(file_name)
+        os.remove(file_name + ".out")
     return ret
 
 def get_line(insn, prog):
