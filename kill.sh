@@ -5,5 +5,5 @@ pkill rr -u $USER
 pkill gdb -u $USER
 pkill get_f -u $USER
 pkill get_i -u $USER
-rm $DIR/insns_*
-rm $DIR/file_lines_
+rm $SDIR/insns_*
+rm $SDIR/file_lines_
