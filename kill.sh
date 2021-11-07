@@ -1,6 +1,6 @@
-cd /home/renxian2/eval_mongodb_44991
-pkill python3 -u renxian2
-pkill para -u renxian2
-pkill rr -u renxian2
-pkill gdb -u renxian2
-exit
+pkill python3 -u $USER
+pkill para -u $USER
+pkill rr -u $USER
+pkill gdb -u $USER
+pkill get_f -u $USER
+pkill get_i -u $USER

@@ -59,38 +59,6 @@ reg_size_map = dict(al=1,   ah=1, ax=2,   eax=4,  rax=8,
 #### C function declarations for accessing Dyninst analysis ####
 ################################################################
 
-def get_line(insn, prog):
-    if not isinstance(insn, str):
-        insn = hex(insn)
-    cmd = ['addr2line', '-e', prog, insn]
-    #print("[main] running command: " + str(cmd))
-    result = subprocess.run(cmd, stdout=subprocess.PIPE)
-    result_seg = result.stdout.decode('ascii').strip().split(":")
-    file = result_seg[0].split("/")[-1]
-    try:
-        line = int(result_seg[1])
-        #print("[main] command returned: " + str(line))
-    except ValueError:
-        line = None
-    return file, line
-
-def get_insn_offsets(line, file, prog):
-    cmd = 'gdb ./'+ prog + ' -ex "info line ' + file + ':' + str(line)+'" --batch > infoLine_result'
-    #print("[main] running command: " + str(cmd))
-    os.system(cmd)
-    with open("infoLine_result", 'r') as f:
-        result = f.readlines()
-    result = result[-1]
-    if "contains no code" in result:
-        return (float('inf'), float('-inf'))
-    print(result)
-    result = result.split("at address")[1]
-    result = result.split("and ends at")
-    start = int(result[0].split()[0], 16)
-    end = int(result[1].split()[0], 16)
-    #print("start " + hex(start) + " end " + hex(end))
-    return (start, end)
-
 def parseLoadsOrStores(json_exprs):
     # TODO, why is it called a read again?
     data_points = []
