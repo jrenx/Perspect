@@ -68,7 +68,7 @@ def execute_cmd_in_parallel(all_inputs, script_name, prefix, num_processor, prog
             if server != my_ip:
                 os.remove(file_name)
             cmd = 'ssh ' + server + ' "cd ' + curr_dir + '/; nohup ./' + script_name + ' ' \
-                  + file_name + ' ' + prog + ' ' + my_ip + ':' + curr_dir +'/ > ' + file_name + '.out 2>&1 &"'
+                  + file_name + ' ' + prog + '_debug ' + my_ip + ':' + curr_dir +'/ > ' + file_name + '.out 2>&1 &"'
             print("Running command: " + cmd, flush=True)
             os.system(cmd)
 
@@ -81,7 +81,7 @@ def execute_cmd_in_parallel(all_inputs, script_name, prefix, num_processor, prog
             for l in f.readlines():
                 ret.append(l)
         os.remove(file_name + "_DONE")
-        os.remove(file_name + ".out")
+        #os.remove(file_name + ".out")
     return ret
 
 def get_line(insn, prog):
@@ -111,10 +111,11 @@ def get_insn_offsets(line, file, prog):
     return parse_insn_offsets(result)
 
 def parse_insn_offsets(result):
+    print(result)
     result = result[-1]
     if "contains no code" in result:
         return (float('inf'), float('-inf'))
-    #print(result)
+    print(result)
     result = result.split("at address")[1]
     result = result.split("and ends at")
     start = int(result[0].split()[0], 16)

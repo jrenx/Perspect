@@ -6,7 +6,7 @@ done < $1
 
 for file_line in "${file_lines[@]}"
 do
-    gdb ./$2 -ex '"'"info line "$file_line'"' --batch
+    gdb ./$2 -ex "info line "$file_line --batch
     echo "DELIMINATOR"
 done
 echo "FIN" >> $1"_DONE.1"
