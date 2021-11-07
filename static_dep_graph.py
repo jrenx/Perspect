@@ -19,9 +19,11 @@ DEBUG_SLICE = False
 VERBOSE = False
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 TRACKS_DIRECT_CALLER = True
-GENERATE_INSN_MAPPING = False
+# = False
 USE_BPATCH = False
 HOST, PORT = "localhost", 9999
+
+num_processor = 16
 
 class BasicBlock:
     def __init__(self, id, ends_in_branch, is_entry, lines):
@@ -855,7 +857,6 @@ class MemoryAccess:
                 s += "\n" + str([str(bo) for bo in bos])
         return s
 
-
 class StaticNode:
     id = 0
     group_id = 0
@@ -906,22 +907,13 @@ class StaticNode:
 
         self.is_intermediate_node = False
 
-        if GENERATE_INSN_MAPPING is True:
-            if file is None and line is None:
-                file, line = get_line(insn, StaticDepGraph.prog)
+        #if GENERATE_INSN_MAPPING is True:
+        #    if file is None and line is None:
+        #        file, line = get_line(insn, StaticDepGraph.prog)
         self.file = file
         self.line = line
-        if GENERATE_INSN_MAPPING is True:
-            if file is not None and line is not None:
-                lines = StaticDepGraph.file_to_line_to_nodes.get(file, None)
-                if lines is None:
-                    lines = {}
-                    StaticDepGraph.file_to_line_to_nodes[file] = lines
-                nodes = lines.get(line, None)
-                if nodes is None:
-                    nodes = set()
-                    lines[line] = nodes
-                nodes.add(self)
+        #if GENERATE_INSN_MAPPING is True:
+        #    StaticDepGraph.insert_file_line_to_map(file, line)
         self.index = None
         self.total_count = None
 
@@ -992,10 +984,12 @@ class StaticNode:
         data["group_insns"] = self.group_insns
         if self.is_intermediate_node is True:
             data["is_intermediate_node"] = self.is_intermediate_node
-        if GENERATE_INSN_MAPPING:
-            data["file"] = self.file
-            data["line"] = self.line
+        #if GENERATE_INSN_MAPPING:
+        data["file"] = self.file
+        data["line"] = self.line
+        if self.index is not None:
             data["index"] = self.index
+        if self.total_count is not None:
             data["total_count"] = self.total_count
         return data
 
@@ -1526,12 +1520,7 @@ class StaticDepGraph:
         return self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
     @staticmethod
-    def build_dependencies(starting_events, prog, limit=10000, use_cached_static_graph=True, parallelize_rr=False):
-        start = time.time()
-        result_dir = os.path.join(curr_dir, 'cache', prog)
-        if not os.path.exists(result_dir):
-            os.makedirs(result_dir)
-
+    def build_key(starting_events):
         key = ""
         for i in range(len(starting_events)):
             event = starting_events[i]
@@ -1540,8 +1529,46 @@ class StaticDepGraph:
             key += reg + "_" + hex(insn)
             if i + 1 < len(starting_events):
                 key += "_"
+        return key
+    @staticmethod
+    def build_file_names(starting_events, prog, limit):
+        result_dir = os.path.join(curr_dir, 'cache', prog)
+        if not os.path.exists(result_dir):
+            os.makedirs(result_dir)
+
+        key = StaticDepGraph.build_key(starting_events)
         result_file = os.path.join(result_dir, 'static_graph_' + str(limit) + "_" + key)
         indice_file = os.path.join(result_dir, 'indices_' + key)
+        return result_dir, result_file, indice_file, key
+
+    @staticmethod
+    def build_indices(starting_events, prog, limit, align_indices=False,
+                        our_source_code_dir=None, other_source_code_dir=None):
+        start = time.time()
+        result_dir, result_file, indice_file, key = StaticDepGraph.build_file_names(starting_events, prog, limit)
+        StaticDepGraph.result_file = result_file
+        StaticDepGraph.prog = prog
+
+        a = time.time()
+        StaticDepGraph.loadJSON(result_file)
+        b = time.time()
+        print("[static_dep] Finished loading graph, took: " + str(b - a))
+
+        if align_indices is False:
+            StaticDepGraph.generate_file_line_for_all_reachable_nodes(prog, our_source_code_dir)
+            # StaticDepGraph.writeJSON(result_file)
+            StaticDepGraph.binary_ptr = setup(prog)
+            StaticDepGraph.build_binary_indices(prog)
+            # StaticDepGraph.writeJSON(result_file)
+            StaticDepGraph.output_indices_mapping(indice_file)
+        else:
+            assert os.path.exists(indice_file)
+            StaticDepGraph.realign_indices(our_source_code_dir, other_source_code_dir)
+
+    @staticmethod
+    def build_dependencies(starting_events, prog, limit, use_cached_static_graph=True, parallelize_rr=False):
+        start = time.time()
+        result_dir, result_file, indice_file, key = StaticDepGraph.build_file_names(starting_events, prog, limit)
         StaticDepGraph.result_file = result_file
         StaticDepGraph.prog = prog
         if use_cached_static_graph and os.path.isfile(result_file):
@@ -1549,11 +1576,7 @@ class StaticDepGraph:
             StaticDepGraph.loadJSON(result_file)
             b = time.time()
             print("[static_dep] Finished loading graph, took: " + str(b-a))
-            #StaticDepGraph.binary_ptr = setup(prog)
-            #StaticDepGraph.get_indices(prog)
-            #StaticDepGraph.writeJSON(result_file)
-            #StaticDepGraph.output_indices_mapping(indice_file)
-            StaticDepGraph.print_graph_info()
+            #StaticDepGraph.print_graph_info()
             return True
 
         rr_result_file = os.path.join(result_dir, 'rr_results_' + prog + '.json')
@@ -1659,9 +1682,9 @@ class StaticDepGraph:
                 StaticDepGraph.build_reverse_postorder_list()
                 StaticDepGraph.build_postorder_list()
                 StaticDepGraph.detect_df_backedges()
-                if GENERATE_INSN_MAPPING:
-                    StaticDepGraph.get_indices(prog)
-                    StaticDepGraph.output_indices_mapping(indice_file)
+                #if GENERATE_INSN_MAPPING:
+                #    StaticDepGraph.build_binary_indices(prog)
+                #    StaticDepGraph.output_indices_mapping(indice_file)
                 StaticDepGraph.print_graph_info()
         except Exception as e:
             print("Caught exception: " + str(e))
@@ -1729,11 +1752,90 @@ class StaticDepGraph:
             json.dump(inner_indices, f, indent=4)
 
     @staticmethod
-    def get_indices(prog):
+    def insert_file_line_to_map(node, file, line):
+        if file is not None and line is not None:
+            lines = StaticDepGraph.file_to_line_to_nodes.get(file, None)
+            if lines is None:
+                lines = {}
+                StaticDepGraph.file_to_line_to_nodes[file] = lines
+            nodes = lines.get(line, None)
+            if nodes is None:
+                nodes = set()
+                lines[line] = nodes
+            nodes.add(node)
+
+    @staticmethod
+    def generate_file_line_for_all_reachable_nodes(prog, our_source_code_dir=None):
+        a = time.time()
+        all_insns = set()
+        for graph in StaticDepGraph.func_to_graph.values():
+            for node in itertools.chain(graph.none_df_starting_nodes,
+                                        graph.nodes_in_cf_slice.keys(),
+                                        graph.nodes_in_df_slice.keys()):
+                all_insns.add(node.insn)
+
+        all_insns = list(all_insns)
+        ret = execute_cmd_in_parallel([hex(insn) for insn in all_insns], 'get_file_line.sh', 'insns_', num_processor, prog)
+
+        insn_to_file_line = {}
+        i = 0
+        print("[indices] total number of file lines to parse: " + str(len(ret)))
+        for l in ret:
+            file, line = parse_get_line_output(l)
+            insn = all_insns[i]
+            i += 1
+            assert insn not in insn_to_file_line
+            insn_to_file_line[insn] = [file, line]
+            print("[indices] insn: " + hex(insn) + " file: " + file + " line: " + str(line))
+
+        for graph in StaticDepGraph.func_to_graph.values():
+            for node in itertools.chain(graph.none_df_starting_nodes,
+                                        graph.nodes_in_cf_slice.keys(),
+                                        graph.nodes_in_df_slice.keys()):
+                print("[indices] Looking for file and line for " + hex(node.insn))
+                assert node.insn in insn_to_file_line
+                file_line = insn_to_file_line[node.insn]
+                node.file = file_line[0] if our_source_code_dir is None else \
+                    file_line[0][file_line[0].startswith(our_source_code_dir) and len(file_line[0]):]
+                node.line = file_line[1]
+                print("[indices] " + hex(node.insn) + " file " + node.file + " line " + str(node.line))
+                StaticDepGraph.insert_file_line_to_map(node, node.file, node.line)
+        b = time.time()
+        print("[indices] generate file line for all reachable_nodes took: " + str(b-a))
+
+    @staticmethod
+    def build_binary_indices(prog):
+        a = time.time()
+
+        all_file_lines = set()
         for file in StaticDepGraph.file_to_line_to_nodes:
             for line in StaticDepGraph.file_to_line_to_nodes[file]:
+                file_line = file.split("/")[-1] + ":" + str(line)
+                all_file_lines.add(file_line)
+
+        all_file_lines = list(all_file_lines)
+        ret = execute_cmd_in_parallel(all_file_lines, 'get_insn_offsets.sh', 'file_lines_', num_processor, prog)
+
+        file_line_to_offsets = {}
+        i = 0
+        group = []
+        for l in ret:
+            if l.strip() != "DELIMINATOR":
+                group.append(l)
+                continue
+            start, end = parse_insn_offsets(group)
+            file_line = all_file_lines[i]
+            i += 1
+            assert file_line not in file_line_to_offsets
+            file_line_to_offsets[file_line] = [start, end]
+
+        for file in StaticDepGraph.file_to_line_to_nodes:
+            for line in StaticDepGraph.file_to_line_to_nodes[file]:
+                file_line = file + "_" + str(line)
+                start_end = file_line_to_offsets[file_line]
+                start = start_end[0]
+                end = start_end[1]
                 nodes = StaticDepGraph.file_to_line_to_nodes[file][line]
-                start, end = get_insn_offsets(line, file, prog)
                 node_list = []
                 addrs = []
                 func = None
@@ -1753,6 +1855,38 @@ class StaticDepGraph:
                     index = indices[i]
                     node_list[i].index = index if index >= 0 else None
                     node_list[i].total_count = total_count
+        b = time.time()
+        print("[indices] build binary indices took: " + str(b-a))
+
+    @staticmethod
+    def realign_indices(our_source_code_dir, other_source_code_dir):
+        a = time.time()
+        files = set()
+        for graph in StaticDepGraph.func_to_graph.values():
+            for node in itertools.chain(graph.none_df_starting_nodes,
+                                        graph.nodes_in_cf_slice.keys(),
+                                        graph.nodes_in_df_slice.keys()):
+                if node.file is not None:
+                    files.add(node.file)
+
+        file_to_mapping = {}
+        for file in files:
+            map, _ = diff_two_files_and_create_line_mapps(os.path.join(our_source_code_dir, file),
+                                                          os.path.join(other_source_code_dir, file))
+            file_to_mapping[file] = map
+
+        for graph in StaticDepGraph.func_to_graph.values():
+            for node in itertools.chain(graph.none_df_starting_nodes,
+                                        graph.nodes_in_cf_slice.keys(),
+                                        graph.nodes_in_df_slice.keys()):
+                map = file_to_mapping[node.file]
+                assert node.line in map
+                old_line = node.line
+                node.line = map[node.line]
+                print("[indices] Changing " + node.file + ":" + str(old_line) + " to " + node.file + ":" + str(node.line))
+
+        b = time.time()
+        print("[indices] realign file line for all reachable_nodes took: " + str(b-a))
 
     @staticmethod
     def print_graph_info():
@@ -2713,18 +2847,44 @@ def json_sanity_check():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--parallelize_rr', dest='parallelize_rr', action='store_true')
+    parser.add_argument('-p', '--parallelize_rr', dest='parallelize_rr', action='store_true')
     parser.set_defaults(parallelize_rr=False)
     parser.add_argument('-c', '--use_cached_static_graph', dest='use_cached_static_graph', action='store_true')
     parser.set_defaults(use_cached_static_graph=False)
+
+    parser.add_argument('-i', '--generate_indices', dest='generate_indices', action='store_true')
+    parser.set_defaults(generate_indices=False)
+    parser.add_argument('-a', '--align_indices', dest='align_indices', action='store_true')
+    parser.set_defaults(align_indices=False)
+    parser.add_argument('-s_ours', '--our_source_code_dir', dest='our_source_code_dir')
+    parser.set_defaults(our_source_code_dir=None)
+    parser.add_argument('-s_others', '--other_source_code_dir', dest='other_source_code_dir')
+    parser.set_defaults(other_source_code_dir=None)
     args = parser.parse_args()
 
     limit, program, _, _, starting_events, _ = parse_inputs()
 
-    StaticDepGraph.build_dependencies(starting_events, program,
-                                      limit=limit, use_cached_static_graph=(False if args.parallelize_rr is True else args.use_cached_static_graph),
-                                      parallelize_rr=args.parallelize_rr)
+    if args.parallelize_rr is True:
+        assert args.generate_indices is False
+    if args.generate_indices is True:
+        assert args.parallelize_rr is False
 
+    if args.generate_indices is True:
+        assert args.our_source_code_dir is not None
+    if args.align_indices is True:
+        assert args.generate_indices is True
+        assert args.our_source_code_dir is not None
+        assert args.other_source_code_dir is not None
+
+    if args.generate_indices is False:
+        StaticDepGraph.build_dependencies(starting_events, program, limit,
+                                      use_cached_static_graph=False if args.parallelize_rr is True else args.use_cached_static_graph,
+                                      parallelize_rr=args.parallelize_rr)
+    else:
+        StaticDepGraph.build_indices(starting_events, program, limit,
+                                      align_indices=args.align_indices,
+                                     our_source_code_dir=args.our_source_code_dir,
+                                     other_source_code_dir=args.other_source_code_dir)
 
 if __name__ == "__main__":
     main()
