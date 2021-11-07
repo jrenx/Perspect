@@ -12,8 +12,8 @@ done
 echo "FIN" >> $1"_DONE"
 mv $1".out" $1".out.1"
 mv $1".DONE" $1".DONE.1"
-scp $1".out.1" $3".out"
-scp $1"_DONE.1" $3"_DONE"
+scp $1".out.1" $3$1".out"
+scp $1"_DONE.1" $3$1"_DONE"
 rm $1
 rm $1".out.1"
 rm $1"_DONE.1"
