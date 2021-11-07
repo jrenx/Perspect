@@ -9,8 +9,10 @@ do
     addr2line -e $2 $insn
 done
 echo "FIN" >> $1"_DONE"
-scp $1".out" $3
-scp $1"_DONE" $3
+mv $1".out" $1".out.1"
+mv $1".DONE" $1".DONE.1"
+scp $1".out.1" $3".out"
+scp $1"_DONE.1" $3"_DONE"
 rm $1
-rm $1".out"
-rm $1"_DONE"
+rm $1".out.1"
+rm $1"_DONE.1"
