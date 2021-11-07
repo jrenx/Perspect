@@ -56,13 +56,17 @@ def execute_cmd_in_parallel(all_inputs, script_name, prefix, num_processor, prog
             f = open(file_name, 'w')
             num_inputs = partition_size if (i + partition_size) < len(all_inputs) else (len(all_inputs) - i)
             print("[indices] Number of inputs to write: " + str(num_inputs))
+
             for n in range(num_inputs):
                 f.write(all_inputs[i] + "\n")
                 i += 1
+
             f.close()
             cmd = 'scp {} {}:{}/'.format(file_name, server, curr_dir)
             print("Running command: " + cmd, flush=True)
             os.system(cmd)
+            if server != my_ip:
+                os.remove(file_name)
             cmd = 'ssh ' + server + ' "cd ' + curr_dir + '/; nohup ./' + script_name + ' ' \
                   + file_name + ' ' + prog + ' ' + my_ip + ':' + curr_dir +'/ > ' + file_name + '.out 2>&1 &"'
             print("Running command: " + cmd, flush=True)
@@ -77,8 +81,8 @@ def execute_cmd_in_parallel(all_inputs, script_name, prefix, num_processor, prog
             for l in f.readlines():
                 ret.append(l)
         os.remove(file_name + "_DONE")
-        os.remove(file_name + ".out")
-        os.remove(file_name)
+        #os.remove(file_name + ".out")
+        #os.remove(file_name)
     return ret
 
 def get_line(insn, prog):
