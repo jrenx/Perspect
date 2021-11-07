@@ -11,6 +11,6 @@ done
 echo "FIN" >> $1"_DONE"
 scp $1".out" $3
 scp $1"_DONE" $3
-rm $1"
+rm $1
 rm $1".out"
 rm $1"_DONE"
