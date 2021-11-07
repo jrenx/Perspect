@@ -1777,6 +1777,7 @@ class StaticDepGraph:
         all_insns = list(all_insns)
         ret = execute_cmd_in_parallel([hex(insn) for insn in all_insns], 'get_file_line.sh', 'insns_', num_processor, prog)
 
+        assert(len(ret) == len(all_insns))
         insn_to_file_line = {}
         i = 0
         print("[indices] total number of file lines to parse: " + str(len(ret)))
@@ -1796,7 +1797,7 @@ class StaticDepGraph:
                 assert node.insn in insn_to_file_line
                 file_line = insn_to_file_line[node.insn]
                 node.file = file_line[0] if our_source_code_dir is None else \
-                    file_line[0][file_line[0].startswith(our_source_code_dir) and len(file_line[0]):]
+                    file_line[0][file_line[0].startswith(our_source_code_dir) and len(our_source_code_dir):]
                 node.line = file_line[1]
                 print("[indices] assignment insn: " + hex(node.insn) + " file " + node.file + " line " + str(node.line))
                 StaticDepGraph.insert_file_line_to_map(node, node.file, node.line)
