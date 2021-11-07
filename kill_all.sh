@@ -8,7 +8,7 @@ done < servers.config
 
 for ip in "${ips[@]}"
 do
-    echo "Updating "$ip
+    echo "Cleaning up jobs on "$ip
     ssh $ip $SDIR"/"kill.sh
 done
 
