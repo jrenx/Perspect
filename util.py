@@ -5,7 +5,8 @@ import socket
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 
 #https://stackoverflow.com/questions/1724693/find-a-file-in-python
-def find_file(name, path):
+def find_file(path, name):
+    print("Looking for file " + name + " in " + path)
     for root, dirs, files in os.walk(path):
         if name in files:
             return os.path.join(root, name)

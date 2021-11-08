@@ -1921,10 +1921,10 @@ class StaticDepGraph:
             f2 = os.path.join(other_source_code_dir, file)
             print("[indices] comparing two files orig: " + str(f1) + " " + str(f2))
             if not os.path.exists(f1):
-                f1 = find_file(our_source_code_dir, file)
+                f1 = find_file(our_source_code_dir, file.split("/")[-1])
                 file_path_changed.add(file)
             if not os.path.exists(f2):
-                f2 = find_file(other_source_code_dir, file)
+                f2 = find_file(other_source_code_dir, file.split("/")[-1])
                 file_path_changed.add(file)
             print("[indices] comparing two files: " + str(f1) + " " + str(f2))
             if f1 is None or f2 is None:
