@@ -174,11 +174,13 @@ class Relation:
         self.lines = lines
         self.file = file
         if self.lines is None or self.file is None:
-            self.lines = prede_node.line
+            self.lines = []
+            self.lines.append(prede_node.line)
             self.file = prede_node.file
         if self.lines is None or self.file is None:
             file, line = get_line(prede_node.insn, prog + "_debug")
-            self.lines = line
+            self.lines = []
+            self.lines.append(line)
             self.file = file
 
         self.key = str(self.file) + ":" + str(self.lines)
