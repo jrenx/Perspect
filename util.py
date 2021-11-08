@@ -4,6 +4,12 @@ import socket
 
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 
+#https://stackoverflow.com/questions/1724693/find-a-file-in-python
+def find_file(name, path):
+    for root, dirs, files in os.walk(path):
+        if name in files:
+            return os.path.join(root, name)
+
 def diff_two_files_and_create_line_mapps(fname1, fname2):
     with open(fname1, "r") as f1:
         fcontent1 = f1.read().splitlines(keepends=True)
