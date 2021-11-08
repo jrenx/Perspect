@@ -342,7 +342,7 @@ void getAddrIndices(vector<Function *> *allFuncs, char *funcName, long unsigned 
         long unsigned int addr = (*it).first;
         if (addr < startAddr) continue;
         if (addr >= endAddr) continue;
-        cout << hex << addr << dec << endl;
+        //cout << hex << addr << dec << endl;
         assert(addrToIndex.find(addr) == addrToIndex.end());
         addrToIndex[addr] = index;
         index ++;

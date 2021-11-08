@@ -1894,7 +1894,7 @@ class StaticDepGraph:
                         index = indices[i]
                         node_list[i].index = index if index >= 0 else None
                         node_list[i].total_count = total_count
-                assert(len(all_nodes) == 0)
+        assert(len(all_nodes) == 0)
         b = time.time()
         print("[indices] build binary indices took: " + str(b-a))
 
