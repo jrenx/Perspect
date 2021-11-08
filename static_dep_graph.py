@@ -1562,7 +1562,9 @@ class StaticDepGraph:
             StaticDepGraph.writeJSON(result_file)
         else:
             assert os.path.exists(indice_file)
-            StaticDepGraph.realign_indices(our_source_code_dir, other_source_code_dir)
+            StaticDepGraph.align_indices(our_source_code_dir, other_source_code_dir)
+            StaticDepGraph.output_indices_mapping(indice_file)
+            StaticDepGraph.writeJSON(result_file)
 
     @staticmethod
     def build_dependencies(starting_events, prog, limit, use_cached_static_graph=True, parallelize_rr=False):
@@ -1900,8 +1902,9 @@ class StaticDepGraph:
         print("[indices] build binary indices took: " + str(b-a))
 
     @staticmethod
-    def realign_indices(our_source_code_dir, other_source_code_dir):
+    def align_indices(our_source_code_dir, other_source_code_dir):
         a = time.time()
+        print("[indices] Directory containing the source codes: " + str(our_source_code_dir) + " " + str(other_source_code_dir))
         files = set()
         for graph in StaticDepGraph.func_to_graph.values():
             for node in itertools.chain(graph.none_df_starting_nodes,
@@ -1911,21 +1914,39 @@ class StaticDepGraph:
                     files.add(node.file)
 
         file_to_mapping = {}
+        file_to_skip = set()
         for file in files:
-            map, _ = diff_two_files_and_create_line_mapps(os.path.join(our_source_code_dir, file),
-                                                          os.path.join(other_source_code_dir, file))
+            f1 = os.path.join(our_source_code_dir, file)
+            f2 = os.path.join(other_source_code_dir, file)
+            print("[indices] comparing two files orig: " + str(f1) + " " + str(f2))
+            if not os.path.exists(f1):
+                f1 = find_file(our_source_code_dir, file)
+            if not os.path.exists(f2):
+                f2 = find_file(other_source_code_dir, file)
+            print("[indices] comparing two files: " + str(f1) + " " + str(f2))
+            if f1 is None or f2 is None:
+                print("[indices] file not found: " + str(file))
+                file_to_skip.add(file)
+                continue
+            map, _ = diff_two_files_and_create_line_mapps(f1, f2)
             file_to_mapping[file] = map
 
+        seen = set()
         for graph in StaticDepGraph.func_to_graph.values():
             for node in itertools.chain(graph.none_df_starting_nodes,
                                         graph.nodes_in_cf_slice.keys(),
                                         graph.nodes_in_df_slice.keys()):
+                if node.insn in seen:
+                    continue
+                seen.add(node.insn)
+                if node.file in file_to_skip:
+                    print("[indices] Skipping file that could not be found: " + str(node.file))
+                    continue
                 map = file_to_mapping[node.file]
-                assert node.line in map
+                assert node.line in map, node.file + " " + str(node.line) + " " + hex(node.insn)
                 old_line = node.line
                 node.line = map[node.line]
                 print("[indices] Changing " + node.file + ":" + str(old_line) + " to " + node.file + ":" + str(node.line))
-
         b = time.time()
         print("[indices] realign file line for all reachable_nodes took: " + str(b-a))
 
