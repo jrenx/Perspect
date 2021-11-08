@@ -171,19 +171,16 @@ class Relation:
         self.timestamp = None
         self.insn = None
 
-        if lines is not None:
-            self.lines = lines
-        else:
-            self.lines = []
-            file, line = get_line(prede_node.insn, prog)
-            if line is not None:
-                self.lines.append(line)
-            elif isinstance(prede_node.bb, BasicBlock):
-                self.lines = list(prede_node.bb.lines)
-
-        if file is None:
-            file, line = get_line(prede_node.insn, prog)
+        self.lines = lines
         self.file = file
+        if self.lines is None or self.file is None:
+            self.lines = prede_node.line
+            self.file = prede_node.file
+        if self.lines is None or self.file is None:
+            file, line = get_line(prede_node.insn, prog + "_debug")
+            self.lines = line
+            self.file = file
+
         self.key = str(self.file) + ":" + str(self.lines)
         self.duplicate = False
 
