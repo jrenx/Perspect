@@ -118,6 +118,11 @@ class TestRR(unittest.TestCase):
             print(r)
 
 class TestSA(unittest.TestCase):
+    def test_indices(self):
+        prog = "mongod_4.2.1"
+        ptr1 = setup(prog)
+        get_addr_indices(ptr1, "__wt_row_leaf_keys", 0xee2bb0, 0xee44ed, [15615212])
+
     def test_general(self):
         prog = "mongod_4.2.1"
         ptr1 = setup(prog)

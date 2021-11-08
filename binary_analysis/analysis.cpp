@@ -312,42 +312,43 @@ void getAddrIndices(vector<Function *> *allFuncs, char *funcName, long unsigned 
     addrs.push_back(addr);
   }
 
-
-  Function *f = getFunction2(allFuncs, funcName, startAddr);
-  std::map<long unsigned int, Block *> bs;
-  for (auto bit = f->blocks().begin(); bit != f->blocks().end(); ++bit) {
-    Block *b = *bit;
-
-    Address last = b->last();
-    Address start = b->start();
-    //cout << "start " << hex << start << endl;
-    //cout << "last " << last << dec << endl;
-
-    if (startAddr <= start && start < endAddr ||
-        startAddr <= last && last < endAddr) {
-      assert(bs.find(start) == bs.end());
-      bs[start] = b;
-      //cout << "Added " << endl;
-    }
-  }
-
   std::unordered_map<long unsigned int, int> addrToIndex;
-  int index = 0;
-  for (auto bit = bs.begin(); bit != bs.end(); ++bit) {
-    Block *bb = bit->second;
-    Block::Insns insns;
-    bb->getInsns(insns);
-    for (auto it = insns.begin(); it != insns.end(); ++it) {
-      Instruction insn = (*it).second;
-      long unsigned int addr = (*it).first;
-      if (addr < startAddr) continue;
-      if (addr >= endAddr) continue;
-      cout << hex << addr << dec << endl;
-      assert(addrToIndex.find(addr) == addrToIndex.end());
-      addrToIndex[addr] = index;
-      index ++;
+  Function *f = getFunction2(allFuncs, funcName, startAddr);
+  if (f != NULL) {
+    std::map<long unsigned int, Block *> bs;
+    for (auto bit = f->blocks().begin(); bit != f->blocks().end(); ++bit) {
+      Block *b = *bit;
+  
+      Address last = b->last();
+      Address start = b->start();
+      //cout << "start " << hex << start << endl;
+      //cout << "last " << last << dec << endl;
+  
+      if (startAddr <= start && start < endAddr ||
+          startAddr <= last && last < endAddr) {
+        assert(bs.find(start) == bs.end());
+        bs[start] = b;
+        //cout << "Added " << endl;
+      }
     }
-  }
+  
+    int index = 0;
+    for (auto bit = bs.begin(); bit != bs.end(); ++bit) {
+      Block *bb = bit->second;
+      Block::Insns insns;
+      bb->getInsns(insns);
+      for (auto it = insns.begin(); it != insns.end(); ++it) {
+        Instruction insn = (*it).second;
+        long unsigned int addr = (*it).first;
+        if (addr < startAddr) continue;
+        if (addr >= endAddr) continue;
+        cout << hex << addr << dec << endl;
+        assert(addrToIndex.find(addr) == addrToIndex.end());
+        addrToIndex[addr] = index;
+        index ++;
+      }
+    }
+  }  
   //cout << addrToIndex.size() << endl;
   cJSON *json_indices = cJSON_CreateArray();
   //std::vector<int> indices;
