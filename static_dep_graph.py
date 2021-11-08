@@ -1556,11 +1556,10 @@ class StaticDepGraph:
 
         if align_indices is False:
             StaticDepGraph.generate_file_line_for_all_reachable_nodes(prog, our_source_code_dir)
-            # StaticDepGraph.writeJSON(result_file)
             StaticDepGraph.binary_ptr = setup(prog)
             StaticDepGraph.build_binary_indices(prog)
-            # StaticDepGraph.writeJSON(result_file)
             StaticDepGraph.output_indices_mapping(indice_file)
+            StaticDepGraph.writeJSON(result_file)
         else:
             assert os.path.exists(indice_file)
             StaticDepGraph.realign_indices(our_source_code_dir, other_source_code_dir)
@@ -1773,6 +1772,8 @@ class StaticDepGraph:
                                         graph.nodes_in_cf_slice.keys(),
                                         graph.nodes_in_df_slice.keys()):
                 all_insns.add(node.insn)
+                #if len(all_insns) > 100:
+                #    break
 
         all_insns = list(all_insns)
         ret = execute_cmd_in_parallel([hex(insn) for insn in all_insns], 'get_file_line.sh', 'insns_', num_processor, prog)
@@ -1793,8 +1794,10 @@ class StaticDepGraph:
             for node in itertools.chain(graph.none_df_starting_nodes,
                                         graph.nodes_in_cf_slice.keys(),
                                         graph.nodes_in_df_slice.keys()):
-                print("[indices] Looking for file and line for " + hex(node.insn))
+                print("[indices] Looking for file and line for " + hex(node.insn), flush=True)
                 assert node.insn in insn_to_file_line
+                #if node.insn not in insn_to_file_line:
+                #    continue
                 file_line = insn_to_file_line[node.insn]
                 node.file = file_line[0] if our_source_code_dir is None else \
                     file_line[0][file_line[0].startswith(our_source_code_dir) and len(our_source_code_dir):]
@@ -1802,60 +1805,95 @@ class StaticDepGraph:
                 print("[indices] assignment insn: " + hex(node.insn) + " file " + node.file + " line " + str(node.line), flush=True)
                 StaticDepGraph.insert_file_line_to_map(node, node.file, node.line)
         b = time.time()
-        print("[indices] generate file line for all reachable_nodes took: " + str(b-a))
+        print("[indices] generate file line for all reachable_nodes took: " + str(b-a), flush=True)
 
     @staticmethod
     def build_binary_indices(prog):
         a = time.time()
 
-        all_file_lines = set()
+        all_file_lines_map = {}
         for file in StaticDepGraph.file_to_line_to_nodes:
             for line in StaticDepGraph.file_to_line_to_nodes[file]:
                 file_line = file.split("/")[-1] + ":" + str(line)
-                all_file_lines.add(file_line)
+                all_file_lines_map[file + ":" + str(line)] = file_line
 
-        all_file_lines = list(all_file_lines)
-        ret = execute_cmd_in_parallel(all_file_lines, 'get_insn_offsets.sh', 'file_lines_', num_processor, prog)
+        all_file_lines = []
+        all_file_lines_inputs = []
+        for k in all_file_lines_map:
+            all_file_lines.append(k)
+            all_file_lines_inputs.append(all_file_lines_map[k])
+
+        ret = execute_cmd_in_parallel(all_file_lines_inputs, 'get_insn_offsets.sh', 'file_lines_', num_processor, prog)
 
         file_line_to_offsets = {}
         i = 0
-        group = []
+        group = set()
         for l in ret:
             if l.strip() != "DELIMINATOR":
-                group.append(l)
+                group.add(l.strip())
                 continue
-            start, end = parse_insn_offsets(group)
             file_line = all_file_lines[i]
+            for o in group:
+                start, end = parse_insn_offsets(o)
+                offsets = file_line_to_offsets.get(file_line, None)
+                if offsets is None:
+                    offsets = []
+                    file_line_to_offsets[file_line] = offsets
+                offsets.append([start, end])
             i += 1
-            assert file_line not in file_line_to_offsets
-            file_line_to_offsets[file_line] = [start, end]
 
         for file in StaticDepGraph.file_to_line_to_nodes:
             for line in StaticDepGraph.file_to_line_to_nodes[file]:
                 file_line = file + "_" + str(line)
-                start_end = file_line_to_offsets[file_line]
-                start = start_end[0]
-                end = start_end[1]
+                #if file_line not in file_line_to_offsets:
+                #    continue
+                offsets = file_line_to_offsets[file_line]
+                print("[indices] Offsets are: " + str(offsets))
                 nodes = StaticDepGraph.file_to_line_to_nodes[file][line]
-                node_list = []
-                addrs = []
-                func = None
-                for n in nodes:
-                    func = n.function
-                    node_list.append(n)
-                    addrs.append(n.insn)
-                    if n.insn > end: end = n.insn + 1
-                    if n.insn < start: start = n.insn
-                indices = get_addr_indices(StaticDepGraph.binary_ptr, func, start, end, addrs)
-                print(indices)
-                print(len(node_list))
-                print(len(indices))
-                assert(len(indices) == len(node_list) + 1)
-                total_count = indices[-1] if (len(indices) == len(node_list) + 1) else None
-                for i in range(len(node_list)):
-                    index = indices[i]
-                    node_list[i].index = index if index >= 0 else None
-                    node_list[i].total_count = total_count
+                all_nodes = set(nodes)
+                for start_end in offsets:
+                    start = start_end[0]
+                    end = start_end[1]
+
+                    node_list = []
+                    addrs = []
+                    func = None
+                    nodes_to_remove = set()
+                    for n in all_nodes:
+                        include = True
+                        if n.insn > end or n.insn < start:
+                            include = False
+                            distances = []
+                            for se in offsets:
+                                distances.append([abs(se[0] - n.insn), se[0]])
+                            distances = sorted(distances, key=lambda pair: pair[0])
+
+                            for pair in distances:
+                                if pair[1] == start:
+                                    include = True
+                                    print("[indices] Include insn: " + hex(n.insn) + " to " + str(start_end))
+                                break
+                        if include is False:
+                            continue
+
+                        func = n.function
+                        node_list.append(n)
+                        addrs.append(n.insn)
+                        if n.insn > end: end = n.insn + 1
+                        if n.insn < start: start = n.insn
+                        nodes_to_remove.add(n)
+                    all_nodes = all_nodes.difference(nodes_to_remove)
+                    indices = get_addr_indices(StaticDepGraph.binary_ptr, func, start, end, addrs)
+                    print(indices)
+                    print(len(node_list))
+                    print(len(indices))
+                    assert(len(indices) == len(node_list) + 1)
+                    total_count = indices[-1] if (len(indices) == len(node_list) + 1) else None
+                    for i in range(len(node_list)):
+                        index = indices[i]
+                        node_list[i].index = index if index >= 0 else None
+                        node_list[i].total_count = total_count
+                assert(len(all_nodes) == 0)
         b = time.time()
         print("[indices] build binary indices took: " + str(b-a))
 

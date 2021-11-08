@@ -32,11 +32,12 @@ def diff_two_files_and_create_line_mapps(fname1, fname2):
     return map1, map2
 
 def execute_cmd_in_parallel(all_inputs, script_name, prefix, num_processor, prog):
+    print("[indices] Total number of inputs: " + str(len(all_inputs)))
     servers = []
     with open("servers.config", "r") as f:
         for l in f.readlines():
             servers.append(l.strip())
-    partition_size = round(len(all_inputs) / len(servers)/num_processor) + 1
+    partition_size = round(len(all_inputs) / len(servers)/ num_processor) + 1
     print("[indices] Each worker executes: " + str(partition_size) + " inputs")
 
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -81,7 +82,7 @@ def execute_cmd_in_parallel(all_inputs, script_name, prefix, num_processor, prog
             for l in f.readlines():
                 ret.append(l)
         os.remove(file_name + "_DONE")
-        #os.remove(file_name + ".out")
+        os.remove(file_name + ".out")
     return ret
 
 def get_line(insn, prog):
@@ -108,14 +109,14 @@ def get_insn_offsets(line, file, prog):
     os.system(cmd)
     with open("infoLine_result", 'r') as f:
         result = f.readlines()
-    return parse_insn_offsets(result)
+    return parse_insn_offsets(result[-1])
 
 def parse_insn_offsets(result):
-    print(result)
-    result = result[-1]
+    #print(result)
     if "contains no code" in result:
         return (float('inf'), float('-inf'))
-    print(result)
+    if "out of range" in result:
+        return (float('inf'), float('-inf'))
     result = result.split("at address")[1]
     result = result.split("and ends at")
     start = int(result[0].split()[0], 16)
