@@ -1844,7 +1844,7 @@ class StaticDepGraph:
 
         for file in StaticDepGraph.file_to_line_to_nodes:
             for line in StaticDepGraph.file_to_line_to_nodes[file]:
-                file_line = file + "_" + str(line)
+                file_line = file + ":" + str(line)
                 #if file_line not in file_line_to_offsets:
                 #    continue
                 offsets = file_line_to_offsets[file_line]
