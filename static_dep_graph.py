@@ -1833,12 +1833,11 @@ class StaticDepGraph:
                 group.add(l.strip())
                 continue
             file_line = all_file_lines[i]
+            assert file_line not in file_line_to_offsets
+            offsets = []
+            file_line_to_offsets[file_line] = offsets
             for o in group:
                 start, end = parse_insn_offsets(o)
-                offsets = file_line_to_offsets.get(file_line, None)
-                if offsets is None:
-                    offsets = []
-                    file_line_to_offsets[file_line] = offsets
                 offsets.append([start, end])
             i += 1
 
