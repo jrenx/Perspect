@@ -1839,6 +1839,7 @@ class StaticDepGraph:
             for o in group:
                 start, end = parse_insn_offsets(o)
                 offsets.append([start, end])
+            group = set()
             i += 1
 
         for file in StaticDepGraph.file_to_line_to_nodes:
