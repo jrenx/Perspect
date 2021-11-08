@@ -1850,7 +1850,7 @@ class StaticDepGraph:
                 print("[indices] Offsets are: " + str(offsets))
                 nodes = StaticDepGraph.file_to_line_to_nodes[file][line]
                 all_nodes = set(nodes)
-                for start_end in offsets:
+                for start_end in itertools.chain(offsets, [float('inf'), float('-inf')]):
                     start = start_end[0]
                     end = start_end[1]
 
@@ -1881,6 +1881,8 @@ class StaticDepGraph:
                         if n.insn > end: end = n.insn + 1
                         if n.insn < start: start = n.insn
                         nodes_to_remove.add(n)
+                    if len(nodes_to_remove) == 0:
+                        continue
                     all_nodes = all_nodes.difference(nodes_to_remove)
                     indices = get_addr_indices(StaticDepGraph.binary_ptr, func, start, end, addrs)
                     print(indices)
