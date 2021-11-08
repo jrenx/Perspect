@@ -1915,14 +1915,17 @@ class StaticDepGraph:
 
         file_to_mapping = {}
         file_to_skip = set()
+        file_path_changed = set()
         for file in files:
             f1 = os.path.join(our_source_code_dir, file)
             f2 = os.path.join(other_source_code_dir, file)
             print("[indices] comparing two files orig: " + str(f1) + " " + str(f2))
             if not os.path.exists(f1):
                 f1 = find_file(our_source_code_dir, file)
+                file_path_changed.add(file)
             if not os.path.exists(f2):
                 f2 = find_file(other_source_code_dir, file)
+                file_path_changed.add(file)
             print("[indices] comparing two files: " + str(f1) + " " + str(f2))
             if f1 is None or f2 is None:
                 print("[indices] file not found: " + str(file))
@@ -1946,7 +1949,10 @@ class StaticDepGraph:
                 assert node.line in map, node.file + " " + str(node.line) + " " + hex(node.insn)
                 old_line = node.line
                 node.line = map[node.line]
-                print("[indices] Changing " + node.file + ":" + str(old_line) + " to " + node.file + ":" + str(node.line))
+                old_file = node.file
+                if node.file in file_path_changed:
+                    node.file = node.file.split("/")[-1]
+                print("[indices] Changing " + old_file + ":" + str(old_line) + " to " + node.file + ":" + str(node.line))
         b = time.time()
         print("[indices] realign file line for all reachable_nodes took: " + str(b-a))
 
