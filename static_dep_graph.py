@@ -1850,7 +1850,7 @@ class StaticDepGraph:
                 print("[indices] Offsets are: " + str(offsets))
                 nodes = StaticDepGraph.file_to_line_to_nodes[file][line]
                 all_nodes = set(nodes)
-                for start_end in itertools.chain(offsets, [float('inf'), float('-inf')]):
+                for start_end in itertools.chain(offsets, [[float('inf'), float('-inf')]]):
                     start = start_end[0]
                     end = start_end[1]
 

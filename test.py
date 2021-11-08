@@ -118,6 +118,17 @@ class TestRR(unittest.TestCase):
             print(r)
 
 class TestSA(unittest.TestCase):
+    def test_indices(self):
+        prog = "mongod_4.2.1"
+        ptr1 = setup(prog)
+        get_addr_indices(ptr1, "__wt_row_leaf_keys", 0xee2bb0, 0xee44ed, [15615212])
+
+    def test_general(self):
+        prog = "mongod_4.2.1"
+        ptr1 = setup(prog)
+        ptr2 = setup2(prog)
+        getAllBBs2(ptr2, ptr1, 0x101ce1b, "__wt_las_sweep", prog)
+
     def test_get_all_bb(self):
         results = getAllBBs(0x416a91, 'bytes.*Buffer·Read', '909_ziptest_exe9')
         print(len(results))
