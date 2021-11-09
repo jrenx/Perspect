@@ -575,7 +575,8 @@ class Indices:
                 indices = set()
                 lines[line] = (total_count, indices)
             else:
-                assert existing_total_count == total_count
+                pass
+                #assert existing_total_count == total_count
             indices.add(index)
         return Indices(indices_map)
 
