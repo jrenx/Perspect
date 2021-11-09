@@ -49,6 +49,9 @@ def compare(f1, f2):
 if __name__ == "__main__":
     #f1 = sys.argv[1]
     #f2 = sys.argv[2]
+    server1 = "10.10.0.33"
+    server2 = "10.10.0.33"
+
     dir1 = "/home/anygroup/perf_debug_tool_dev_jenny"
     dir2 = "/home/anygroup/eval_909_32bit"
 
@@ -94,6 +97,7 @@ if __name__ == "__main__":
             continue
         os.chdir(dir2)
         cmd = "python3 relation_analysis.py  > rel_" + str(i)+ " 2>&1"
+        cmd = "ssh " + server2 + ' "' + "cd " + dir2 + "; " + cmd + '"'
         print(cmd)
         os.system(cmd)
         print("===========================================================")
@@ -101,10 +105,12 @@ if __name__ == "__main__":
         if sd_old is not None and sd_old == sd:
             break
         sd_old = sd
-        cmd = "cp " + f1 + " " + d2
+        #cmd = "cp " + f1 + " " + d2
+        cmd = "scp " + server1 + ":" + f1 + " " + d2
         print(cmd)
         os.system(cmd)
-        cmd = "cp " + f2 + " " + d1
+        #cmd = "cp " + f2 + " " + d1
+        cmd = "scp " + server2 + ":" + f2 + " " + d1
         print(cmd)
         os.system(cmd)
         print("", flush=True)
