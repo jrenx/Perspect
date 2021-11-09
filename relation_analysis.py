@@ -36,9 +36,10 @@ class RelationAnalysis:
         self.other_indices_map_inner = None
         self.other_simple_relation_groups = None
         self.relation_groups = []  # results
+        self.steps = steps
 
         self.dd = DynamicDependence(starting_events, prog, arg, path, starting_insn_to_weight)
-        self.dd.prepare_to_build_dynamic_dependencies(steps)
+        self.dd.prepare_to_build_dynamic_dependencies(self.steps)
 
         print("[ra] Getting the counts of each unique node in the dynamic trace")
         if not os.path.exists(self.dd.trace_path + ".count"):
@@ -160,7 +161,7 @@ class RelationAnalysis:
     def analyze(self, use_cache=False):
         print(use_cache)
         a = time.time()
-        cache_file = os.path.join(curr_dir, "cache", self.prog, "rgroups_" + self.dd.key + ".json")
+        cache_file = os.path.join(curr_dir, "cache", self.prog, "rgroups.json")
         print(cache_file)
         if use_cache is True:
             if os.path.exists(cache_file):
@@ -172,7 +173,7 @@ class RelationAnalysis:
                     self.print_rgroups(rgroups)
                 return
 
-        self.dd.prepare_to_build_dynamic_dependencies(10000)
+        self.dd.prepare_to_build_dynamic_dependencies(self.steps)
         #TODO, do below in the static graph logic
         #StaticDepGraph.build_postorder_list()
         #StaticDepGraph.build_postorder_ranks()
