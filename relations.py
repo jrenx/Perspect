@@ -575,7 +575,8 @@ class Indices:
                 indices = set()
                 lines[line] = (total_count, indices)
             else:
-                assert existing_total_count == total_count
+                pass
+                #assert existing_total_count == total_count
             indices.add(index)
             if total_count is not None and existing_total_count is not None:
                 if total_count > existing_total_count:
