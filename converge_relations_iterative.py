@@ -89,14 +89,14 @@ if __name__ == "__main__":
     for i in range(100):
         print("Iteration: " + str(i))
         os.chdir(dir1)
-        cmd = "python3 relation_analysis.py  > rel_" + str(i)+ " 2>&1"
+        cmd = "python3.7 relation_analysis.py  > rel_" + str(i)+ " 2>&1"
         print(cmd)
         os.system(cmd)
 
         if i%2 == 0:
             continue
         os.chdir(dir2)
-        cmd = "python3 relation_analysis.py  > rel_" + str(i)+ " 2>&1"
+        cmd = "python3.7 relation_analysis.py  > rel_" + str(i)+ " 2>&1"
         cmd = "ssh " + server2 + ' "' + "cd " + dir2 + "; " + cmd + '"'
         print(cmd)
         os.system(cmd)
