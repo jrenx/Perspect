@@ -1665,9 +1665,10 @@ class DynamicGraph:
                 if df_prede.static_node.mem_load.read_same_as_write is True:
                     assert df_prede.mem_store_addr is None
                     to_remove.add(df_prede)
-                    print("TRIM Do not consider the load for bit vars ")
+                    print("TRIM Do not consider the load for bit vars: " + str(df_prede.id))
             for df_prede in to_remove:
                 dnode.df_predes.remove(df_prede)
+                df_prede.df_succes.remove(dnode)
         # check bit mask where they exist, then trim ones that do not match
         for dnode in self.dynamic_nodes.values():
             dnode.remaining_load_bit_mask = dnode.load_bit_mask
