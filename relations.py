@@ -578,6 +578,10 @@ class Indices:
                 pass
                 #assert existing_total_count == total_count
             indices.add(index)
+            if total_count is not None and existing_total_count is not None:
+                if total_count > existing_total_count:
+                    lines[line] = (total_count, indices)
+                
         return Indices(indices_map)
 
     def get_indices(self, n):
