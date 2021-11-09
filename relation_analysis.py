@@ -321,6 +321,6 @@ if __name__ == "__main__":
     limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
 
     ra = RelationAnalysis(starting_events, starting_insn_to_weight, program, program_args, program_path, limit,
-                          other_indices_file='indices_esi_0x8050c16_ebx_0x804e41c_eax_0x804e5fb_eax_0x804e804',
-                          other_relations_file='rgroups_simple_esi_0x8050c16_ebx_0x804e41c_eax_0x804e5fb_eax_0x804e804.json')
+                          other_indices_file='indices__0x1012420__0x10710f0__0x1076410',
+                          other_relations_file='rgroups_simple__0x1012420__0x10710f0__0x1076410.json')
     ra.analyze(args.use_cache)
