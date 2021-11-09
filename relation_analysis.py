@@ -69,7 +69,7 @@ class RelationAnalysis:
             self.other_indices_map_inner = self.load_indices(other_indices_file_path_inner)
 
         if other_relations_file is not None:
-            other_relations_file_path = os.path.joincurr_dir, "cache", self.prog, other_relations_file)
+            other_relations_file_path = os.path.join(curr_dir, "cache", self.prog, other_relations_file)
             self.other_simple_relation_groups = RelationAnalysis.load_simple_relations(other_relations_file_path)
 
     def add_to_explained_variant_relation(self, rgroup):
