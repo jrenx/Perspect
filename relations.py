@@ -503,7 +503,7 @@ class SimpleRelationGroup:
 
                 child_key = Indices.build_key_from_index_quad(index_quad)
                 relations_map[child_key] = (relation, index_quad)
-                if total_count == 0 or total_count is None:
+                if total_count == 0 or total_count is None or index is None:
                     child_key_short = file + "_" + str(line)
                     relations_map[child_key_short] = (relation, index_quad)
                 else:
