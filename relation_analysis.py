@@ -173,7 +173,7 @@ class RelationAnalysis:
                     self.print_rgroups(rgroups)
                 return
 
-        self.dd.prepare_to_build_dynamic_dependencies(self.steps)
+        #self.dd.prepare_to_build_dynamic_dependencies(self.steps)
         #TODO, do below in the static graph logic
         #StaticDepGraph.build_postorder_list()
         #StaticDepGraph.build_postorder_ranks()
@@ -205,7 +205,7 @@ class RelationAnalysis:
                 print("\n" + hex(insn) + "@" + func + " has a node forward and backward invariant already explained...")
                 continue
 
-            if self.other_indices_map.indices_not_found(starting_node):
+            if self.other_indices_map is not None and self.other_indices_map.indices_not_found(starting_node):
                 #prede_explained = False
                 #for p in itertools.chain(starting_node.df_predes, starting_node.cf_predes):
                 #    if self.other_indices_map.get_indices(p) is not None:
@@ -285,20 +285,23 @@ class RelationAnalysis:
         self.relation_groups = sorted(self.relation_groups, key=lambda rg: rg.weight)
         self.relation_groups = self.relation_groups[::-1] #reverse the list
         self.print_rgroups(self.relation_groups)
-        b = time.time()
-        print("[ra] took " + str(b-a))
 
         json_rgroups = []
         for relation_group in self.relation_groups:
             json_rgroups.append(relation_group.toJSON())
+        print("[ra] Writing to " + cache_file)    
         with open(cache_file, 'w') as f:
             json.dump(json_rgroups, f, indent=4)
 
         json_rgroups_simple = []
         for relation_group in self.relation_groups:
             json_rgroups_simple.append(SimpleRelationGroup.toJSON(relation_group))
+        print("[ra] Writing to " + os.path.join(curr_dir, "cache", self.prog, "rgroups_simple_" + self.dd.key + ".json"))    
         with open(os.path.join(curr_dir, "cache", self.prog, "rgroups_simple_" + self.dd.key + ".json"), 'w') as f:
             json.dump(json_rgroups_simple, f, indent=4)
+
+        b = time.time()
+        print("[ra] took " + str(b-a))
 
     def print_rgroups(self, relation_groups):
         num_rels = 0
