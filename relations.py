@@ -511,6 +511,10 @@ class SimpleRelationGroup:
                     inner_map = relations_map.get(child_key_short, {})
                     if len(inner_map) == 0:
                         relations_map[child_key_short] = inner_map
+                    elif isinstance(inner_map, tuple):
+                        pair = inner_map
+                        inner_map = {}
+                        inner_map[0] = pair
                     ratio = index/max(total_count,1)
                     inner_map[ratio] = (relation, index_quad)
                     #relations_map[child_key_short] = (relation, index_quad)
