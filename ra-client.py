@@ -326,12 +326,12 @@ class RelationAnalysis:
         self.relation_groups = self.relation_groups[::-1] #reverse the list
         self.print_rgroups(self.relation_groups)
         b = time.time()
-        print("[ra] took " + str(b-a))
         json_rgroups = []
         for relation_group in self.relation_groups:
             json_rgroups.append(relation_group.toJSON())
         with open(cache_file, 'w') as f:
             json.dump(json_rgroups, f, indent=4)
+        print("[ra] took " + str(b-a))
 
     def print_rgroups(self, relation_groups):
         num_rels = 0
