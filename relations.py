@@ -271,19 +271,19 @@ class RelationGroup:
         self.weight = weight
         self.relations = {}
         self.sorted_relations = []
-        if lines is not None:
-            self.lines = lines
-        else:
-            self.lines = []
-            file, line = get_line(starting_node.insn, prog)
-            if line is not None:
-                self.lines.append(line)
-            elif isinstance(starting_node.bb, BasicBlock):
-                self.lines = starting_node.bb.lines
 
-        if file is None:
-            file, line = get_line(starting_node.insn, prog)
+        self.lines = lines
         self.file = file
+        if self.lines is None or self.file is None:
+            self.lines = []
+            self.lines.append(starting_node.line)
+            self.file = starting_node.file
+        if self.lines is None or self.file is None:
+            file, line = get_line(prede_node.insn, prog + "_debug")
+            self.lines = []
+            self.lines.append(line)
+            self.file = file
+
         #self.invariant_predes = set()
         self.finished = False
         self.use_weight = False
