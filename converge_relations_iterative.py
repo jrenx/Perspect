@@ -49,17 +49,17 @@ def compare(f1, f2):
 if __name__ == "__main__":
     #f1 = sys.argv[1]
     #f2 = sys.argv[2]
-    server1 = "10.10.0.33"
-    server2 = "10.10.0.33"
+    server1 = "10.1.0.21"
+    server2 = "10.1.0.17"
 
-    dir1 = "/home/anygroup/perf_debug_tool_dev_jenny"
-    dir2 = "/home/anygroup/eval_909_32bit"
+    dir1 = "/home/renxian2/eval_mongodb_44991"
+    dir2 = "/home/renxian2/eval_mongodb_44991"
 
-    cache_dir1 = "cache/909_ziptest_exe9"
-    cache_dir2 = "cache/909_ziptest_exe9_32"
+    cache_dir1 = "cache/mongod_4.2.1"
+    cache_dir2 = "cache/mongod_4.0.13"
 
-    file1 = "rgroups_simple_rdi_0x409daa_rbx_0x407240_rdx_0x40742b_rcx_0x40764c.json"
-    file2 = "rgroups_simple_esi_0x8050c16_ebx_0x804e41c_eax_0x804e5fb_eax_0x804e804.json"
+    file1 = "rgroups_simple__0x1012420__0x10710f0__0x1076410.json"
+    file2 = "rgroups_simple__0xee2bb0__0xf3a4b0__0xf3dd30.json"
 
     d1 = os.path.join(dir1, cache_dir1)
     d2 = os.path.join(dir2, cache_dir2)
