@@ -86,7 +86,7 @@ def compare_relations(parent_d, parent_key, left, right):
             continue
         val = right.relations_map.get(key) #TODO
         if isinstance(val, dict):
-            our_ratio = (index if index is not None else 0)/ max(total_count, 1)
+            our_ratio = (index if index is not None else 0)/ max(total_count if total_count is not None else 1, 1)
             min_diff_ratio = 1
             for their_ratio in val:
                 ratio_diff = abs(their_ratio-our_ratio)
