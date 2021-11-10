@@ -1740,7 +1740,7 @@ class StaticDepGraph:
                 indices.append([node.file, node.line, node.index, node.total_count])
 
                 is_inner = True
-                for p in itertools.chain(node.cf_predes, node.df_predes):
+                for p in itertools.chain(node.cf_succes, node.df_succes):
                     if p.explained is False:
                         is_inner = False
                         break
