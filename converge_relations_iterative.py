@@ -67,6 +67,7 @@ if __name__ == "__main__":
     f1 = os.path.join(dir1, cache_dir1, file1)
     f2 = os.path.join(dir2, cache_dir2, file2)
 
+    f21 = os.path.join(dir2, cache_dir1, file2)
     """
     cmd = "rm " + os.path.join(dir1, cache_dir1, file1)
     print(cmd)
@@ -100,11 +101,7 @@ if __name__ == "__main__":
         cmd = "ssh " + server2 + ' "' + "cd " + dir2 + "; " + cmd + '"'
         print(cmd)
         os.system(cmd)
-        print("===========================================================")
-        sd = compare(f1, f2)
-        if sd_old is not None and sd_old == sd:
-            break
-        sd_old = sd
+
         #cmd = "cp " + f1 + " " + d2
         cmd = "scp " + server1 + ":" + f1 + " " + d2
         print(cmd)
@@ -113,4 +110,11 @@ if __name__ == "__main__":
         cmd = "scp " + server2 + ":" + f2 + " " + d1
         print(cmd)
         os.system(cmd)
+
+        print("===========================================================")
+        sd = compare(f1, f21)
+        if sd_old is not None and sd_old == sd:
+            break
+        sd_old = sd
+
         print("", flush=True)
