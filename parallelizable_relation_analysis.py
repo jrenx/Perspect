@@ -514,14 +514,14 @@ class ParallelizableRelationAnalysis:
                 if indices_map.indices_not_found(static_node):
                     indices_not_found = True
                     print("\n" + hex(static_node.insn) + "@" + static_node.function + " is not found in the other repro's static slice...")
-                    prede_explained = False
+                    succe_explained = False
                     if indices_map_inner is not None:
-                        for p in itertools.chain(static_node.df_predes, static_node.cf_predes):
+                        for p in itertools.chain(static_node.df_succes, static_node.cf_succes):
                             if indices_map_inner.get_indices(p) is not None:
-                                prede_explained = True
+                                succe_explained = True
                                 break
-                    if prede_explained is False:
-                        print("\n" + hex(static_node.insn) + "@" + static_node.function + "'s predes are also not found in the other repro's inner static slice...")
+                    if succe_explained is False:
+                        print("\n" + hex(static_node.insn) + "@" + static_node.function + "'s succes are also not found in the other repro's inner static slice...")
                         continue
 
             analyzed = ParallelizableRelationAnalysis.build_relation_with_predecessor(dgraph, starting_node, static_node,
