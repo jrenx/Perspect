@@ -16,6 +16,7 @@ import traceback
 from dynamic_dep_graph import *
 from relations import *
 from util import *
+from relation_analysis import *
 
 DEBUG = True
 Weight_Threshold = 0
@@ -113,8 +114,12 @@ class ParallelRelationAnalysis(RelationAnalysis):
             if file_exists:
                 return
 
+        received_results = queue.Queue()
+        received_cache = {}
+        pending_inputs = queue.Queue()
+
         sender_receiver_t = threading.Thread(target=sender_receiver,
-                                    args=(self.pending_inputs, self.received_results))
+                                    args=(pending_inputs, received_results))
         sender_receiver_t.start()
 
         try:
@@ -138,7 +143,7 @@ class ParallelRelationAnalysis(RelationAnalysis):
                 if graph is None:
                     continue
                 wavefront.append((None, graph.insn_to_node[insn]))
-                self.pending_inputs.put(hex(insn) + "|" + func + "|" + str(0) + "|" + str(0))
+                pending_inputs.put(hex(insn) + "|" + func + "|" + str(0) + "|" + str(0))
             while len(wavefront) > 0:
                 curr_weight, starting_node = wavefront.popleft()
                 if starting_node is not None:
@@ -171,8 +176,8 @@ class ParallelRelationAnalysis(RelationAnalysis):
                 starting_node.print_node("[ra] starting static node: ")
 
                 print("[ra] Waiting results for: " + hex(starting_node.insn))
-                while starting_node.insn not in self.received_cache:
-                    ret = self.received_results.get()
+                while starting_node.insn not in received_cache:
+                    ret = received_results.get()
                     for (key, value) in ret.items():
                         print("[ra] Getting results for: " + hex(int(key)))
                         curr_wavefront = []
@@ -184,9 +189,9 @@ class ParallelRelationAnalysis(RelationAnalysis):
                                 wavelet = graph.insn_to_node[int(segs[0])]
                                 curr_wavefront.append(wavelet)
                             rgroup = RelationGroup.fromJSON(value[1], self.prog)
-                        self.received_cache[int(key)] = (curr_wavefront, rgroup)
+                        received_cache[int(key)] = (curr_wavefront, rgroup)
                         print("[ra] Done getting results for: " + hex(int(key)))
-                (curr_wavefront, rgroup) = self.received_cache[starting_node.insn]
+                (curr_wavefront, rgroup) = received_cache[starting_node.insn]
                 print("[ra] Got results for: " + hex(starting_node.insn))
                 if rgroup is None:
                     continue
@@ -223,7 +228,7 @@ class ParallelRelationAnalysis(RelationAnalysis):
 
                     wavefront.append((weight, wavelet))
                     starting_weight = 0 if weight is None else weight.total_weight
-                    self.pending_inputs.put(wavelet.hex_insn + "|" + wavelet.function + "|" + str(starting_weight) + "|" + str(max_contrib))
+                    pending_inputs.put(wavelet.hex_insn + "|" + wavelet.function + "|" + str(starting_weight) + "|" + str(max_contrib))
                     self.print_wavelet(weight, wavelet, "NEW")
 
                 print("=======================================================================")
@@ -232,7 +237,7 @@ class ParallelRelationAnalysis(RelationAnalysis):
                     self.print_wavelet(weight, starting_node, "ALL")
 
                 #break #TODO
-            self.pending_inputs.put("FIN")
+            pending_inputs.put("FIN")
         except Exception as e:
             print("Caught exception in relation analysis loop: " + str(e))
             print(str(e))
