@@ -1,6 +1,9 @@
 import sys
 import os
 from relations import *
+from util import *
+import socket
+curr_dir = os.path.dirname(os.path.realpath(__file__))
 
 def parse(f):
     with open(f, 'r') as ff:
@@ -49,17 +52,24 @@ def compare(f1, f2):
 if __name__ == "__main__":
     #f1 = sys.argv[1]
     #f2 = sys.argv[2]
-    server1 = "10.10.0.33"
-    server2 = "10.10.0.33"
+    limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
+    other_ip, other_dir, other_program, other_relations_file, _ = parse_relation_analysis_inputs()
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    my_ip = s.getsockname()[0]
+    s.close()
+    
+    server1 = my_ip
+    server2 = other_ip
 
-    dir1 = "/home/anygroup/perf_debug_tool_dev_jenny"
-    dir2 = "/home/anygroup/eval_909_32bit"
+    dir1 = curr_dir
+    dir2 = other_dir
 
-    cache_dir1 = "cache/909_ziptest_exe9"
-    cache_dir2 = "cache/909_ziptest_exe9_32"
+    cache_dir1 = os.path.join(curr_dir, "cache", program)
+    cache_dir2 = os.path.join(curr_dir, "cache", other_program)
 
-    file1 = "rgroups_simple_rdi_0x409daa_rbx_0x407240_rdx_0x40742b_rcx_0x40764c.json"
-    file2 = "rgroups_simple_esi_0x8050c16_ebx_0x804e41c_eax_0x804e5fb_eax_0x804e804.json"
+    file1 = "rgroups_simple_" + build_key(starting_events) + ".json"
+    file2 = other_relations_file
 
     d1 = os.path.join(dir1, cache_dir1)
     d2 = os.path.join(dir2, cache_dir2)
@@ -90,14 +100,14 @@ if __name__ == "__main__":
     for i in range(100):
         print("Iteration: " + str(i))
         os.chdir(dir1)
-        cmd = "python3.7 relation_analysis.py  > rel_" + str(i)+ " 2>&1"
+        cmd = "python3.7 serial_relation_analysis.py  > rel_" + str(i)+ " 2>&1"
         print(cmd)
         os.system(cmd)
 
         if i%2 == 0:
             continue
         os.chdir(dir2)
-        cmd = "python3.7 relation_analysis.py  > rel_" + str(i)+ " 2>&1"
+        cmd = "python3.7 serial_relation_analysis.py  > rel_" + str(i)+ " 2>&1"
         cmd = "ssh " + server2 + ' "' + "cd " + dir2 + "; " + cmd + '"'
         print(cmd)
         os.system(cmd)

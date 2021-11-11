@@ -11,11 +11,14 @@ from dynamic_dep_graph import *
 from parallelizable_relation_analysis import *
 import time
 from util import *
+from ra_util import *
 
 PORT = 15000
 dd = None
+curr_dir = os.path.dirname(os.path.realpath(__file__))
 
-def run_task(id, pipe, prog, arg, path, starting_events, starting_insn_to_weight, steps):
+def run_task(id, pipe, prog, arg, path, starting_events, starting_insn_to_weight, steps,
+        other_indices_map, other_indices_map_inner, other_simple_relation_groups, node_avg_timestamps):
     dd = DynamicDependence(starting_events, prog, arg, path, starting_insn_to_weight)
     dd.prepare_to_build_dynamic_dependencies(steps)
     #StaticDepGraph.build_postorder_list()
@@ -42,7 +45,12 @@ def run_task(id, pipe, prog, arg, path, starting_events, starting_insn_to_weight
             sys.stderr = f
             a = time.time()
             dgraph = dd.build_dynamic_dependencies(insn=insn, pa_id=id)
-            wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, node, starting_weight, max_contrib, prog)
+            wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, node, starting_weight, max_contrib, prog,
+                                                                             other_indices_map, \
+                                                                             other_indices_map_inner,
+                                                                             other_simple_relation_groups,\
+                                                                             node_avg_timestamps)
+
             print("WAVEFRONT: " + str(wavefront))
             print("RGOUP: " + str(rgroup))
             b = time.time()
@@ -69,12 +77,36 @@ def run_task(id, pipe, prog, arg, path, starting_events, starting_insn_to_weight
 
 def main():
     limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
+    _, _, _, other_relations_file, other_indices_file = parse_relation_analysis_inputs()
 
     processes = []
     pipes = []
 
     dd = DynamicDependence(starting_events, program, program_args, program_path, starting_insn_to_weight)
     dd.prepare_to_build_dynamic_dependencies(limit)
+
+    print("[ra] Getting the average timestamp of each unique node in the dynamic trace")
+    if not os.path.exists(dd.trace_path + ".avg_timestamp"):
+        preprocessor_file = os.path.join(curr_dir, 'preprocessor', 'count_node')
+        pp_process = subprocess.Popen([preprocessor_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = pp_process.communicate()
+        print(stdout)
+        print(stderr)
+    node_avg_timestamps = load_node_info(dd.trace_path + ".avg_timestamp")
+    print("[ra] Finished getting the average timestamp of each unique node in the dynamic trace")
+    
+    if other_indices_file is not None:
+        other_indices_file_path = os.path.join(curr_dir, "cache", program, other_indices_file)
+        other_indices_map = load_indices(other_indices_file_path)
+    
+    if other_indices_file is not None:
+        other_indices_file_path_inner = os.path.join(curr_dir, "cache", program, other_indices_file + "_inner")
+        other_indices_map_inner = load_indices(other_indices_file_path_inner)
+    
+    if other_relations_file is not None:
+        other_relations_file_path = os.path.join(curr_dir, "cache", program, other_relations_file)
+        other_simple_relation_groups = RelationAnalysis.load_simple_relations(other_relations_file_path)
+
     preparse_cmd = "./preprocessor/preprocess_parallel " + dd.trace_path + " > preparser_out &"
     print("Starting preparser with command: " + preparse_cmd)
     os.system(preparse_cmd)
@@ -83,7 +115,8 @@ def main():
     num_processor = 8
     for i in range(num_processor):
         parent_conn, child_conn = mp.Pipe(duplex=True)
-        p = mp.Process(target=run_task, args=(i, child_conn, program, program_args, program_path, starting_events, starting_insn_to_weight, limit))
+        p = mp.Process(target=run_task, args=(i, child_conn, program, program_args, program_path, starting_events, starting_insn_to_weight, limit,
+                                              other_indices_map, other_indices_map_inner, other_simple_relation_groups, node_avg_timestamps))
         p.start()
         processes.append(p)
         pipes.append(parent_conn)

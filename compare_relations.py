@@ -1,6 +1,8 @@
 import sys
 import os
 from relations import *
+from util import *
+curr_dir = os.path.dirname(os.path.realpath(__file__))
 
 def parse(f):
     with open(f, 'r') as ff:
@@ -171,14 +173,18 @@ def compare_relations(parent_d, parent_key, left, right):
 if __name__ == "__main__":
     #f1 = sys.argv[1]
     #f2 = sys.argv[2]
-    dir1 = "/home/anygroup/perf_debug_tool_dev_jenny"
-    dir2 = "/home/anygroup/eval_909_32bit"
+    limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
+    _, other_dir, other_program, other_relations_file, _ = parse_relation_analysis_inputs()
 
-    cache_dir1 = "cache/909_ziptest_exe9"
-    cache_dir2 = "cache/909_ziptest_exe9_32"
+    dir1 = curr_dir
+    dir2 = other_dir
 
-    file1 = "rgroups_simple_rdi_0x409daa_rbx_0x407240_rdx_0x40742b_rcx_0x40764c.json"
-    file2 = "rgroups_simple_esi_0x8050c16_ebx_0x804e41c_eax_0x804e5fb_eax_0x804e804.json"
+    cache_dir1 = os.path.join(curr_dir, "cache", program)
+    cache_dir2 = os.path.join(curr_dir, "cache", other_program)
+    #cache_dir2 = "cache/mongod_4.0.13"
+
+    file1 = "rgroups_simple_" + build_key(starting_events) + ".json"
+    file2 = other_relations_file
 
     d1 = os.path.join(dir1, cache_dir1)
     d2 = os.path.join(dir2, cache_dir2)

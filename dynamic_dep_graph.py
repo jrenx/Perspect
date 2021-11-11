@@ -323,15 +323,7 @@ class DynamicDependence:
         print("[dg] Starting events are: " + str(self.starting_events))
         self.starting_insn_to_weight = starting_insn_to_weight
 
-        key = ""
-        for i in range(len(self.starting_events)):
-            event = self.starting_events[i]
-            reg = event[0]
-            insn = event[1]
-            key += reg + "_" + hex(insn)
-            if i + 1 < len(self.starting_events):
-                key += "_"
-        self.key = key
+        self.key = build_key(self.starting_events)
 
         self.trace_name = self.key + "_" + 'instruction_trace.out'
         self.trace_path = os.path.join(curr_dir, 'pin', self.trace_name)
