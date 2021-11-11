@@ -131,6 +131,17 @@ def parse_insn_offsets(result):
     #print("start " + hex(start) + " end " + hex(end))
     return (start, end)
 
+def build_key(starting_events):
+    key = ""
+    for i in range(len(starting_events)):
+        event = starting_events[i]
+        reg = event[0]
+        insn = event[1]
+        key += reg + "_" + hex(insn)
+        if i + 1 < len(starting_events):
+            key += "_"
+    return  key
+
 def parse_inputs():
     limit = None
     program = None
@@ -170,6 +181,34 @@ def parse_inputs():
     print("Starting events are: " + str(starting_events))
     print("Starting events weights are: " + str(starting_insn_to_weight))
     return  limit, program, program_args, program_path, starting_events, starting_insn_to_weight
+
+def parse_relation_analysis_inputs():
+    ip = None
+    dir = None
+    prog = None
+    simple_relations_file = None
+    indices_file = None
+
+    with open("relation_analysis.config", "r") as f:
+        for l in f.readlines():
+            segs = l.split("=")
+            if segs[0] == "other_ip":
+                ip = segs[1].strip()
+            elif segs[0] == "other_dir":
+                dir = segs[1].strip()
+            elif segs[0] == "other_prog":
+                prog = segs[1].strip()
+            elif segs[0] == "other_simple_rgroup_file":
+                simple_relations_file = segs[1].strip()
+            elif segs[0] == "other_indices_file":
+                indices_file = segs[1].strip()
+    print("Other ip is: " + str(ip))
+    print("Other dir is: " + str(dir))
+    print("Other prog is: " + str(prog))
+    print("Other relations file is: " + str(simple_relations_file))
+    print("Other simple indices is: " + str(indices_file))
+
+    return ip, dir, prog, simple_relations_file, indices_file
 
 if __name__ == '__main__':
     #parse_inputs()
