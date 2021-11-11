@@ -1,6 +1,9 @@
 import sys
 import os
 from relations import *
+from util import *
+import socket
+curr_dir = os.path.dirname(os.path.realpath(__file__))
 
 def parse(f):
     with open(f, 'r') as ff:
@@ -49,17 +52,24 @@ def compare(f1, f2):
 if __name__ == "__main__":
     #f1 = sys.argv[1]
     #f2 = sys.argv[2]
-    server1 = "10.1.0.21"
-    server2 = "10.1.0.17"
+    limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
+    other_ip, other_dir, other_program, other_relations_file, _ = parse_relation_analysis_inputs()
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    my_ip = s.getsockname()[0]
+    s.close()
+    
+    server1 = my_ip
+    server2 = other_ip
 
-    dir1 = "/home/renxian2/eval_mongodb_44991"
-    dir2 = "/home/renxian2/eval_mongodb_44991"
+    dir1 = curr_dir
+    dir2 = other_dir
 
-    cache_dir1 = "cache/mongod_4.2.1"
-    cache_dir2 = "cache/mongod_4.0.13"
+    cache_dir1 = os.path.join(curr_dir, "cache", program)
+    cache_dir2 = os.path.join(curr_dir, "cache", other_program)
 
-    file1 = "rgroups_simple__0x1012420__0x10710f0__0x1076410.json"
-    file2 = "rgroups_simple__0xee2bb0__0xf3a4b0__0xf3dd30.json"
+    file1 = "rgroups_simple_" + build_key(starting_events) + ".json"
+    file2 = other_relations_file
 
     d1 = os.path.join(dir1, cache_dir1)
     d2 = os.path.join(dir2, cache_dir2)
@@ -90,14 +100,14 @@ if __name__ == "__main__":
     for i in range(100):
         print("Iteration: " + str(i))
         os.chdir(dir1)
-        cmd = "python3.7 relation_analysis.py  > rel_" + str(i)+ " 2>&1"
+        cmd = "python3.7 serial_relation_analysis.py  > rel_" + str(i)+ " 2>&1"
         print(cmd)
         os.system(cmd)
 
         if i%2 == 0:
             continue
         os.chdir(dir2)
-        cmd = "python3.7 relation_analysis.py  > rel_" + str(i)+ " 2>&1"
+        cmd = "python3.7 serial_relation_analysis.py  > rel_" + str(i)+ " 2>&1"
         cmd = "ssh " + server2 + ' "' + "cd " + dir2 + "; " + cmd + '"'
         print(cmd)
         os.system(cmd)

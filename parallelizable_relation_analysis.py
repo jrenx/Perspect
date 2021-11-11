@@ -3,6 +3,7 @@ from relations import *
 import itertools
 import time
 from util import *
+from relation_analysis import *
 
 class ParallelizableRelationAnalysis:
 

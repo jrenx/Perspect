@@ -1,6 +1,8 @@
 import sys
 import os
 from relations import *
+from util import *
+curr_dir = os.path.dirname(os.path.realpath(__file__))
 
 def parse(f):
     with open(f, 'r') as ff:
@@ -171,15 +173,18 @@ def compare_relations(parent_d, parent_key, left, right):
 if __name__ == "__main__":
     #f1 = sys.argv[1]
     #f2 = sys.argv[2]
-    dir1 = "/home/renxian2/eval_mongodb_44991"
-    dir2 = "/home/renxian2/eval_mongodb_44991"
+    limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
+    _, other_dir, other_program, other_relations_file, _ = parse_relation_analysis_inputs()
 
-    cache_dir1 = "cache/mongod_4.2.1"
-    cache_dir2 = "cache/mongod_4.2.1"
+    dir1 = curr_dir
+    dir2 = other_dir
+
+    cache_dir1 = os.path.join(curr_dir, "cache", program)
+    cache_dir2 = os.path.join(curr_dir, "cache", other_program)
     #cache_dir2 = "cache/mongod_4.0.13"
 
-    file1 = "rgroups_simple__0x1012420__0x10710f0__0x1076410.json"
-    file2 = "rgroups_simple__0xee2bb0__0xf3a4b0__0xf3dd30.json"
+    file1 = "rgroups_simple_" + build_key(starting_events) + ".json"
+    file2 = other_relations_file
 
     d1 = os.path.join(dir1, cache_dir1)
     d2 = os.path.join(dir2, cache_dir2)
