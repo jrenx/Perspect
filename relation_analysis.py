@@ -159,7 +159,7 @@ class RelationAnalysis:
         print("[ra] Total number of relations groups: " + str(len(relation_groups)))
         print("[ra] Total number of relations: " + str(num_rels))
 
-    def output_results(self):
+    def sort_and_output_results(self):
         self.relation_groups = sorted(self.relation_groups, key=lambda rg: rg.weight)
         self.relation_groups = self.relation_groups[::-1] #reverse the list
         self.print_rgroups(self.relation_groups)
