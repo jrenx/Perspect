@@ -8,6 +8,6 @@ done < servers.config
 
 for ip in "${ips[@]}"
 do
-    echo "Copying to "$ip
+    echo "Copying "$1" to "$ip" dir: "$2
     scp $SDIR"/"$1 $ip":"$SDIR"/"$2
 done
