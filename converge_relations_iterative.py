@@ -77,7 +77,8 @@ if __name__ == "__main__":
     f1 = os.path.join(dir1, cache_dir1, file1)
     f2 = os.path.join(dir2, cache_dir2, file2)
 
-    f21 = os.path.join(dir2, cache_dir1, file2)
+    f12 = os.path.join(dir1, cache_dir1, file2)
+    f21 = os.path.join(dir2, cache_dir2, file1)
     """
     cmd = "rm " + os.path.join(dir1, cache_dir1, file1)
     print(cmd)
@@ -99,23 +100,30 @@ if __name__ == "__main__":
     sd_old = None
     for i in range(100):
         print("Iteration: " + str(i))
+
+        # Run the local one
         os.chdir(dir1)
-        cmd = "python3.7 serial_relation_analysis.py  > rel_" + str(i)+ " 2>&1"
+        #cmd = "python3.7 serial_relation_analysis.py  > rel_" + str(i)+ " 2>&1"
+        cmd = "./ra.sh " + str(i) + " " + f12 + " " + d1
+        print(cmd)
+        os.system(cmd)
+
+        #cmd = "cp " + f1 + " " + d2
+        cmd = "scp " + f1 + " " + server2 + ":" + d2
         print(cmd)
         os.system(cmd)
 
         if i%2 == 0:
             continue
+
+        # Run the remote one
         os.chdir(dir2)
-        cmd = "python3.7 serial_relation_analysis.py  > rel_" + str(i)+ " 2>&1"
+        #cmd = "python3.7 serial_relation_analysis.py  > rel_" + str(i)+ " 2>&1"
+        cmd = "./ra.sh " + str(i) + " " + f21 + " " + d2
         cmd = "ssh " + server2 + ' "' + "cd " + dir2 + "; " + cmd + '"'
         print(cmd)
         os.system(cmd)
 
-        #cmd = "cp " + f1 + " " + d2
-        cmd = "scp " + server1 + ":" + f1 + " " + d2
-        print(cmd)
-        os.system(cmd)
         #cmd = "cp " + f2 + " " + d1
         cmd = "scp " + server2 + ":" + f2 + " " + d1
         print(cmd)
