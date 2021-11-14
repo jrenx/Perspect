@@ -1,6 +1,7 @@
 import os
 from difflib import *
 import socket
+import subprocess
 
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -131,6 +132,14 @@ def parse_insn_offsets(result):
     #print("start " + hex(start) + " end " + hex(end))
     return (start, end)
 
+def demangle(func):
+    cmd = ['c++filt', '-n', func]
+    #print("[main] running command: " + str(cmd))
+    result = subprocess.run(cmd, stdout=subprocess.PIPE)
+    result = result.stdout.decode('ascii').strip()
+    print("Demangled name is: " + str(result))
+    return result
+
 def build_key(starting_events):
     key = ""
     for i in range(len(starting_events)):
@@ -175,7 +184,9 @@ def parse_inputs():
                 segs = l.split()
                 reg = "" if segs[0] == "_" else regs[0]
                 insn = int(segs[1], 16)
-                starting_events.append([reg, insn, segs[2]])
+                func = segs[2]
+                func = demangle(func)
+                starting_events.append([reg, insn, func])
                 if len(segs) >= 4:
                     starting_insn_to_weight[insn] = float(segs[3])
     print("Starting events are: " + str(starting_events))
@@ -278,4 +289,5 @@ def parse_relation_analysis_port():
 
 if __name__ == '__main__':
     #parse_inputs()
-    diff_two_files_and_create_line_mapps("rec_row.c_4.0.13", "rec_row.c_4.2.1")
+    #diff_two_files_and_create_line_mapps("rec_row.c_4.0.13", "rec_row.c_4.2.1")
+    demangle("_ZN2js8frontend19TokenStreamSpecificIDsNS0_20ParserAnyCharsAccessINS0_13GeneralParserINS0_18SyntaxParseHandlerEDsEEEEE16getTokenInternalEPNS0_9TokenKindENS0_5Token8ModifierE")
