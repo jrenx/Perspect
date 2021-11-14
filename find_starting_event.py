@@ -96,15 +96,15 @@ def run():
     for f in trace1:
         #More aggressive event trimming - begin
         if f in trace2:
-            if round((trace1[f] + trace2[f])/2) <= 5:
+            if round((trace1[f] + trace2[f])/2) <= CUT_OFF:
                 remove_set1.add(f)
-        elif round(trace1[f]) <= 5:
+        elif round(trace1[f]) <= CUT_OFF:
             remove_set1.add(f)
         #More aggressive event trimming - end
 
         if f in highly_ranked:
             continue
-        if round(trace1[f]) <= 5:
+        if round(trace1[f]) <= CUT_OFF:
             remove_set1.add(f)
 
     sorted_trace2 = []
@@ -112,15 +112,15 @@ def run():
     for f in trace2:
         #More aggressive event trimming - begin
         if f in trace1:
-            if round((trace1[f] + trace2[f])/2) <= 5:
+            if round((trace1[f] + trace2[f])/2) <= CUT_OFF:
                 remove_set2.add(f)
-        elif round(trace2[f]) <= 5:
+        elif round(trace2[f]) <= CUT_OFF:
             remove_set2.add(f)
         #More aggressive event trimming - end
 
         if f in highly_ranked:
             continue
-        if round(trace2[f]) <= 5:
+        if round(trace2[f]) <= CUT_OFF:
             remove_set2.add(f)
 
 
