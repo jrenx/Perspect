@@ -2163,6 +2163,7 @@ class StaticDepGraph:
                                                                              prog)
             if prede is None:
                 assert group_size is None
+                group_size = 0
                 continue
             nodes.append(prede)
         if group is True:
