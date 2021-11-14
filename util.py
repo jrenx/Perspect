@@ -137,6 +137,8 @@ def demangle(func):
     #print("[main] running command: " + str(cmd))
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
     result = result.stdout.decode('ascii').strip()
+    if result != func:
+        result = result.split("(")[0]
     print("Demangled name is: " + str(result))
     return result
 
