@@ -125,7 +125,7 @@ def main():
         port = parse_port()
         worker_addresses = []
         with open("servers.config", "r") as f:
-            for l in f.readlines:
+            for l in f.readlines():
                 worker_addresses.append((l.strip(), port))
  
         for addr in worker_addresses:
