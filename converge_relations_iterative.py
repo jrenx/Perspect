@@ -69,6 +69,7 @@ if __name__ == "__main__":
     cache_dir2 = os.path.join(curr_dir, "cache", other_program)
 
     file1 = "rgroups_simple_" + build_key(starting_events) + ".json"
+    file11 = "rgroups.json"
     file2 = other_relations_file
 
     d1 = os.path.join(dir1, cache_dir1)
@@ -77,6 +78,7 @@ if __name__ == "__main__":
     f1 = os.path.join(dir1, cache_dir1, file1)
     f2 = os.path.join(dir2, cache_dir2, file2)
 
+    f11 = os.path.join(dir1, cache_dir1, file11)
     f12 = os.path.join(dir1, cache_dir1, file2)
     f21 = os.path.join(dir2, cache_dir2, file1)
     """
@@ -110,7 +112,9 @@ if __name__ == "__main__":
 
         if i>10 and i%2 == 0:
             #cmd = "cp " + f1 + " " + d2
+            sleep(10)
             while not os.path.exists(f1):
+                sleep(10)
                 continue
             cmd = "scp " + f1 + " " + server2 + ":" + d2
             print(cmd, flush=True)
@@ -126,7 +130,9 @@ if __name__ == "__main__":
         print(cmd, flush=True)
         os.system(cmd)
 
-        while not os.path.exists(f1):
+        sleep(10)
+        while not os.path.exists(f11):
+            sleep(10)
             continue
         #cmd = "cp " + f1 + " " + d2
         cmd = "scp " + f1 + " " + server2 + ":" + d2

@@ -81,8 +81,8 @@ class RelationAnalysis:
         self.simple_rgroup_file = os.path.join(curr_dir, "cache", self.prog, "rgroups_simple_" + self.dd.key + ".json")
         if os.path.exists(self.simple_rgroup_file):
             os.remove(self.simple_rgroup_file)
-        #if os.path.exists(self.rgroup_file):
-        #    os.remove(self.rgroup_file)
+        if os.path.exists(self.rgroup_file):
+            os.remove(self.rgroup_file)
 
     def add_to_explained_variant_relation(self, rgroup):
         for rel in rgroup.relations.values():
@@ -174,13 +174,13 @@ class RelationAnalysis:
             json_rgroups.append(relation_group.toJSON())
             json_rgroups_simple.append(SimpleRelationGroup.toJSON(relation_group))
 
-        print("[ra] Writing to " + self.rgroup_file)
-        with open(self.rgroup_file, 'w') as f:
-            json.dump(json_rgroups, f, indent=4)
-
         print("[ra] Writing to " + self.simple_rgroup_file)
         with open(self.simple_rgroup_file, 'w') as f:
             json.dump(json_rgroups_simple, f, indent=4)
+
+        print("[ra] Writing to " + self.rgroup_file)
+        with open(self.rgroup_file, 'w') as f:
+            json.dump(json_rgroups, f, indent=4)
 
     def fetch_cached_rgroup(self):
         if os.path.exists(cache_file):
