@@ -12,7 +12,8 @@ import threading
 import traceback
 from util import *
 
-HOST, PORT = "localhost", 9999
+HOST = "localhost"
+PORT = parse_inner_port()
 q = queue.Queue()
 DEBUG = True
 num_server = 4
@@ -121,7 +122,7 @@ def main():
         print("[client] Execution of iteration 0 starts at {}".format(datetime.datetime.strftime(start_time, "%Y/%m/%d, %H:%M:%S")), flush=True)
 
         sockets = []
-        port = 12000
+        port = parse_port()
         worker_addresses = []
         with open("servers.config", "r") as f:
             for l in f.readlines:

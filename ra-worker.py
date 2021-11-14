@@ -7,15 +7,18 @@ import socket
 import json
 import datetime
 import traceback
-from dynamic_dep_graph import *
-from parallelizable_relation_analysis import *
+import threading
 import time
+from parallelizable_relation_analysis import *
+from dynamic_dep_graph import *
 from util import *
 from ra_util import *
 
-PORT = 15000
-dd = None
+PORT = parse_relation_analysis_port()
+#dd = None
 curr_dir = os.path.dirname(os.path.realpath(__file__))
+debug_log_dir = "ra_worker_debug_logs"
+num_processor = parse_relation_analysis_parallelization_factor()
 
 def run_task(id, pipe, prog, arg, path, starting_events, starting_insn_to_weight, steps,
         other_indices_map, other_indices_map_inner, other_simple_relation_groups, node_avg_timestamps):
@@ -23,6 +26,7 @@ def run_task(id, pipe, prog, arg, path, starting_events, starting_insn_to_weight
     dd.prepare_to_build_dynamic_dependencies(steps)
     #StaticDepGraph.build_postorder_list()
     #StaticDepGraph.build_postorder_ranks()
+    pipe.send("ready")
     while True:
         obj = pipe.recv()
         if obj == "Shutdown":
@@ -40,7 +44,7 @@ def run_task(id, pipe, prog, arg, path, starting_events, starting_insn_to_weight
         try:
             old = sys.stdout
             old_e = sys.stderr
-            f = open(hex(insn) + "_graph.log", 'w')
+            f = open(os.path.join(curr_dir, debug_log_dir, hex(insn) + "_graph.log"), 'w')
             sys.stdout = f
             sys.stderr = f
             a = time.time()
@@ -76,6 +80,14 @@ def run_task(id, pipe, prog, arg, path, starting_events, starting_insn_to_weight
 
 
 def main():
+    ra_worker_ready_file = os.path.join(curr_dir, "ra_worker_ready")
+
+    if os.path.exists(ra_worker_ready_file):
+        os.remove(ra_worker_ready_file)
+
+    if not os.path.exists(os.path.join(curr_dir, debug_log_dir)):
+        os.makedirs(os.path.join(curr_dir, debug_log_dir))
+
     limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
     _, _, _, other_relations_file, other_indices_file = parse_relation_analysis_inputs()
 
@@ -112,7 +124,6 @@ def main():
     os.system(preparse_cmd)
 
     mp.set_start_method('spawn')
-    num_processor = 8
     for i in range(num_processor):
         parent_conn, child_conn = mp.Pipe(duplex=True)
         p = mp.Process(target=run_task, args=(i, child_conn, program, program_args, program_path, starting_events, starting_insn_to_weight, limit,
@@ -120,6 +131,15 @@ def main():
         p.start()
         processes.append(p)
         pipes.append(parent_conn)
+
+    for pipe in pipes:
+        ret = pipe.recv()
+        assert ret.strip() == "ready"
+        
+    print("[server] All workers are ready")
+    f = open(ra_worker_ready_file, "w")
+    f.write("ready")
+    f.close()
 
     print("[server] Setting up sockets")
     listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

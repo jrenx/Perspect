@@ -102,26 +102,35 @@ if __name__ == "__main__":
         print("Iteration: " + str(i))
 
         # Run the local one
-        os.chdir(dir1)
+        #os.chdir(dir1)
         #cmd = "python3.7 serial_relation_analysis.py  > rel_" + str(i)+ " 2>&1"
-        cmd = "./ra.sh " + str(i) + " " + f12 + " " + d1
-        print(cmd)
+        cmd = "./ra.sh 60 " + str(i) + " " + f12 + " " + d1 + " &"
+        print(cmd, flush=True)
         os.system(cmd)
 
-        #cmd = "cp " + f1 + " " + d2
-        cmd = "scp " + f1 + " " + server2 + ":" + d2
-        print(cmd)
-        os.system(cmd)
+        if i>10 and i%2 == 0:
+            #cmd = "cp " + f1 + " " + d2
+            while not os.path.exists(f1):
+                continue
+            cmd = "scp " + f1 + " " + server2 + ":" + d2
+            print(cmd, flush=True)
+            os.system(cmd)
 
-        if i%2 == 0:
             continue
 
         # Run the remote one
-        os.chdir(dir2)
+        #os.chdir(dir2)
         #cmd = "python3.7 serial_relation_analysis.py  > rel_" + str(i)+ " 2>&1"
-        cmd = "./ra.sh " + str(i) + " " + f21 + " " + d2
+        cmd = "./ra.sh 60 " + str(i) + " " + f21 + " " + d2
         cmd = "ssh " + server2 + ' "' + "cd " + dir2 + "; " + cmd + '"'
-        print(cmd)
+        print(cmd, flush=True)
+        os.system(cmd)
+
+        while not os.path.exists(f1):
+            continue
+        #cmd = "cp " + f1 + " " + d2
+        cmd = "scp " + f1 + " " + server2 + ":" + d2
+        print(cmd, flush=True)
         os.system(cmd)
 
         #cmd = "cp " + f2 + " " + d1
@@ -129,8 +138,19 @@ if __name__ == "__main__":
         print(cmd)
         os.system(cmd)
 
+        if i == 0:
+            cmd = "./merge_dynamic_graphs.sh " + str(d1)
+            print(cmd, flush=True)
+            os.system(cmd)
+
+            cmd = "./merge_dynamic_graphs.sh " + str(d2)
+            cmd = "ssh " + server2 + ' "' + "cd " + dir2 + "; " + cmd + '"'
+            print(cmd, flush=True)
+            os.system(cmd)
+
+          
         print("===========================================================")
-        sd = compare(f1, f21)
+        sd = compare(f1, f12)
         if sd_old is not None and sd_old == sd:
             break
         sd_old = sd

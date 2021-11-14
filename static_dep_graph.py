@@ -21,9 +21,10 @@ curr_dir = os.path.dirname(os.path.realpath(__file__))
 TRACKS_DIRECT_CALLER = True
 # = False
 USE_BPATCH = False
-HOST, PORT = "localhost", 9999
+HOST = "localhost"
+PORT = parse_inner_port()
 
-num_processor = 16
+num_processor = parse_parallelization_factor()
 
 class BasicBlock:
     def __init__(self, id, ends_in_branch, is_entry, lines):
