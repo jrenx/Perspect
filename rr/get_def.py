@@ -6,6 +6,7 @@ from get_watchpoints import *
 sys.path.append(os.path.abspath('./..'))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sa_util import *
+from util import *
 MAX_WP_COUNT = 2
 SMALL_READ_POINT_COUNT = 2000
 LARGE_READ_POINT_COUNT = 10000
@@ -462,6 +463,7 @@ def get_def(binary_ptr, branch, target, read, reg, shift='0x0', offset='0x0', of
             addr = line[0]
             insn = int(line[1], 16)
             func = line[2]
+            func = demangle(func)
             if func is None:
                 continue
             if insn in all_unique_writes:

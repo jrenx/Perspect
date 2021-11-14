@@ -17,6 +17,7 @@ def run_task(id, pipe, prog):
     sys.path.insert(2, os.path.join(os.getcwd(), 'rr'))
     import rr_util
     import sa_util
+    import util
     binary_ptr = sa_util.setup(prog)
     while True:
         obj = pipe.recv()
@@ -59,6 +60,7 @@ def main():
         shutil.copytree('rr', rr_dir, ignore=shutil.ignore_patterns('.*', '_*'))
         shutil.copy('rr_util.py', process_dir)
         shutil.copy('sa_util.py', process_dir)
+        shutil.copy('util.py', process_dir)
         shutil.copy('analysis.config', process_dir)
         shutil.copy(program, process_dir)
         binary_dir = os.path.join(process_dir, 'binary_analysis')
