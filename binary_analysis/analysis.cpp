@@ -958,6 +958,27 @@ SymtabAPI::Symtab *setup2(char *progName) {
 }
 
 int main() {
+  const char *progName = "mongod";
+  SymtabAPI::Symtab *symTab = setup2((char *)progName);
+  vector<Function *>* fs = setup((char *)progName);
+  cout << "SIZE: " << fs->size() << endl;
+  string s("__json_pack_size.cold.16");
+  for (auto it = fs->begin(); it != fs->end(); it++) {
+    cout <<"--------------------" << endl;
+    Function *f = *it;
+    cout << f->name() << endl;
+    if (f->name() == s) continue;
+    Block *b = NULL;
+    int c = 0;
+    for (auto bit = f->blocks().begin(); bit != f->blocks().end(); ++bit) {
+	    b = *bit;
+	    c += 1;
+    }
+    cout << c << endl;
+    getAllBBs2(symTab, fs, (char *)progName, (char *)f->name().c_str(), (long unsigned int)b->last());
+  } 
+  SymtabAPI::Symtab::closeSymtab(symTab);
+
   //const char *progName = "909_ziptest_exe9";
   //getMemWritesToStaticAddresses((char *)progName);
 }
