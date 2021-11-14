@@ -2017,13 +2017,16 @@ class StaticDepGraph:
                 return new_nodes
 
             if func in StaticDepGraph.pending_nodes:
+                to_remove = set()
                 print("[static_dep] Adding pending nodes for function: " + func)
                 for pending_node in StaticDepGraph.pending_nodes[func].values():
                     if not graph.cfg.contains_insn(pending_node.insn):
                         continue
                     graph.id_to_node[pending_node.id] = pending_node
                     graph.insn_to_node[pending_node.insn] = pending_node
-                    del StaticDepGraph.pending_nodes[func][pending_node.insn]
+                    to_remove.add(pending_node.insn)
+                for insn in to_remove:
+                    del StaticDepGraph.pending_nodes[func][insn]
                     #FIXME: remoe after?
 
             target_bbs.add(graph.cfg.ordered_bbs[0])
