@@ -1,7 +1,7 @@
 import sys
 import json
 import os
-CUT_OFF = 5
+CUT_OFF = 1
 def parse(lines, trace):
     ordered_trace = []
     for l in lines:
@@ -192,9 +192,9 @@ def run():
                     print(result)
                     output1[f] = result
                     if f in all_output:
-                        all_output[f] += weights1[f]
+                        all_output[f] += weights1[f]*w1
                     else:
-                        all_output[f] = weights1[f]
+                        all_output[f] = weights1[f]*w1
 
 
     print()
@@ -215,9 +215,9 @@ def run():
                     print(result)
                     output2[f] = result
                     if f in all_output:
-                        all_output[f] += weights2[f]
+                        all_output[f] += weights2[f]*w2
                     else:
-                        all_output[f] = weights2[f]
+                        all_output[f] = weights2[f]*w2
 
     all_output_l = []
     for addr in all_output:
