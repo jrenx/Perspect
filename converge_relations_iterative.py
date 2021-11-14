@@ -3,6 +3,7 @@ import os
 from relations import *
 from util import *
 import socket
+import time
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 
 def parse(f):
@@ -112,9 +113,9 @@ if __name__ == "__main__":
 
         if i>10 and i%2 == 0:
             #cmd = "cp " + f1 + " " + d2
-            sleep(10)
+            time.sleep(10)
             while not os.path.exists(f1):
-                sleep(10)
+                time.sleep(10)
                 continue
             cmd = "scp " + f1 + " " + server2 + ":" + d2
             print(cmd, flush=True)
@@ -130,9 +131,9 @@ if __name__ == "__main__":
         print(cmd, flush=True)
         os.system(cmd)
 
-        sleep(10)
+        time.sleep(10)
         while not os.path.exists(f11):
-            sleep(10)
+            time.sleep(10)
             continue
         #cmd = "cp " + f1 + " " + d2
         cmd = "scp " + f1 + " " + server2 + ":" + d2
@@ -144,15 +145,15 @@ if __name__ == "__main__":
         print(cmd)
         os.system(cmd)
 
-        if i == 0:
-            cmd = "./merge_dynamic_graphs.sh " + str(d1)
-            print(cmd, flush=True)
-            os.system(cmd)
+        #if i == 0:
+        #    cmd = "./merge_dynamic_graphs.sh " + str(d1)
+        #    print(cmd, flush=True)
+        #    os.system(cmd)
 
-            cmd = "./merge_dynamic_graphs.sh " + str(d2)
-            cmd = "ssh " + server2 + ' "' + "cd " + dir2 + "; " + cmd + '"'
-            print(cmd, flush=True)
-            os.system(cmd)
+        #    cmd = "./merge_dynamic_graphs.sh " + str(d2)
+        #    cmd = "ssh " + server2 + ' "' + "cd " + dir2 + "; " + cmd + '"'
+        #    print(cmd, flush=True)
+        #    os.system(cmd)
 
           
         print("===========================================================")
