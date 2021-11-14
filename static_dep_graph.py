@@ -2023,7 +2023,7 @@ class StaticDepGraph:
                         continue
                     graph.id_to_node[pending_node.id] = pending_node
                     graph.insn_to_node[pending_node.insn] = pending_node
-                    del StaticDepGraph.pending_nodes[pending_node.insn]
+                    del StaticDepGraph.pending_nodes[func][pending_node.insn]
                     #FIXME: remoe after?
 
             target_bbs.add(graph.cfg.ordered_bbs[0])
