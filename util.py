@@ -182,6 +182,43 @@ def parse_inputs():
     print("Starting events weights are: " + str(starting_insn_to_weight))
     return  limit, program, program_args, program_path, starting_events, starting_insn_to_weight
 
+def parse_parallelization_factor():
+    pfactor = None
+
+    with open("analysis.config", "r") as f:
+        for l in f.readlines():
+            segs = l.split("=")
+            if segs[0] == "single_machine_parallelization_factor":
+                pfactor = int(segs[1].strip())
+    print("Parallelization factor is: " + str(pfactor))
+
+    return pfactor
+
+def parse_port():
+    port = None
+
+    with open("analysis.config", "r") as f:
+        for l in f.readlines():
+            segs = l.split("=")
+            if segs[0] == "port":
+                port = int(segs[1].strip())
+    print("Port is: " + str(port))
+
+    return port
+
+def parse_inner_port():
+    inner_port = None
+
+    with open("analysis.config", "r") as f:
+        for l in f.readlines():
+            segs = l.split("=")
+            if segs[0] == "inner_port":
+                inner_port = int(segs[1].strip())
+    print("Inner port is: " + str(inner_port))
+
+    return inner_port
+
+
 def parse_relation_analysis_inputs():
     ip = None
     dir = None
@@ -198,10 +235,14 @@ def parse_relation_analysis_inputs():
                 dir = segs[1].strip()
             elif segs[0] == "other_prog":
                 prog = segs[1].strip()
-            elif segs[0] == "other_simple_rgroup_file":
-                simple_relations_file = segs[1].strip()
-            elif segs[0] == "other_indices_file":
-                indices_file = segs[1].strip()
+            elif segs[0] == "other_key":
+                other_key = segs[1].strip()
+            #elif segs[0] == "other_simple_rgroup_file":
+            #    simple_relations_file = segs[1].strip()
+            #elif segs[0] == "other_indices_file":
+            #    indices_file = segs[1].strip()
+    simple_relations_file = "rgroups_simple" + other_key + ".json"
+    indices_file = "indices" + other_key
     print("Other ip is: " + str(ip))
     print("Other dir is: " + str(dir))
     print("Other prog is: " + str(prog))
@@ -209,6 +250,31 @@ def parse_relation_analysis_inputs():
     print("Other simple indices is: " + str(indices_file))
 
     return ip, dir, prog, simple_relations_file, indices_file
+
+def parse_relation_analysis_parallelization_factor():
+    pfactor = None
+
+    with open("relation_analysis.config", "r") as f:
+        for l in f.readlines():
+            segs = l.split("=")
+            if segs[0] == "single_machine_parallelization_factor":
+                pfactor = int(segs[1].strip())
+    print("Parallelization factor is: " + str(pfactor))
+
+    return pfactor
+
+def parse_relation_analysis_port():
+    port = None
+
+    with open("relation_analysis.config", "r") as f:
+        for l in f.readlines():
+            segs = l.split("=")
+            if segs[0] == "port":
+                port = int(segs[1].strip())
+    print("Port is: " + str(port))
+
+    return port
+
 
 if __name__ == '__main__':
     #parse_inputs()

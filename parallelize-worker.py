@@ -9,7 +9,7 @@ import datetime
 import traceback
 from util import *
 
-port = 12000
+port = parse_port()
 
 def run_task(id, pipe, prog):
     os.chdir('run_{}'.format(id))
@@ -44,7 +44,7 @@ def run_task(id, pipe, prog):
 
 def main():
     curr_dir = os.path.dirname(os.path.realpath(__file__))
-    num_processor = 8
+    num_processor = parse_parallelization_factor()
 
     _, program, _, _, _, _ = parse_inputs()
 

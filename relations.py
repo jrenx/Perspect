@@ -425,29 +425,32 @@ class SimpleRelationGroup:
         data["weight"] = relation_group.weight
         predes = []
         prede_insns = []
-        for r in relation_group.relations.values():
-            n = r.prede_node
-            predes.append([n.file, n.line, n.index, n.total_count])
-            prede_insns.append(n.hex_insn)
+        if relation_group.relations is not None:
+            for r in relation_group.relations.values():
+                n = r.prede_node
+                predes.append([n.file, n.line, n.index, n.total_count])
+                prede_insns.append(n.hex_insn)
         data["predes"] = predes
         data["predes_insns"] = prede_insns
         data["insn"] = relation_group.starting_node.insn
 
         relations = []
-        for r in relation_group.relations.values():
-            relation_data = {}
-            relation_data["weight"] = r.weight.toJSON()
-            relation_data["forward"] = r.forward.toJSON() if r.forward is not None else None
-            relation_data["backward"] = r.backward.toJSON() if r.backward is not None else None
-            relation_data["timestamp"] = r.timestamp
-            relation_data["insn"] = r.prede_node.insn if r.prede_node is not None else r.insn
-            relation_data["duplicate"] = r.duplicate
-            relations.append(relation_data)
+        if relation_group.relations is not None:
+            for r in relation_group.relations.values():
+                relation_data = {}
+                relation_data["weight"] = r.weight.toJSON()
+                relation_data["forward"] = r.forward.toJSON() if r.forward is not None else None
+                relation_data["backward"] = r.backward.toJSON() if r.backward is not None else None
+                relation_data["timestamp"] = r.timestamp
+                relation_data["insn"] = r.prede_node.insn if r.prede_node is not None else r.insn
+                relation_data["duplicate"] = r.duplicate
+                relations.append(relation_data)
         data["relations"] = relations
 
         wavelets = []
-        for n in relation_group.wavefront:
-            wavelets.append([n.file, n.line, n.index, n.total_count])
+        if relation_group.wavefront is not None:
+            for n in relation_group.wavefront:
+                wavelets.append([n.file, n.line, n.index, n.total_count])
         data["wavefront"] = wavelets
         return data
 

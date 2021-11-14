@@ -10,13 +10,15 @@ sys.path.append(os.path.abspath('./rr'))
 from sat_def import *
 from get_def import *
 lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
+from util import *
 #https://stackoverflow.com/questions/145270/calling-c-c-from-python
 
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 pid = str(os.getpid())
 DEBUG_CTYPE = True
 DEBUG = True
-HOST, PORT = "localhost", 9999
+HOST = "localhost"
+PORT = parse_inner_port()
 ################################################################
 #### Helper functions that interact with RR functionalities ####
 ################################################################
