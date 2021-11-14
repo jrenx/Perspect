@@ -10,11 +10,13 @@ import traceback
 import socketserver
 import queue
 import _thread
+from util import *
 
-HOST, PORT = "localhost", 9999
+HOST = "localhost"
+PORT = parse_inner_port()
 q = queue.Queue()
 DEBUG = True
-num_processor = 16
+num_processor = parse_parallelization_factor()
 num_new_unique_inputs_received = 0
 handled = set()
 

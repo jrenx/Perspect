@@ -74,8 +74,8 @@ def sender_receiver_worker(s, q, results_q):
 def sender_receiver(q, results_q):
     sockets = []
     threads = []
-    num_processor = 8
-    port = 15000
+    num_processor = parse_relation_analysis_parallelization_factor()
+    port = parse_relation_analysis_port()
     worker_addresses = []
     with open("servers.config", "r") as f:
         for l in f.readlines():
