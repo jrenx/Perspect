@@ -993,7 +993,8 @@ public:
     for (int i = 1; i < CodeCount; i++) {
       unsigned long count = OccurrencesPerCode[i];
 #ifdef SAMPLE
-      count = (count / SAMPLE_THRESHOLD) + 1;
+      if (count == 0) count = 0;
+      else count = (count / SAMPLE_THRESHOLD) + 1;
 #endif
       osc << std::hex << CodeToInsn[i] << std::dec << " " << count << "\n";
     }
