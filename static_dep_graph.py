@@ -338,18 +338,25 @@ class CFG:
         bb_id_to_pdom_ids = {}
 
         if finalfinal is not True:
+            iteration = 0
             retry = True
             while retry:
                 retry = False
+                iteration += 1
+                if iteration > 3:
+                    break
                 for bb in self.postorder_list:
                     if DEBUG_SIMPLIFY: print("[Simplify] Examining: " + str(bb.id))
                     pdom_ids = None
+                    cont = False
                     for succe in bb.succes:
                         if DEBUG_SIMPLIFY: print("[Simplify]      current succe : " + str(succe.id))
                         if succe.id not in bb_id_to_pdom_ids:
                             if succe in bb.backedge_targets:
                                 retry = True
                                 if DEBUG_SIMPLIFY: print("[Simplify]      ignoring, is a backedge ")
+                                cont = True
+                                break
                             else:
                                 pdom_ids = set()
                             continue
@@ -358,6 +365,8 @@ class CFG:
                         else:
                             pdom_ids = pdom_ids.intersection(bb_id_to_pdom_ids[succe.id])
                         if DEBUG_SIMPLIFY: print("[Simplify]      current pdom : " + str(pdom_ids))
+                    if cont is True:
+                        continue
                     if pdom_ids is None:
                         pdom_ids = set()
                     pdom_ids.add(bb.id)
@@ -367,6 +376,8 @@ class CFG:
 
             if DEBUG_SIMPLIFY: print("[Simplify] " + str(postorder_map))
             for bb in self.postorder_list:
+                if bb.id not in bb_id_to_pdom_ids:
+                    continue
                 pdom_ids = bb_id_to_pdom_ids[bb.id]
                 pdom_ids.remove(bb.id)
                 bb.pdoms = []
@@ -455,7 +466,7 @@ class CFG:
                     if bb.immed_pdom not in child_bb.pdoms:
                         ignore = True
                         break
-                assert bb.immed_pdom in child_bb.pdoms
+                assert bb.immed_pdom in child_bb.pdoms, str(bb.id) + " " + str(bb.immed_pdom.id) + " " + str([p.id for p in child_bb.pdoms])
                 all_succes_before_immed_pdom.add(child_bb)
                 for succe in child_bb.succes:
                     worklist.append(succe)
