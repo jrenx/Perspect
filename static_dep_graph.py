@@ -1555,7 +1555,8 @@ class StaticDepGraph:
 
     @staticmethod
     def build_indices(starting_events, prog, limit, align_indices=False,
-                        our_source_code_dir=None, other_source_code_dir=None):
+                        our_source_code_dir=None, other_source_code_dir=None,
+                      source_codes_same=False):
         start = time.time()
         result_dir, result_file, indice_file, key = StaticDepGraph.build_file_names(starting_events, prog, limit)
         StaticDepGraph.result_file = result_file
@@ -1565,11 +1566,23 @@ class StaticDepGraph:
         StaticDepGraph.loadJSON(result_file)
         b = time.time()
         print("[static_dep] Finished loading graph, took: " + str(b - a))
-
+        print("[indices] Source codes are the same? " + str(source_codes_same) + " align indices? " + str(align_indices))
         if align_indices is False:
-            StaticDepGraph.generate_file_line_for_all_reachable_nodes(prog, our_source_code_dir)
-            StaticDepGraph.binary_ptr = setup(prog)
-            StaticDepGraph.build_binary_indices(prog)
+            if source_codes_same is True:
+                for graph in StaticDepGraph.func_to_graph.values():
+                    for node in itertools.chain(graph.none_df_starting_nodes, \
+                                                graph.nodes_in_cf_slice.keys(), \
+                                                graph.nodes_in_df_slice.keys()):
+                        if node.explained is False:
+                            continue
+                        node.file = node.function
+                        node.line = node.insn
+                        node.index = 0
+                        node.total_count = 1
+            else:
+                StaticDepGraph.generate_file_line_for_all_reachable_nodes(prog, our_source_code_dir)
+                StaticDepGraph.binary_ptr = setup(prog)
+                StaticDepGraph.build_binary_indices(prog)
             StaticDepGraph.output_indices_mapping(indice_file)
             StaticDepGraph.writeJSON(result_file)
         else:
@@ -1577,6 +1590,8 @@ class StaticDepGraph:
             StaticDepGraph.align_indices(our_source_code_dir, other_source_code_dir)
             StaticDepGraph.output_indices_mapping(indice_file)
             StaticDepGraph.writeJSON(result_file)
+        end = time.time()
+        print("[indices] Building indices took: " + str(end - start))
 
     @staticmethod
     def build_dependencies(starting_events, prog, limit, use_cached_static_graph=True, parallelize_rr=False):
@@ -1792,7 +1807,7 @@ class StaticDepGraph:
         all_insns = list(all_insns)
         ret = execute_cmd_in_parallel([hex(insn) for insn in all_insns], 'get_file_line.sh', 'insns_', num_processor, prog)
 
-        assert(len(ret) == len(all_insns))
+        assert len(ret) == len(all_insns), str(len(ret)) + " " + str(len(all_insns))
         insn_to_file_line = {}
         i = 0
         print("[indices] total number of file lines to parse: " + str(len(ret)))
@@ -2944,6 +2959,8 @@ def main():
     parser.set_defaults(our_source_code_dir=None)
     parser.add_argument('-s_others', '--other_source_code_dir', dest='other_source_code_dir')
     parser.set_defaults(other_source_code_dir=None)
+    parser.add_argument('-same', '--source_codes_same', dest='source_codes_same', action='store_true')
+    parser.set_defaults(source_codes_same=False)
     args = parser.parse_args()
 
     limit, program, _, _, starting_events, _ = parse_inputs()
@@ -2968,7 +2985,8 @@ def main():
         StaticDepGraph.build_indices(starting_events, program, limit,
                                       align_indices=args.align_indices,
                                      our_source_code_dir=args.our_source_code_dir,
-                                     other_source_code_dir=args.other_source_code_dir)
+                                     other_source_code_dir=args.other_source_code_dir,
+                                     source_codes_same=args.source_codes_same)
 
 if __name__ == "__main__":
     main()
