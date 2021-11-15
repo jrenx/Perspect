@@ -20,9 +20,9 @@
 #include <netinet/in.h>
 #include <string.h>
 
-//#define SAMPLE
-#define SAMPLE_THRESHOLD 50
-#define LARGE_THRESOLD  100000
+#define SAMPLE
+#define SAMPLE_THRESHOLD 5
+#define LARGE_THRESOLD  200000
 #define CHECK_ALL_COUNTS
 
 using namespace std;
