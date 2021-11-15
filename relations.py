@@ -279,7 +279,7 @@ class RelationGroup:
             self.lines.append(starting_node.line)
             self.file = starting_node.file
         if self.lines is None or self.file is None:
-            file, line = get_line(prede_node.insn, prog + "_debug")
+            file, line = get_line(starting_node.insn, prog + "_debug")
             self.lines = []
             self.lines.append(line)
             self.file = file
