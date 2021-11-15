@@ -4,21 +4,21 @@ from util import *
 from dynamic_dep_graph import *
 
 curr_dir = os.path.dirname(os.path.realpath(__file__))
-limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
+_, _, _, _, starting_events, starting_insn_to_weight = parse_inputs()
 
-dd = DynamicDependence(starting_events, program, program_args, program_path, starting_insn_to_weight)
-print(program)
-dd.prepare_to_build_dynamic_dependencies(limit)
+key = build_key(starting_events)
+trace_name = key + "_" + 'instruction_trace.out'
+trace_path = os.path.join(curr_dir, 'pin', trace_name)
 
 print("[ra] Getting the counts of each unique node in the dynamic trace")
-if not os.path.exists(dd.trace_path + ".count"):
+if not os.path.exists(trace_path + ".count"):
     preprocessor_file = os.path.join(curr_dir, 'preprocessor', 'count_node')
     pp_process = subprocess.Popen([preprocessor_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = pp_process.communicate()
     print(stdout)
     print(stderr)
 node_counts = {}
-with open(dd.trace_path + ".count", 'r') as f:  # TODO
+with open(trace_path + ".count", 'r') as f:  # TODO
     for l in f.readlines():
         insn = int(l.split()[0], 16)
         if insn not in starting_insn_to_weight:
