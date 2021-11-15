@@ -36,7 +36,12 @@ for event in starting_events:
     event_str = reg + " " + hex(insn) + " " + func
     weight = starting_insn_to_weight.get(insn, None)
     if weight is not None:
-        weight = weight/node_counts[insn] * 1000
+        if node_counts[insn] > 0:
+            weight = weight/node_counts[insn] * 1000
+        elif node_counts[insn] == 0:
+            weight = 0
+        else:
+            assert(False), node_counts[insn]
         event_str += (" " + str(weight))
     starting_events_strs.append(event_str)
 
