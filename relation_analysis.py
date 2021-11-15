@@ -78,7 +78,7 @@ class RelationAnalysis:
             self.other_simple_relation_groups = RelationAnalysis.load_simple_relations(other_relations_file_path)
 
         self.rgroup_file = os.path.join(curr_dir, 'cache', self.prog, "rgroups.json")
-        self.simple_rgroup_file = os.path.join(curr_dir, "cache", self.prog, "rgroups_simple_" + self.dd.key + ".json")
+        self.simple_rgroup_file = os.path.join(curr_dir, "cache", self.prog, "rgroups_simple_" + self.dd.key + "_1.json")
         if os.path.exists(self.simple_rgroup_file):
             os.remove(self.simple_rgroup_file)
         if os.path.exists(self.rgroup_file):
