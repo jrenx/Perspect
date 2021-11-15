@@ -125,6 +125,10 @@ def parse_insn_offsets(result):
         return (float('inf'), float('-inf'))
     if "out of range" in result:
         return (float('inf'), float('-inf'))
+    if "at address" not in result:
+        return (float('inf'), float('-inf'))
+    if "and ends at" not in result:
+        return (float('inf'), float('-inf'))
     result = result.split("at address")[1]
     result = result.split("and ends at")
     start = int(result[0].split()[0], 16)
