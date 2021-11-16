@@ -28,7 +28,7 @@ def compare(f1, f2):
             #continue
             d = rg.group_weight
             unique = True
-            key = rg.index_quad
+            key = Indices.build_key_from_index_quad(rg.index_quad)
         else:
             #d = abs(rs1[key][0] - rs2[key][0])
             d = abs(rg.group_weight - rs2.relations_map[key].group_weight)
@@ -42,7 +42,7 @@ def compare(f1, f2):
             #continue
             d = rg.group_weight
             d = round(d)
-            diff.append((d, rg.index_quad, True, "right"))
+            diff.append((d, Indices.build_key_from_index_quad(rg.index_quad), True, "right"))
     #print(diff)
     sorted_diff = sorted(diff, key=lambda pair: (pair[0], pair[1]))
     #print(sorted_diff)
@@ -53,6 +53,7 @@ def compare(f1, f2):
 if __name__ == "__main__":
     #f1 = sys.argv[1]
     #f2 = sys.argv[2]
+    a = time.time()
     limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
     other_ip, other_dir, other_program, other_relations_file, _ = parse_relation_analysis_inputs()
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -163,3 +164,5 @@ if __name__ == "__main__":
         sd_old = sd
 
         print("", flush=True)
+    b = time.time()
+    print("Finished converging, took: " + str(b-a))

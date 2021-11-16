@@ -191,5 +191,6 @@ if __name__ == "__main__":
 
     f1 = os.path.join(dir1, cache_dir1, file1)
     f2 = os.path.join(dir2, cache_dir2, file2)
+    f12 = os.path.join(dir2, cache_dir1, file2)
 
-    compare_relation_groups(f1, f2)
+    compare_relation_groups(f1, f12)
