@@ -1694,7 +1694,13 @@ class StaticDepGraph:
                         continue
                     graph.build_control_flow_dependencies(set(), final=True)
                     graph.merge_nodes(graph.nodes_in_df_slice, final=True)
+
+                # must call this after calling buildi_control_flow_dependencies, else the call edge may be cleared!
+                for graph in StaticDepGraph.func_to_graph.values():
+                    if graph.changed is False:
+                        continue
                     if TRACKS_DIRECT_CALLER: graph.merge_callsite_nodes()
+
                 for graph in StaticDepGraph.func_to_graph.values():
                     if graph.changed is False:
                         continue
@@ -2121,8 +2127,10 @@ class StaticDepGraph:
             for callsite in self.pending_callsite_nodes:
                 if n not in callsite.cf_succes:
                     callsite.cf_succes.append(n)
+                    print("Adding " + str(n.id) + " to cf succe of " + str(callsite.id))
                 if callsite not in n.cf_predes:
                     n.cf_predes.append(callsite)
+                    print("Adding " + str(callsite.id) + " to cf prede of " + str(n.id))
 
     #FIXME, think about if this makes sense
     def merge_nodes(self, nodes, final=False, interprocedural_set=set()):
