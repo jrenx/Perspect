@@ -523,6 +523,7 @@ class DynamicDependence:
         for graph in StaticDepGraph.func_to_graph.values():
 
             for node in graph.none_df_starting_nodes:
+                self.insn_of_cf_nodes.append(node.insn)
                 self.insn_to_static_node[node.insn] = node
 
             for node in graph.nodes_in_cf_slice.keys():
