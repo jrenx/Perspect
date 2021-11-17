@@ -1,7 +1,3 @@
-_ 0x11fb680 __wt_struct_packv 0
-_ 0x11f9eb0 __wt_struct_sizev 0
-_ 0x1333360 __wt_rec_upd_select 0.24308016007867583
-_ 0x11cdf70 __wt_cursor_cache 0.24741426553549387
 _ 0x12be1d0 __tree_walk_internal 0.08092034700644382
 _ 0x122aa20 __wt_scr_alloc_func 0.042608335376793774
 _ 0x12273e0 __wt_session_gen_leave 0.03040150979065029

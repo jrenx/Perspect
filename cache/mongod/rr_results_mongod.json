@@ -24315,5 +24315,713 @@
             "__config_next",
             "rax"
         ]
-    ]
+    ],
+    "mongod_*0x13300d7_*0x132ecff_*0x13300c3_rbp_0x0_-0x2c8_None": [],
+    "mongod_*0x132d0ba_*0x132d0e4_*0x132d0b4_rax_0x0_0x0_None": [],
+    "mongod_*0x132fa9b_*0x132ecff_*0x13302c7_rdi_0x0_0x0_None": [],
+    "mongod_*0x132f28b_*0x132ecff_*0x132f285_r11_0x0_0x0_None": [],
+    "mongod_*0x132e5f2_*0x132ecff_*0x132fe98_rdi_0x0_0x1_None": [],
+    "mongod_*0x132f29a_*0x132ecff_*0x132f291_rbp_0x0_-0x12f_None": [],
+    "mongod_*0x132f0b6_*0x132ecff_*0x132f0b0_r11_0x0_0x0_None": [],
+    "mongod_*0x132e6b2_*0x132ecff_*0x132e68f_rbp_0x0_-0x2c0_None": [],
+    "mongod_*0x132f189_*0x132ecff_*0x13304be_rbp_0x0_-0x2c8_None": [],
+    "mongod_*0x132fa9b_*0x132ecff_*0x132e2b5_rbp_0x0_-0x270_None": [],
+    "mongod_*0x132eae8_*0x132ecff_*0x132ea76_rbp_0x0_-0x2c8_None": [],
+    "mongod_*0x132f4c2_*0x132ecff_*0x132f456_rbp_0x0_-0x238_None": [],
+    "mongod_*0x132d099_*0x132d0e4_*0x132d092_r15_0x0_0x38_None": [
+        [
+            [
+                "R12",
+                0,
+                56,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            19689918,
+            "__wt_page_modify_alloc",
+            "rdx"
+        ]
+    ],
+    "mongod_*0x132f0d9_*0x132ecff_*0x132f0c7_r11_0x0_0x1_None": [],
+    "mongod_*0x132f332_*0x132ecff_*0x132f2c7_rbp_0x0_-0x1a0_None": [],
+    "mongod_*0x132f2da_*0x132ecff_*0x132f2ce_r9_0x0_0x0_None": [],
+    "mongod_*0x132e70d_*0x132ecff_*0x132e701_rdx_0x0_0x0_None": [],
+    "mongod_*0x132eae8_*0x132ecff_*0x132eacd_rbp_0x0_-0x2c8_None": [],
+    "mongod_*0x132e772_*0x132ecff_*0x132e6fa_rbp_0x0_-0x238_None": [],
+    "mongod_*0x132f28b_*0x132ecff_*0x13306ed_r11_0x0_0x0_None": [],
+    "mongod_*0x132e816_*0x132ecff_*0x133017e_r11_0x0_0x0_None": [],
+    "mongod_*0x132fa9b_*0x132ecff_*0x1330333_rdi_0x0_0x1_None": [],
+    "mongod_*0x132f632_*0x132ecff_*0x132ff36_rbp_0x0_-0x240_None": [],
+    "mongod_*0x132f28b_*0x132ecff_*0x132f358_r11_0x0_0x0_None": [],
+    "mongod_*0x132ebdb_*0x132ecff_*0x1330558_r11_0x0_0x0_None": [],
+    "mongod_*0x132f189_*0x132ecff_*0x132f158_rbp_0x0_-0x2c8_None": [],
+    "mongod_*0x132fa9b_*0x132ecff_*0x1330304_rdx_0x0_-0x1_None": [],
+    "mongod_*0x132f129_*0x132ecff_*0x132f108_rbp_0x0_-0x2c8_None": [],
+    "mongod_*0x132eb3c_*0x132ecff_*0x132eb28_rbp_0x0_-0x2c8_None": [],
+    "mongod_*0x132e5f2_*0x132ecff_*0x132fd87_rdi_0x0_0x0_None": [],
+    "mongod_*0x132f3a2_*0x132ecff_*0x132f39e_r11_0x0_0x0_None": [],
+    "mongod_*0x132e816_*0x132ecff_*0x13301f3_r11_0x0_0x0_None": [],
+    "mongod_*0x132e590_*0x132ecff_*0x132e584_r11_0x0_0x2_None": [],
+    "mongod_*0x132e5f2_*0x132ecff_*0x132fdcc_rdx_0x0_-0x1_None": [],
+    "mongod_*0x132f5d7_*0x132ecff_*0x132f5d3_r11_0x0_0x0_None": [],
+    "mongod_*0x132ebdb_*0x132ecff_*0x132ebd5_r11_0x0_0x0_None": [],
+    "mongod_*0x132e9d6_*0x132ecff_*0x132e9d0_r11_0x0_0x0_None": [],
+    "mongod_*0x132f1e1_*0x132ecff_*0x132f1cf_rbp_0x0_-0x2c8_None": [],
+    "mongod_*0x132d0fc_*0x132ecff_*0x132d0f3_r15_0x0_0x18_None": [
+        [
+            [
+                "RAX",
+                0,
+                24,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            19425983,
+            "__wt_page_alloc",
+            "r15d"
+        ]
+    ],
+    "mongod_*0x132f5e8_*0x132ecff_*0x132f5dd_rax_0x0_0x0_None": [],
+    "mongod_*0x132ebe7_*0x132ecff_*0x132ebe1_rbp_0x0_-0x6f_None": [],
+    "mongod_*0x132e9fa_*0x132ecff_*0x132e9e7_r11_0x0_0x1_None": [],
+    "mongod_*0x1330312_*0x132ecff_*0x13302c0_rbp_0x0_-0x1a0_None": [],
+    "mongod_*0x132fdda_*0x132ecff_*0x132fd80_rbp_0x0_-0x238_None": [],
+    "mongod_*0x132d349_*0x132ecff_*0x132d33c_rbp_0x0_-0x48_None": [],
+    "mongod_*0x1330431_*0x132ecff_*0x1330429_rcx_0x0_0x20_None": [],
+    "mongod_*0x13306e3_*0x132ecff_*0x13306db_r9_0x0_0x20_None": [],
+    "mongod_*0x132d36c_*0x132ecff_*0x132da74_rbp_0x0_-0x90_None": [],
+    "mongod_*0x132fa9b_*0x132ecff_*0x1330444_rbp_0x0_-0x1a0_None": [],
+    "mongod_*0x132f403_*0x132ecff_*0x132e81c_rbp_0x0_-0x238_None": [],
+    "mongod_*0x132d36c_*0x132ecff_*0x132d335_rbp_0x0_-0x90_None": [],
+    "mongod_*0x132e80e_*0x132ecff_*0x132e808_r11_0x0_0x0_None": [],
+    "mongod_*0x132ea46_*0x132ecff_*0x132ea2a_rbp_0x0_-0x2c8_None": [],
+    "mongod_*0x132ec23_*0x132ecff_*0x132ec18_rax_0x0_0x0_None": [],
+    "mongod_*0x132fa42_*0x132ecff_*0x132fa3e_r11_0x0_0x0_None": [],
+    "mongod_*0x132ebdb_*0x132ecff_*0x133043b_r11_0x0_0x0_None": [],
+    "mongod_*0x132ec72_*0x132ecff_*0x132ec11_rbp_0x0_-0x238_None": [],
+    "mongod_*0x132f632_*0x132ecff_*0x1330040_rbp_0x0_-0x238_None": [],
+    "mongod_*0x132e6b2_*0x132ecff_*0x132e63a_rbp_0x0_-0x238_None": [],
+    "mongod_*0x132fa53_*0x132ecff_*0x132fa48_r9_0x0_0x0_None": [],
+    "mongod_*0x132fa9b_*0x132ecff_*0x132e0bb_rbp_0x0_-0x270_None": [],
+    "mongod_*0x132d36c_*0x132ecff_*0x132d35f_rax_0x0_0x30_None": [],
+    "mongod_*0x13301e9_*0x132ecff_*0x13301e1_rcx_0x0_0x20_None": [
+        [
+            [
+                "RBP",
+                0,
+                4294967128,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            20108285,
+            "__wt_rec_row_leaf",
+            ""
+        ]
+    ],
+    "mongod_*0x132f469_*0x132ecff_*0x132f45d_rcx_0x0_0x0_None": [],
+    "mongod_*0x132e816_*0x132ecff_*0x13304e8_r11_0x0_0x0_None": [],
+    "mongod_*0x132e57e_*0x132ecff_*0x132e56b_r11_0x0_0x1_None": [],
+    "mongod_*0x132e550_*0x132ecff_*0x132e54a_r11_0x0_0x0_None": [],
+    "mongod_*0x132d36c_*0x132ecff_*0x132d1d6_rax_0x0_0x0_None": [],
+    "mongod_*0x132f3b2_*0x132ecff_*0x132f3a8_rcx_0x0_0x0_None": [],
+    "mongod_*0x132f429_*0x132ecff_*0x132f420_rbp_0x0_-0xcf_None": [
+        [
+            [
+                "RBP",
+                0,
+                4294967091,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            20108400,
+            "__wt_rec_row_leaf",
+            ""
+        ]
+    ],
+    "mongod_*0x132e64b_*0x132ecff_*0x132e641_rdx_0x0_0x0_None": [],
+    "mongod_*0x133070c_*0x132e052_*0x1330701_rcx_0x0_0x18_None": [],
+    "mongod_*0x132d95c_*0x132e052_*0x132ddb5_r13_0x0_0x2c0_None": [],
+    "mongod_*0x1330715_*0x132e052_*0x133070e_rcx_0x0_0x10_None": [],
+    "mongod_*0x132f928_*0x132e052_*0x132db05_rbp_0x0_-0xd8_None": [],
+    "mongod_*0x132e3f8_*0x132e052_*0x132edb8_rbp_0x0_-0x288_None": [],
+    "mongod_*0x133071d_*0x132e052_*0x1330717_rcx_0x0_0x0_None": [],
+    "mongod_*0x132dfa2_*0x132e052_*0x132df9a_r12_0x0_0x22_None": [],
+    "mongod_*0x132f82e_*0x132e052_*0x132f820_rcx_0x0_0x8_None": [],
+    "mongod_*0x132f833_*0x132e052_*0x132f824_rbp_0x0_-0x130_None": [],
+    "mongod_*0x132ddbf_*0x132e052_*0x132dda7_rbp_0x0_-0x1a0_None": [],
+    "mongod_*0x132e8ae_*0x132e052_*0x132e8a7_rbp_0x0_-0x90_None": [],
+    "mongod_*0x132de0f_*0x132e052_*0x132dd26_r13_0x0_0x2d0_None": [
+        [
+            [
+                "RBX",
+                0,
+                720,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            18916768,
+            "__wt_rec_split_init",
+            "rax"
+        ],
+        [
+            [
+                "R13",
+                0,
+                720,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            20110959,
+            "__wt_rec_row_leaf",
+            "rax"
+        ]
+    ],
+    "mongod_*0x132d95c_*0x132e052_*0x1330257_rbp_0x0_-0x90_None": [],
+    "mongod_*0x132d95c_*0x132e052_*0x132dde1_r13_0x0_0x2c0_None": [],
+    "mongod_*0x132dfce_*0x132e052_*0x132e8c2_r9_0x0_0x78_None": [],
+    "mongod_*0x132dbc3_*0x132e052_*0x132dbbd_r12_0x0_0x23_None": [],
+    "mongod_*0x132d95c_*0x132e052_*0x1330274_r13_0x0_0x2c0_None": [],
+    "mongod_*0x132dccc_*0x132e052_*0x132dcb9_r13_0x0_0x410_None": [
+        [
+            [
+                "R15",
+                0,
+                1040,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            20080925,
+            "__rec_cell_build_leaf_key",
+            "rax"
+        ],
+        [
+            [
+                "R12",
+                0,
+                1040,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            20079677,
+            "__rec_cell_build_int_key",
+            "rdx"
+        ]
+    ],
+    "mongod_*0x132dfce_*0x132e052_*0x132dfc7_r9_0x0_0x78_None": [],
+    "mongod_*0x132dbcf_*0x132e052_*0x132dbc9_r12_0x0_0x21_None": [],
+    "mongod_*0x132d5d3_*0x132e052_*0x132d5cc_rbp_0x0_-0xcf_None": [],
+    "mongod_*0x132dfdb_*0x132e052_*0x132dfd4_r10_0x0_0x8_None": [],
+    "mongod_*0x132dd4e_*0x132e052_*0x132dd46_r13_0x0_0x498_None": [
+        [
+            [
+                "R13",
+                0,
+                1176,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            20114950,
+            "__wt_rec_row_leaf",
+            "rax"
+        ],
+        [
+            [
+                "RBX",
+                0,
+                1176,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            20075794,
+            "__wt_rec_cell_build_val.constprop.22",
+            "rax"
+        ]
+    ],
+    "mongod_*0x132d95c_*0x132e052_*0x132e007_r13_0x0_0x2c0_None": [
+        [
+            [
+                "R13",
+                0,
+                704,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            20110613,
+            "__wt_rec_row_leaf",
+            "rax"
+        ]
+    ],
+    "mongod_*0x133070c_*0x132e052_*0x13306fa_rbp_0x0_-0x138_None": [],
+    "mongod_*0x132dce3_*0x132e052_*0x132dc4b_r13_0x0_0x298_None": [
+        [
+            [
+                "RBX",
+                0,
+                664,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            18916479,
+            "__wt_rec_split_init",
+            "r15"
+        ]
+    ],
+    "mongod_*0x132de0f_*0x132e052_*0x132dd61_rbp_0x0_-0x298_None": [
+        [
+            [
+                "RBP",
+                0,
+                4294966632,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            20107274,
+            "__wt_rec_row_leaf",
+            "rax"
+        ]
+    ],
+    "mongod_*0x132ed99_*0x132e052_*0x132ed92_rdx_0x0_0x968_None": [
+        [
+            [
+                "RAX",
+                0,
+                2408,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            18524525,
+            "wiredtiger_open",
+            "rdx"
+        ]
+    ],
+    "mongod_*0x132f81e_*0x132e052_*0x132f810_rbp_0x0_-0x12e_None": [],
+    "mongod_*0x132de0f_*0x132e052_*0x132dcff_r13_0x0_0x418_None": [
+        [
+            [
+                "R15",
+                0,
+                1048,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            20080935,
+            "__rec_cell_build_leaf_key",
+            "rax"
+        ],
+        [
+            [
+                "R12",
+                0,
+                1048,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            20079685,
+            "__rec_cell_build_int_key",
+            "rax"
+        ]
+    ],
+    "mongod_*0x132df77_*0x132e052_*0x132df70_r13_0x0_0x2c8_None": [
+        [
+            [
+                "RBX",
+                0,
+                712,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            18916699,
+            "__wt_rec_split_init",
+            "rax"
+        ],
+        [
+            [
+                "R13",
+                0,
+                712,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            20110916,
+            "__wt_rec_row_leaf",
+            "rcx"
+        ]
+    ],
+    "mongod_*0x132d95c_*0x132e052_*0x132ddf0_r13_0x0_0x490_None": [
+        [
+            [
+                "RBX",
+                0,
+                1168,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            20075780,
+            "__wt_rec_cell_build_val.constprop.22",
+            "rax"
+        ],
+        [
+            [
+                "R13",
+                0,
+                1168,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            20114919,
+            "__wt_rec_row_leaf",
+            ""
+        ]
+    ],
+    "mongod_*0x132dc7d_*0x132e052_*0x132dc75_r13_0x0_0x501_None": [
+        [
+            [
+                "R13",
+                0,
+                1282,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            20111435,
+            "__wt_rec_row_leaf",
+            "al"
+        ]
+    ],
+    "mongod_*0x132ed73_*0x132e052_*0x132ed67_rbp_0x0_-0x90_None": [
+        [
+            [
+                "R14",
+                0,
+                0,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            19049255,
+            "__wt_scr_alloc_func",
+            "rax"
+        ]
+    ],
+    "mongod_*0x132df55_*0x132e052_*0x132df4e_rbp_0x0_-0x251_None": [
+        [
+            [
+                "RBP",
+                0,
+                4294966704,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            20107263,
+            "__wt_rec_row_leaf",
+            ""
+        ]
+    ],
+    "mongod_*0x11cd520_*0x11cdc1c_*0x11cd518_rip_0x0_0x2d7549c_None": [],
+    "mongod_*0x11cd516_*0x11cdc1c_*0x11cd50c_rbx_0x0_0x120_None": [],
+    "mongod_*0x134670f_*0x1346b8f_*0x1346701_rdx_0x0_0x168_None": [],
+    "mongod_*0x11cc112_*0x11cc7da_*0x11cc10a_rip_0x0_0x2d768ae_None": [],
+    "mongod_*0x11cc108_*0x11cc7da_*0x11cc0fe_rbx_0x0_0x120_None": [],
+    "mongod_*0x13466db_*0x1346b8f_*0x13466d6_r15_0x0_-0x10_None": [],
+    "mongod_*0x132dc67_*0x132e052_*0x132dc60_r13_0x0_0x2d0_None": [
+        [
+            [
+                "RBX",
+                0,
+                720,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            18916768,
+            "__wt_rec_split_init",
+            "rax"
+        ],
+        [
+            [
+                "R13",
+                0,
+                720,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            20110959,
+            "__wt_rec_row_leaf",
+            "rax"
+        ]
+    ],
+    "mongod_*0x11cd4fa_*0x11cdc1c_*0x11cd4ee_rdx_0x0_0x1774_None": [
+        [
+            [
+                "RBX",
+                0,
+                6004,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            19205560,
+            "__wt_txn_recover",
+            ""
+        ],
+        [
+            [
+                "RBX",
+                0,
+                6004,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            18543450,
+            "__wt_conn_btree_apply",
+            ""
+        ],
+        [
+            [
+                "R12",
+                0,
+                6004,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            18687308,
+            "__wt_evict_create",
+            ""
+        ]
+    ],
+    "mongod_*0x132d973_*0x132e052_*0x132d968_rbp_0x0_-0x290_None": [
+        [
+            [
+                "RBP",
+                0,
+                4294966640,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            20107640,
+            "__wt_rec_row_leaf",
+            "rax"
+        ]
+    ],
+    "mongod_*0x11cd4bb_*0x11cdc1c_*0x11cd4a5_rbx_0x0_0x140_None": [
+        [
+            [
+                "RBX",
+                0,
+                320,
+                null,
+                null,
+                null,
+                "memwrite",
+                null,
+                null,
+                null,
+                false,
+                null
+            ],
+            18662201,
+            "__wt_cursor_set_keyv",
+            "eax"
+        ]
+    ],
+    "mongod_*0x12bc4f6_*0x12bc4a6_*0x12bc4e0_rbx_0x0_0x1_None": []
 }
