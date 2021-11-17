@@ -129,12 +129,15 @@ def main():
                 worker_addresses.append((l.strip(), port))
  
         for addr in worker_addresses:
-            for _ in range(num_processor):
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                print("[client] Connecting to {}".format(addr), flush=True)
-                s.connect(addr)
-                print("[client] Connected to {}".format(addr), flush=True)
-                sockets.append(s)
+            for num in range(num_processor):
+                try:
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    print("[client] Connecting to {}".format(addr), flush=True)
+                    s.connect(addr)
+                    print("[client] Connected to {}".format(addr), flush=True)
+                    sockets.append(s)
+                except Exception as e:
+                    print("[client/warn] Connecting to addr: " + str(addr) + " worker " + str(num) + " failed... ")
 
         print("[client] Sending initial tasks", flush=True)
         closed_sockets = set()
