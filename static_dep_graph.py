@@ -777,11 +777,11 @@ class MemoryAccess:
         if off_str.startswith("0xf"):
             if len(off_str) == 10: #32bit
                 new_off = -((~off+1)&0xffffffff)
-                print("[rr] " + str(off) + " Likely a negative offset, convert it to " + str(new_off))
+                print("[static_dep] " + str(off) + " Likely a negative offset, convert it to " + str(new_off))
                 return new_off
             if len(off_str) == 18: #64bit
                 new_off = -((~off+1)&0xffffffffffffffff)
-                print("[rr] " + str(off) + " Likely a negative offset, convert it to " + str(new_off))
+                print("[static_dep] " + str(off) + " Likely a negative offset, convert it to " + str(new_off))
                 return new_off
         return off
 
@@ -1181,6 +1181,7 @@ class StaticDepGraph:
     bb_result_cache = {}
 
     func_to_callsites = None
+    func_first_insn_to_dyn_callsites = None
     func_hot_and_cold_path_map = None
 
     starting_nodes = []
@@ -1631,6 +1632,7 @@ class StaticDepGraph:
         try:
             total_node_count = 0
             StaticDepGraph.func_to_callsites, StaticDepGraph.func_hot_and_cold_path_map = get_func_to_callsites(prog)
+            StaticDepGraph.func_first_insn_to_dyn_callsites = get_func_first_insn_to_dyn_callsites(prog)
             StaticDepGraph.binary_ptr = setup(prog)
             if USE_BPATCH is False:
                 StaticDepGraph.binary_ptr2 = setup2(prog)
@@ -2065,13 +2067,22 @@ class StaticDepGraph:
             graph.build_control_flow_dependencies(target_bbs)
 
             if TRACKS_DIRECT_CALLER:
+                callsites = []
                 if func in StaticDepGraph.func_to_callsites:
                     callsites = StaticDepGraph.func_to_callsites[func]
-                    print("[static_dep] Instantiating callsites for: " + func)
-                    for c in callsites:
-                        new_node = StaticDepGraph.make_or_get_cf_node(c[0], None, c[1])
-                        new_nodes.add(new_node)
-                        graph.pending_callsite_nodes.append(new_node)
+                dyn_callsites = []
+                for entry_bb in graph.cfg.entry_bbs:
+                    print("[static_dep] first instruction of function " + func + " is " + hex(entry_bb.start_insn))
+                    if entry_bb.start_insn in StaticDepGraph.func_first_insn_to_dyn_callsites:
+                        dyn_callsites = StaticDepGraph.func_first_insn_to_dyn_callsites[entry_bb.start_insn]
+                        print("[static_dep] found dynamic callsites for function " + func + ": " + str(dyn_callsites))
+                        break
+                print("[static_dep] Instantiating callsites for: " + func)
+                for c in itertools.chain(callsites, dyn_callsites):
+                    print("[static_dep] Callsite is: " + str(c))
+                    new_node = StaticDepGraph.make_or_get_cf_node(c[0], None, c[1])
+                    new_nodes.add(new_node)
+                    graph.pending_callsite_nodes.append(new_node)
         if initial_node.is_df is False:
             graph.none_df_starting_nodes.add(initial_node)
         """

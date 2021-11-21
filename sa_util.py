@@ -175,6 +175,29 @@ def parseLoadsOrStores(json_exprs):
                             read_same_as_write, is_bit_var, type, func, dst, bit_operationses, intermediate_def, off1])
     return data_points
 
+def get_dynamic_callsites(binary_ptr):
+    print()
+    print( "[main] getting dynamic callsites: ")
+    if not os.path.exists(os.path.join(curr_dir, 'getDynamicCallsites_result')):
+        if DEBUG_CTYPE: print("[main] : " + "Calling C", flush=True)
+        lib.getDynamicCallsites(c_ulong(binary_ptr))
+        if DEBUG_CTYPE: print("[main] : Back from C")
+    f = open(os.path.join(curr_dir, 'getDynamicCallsites_result'))
+    json_callsites = json.load(f)
+    f.close()
+    if DEBUG_CTYPE: print("[main] returned " + str(json_callsites))
+    callsites = parseLoadsOrStores(json_callsites)
+    return callsites
+
+def get_func_first_insn_to_dyn_callsites(prog):
+    result_file = os.path.join(curr_dir, 'cache', prog, "dyn_callsites.json")
+    with open(result_file, 'r') as f:
+        ret = json.load(f)
+    ret1 = {}
+    for k in ret:
+        ret1[int(k)] = ret[k]
+    return ret1
+
 #FIXME: call instructions insns and not addrs
 def get_func_to_callsites(prog):
     print()
