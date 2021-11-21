@@ -36,5 +36,6 @@ cache/909_ziptest_exe9/dynamic_graph*
 backup/*
 logs/*
 pointers
-*log*
+*logs
+*.log
 run_*
