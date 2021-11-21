@@ -544,11 +544,23 @@ class CFG:
                         print("Immed dom: " + str(bb.immed_pdom.id))
                         assert False
                     """
-                    assert bb.is_entry or bb.is_new_entry
-                    self.entry_bbs.remove(bb)
+                    # weirdly, sometimes the entry can have a predecessor, I dunno why
+                    if bb in self.entry_bbs:
+                        print("[static_dep] should be normal entry block")
+                        assert bb.is_entry or bb.is_new_entry, bb.id
+                        self.entry_bbs.remove(bb)
+                    else:
+                        print("[static_dep] entry block has predecessors??")
+                        entry_has_prede = False
+                        for entry_bb in self.entry_bbs:
+                            if len(entry_bb.predes) != 0:
+                                entry_has_prede = True
+                        assert entry_has_prede is True
+                        self.entry_bbs = self.entry_bbs.difference(all_succes_before_immed_pdom)
                     self.entry_bbs.add(bb.immed_pdom)
                     if DEBUG_SIMPLIFY: print("Replacing entry BB " + str(bb.id) + " with " + str(bb.immed_pdom.id))
                     bb.immed_pdom.is_new_entry = True
+
 
             #remove_set.add(bb) not really needed
             all_predes = []
