@@ -332,7 +332,7 @@ class DynamicDependence:
         self.init_graph = None
 
     def get_dynamic_trace(self, prog, arg, path, trace_name, trace_path):
-
+        #FIXME: not necessary to pass prog, arg, path, they are fields
         insn_to_bit_operand = {}
         for node in self.all_static_df_nodes:
             if node.mem_store != None:
@@ -503,7 +503,8 @@ class DynamicDependence:
             instructions.append([hex(insn), reg, i])
             #self.insns_with_regs.add(insn)
             #self.insn_to_reg_count[insn] = 1
-
+            
+        assert i < 65536
         if os.path.isfile(trace_path):
             return
 
@@ -523,7 +524,7 @@ class DynamicDependence:
         for graph in StaticDepGraph.func_to_graph.values():
 
             for node in graph.none_df_starting_nodes:
-                self.insn_of_cf_nodes.append(node.insn)
+                self.all_static_cf_nodes.append(node)
                 self.insn_to_static_node[node.insn] = node
 
             for node in graph.nodes_in_cf_slice.keys():
@@ -622,7 +623,7 @@ class DynamicDependence:
             with open(self.trace_path + ".parsed" + ('' if pa_id is None else ('_' + str(pa_id))), 'rb') as f:
                 byte_seq = f.read() #more than twice faster than readlines!
 
-            with open(self.trace_path + ".large" + ('' if pa_id is None else ('_' + str(pa_id))) , 'rb') as f:
+            with open(self.trace_path + ".large" + ('' if pa_id is None else ('_' + str(pa_id))) , 'r') as f:
                 large = f.readlines() #more than twice faster than readlines!
                 codes_to_ignore = set()
                 for l in large:
@@ -724,6 +725,111 @@ class DynamicDependence:
         print("[TIME] Invoking PIN took: ",
               str(time_record["invoke_pin"] - time_record["static_slice"]), flush=True)
         self.init_graph = self.build_dynamic_dependencies()
+
+    def detect_dynamic_callees_run_trace(self):
+        StaticDepGraph.binary_ptr = setup(self.prog)
+        callsites = get_dynamic_callsites(StaticDepGraph.binary_ptr)
+        visited = set()
+        instructions = []
+        mem_accesses = []
+        insn_to_func_map = {}
+        i = 0
+        for load in callsites:
+            insn = load[0]
+            assert insn not in visited
+            visited.add(insn)
+            hex_insn = hex(insn)
+            reg = load[1]
+            shift = load[2]
+            off = load[3]
+            off_reg = load[4]
+            mem_load = MemoryAccess(reg, shift, off, off_reg, False)
+            func = load[8]
+            insn_to_func_map[insn] = func
+
+            reg_count = 0
+            if mem_load.reg != None and mem_load.reg != '':
+                reg_count += 1
+            if mem_load.off_reg != None and mem_load.off_reg != '':
+                reg_count += 1
+            if reg_count == 0:
+                continue
+            if reg_count > 1:
+                print("[warn] dynamic callsite involving multiple regs are not handled right now: " + hex_insn)
+                continue
+            i += 1
+            mem_accesses.append(mem_load.toJSON())
+            if mem_load.reg != None and mem_load.reg != '':
+                instructions.append([hex_insn, mem_load.reg.lower(), i])
+            if mem_load.off_reg != None and mem_load.off_reg != '':
+                instructions.append([hex_insn, mem_load.off_reg.lower(), i])
+
+            self.code_to_insn[i] = insn
+            self.insn_to_reg_count[insn] = reg_count
+        assert i < 65536
+        with open("getDynamicCallsites1_result", 'w') as f:
+            json.dump(insn_to_func_map, f, indent=4, ensure_ascii=False)
+
+        preprocess_data = {
+            "trace_file": self.trace_path,
+            "code_to_insn": self.code_to_insn,
+            "insn_to_reg_count": self.insn_to_reg_count,
+            "mem_accesses": mem_accesses
+        }
+        preprocess_data_file = os.path.join(curr_dir, 'preprocess_data')
+        with open(preprocess_data_file, 'w') as f:
+            json.dump(preprocess_data, f, indent=4, ensure_ascii=False)
+
+        # invoke PIN. get output of a sequence of insn
+        trace = InsRegTrace(self.path + self.prog + ' ' + self.arg,
+                            pin='~/pin-3.11/pin', out=self.trace_name)
+        print("[dyn_dep] Total number of instructions watched: " + str(len(instructions)))
+        print(instructions)
+        trace.run_function_trace(instructions, False)
+
+    def detect_dynamic_callees_parse_trace(self):
+        preprocessor_file = os.path.join(curr_dir, 'preprocessor', 'call_site_parser')
+        cmd = [preprocessor_file]
+        try:
+            pp_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = pp_process.communicate()
+        except Exception as e:
+            print("Caught exception: " + str(e))
+            print(str(e))
+            print("-" * 60)
+            traceback.print_exc(file=sys.stdout)
+            print("-" * 60)
+        print(stdout)
+        print(stderr)
+
+        insn_to_func_map = {}
+        with open("getDynamicCallsites1_result", 'r') as f:
+            str_insn_to_func_map = json.load(f)
+            for insn in str_insn_to_func_map:
+                insn_to_func_map[int(insn)] = str_insn_to_func_map[insn]
+
+        callee_to_callsite = {}
+        with open(self.trace_path + ".parsed", 'r') as f:
+            lines = f.readlines()  # more than twice faster than readlines!
+            for l in lines:
+                segs = l.split("|")
+                callsite = int(segs[0], 16)
+                callees = segs[1].split()
+                print(hex(callsite))
+                print(str(callees))
+                func = insn_to_func_map[callsite]
+                print(func)
+                for c in callees:
+                    callee = int(c, 16)
+                    callsites = callee_to_callsite.get(callee, None)
+                    if callsites is None:
+                        callsites = []
+                        callee_to_callsite[callee] = callsites
+                    callsites.append([callsite, func])
+        result_file = os.path.join(curr_dir, 'cache', self.prog, "dyn_callsites.json")
+        with open("result_file", 'w') as f:
+            json.dump(callee_to_callsite, f, indent=4, ensure_ascii=False)
+
 class ParsingContext:
     def __init__(self):
         self.pending_reg_count = 0
@@ -2438,14 +2544,24 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--parallelize_id', dest='pa_id', type=int)
     parser.add_argument('--starting_instruction', dest='starting_insn')
+    parser.add_argument('-c1', '--detect_dyn_callees', dest='detect_dyn_callees', action='store_true')
+    parser.set_defaults(detect_dyn_callees=False)
+    parser.add_argument('-c2', '--parse_dyn_callees', dest='parse_dyn_callees', action='store_true')
+    parser.set_defaults(parse_dyn_callees=False)
     args = parser.parse_args()
     print("Parallel execution id is: " + str(args.pa_id))
     print("Optional starting instruction is: " + str(args.starting_insn))
 
     limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
 
-    dd = DynamicDependence(starting_events, program, program_args, program_path, starting_insn_to_weight=starting_insn_to_weight)
-    dd.prepare_to_build_dynamic_dependencies(limit)
-
-    for event in starting_events:
-        dg = dd.build_dynamic_dependencies(event[1] if args.starting_insn is None else int(args.starting_insn, 16), args.pa_id)
+    if args.detect_dyn_callees is True:
+        dd = DynamicDependence(starting_events, program, program_args, program_path, starting_insn_to_weight=starting_insn_to_weight)
+        dd.detect_dynamic_callees_run_trace()
+    elif args.parse_dyn_callees is True:
+        dd = DynamicDependence(starting_events, program, program_args, program_path, starting_insn_to_weight=starting_insn_to_weight)
+        dd.detect_dynamic_callees_parse_trace()
+    else:
+        dd = DynamicDependence(starting_events, program, program_args, program_path, starting_insn_to_weight=starting_insn_to_weight)
+        dd.prepare_to_build_dynamic_dependencies(limit)
+        for event in starting_events:
+            dg = dd.build_dynamic_dependencies(event[1] if args.starting_insn is None else int(args.starting_insn, 16), args.pa_id)
