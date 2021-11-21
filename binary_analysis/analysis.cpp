@@ -376,6 +376,73 @@ void getAddrIndices(vector<Function *> *allFuncs, char *funcName, long unsigned 
   if(DEBUG) cout << endl;
 }
 
+void getDynamicCallsites(vector<Function *> *allFuncs) {
+  if (DEBUG) cout << "[sa] ================================" << endl;
+
+  cJSON *json_writes  = cJSON_CreateArray();
+  boost::unordered_map<Address, std::pair<Block*, Function*>> staticWriteInsns;
+  cJSON *json_reads = cJSON_CreateArray();
+  for (auto fit = allFuncs->begin(); fit != allFuncs->end(); ++fit) {
+    Function *f = *fit;
+    for (auto bit = f->blocks().begin(); bit != f->blocks().end(); ++bit) {
+      Block *b = *bit;
+      Block::Insns insns;
+      b->getInsns(insns);
+      for (auto iit = insns.begin(); iit != insns.end(); iit++) {
+        long unsigned int addr = (*iit).first;
+        Instruction insn = (*iit).second;
+	      entryID id = insn.getOperation().getID();
+	      if (id != e_call && id != e_callq) continue;
+        //cout << hex << addr << dec << " " << insn.format() << " ";
+	//      cout << insn.readsMemory() << endl;
+
+        std::vector<Operand> ops;
+        insn.getOperands(ops);
+	bool isStaticCall = false;
+        for (auto oit = ops.rbegin(); oit != ops.rend(); oit++) {
+          std::vector<MachRegister> regs;
+          long off = 0;
+          getRegAndOff((*oit).getValue(), regs, &off);
+          if (off != 0) continue;
+          if (regs.size() != 1) continue;
+          MachRegister reg = regs[0];
+          if (reg == x86_64::rip) {
+	    isStaticCall = true;
+	    break;
+	  }
+	}
+	if (isStaticCall == true) continue;
+
+        bool memReadFound = false, regFound = false;
+        std::string readStr = getMemReadStrIfNotRegReadStr(insn, &memReadFound, &regFound);
+        if (!memReadFound && !regFound) {
+          //if (INFO) cout << "[sa] result is a constant load, ignore" << endl;
+          continue;
+        }
+
+        char *funcName = (char *)f->name().c_str();
+        //if (INFO) cout << "[sa] => Instruction addr: " << std::hex << addr << std::dec << endl;
+        //if (INFO) cout << "[sa] => Function: " << funcName << endl;
+        //if (INFO) cout << "[sa] => Read expr: " << readStr << endl;
+        cJSON *json_read = cJSON_CreateObject();
+        cJSON_AddNumberToObject(json_read, "insn_addr", addr);
+        cJSON_AddStringToObject(json_read, "expr", readStr.c_str());
+        cJSON_AddStringToObject(json_read, "func", funcName);
+        cJSON_AddItemToArray(json_reads, json_read);
+      }
+    }
+  }
+  char *rendered = cJSON_Print(json_reads);
+  cJSON_Delete(json_reads);
+  std::ofstream out("getDynamicCallsites_result");
+  out << rendered;
+  out.close();
+
+  if(DEBUG) cout << "[sa] all results saved to \"getDynamicCallsites_result\"";
+  if(DEBUG) cout << endl;
+}
+
+
 void getCalleeToCallsites(char * progName) {
   if (DEBUG) cout << "[sa] ================================" << endl;
   SymtabCodeSource *stcs = new SymtabCodeSource((char *) progName);

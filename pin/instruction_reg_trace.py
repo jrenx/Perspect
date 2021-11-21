@@ -11,7 +11,7 @@ class InsRegTrace:
         self.pin = pin
         self.out = out
 
-    def run_function_trace(self, ins_reg_map):
+    def run_function_trace(self, ins_reg_map, execute=True):
         if self.is_32:
             obj_file = os.path.join(pin_dir, 'obj-ia32', 'instruction_reg_log.so')
         else:
@@ -34,7 +34,8 @@ class InsRegTrace:
         pin_program_list.extend(self.program)
         pin_cmd = ' '.join(pin_program_list)
         print(pin_cmd)
-        subprocess.call(pin_cmd, shell=True)
+        if execute is True:
+            subprocess.call(pin_cmd, shell=True)
 
     def parse_break_points(self, branch, target):
         count = -1

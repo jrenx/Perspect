@@ -118,6 +118,12 @@ class TestRR(unittest.TestCase):
             print(r)
 
 class TestSA(unittest.TestCase):
+    def test_dyn_callsites(self):
+        prog = "mongod"
+        ptr1 = setup(prog)
+        ret = get_dynamic_callsites(ptr1)
+        print(ret)
+
     def test_indices(self):
         prog = "mongod_4.2.1"
         ptr1 = setup(prog)
