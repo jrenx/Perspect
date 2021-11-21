@@ -118,15 +118,18 @@ VOID record_reg(ADDRINT pc, ADDRINT reg)
         size += sizeof(u_int16_t);
     }
 
-    short code = insn_to_code[pc];
+    //std::cout << "pc: " << std::hex << pc << std::dec << endl;
+    u_int16_t code = insn_to_code[pc];
 
     if (!no_reg_array[code]) {
       memcpy(buffer + size, (char*)&reg, sizeof(ADDRINT));
       size += sizeof(ADDRINT);
+      //std::cout << "reg: " << std::hex << reg << std::dec << endl;
     }
 
     memcpy(buffer + size, (char*)&code, sizeof(u_int16_t));
     size += sizeof(u_int16_t);
+    //std::cout << "code: " << code << endl;
     // If got interrupted in the middle, do not use the newly logged data.
     if (stop == 1) size = prev_size;
     PIN_ReleaseLock(&lock);
