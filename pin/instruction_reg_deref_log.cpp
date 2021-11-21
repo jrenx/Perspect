@@ -42,12 +42,12 @@ public:
     } else {
       addr += offset;
     }
-
+/*
     std::cout << "  reg: "      << reg     << " " << std::hex << regValue    << std::dec;
     std::cout << " off reg: " << off_reg << " " << std::hex << offRegValue << std::dec;
     std::cout << " offset: " << offset << " shift: " << shift;
     std::cout << " addr: " << std::hex << addr << std::dec << "\n";
-
+*/
     return addr;
   }
 };
@@ -220,17 +220,17 @@ VOID record_reg(ADDRINT pc, ADDRINT reg)
         size += sizeof(u_int16_t);
     }
 
-    std::cout << "pc: " << std::hex << pc << std::dec << endl;
+    //std::cout << "pc: " << std::hex << pc << std::dec << endl;
     u_int16_t code = insn_to_code[pc];
-    std::cout << "code: " << code << endl;
-    std::cout << "reg: " << std::hex << reg << std::dec << endl;
+    //std::cout << "code: " << code << endl;
+    //std::cout << "reg: " << std::hex << reg << std::dec << endl;
     MemAccess *mem_load = CodeToMemAccess[code];
     void *addr = (void*)mem_load->calc_addr(reg, 0);
-    std::cout << "addr: " << std::hex << addr << std::dec << endl;
+    //std::cout << "addr: " << std::hex << addr << std::dec << endl;
     unsigned long deref = *static_cast<UINT64*>(addr);
     memcpy(buffer + size, (char*)&deref, sizeof(unsigned long));
     size += sizeof(unsigned long);
-    std::cout << "content: " << std::hex << deref << std::dec << endl << endl;
+    //std::cout << "content: " << std::hex << deref << std::dec << endl << endl;
 
     memcpy(buffer + size, (char*)&code, sizeof(u_int16_t));
     size += sizeof(u_int16_t);
