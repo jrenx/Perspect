@@ -463,11 +463,11 @@ def get_def(binary_ptr, branch, target, read, reg, shift='0x0', offset='0x0', of
             addr = line[0]
             insn = int(line[1], 16)
             func = line[2]
-            if func is not None: func = demangle(func)
             if func is None:
                 continue
             if insn in all_unique_writes:
                 continue
+            func = demangle(func)
             all_unique_writes.add(insn)
             new_unique_writes.append([insn, func, addr])
         print("[rr][" + pid + "] Found " + str(len(new_unique_writes)) + " new unique writes: " + str(new_unique_writes))
