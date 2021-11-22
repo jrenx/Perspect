@@ -827,7 +827,7 @@ class DynamicDependence:
                         callee_to_callsite[callee] = callsites
                     callsites.append([callsite, func])
         result_file = os.path.join(curr_dir, 'cache', self.prog, "dyn_callsites.json")
-        with open("result_file", 'w') as f:
+        with open(result_file, 'w') as f:
             json.dump(callee_to_callsite, f, indent=4, ensure_ascii=False)
 
 class ParsingContext:
