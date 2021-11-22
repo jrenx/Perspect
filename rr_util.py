@@ -11,6 +11,7 @@ from sat_def import *
 from get_def import *
 lib = cdll.LoadLibrary('./binary_analysis/static_analysis.so')
 from util import *
+from get_simple_breakpoints import *
 #https://stackoverflow.com/questions/145270/calling-c-c-from-python
 
 curr_dir = os.path.dirname(os.path.realpath(__file__))
@@ -88,6 +89,9 @@ def rr_backslice(binary_ptr, prog, branch, target, insn, reg, shift, off, off_re
 
     return rr_result_defs
 
+def instruction_executed(insn):
+   run_simple_breakpoint([insn])
+   return len(parse_simple_breakpoint()) > 0
 ################################################################
 ####                  Other helper functions                ####
 ################################################################
