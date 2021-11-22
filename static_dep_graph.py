@@ -2061,6 +2061,7 @@ class StaticDepGraph:
                 print("[static_dep][warn] Failed to load the cfg for function: "
                       + func + " ignoring the function...")
                 return new_nodes
+            orig_entry_bbs = set(graph.cfg.entry_bbs)
 
             if func in StaticDepGraph.pending_nodes:
                 to_remove = set()
@@ -2083,7 +2084,7 @@ class StaticDepGraph:
                 if func in StaticDepGraph.func_to_callsites:
                     callsites = StaticDepGraph.func_to_callsites[func]
                 dyn_callsites = []
-                for entry_bb in graph.cfg.entry_bbs:
+                for entry_bb in orig_entry_bbs:
                     print("[static_dep] first instruction of function " + func + " is " + hex(entry_bb.start_insn))
                     if entry_bb.start_insn in StaticDepGraph.func_first_insn_to_dyn_callsites:
                         dyn_callsites = StaticDepGraph.func_first_insn_to_dyn_callsites[entry_bb.start_insn]
