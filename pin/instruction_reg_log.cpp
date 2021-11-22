@@ -118,7 +118,7 @@ VOID record_reg(ADDRINT pc, ADDRINT reg)
         size += sizeof(u_int16_t);
     }
 
-    short code = insn_to_code[pc];
+    u_int16_t code = insn_to_code[pc];
 
     if (!no_reg_array[code]) {
       memcpy(buffer + size, (char*)&reg, sizeof(ADDRINT));
