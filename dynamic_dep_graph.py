@@ -829,6 +829,7 @@ class DynamicDependence:
         result_file = os.path.join(curr_dir, 'cache', self.prog, "dyn_callsites.json")
         with open(result_file, 'w') as f:
             json.dump(callee_to_callsite, f, indent=4, ensure_ascii=False)
+        os.remove(self.trace_path)
 
 class ParsingContext:
     def __init__(self):
