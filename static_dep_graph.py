@@ -482,6 +482,10 @@ class CFG:
                     if DEBUG_SIMPLIFY:
                         print("[simplify] Cannot remove node because target is a child BB, but updating immed pdom: " \
                           + str(bb.immed_pdom.lines) + " " + str(bb.immed_pdom.id))
+                    if bb.is_entry is True or bb.is_new_entry is True:
+                        if DEBUG_SIMPLIFY:
+                            print("[simplify] Cannot update immed pdom because bb is an entry block.")
+                        continue
                     if bb.immed_pdom.id in updated_set:
                         if DEBUG_SIMPLIFY:
                             print("[simplify] already updated immed pdom: " \
