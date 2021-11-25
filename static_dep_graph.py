@@ -538,7 +538,7 @@ class CFG:
                         print("[simplify] new predecessors are: " + str([prede.lines for prede in bb.immed_pdom.predes]))
                 continue
 
-            if TRACKS_DIRECT_CALLER:
+            if TRACKS_DIRECT_CALLER and final is True:
                 if len(self.entry_bbs.intersection(all_succes_before_immed_pdom)) > 0:
                     """
                     if len(bb.predes) != 0:
@@ -550,19 +550,21 @@ class CFG:
                     """
                     # weirdly, sometimes the entry can have a predecessor, I dunno why
                     if bb in self.entry_bbs:
-                        print("[static_dep] should be normal entry block")
+                        if DEBUG_SIMPLIFY: print("[static_dep] should be normal entry block")
                         assert bb.is_entry or bb.is_new_entry, bb.id
                         self.entry_bbs.remove(bb)
+                        if DEBUG_SIMPLIFY: print("[static_dep] Replacing entry BB " + str(bb.id) + " with " + str(bb.immed_pdom.id))
                     else:
-                        print("[static_dep] entry block has predecessors??")
+                        if DEBUG_SIMPLIFY: print("[static_dep] entry block has predecessors??")
                         entry_has_prede = False
                         for entry_bb in self.entry_bbs:
                             if len(entry_bb.predes) != 0:
                                 entry_has_prede = True
                         assert entry_has_prede is True
+                        if DEBUG_SIMPLIFY: print("[static_dep] Changing entry BBs from " + str([entry_bb.id for entry_bb in self.entry_bbs]))
                         self.entry_bbs = self.entry_bbs.difference(all_succes_before_immed_pdom)
+                        if DEBUG_SIMPLIFY: print("[static_dep]   to " + str([entry_bb.id for entry_bb in self.entry_bbs]) + " and " + str(bb.immed_pdom.id))
                     self.entry_bbs.add(bb.immed_pdom)
-                    if DEBUG_SIMPLIFY: print("Replacing entry BB " + str(bb.id) + " with " + str(bb.immed_pdom.id))
                     bb.immed_pdom.is_new_entry = True
 
 
