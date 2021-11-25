@@ -160,7 +160,6 @@ class CFG:
 
         self.target_bbs = set()
         self.entry_bbs = set()
-        self.exit_bbs = set() #currently, the is_exit flag is not set for individual BBs
         self.postorder_list = []
 
         self.built = False
@@ -189,11 +188,6 @@ class CFG:
         for n in self.entry_bbs:
             data["entry_bbs"].append(n.id)
         data["entry_bbs"].sort()
-
-        data["exit_bbs"] = []
-        for n in self.exit_bbs:
-            data["exit_bbs"].append(n.id)
-        data["exit_bbs"].sort()
 
         data["postorder_list"] = []
         for n in self.postorder_list:
@@ -258,9 +252,6 @@ class CFG:
 
         for n in data["entry_bbs"]:
             cfg.entry_bbs.add(cfg.id_to_bb[n])
-
-        for n in data["exit_bbs"]:
-            cfg.exit_bbs.add(cfg.id_to_bb[n])
 
         for n in data["postorder_list"]:
             cfg.postorder_list.append(cfg.id_to_bb[n])
@@ -484,12 +475,6 @@ class CFG:
                 if DEBUG_SIMPLIFY:
                     print("[Simplify]   a child BB was a successor of the immed_pdom, possible have been aggressively simplified")
                 continue
-
-            if len(self.exit_bbs.intersection(all_succes_before_immed_pdom)) > 0:
-                if DEBUG_SIMPLIFY:
-                    print("[Simplify] Cannot simplify because child BBs include at least one exit block.")
-                continue
-
             if len(self.target_bbs.intersection(all_succes_before_immed_pdom)) > 0:
                 #or len(self.entry_bbs.intersection(all_succes_before_immed_pdom)) > 0:
                 #ignore_set.union(all_succes_before_immed_pdom) #FIXME, do not assign after union why???
@@ -707,10 +692,6 @@ class CFG:
                     if int(json_bb['is_entry']) == 1:
                         is_entry = True
 
-                    is_exit = False
-                    if int(json_bb['is_exit']) == 1:
-                        is_exit = True
-
                     lines = []
                     for json_line in json_bb['lines']:
                         lines.append(int(json_line['line']))
@@ -720,8 +701,6 @@ class CFG:
                     #    self.target_bb = bb
                     if is_entry:
                         self.entry_bbs.add(bb)
-                    if is_exit:
-                        self.exit_bbs.add(bb)
 
                     start_insn = int(json_bb['start_insn'])
                     bb.add_start_insn(start_insn)
