@@ -486,9 +486,6 @@ cJSON *printBBsToJsonHelper(BPatch_Vector<BPatch_basicBlock *> &bbs,
     int isEntry = (bb->isEntryBlock() == true) ? 1 : 0;
     cJSON_AddNumberToObject(json_bb, "is_entry", isEntry);
 
-    int isExit = (bb->isExitBlock() == true) ? 1 : 0;
-    cJSON_AddNumberToObject(json_bb, "is_exit", isExit);
-
     BPatch_Vector<BPatch_basicBlock *> predes;
     bb->getSources(predes);
     cJSON_AddItemToObject(json_bb, "predes",  printBBIdsToJsonHelper(predes));
@@ -544,10 +541,6 @@ cJSON *printBBsToJsonHelper(vector<Block *> &bbs,
     blockIds.insert({bb, id});
     id++;
   }
-  boost::unordered_map<Block*, Block*> exits;
-  for (auto eit = f->exitBlocks().begin(); eit != f->exitBlocks().end(); ++eit) {
-    exits[*eit] = *eit;
-  }
   for(auto it = bbs.begin(); it != bbs.end(); ++it) {
     Block *bb = *it;
     cJSON *json_bb  = cJSON_CreateObject();
@@ -567,10 +560,6 @@ cJSON *printBBsToJsonHelper(vector<Block *> &bbs,
     cJSON_AddNumberToObject(json_bb, "ends_in_branch", isBranch);
     int isEntry = (bb == f->entry()) ? 1 : 0;
     cJSON_AddNumberToObject(json_bb, "is_entry", isEntry);
-
-    int isExit = 0;
-    if (exits.find(bb) != exits.end()) isExit = 1;
-    cJSON_AddNumberToObject(json_bb, "is_exit", isExit);
 
     vector<Block *> predes;
     Block::edgelist sources = bb->sources();
