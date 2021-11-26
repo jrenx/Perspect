@@ -25,16 +25,8 @@ Weight_Threshold = 0
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 
 class SerialRelationAnalysis(RelationAnalysis):
-    def analyze(self, use_cache=False):
-        print(use_cache)
+    def analyze(self):
         a = time.time()
-
-        print(self.rgroup_file)
-        if use_cache is True:
-            file_exists = self.fetch_cached_rgroup()
-            if file_exists:
-                return
-
         #self.dd.prepare_to_build_dynamic_dependencies(self.steps)
         #TODO, do below in the static graph logic
         #StaticDepGraph.build_postorder_list()
@@ -151,14 +143,18 @@ class SerialRelationAnalysis(RelationAnalysis):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--use_cache', dest='use_cache', action='store_true')
+    parser.add_argument('-c', '--use_cache', dest='use_cache', action='store_true')
     parser.set_defaults(use_cache=False)
     args = parser.parse_args()
 
     limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
     _, _, _, other_relations_file, other_indices_file = parse_relation_analysis_inputs()
-    ra = SerialRelationAnalysis(starting_events, program, program_args, program_path, limit,
+    if args.use_cache is True:
+        rgroup_file = os.path.join(curr_dir, 'cache', program, "rgroups.json")
+        file_exists = RelationAnalysis.fetch_cached_rgroup(program, rgroup_file)
+    else:
+        ra = SerialRelationAnalysis(starting_events, program, program_args, program_path, limit,
                           starting_insn_to_weight,
                           other_indices_file=other_indices_file,
                           other_relations_file=other_relations_file)
-    ra.analyze(args.use_cache)
+        ra.analyze()
