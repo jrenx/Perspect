@@ -150,10 +150,10 @@ public:
   bool *isBitOpCode;
   bool *containsBitOpCode;
 
-  short **CodeToPriorBitOpCodes;
+  unsigned short **CodeToPriorBitOpCodes;
   int *CodeToPriorBitOpCodeCount;
 
-  short **LaterBitOpCodeToCodes;
+  unsigned short **LaterBitOpCodeToCodes;
   int *LaterBitOpCodeToCodeCount;
 
   unordered_set<long> StartInsns;
@@ -436,7 +436,7 @@ public:
       CodeOfStartInsns = new bool[CodeCount];
       for (int i = 0; i < CodeCount; i++) CodeOfStartInsns[i] = false;
       for (auto it = StartInsns.begin(); it != StartInsns.end(); it++) {
-        short code = InsnToCode[(*it)];
+        unsigned short code = InsnToCode[(*it)];
         if (code > MaxStartCode) MaxStartCode = code;
         CodeOfStartInsns[code] = true;
         cout << InsnToCode[(*it)] << " is start code " << endl;
@@ -517,19 +517,19 @@ public:
     cJSON *json_loadInsnToBitOps = cJSON_GetObjectItem(data, "load_insn_to_bit_ops");
     unordered_map<long, unordered_set<long>*> map4;
     parseJsonMapOfLists(json_loadInsnToBitOps, map4);
-    CodeToPriorBitOpCodes = new short*[CodeCount];
+    CodeToPriorBitOpCodes = new unsigned short*[CodeCount];
     CodeToPriorBitOpCodeCount = new int[CodeCount];
     for (int i = 0; i < CodeCount; i++) CodeToPriorBitOpCodes[i] = NULL;
     for (int i = 0; i < CodeCount; i++) CodeToPriorBitOpCodeCount[i] = -1;
     for (auto it = map4.begin(); it != map4.end(); it++) {
-      short key = InsnToCode[(long)(*it).first];
+      unsigned short key = InsnToCode[(long)(*it).first];
       unordered_set<long> *set = (*it).second;
       containsBitOpCode[key] = true;
-      CodeToPriorBitOpCodes[key] = new short[set->size()];
+      CodeToPriorBitOpCodes[key] = new unsigned short[set->size()];
       CodeToPriorBitOpCodeCount[key] = set->size();
       int i = 0;
       for (auto sit = set->begin(); sit != set->end(); sit++) {
-        short c = InsnToCode[*sit];
+        unsigned short c = InsnToCode[*sit];
         CodeToPriorBitOpCodes[key][i] = c;
         isBitOpCode[c] = true;
         i++;
@@ -539,20 +539,20 @@ public:
     cJSON *json_bitOpToStoreInsns = cJSON_GetObjectItem(data, "bit_op_to_store_insns");
     unordered_map<long, unordered_set<long>*> map5;
     parseJsonMapOfLists(json_bitOpToStoreInsns, map5);
-    LaterBitOpCodeToCodes = new short*[CodeCount];
+    LaterBitOpCodeToCodes = new unsigned short*[CodeCount];
     LaterBitOpCodeToCodeCount = new int[CodeCount];
     for (int i = 0; i < CodeCount; i++) LaterBitOpCodeToCodes[i] = NULL;
     for (int i = 0; i < CodeCount; i++) LaterBitOpCodeToCodeCount[i] = -1;
     for (auto it = map5.begin(); it != map5.end(); it++) {
-      short key = InsnToCode[(long)(*it).first];
+      unsigned short key = InsnToCode[(long)(*it).first];
       unordered_set<long> *set = (*it).second;
       containsBitOpCode[key] = true;
-      LaterBitOpCodeToCodes[key] = new short[set->size()];
+      LaterBitOpCodeToCodes[key] = new unsigned short[set->size()];
       LaterBitOpCodeToCodeCount[key] = set->size();
       isBitOpCode[key] = true;
       int i = 0;
       for (auto sit = set->begin(); sit != set->end(); sit++) {
-        short c = InsnToCode[*sit];
+        unsigned short c = InsnToCode[*sit];
         LaterBitOpCodeToCodes[key][i] = c;
         i++;
       }
@@ -607,7 +607,7 @@ public:
     bool loadsMemory;
     int regCount2;
 
-    short *bitOps;
+    unsigned short *bitOps;
     boost::unordered_map<u_int8_t, Context *> ctxtMap;
 #ifndef COUNT_ONLY
     // Because the parse is read in reverse by the python logic, make sure to always print a place holder of thread first.
@@ -700,7 +700,7 @@ public:
         // and not confuse it with a load and store
         ctxt->otherRegsParsed = false;
 
-        short *parentOfBitOps = LaterBitOpCodeToCodes[code];
+        unsigned short *parentOfBitOps = LaterBitOpCodeToCodes[code];
         if (parentOfBitOps != NULL) {
           // The associated instruction is supposed to happen before the bit operations
           // in the reversed trace, and it should have been a store instruction
@@ -803,7 +803,7 @@ public:
       if (bitOps != NULL) {
         int count = CodeToPriorBitOpCodeCount[code];
         for (int j = 0; j < count; j++) {
-          short bitOpCode = bitOps[j];
+          unsigned short bitOpCode = bitOps[j];
           if (ctxt->codeToBitOperandIsValid[bitOpCode]) {
             if (DEBUG) cout << "[load] " << bitOpCode << " " << count << " " << std::bitset<64>(ctxt->codeToBitOperand[bitOpCode]) << endl;
 #ifndef COUNT_ONLY
@@ -948,7 +948,7 @@ public:
       if (bitOps != NULL) {
         int count = CodeToPriorBitOpCodeCount[code];
         for (int j = 0; j < count; j++) {
-          short bitOpCode = bitOps[j];
+          unsigned short bitOpCode = bitOps[j];
           ctxt->codeToBitOperandIsValid[bitOpCode] = false;
         }
       }
