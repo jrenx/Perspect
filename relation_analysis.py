@@ -182,13 +182,15 @@ class RelationAnalysis:
         with open(self.rgroup_file, 'w') as f:
             json.dump(json_rgroups, f, indent=4)
 
-    def fetch_cached_rgroup(self):
-        if os.path.exists(cache_file):
-            with open(cache_file) as f:
-                json_rgroups = json.load(f)
+    @staticmethod
+    def fetch_cached_rgroup(rgroup_file, prog):
+        if os.path.exists(rgroup_file):
+            with open(rgroup_file) as f:
+                content = f.read().decode("utf-8", "ignore")
+                json_rgroups = json.loads(content)
                 rgroups = []
                 for json_rgroup in json_rgroups:
-                    rgroups.append(RelationGroup.fromJSON(json_rgroup, self.prog))
+                    rgroups.append(RelationGroup.fromJSON(json_rgroup, prog))
                 self.print_rgroups(rgroups)
             return True
         return False
