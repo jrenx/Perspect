@@ -104,18 +104,20 @@ VOID record_reg(ADDRINT pc, ADDRINT reg)
     // wnly log the tid after a thread context switch
     pid_t tid = syscall(SYS_gettid);
     if (tid != curr_tid) {
-        curr_tid = tid;
-        u_int8_t short_tid = tids[tid];
-        if (short_tid  == 0) {
-            short_tid = max_short_tid;
-            tids[tid] = max_short_tid;
-            max_short_tid ++;
-        }
-        memcpy(buffer + size, (char*)&short_tid, sizeof(u_int8_t));
-        size += sizeof(u_int8_t);
+	if (curr_tid != -1) {
+            u_int8_t short_tid = tids[curr_tid];
+            if (short_tid  == 0) {
+                short_tid = max_short_tid;
+                tids[curr_tid] = max_short_tid;
+                max_short_tid ++;
+            }
+            memcpy(buffer + size, (char*)&short_tid, sizeof(u_int8_t));
+            size += sizeof(u_int8_t);
  
-        memcpy(buffer + size, (char*)&place_holder_code, sizeof(u_int16_t));
-        size += sizeof(u_int16_t);
+            memcpy(buffer + size, (char*)&place_holder_code, sizeof(u_int16_t));
+            size += sizeof(u_int16_t);
+        }
+        curr_tid = tid;
     }
 
     u_int16_t code = insn_to_code[pc];
@@ -190,6 +192,25 @@ VOID ImageLoad(IMG img, VOID *v)
 VOID Fini(INT32 code, VOID *v)
 {
     PIN_GetLock(&lock, 0);
+
+    if ((size + max_update_size) >= blimit) {
+        TraceFile.write(buffer, size);
+        TraceFile.flush();
+        size = 0;
+    }
+
+    u_int8_t short_tid = tids[curr_tid];
+    if (short_tid  == 0) {
+        short_tid = max_short_tid;
+        tids[curr_tid] = max_short_tid;
+        max_short_tid ++;
+    }
+    memcpy(buffer + size, (char*)&short_tid, sizeof(u_int8_t));
+    size += sizeof(u_int8_t);
+ 
+    memcpy(buffer + size, (char*)&place_holder_code, sizeof(u_int16_t));
+    size += sizeof(u_int16_t);
+
     TraceFile.write(buffer, size);    
     size = 0;
     TraceFile.flush();
@@ -200,6 +221,25 @@ VOID Fini(INT32 code, VOID *v)
 VOID Detach(VOID *v)
 {
     PIN_GetLock(&lock, 0);
+
+    if ((size + max_update_size) >= blimit) {
+        TraceFile.write(buffer, size);
+        TraceFile.flush();
+        size = 0;
+    }
+
+    u_int8_t short_tid = tids[curr_tid];
+    if (short_tid  == 0) {
+        short_tid = max_short_tid;
+        tids[curr_tid] = max_short_tid;
+        max_short_tid ++;
+    }
+    memcpy(buffer + size, (char*)&short_tid, sizeof(u_int8_t));
+    size += sizeof(u_int8_t);
+ 
+    memcpy(buffer + size, (char*)&place_holder_code, sizeof(u_int16_t));
+    size += sizeof(u_int16_t);
+
     TraceFile.write(buffer, size);    
     size = 0;
     TraceFile.flush();
