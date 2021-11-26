@@ -624,7 +624,18 @@ public:
       assert(code >= 0);
       if (code == 0) {
         i -= sizeof(u_int8_t);
+	// read all the thread ids printed in the beginning
+	if (nodeCount == 0) {
+          std::memcpy(&threadId, buffer + i, sizeof(u_int8_t));
+	  continue;
+	}
+
         if (prevNodeCount == nodeCount) continue;
+#ifndef COUNT_ONLY    
+	if (prevNodeCount == 0) {
+          osti.write((char*)&threadId, sizeof(u_int8_t));
+	}
+#endif
         prevNodeCount = nodeCount;
         u_int8_t prevThreadId = threadId;
         std::memcpy(&threadId, buffer + i, sizeof(u_int8_t));
