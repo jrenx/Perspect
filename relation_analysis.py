@@ -154,7 +154,8 @@ class RelationAnalysis:
         curr_weighted_wavefront = sorted(curr_weighted_wavefront, key=lambda weight_and_node: weight_and_node[0])
         return curr_weighted_wavefront
 
-    def print_rgroups(self, relation_groups):
+    @staticmethod
+    def print_rgroups(relation_groups):
         num_rels = 0
         for relation_group in relation_groups:
             num_rels += len(relation_group.relations)
@@ -166,7 +167,7 @@ class RelationAnalysis:
     def sort_and_output_results(self):
         self.relation_groups = sorted(self.relation_groups, key=lambda rg: rg.weight)
         self.relation_groups = self.relation_groups[::-1] #reverse the list
-        self.print_rgroups(self.relation_groups)
+        RelationAnalysis.print_rgroups(self.relation_groups)
 
         json_rgroups = []
         json_rgroups_simple = []
@@ -184,13 +185,13 @@ class RelationAnalysis:
 
     @staticmethod
     def fetch_cached_rgroup(rgroup_file, prog):
+        print("file stored in: " + rgroup_file)
         if os.path.exists(rgroup_file):
             with open(rgroup_file) as f:
-                content = f.read().decode("utf-8", "ignore")
-                json_rgroups = json.loads(content)
+                json_rgroups = json.load(f)
                 rgroups = []
                 for json_rgroup in json_rgroups:
                     rgroups.append(RelationGroup.fromJSON(json_rgroup, prog))
-                self.print_rgroups(rgroups)
+                RelationAnalysis.print_rgroups(rgroups)
             return True
         return False
