@@ -150,8 +150,9 @@ if __name__ == "__main__":
     limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
     _, _, _, other_relations_file, other_indices_file = parse_relation_analysis_inputs()
     if args.use_cache is True:
+        StaticDepGraph.build_dependencies(starting_events, program, limit=limit)
         rgroup_file = os.path.join(curr_dir, 'cache', program, "rgroups.json")
-        file_exists = RelationAnalysis.fetch_cached_rgroup(program, rgroup_file)
+        file_exists = RelationAnalysis.fetch_cached_rgroup(rgroup_file, program)
     else:
         ra = SerialRelationAnalysis(starting_events, program, program_args, program_path, limit,
                           starting_insn_to_weight,

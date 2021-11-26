@@ -245,7 +245,7 @@ class Relation:
 
         prede_count = data["prede_count"]
         weight = Weight.fromJSON(data["weight"])
-        lines = [int(d) for d in data["lines"]] if "lines" in data else None
+        lines = [(int(d) if d is not None else None) for d in data["lines"]] if "lines" in data else None
         file = data["file"] if "file" in data else None
 
         rel = Relation(target_node, prede_node, prede_count, weight, prog, lines=lines, file=file)
