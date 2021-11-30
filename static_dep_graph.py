@@ -2511,17 +2511,17 @@ class StaticDepGraph:
                     continue
             #assert node.explained is False
             print("[static_dep] Looking for dataflow dependencies potentially non-local to function: " + str(func) \
-                  + " for read " + str(node.mem_load) + " @ " + hex(node.insn))
+                  + " for read " + str(node.mem_load) + " @ " + hex(node.insn) + (" redo" if redo is True else ""))
             print(node)
 
             if node.mem_load is None:
                 node.explained = True
-                print("[warn] node does not have memory load?")
+                print("[static_dep/warn] node does not have memory load?")
                 continue
 
             if node.mem_load.read_same_as_write is True:
                 node.explained = True
-                print("Node read same as write, do no watch using RR...")
+                print("[static_dep] Node read same as write, do no watch using RR...")
                 continue
 
             branch_insn = None
@@ -2530,6 +2530,8 @@ class StaticDepGraph:
             if closest_dep_branch_node is not None:
                 farthest_target_node = self.get_farthest_target(closest_dep_branch_node)
                 if farthest_target_node in node.mem_load.targets:
+                    print("[static_dep] Target already explained: " +
+                          (farthest_target_node.hex_insn if farthest_target_node is not None else str(farthest_target_node)))
                     continue
                 node.mem_load.targets.add(farthest_target_node)
 
@@ -2540,6 +2542,7 @@ class StaticDepGraph:
                             already_explored = True
                             break
                     if already_explored is True:
+                        print("[static_dep] Target's predecessor already explained: " + farthest_target_node.hex_insn)
                         continue
                     branch_insn = closest_dep_branch_node.bb.last_insn
                     target_insn = farthest_target_node.insn

@@ -60,7 +60,9 @@ def rr_backslice(binary_ptr, prog, branch, target, insn, reg, shift, off, off_re
     off_reg_str = None if off_reg is None else off_reg.lower()
     key = prog + "_" + str(branch_str) + "_" + str(target_str) + "_" \
           + insn_str + "_" + reg_str + "_" + shift_str + "_" + off_str + "_" + str(off_reg_str)
+    print("[rr] inputting for RR analysis: " + str(key))
     if key in rr_result_cache:
+        print("[rr] Found in cache.")
         return rr_result_cache[key]
     #if conn is None:
     #    print("[main] writing to file: " + key)
