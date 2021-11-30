@@ -385,6 +385,8 @@ class DynamicDependence:
         unique_insns = set()
         i = 0
 
+        print("[dyn_dep] number of instructions to ignore: " + str(len(StaticDepGraph.insns_that_never_executed)))
+
         for start_event in self.starting_events:
             reg = start_event[0]
             insn = start_event[1]
@@ -396,6 +398,8 @@ class DynamicDependence:
                 continue
             assert insn not in unique_insns
             unique_insns.add(insn)
+            if insn in StaticDepGraph.insns_that_never_executed:
+                continue
 
             i += 1
             self.code_to_insn[i] = insn
@@ -422,6 +426,8 @@ class DynamicDependence:
             if node.insn in unique_insns: #TODO should not have overlaps ..
                 continue
             unique_insns.add(node.insn)
+            if node.insn in StaticDepGraph.insns_that_never_executed:
+                continue
 
             i += 1
             self.code_to_insn[i] = node.insn
@@ -482,6 +488,8 @@ class DynamicDependence:
             if node.insn in unique_insns:
                 continue
             unique_insns.add(node.insn)
+            if node.insn in StaticDepGraph.insns_that_never_executed:
+                continue
 
             i += 1
             self.code_to_insn[i] = node.insn
@@ -497,6 +505,8 @@ class DynamicDependence:
         self.max_code_with_static_node = i
 
         for insn in insn_to_bit_operand:
+            if insn in StaticDepGraph.insns_that_never_executed:
+                continue
             i += 1
             self.code_to_insn[i] = insn
             reg = insn_to_bit_operand[insn]
@@ -504,7 +514,7 @@ class DynamicDependence:
             #self.insns_with_regs.add(insn)
             #self.insn_to_reg_count[insn] = 1
             
-        assert i < 65536
+        assert i < 65536, i
         if os.path.isfile(trace_path):
             return
 
