@@ -21,7 +21,7 @@ def br_handler(event):
         global invalid
         invalid += 1
 
-gdb.event.stop.connect(br_handler)
+gdb.events.stop.connect(br_handler)
 
 not_exit = True
 
@@ -30,6 +30,8 @@ def exit_handler(event):
     not_exit = False
     
 gdb.events.exited.connect(exit_handler)
+
+gdb.execute('run')
 
 while not_exit:
     try:
