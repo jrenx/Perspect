@@ -45,6 +45,22 @@ class BasicBlock:
         self.predes = []
         self.succes = []
 
+    def has_prede(self, target):
+        visited = set()
+        worklist = deque()
+        worklist.append(self)
+        while (len(worklist) > 0):
+            bb = worklist.popleft()
+            if bb == target:
+                return True
+            if bb in visited:
+                continue
+            visited.add(bb)
+
+            for prede in bb.predes:
+                worklist.append(prede)
+        return False
+
     def toJSON(self):
         data = {}
         data["id"] = self.id
@@ -799,6 +815,7 @@ class MemoryAccess:
         self.bit_operations = None
         self.read_same_as_write = False
         self.off1 = MemoryAccess.convert_offset(off1) if off1 is not None else None
+        self.targets = set()
 
     @staticmethod
     def convert_offset(off):
@@ -2104,10 +2121,12 @@ class StaticDepGraph:
         print("[static_dep] " + str(initial_node))
         target_bbs = set()
 
+        redo_remote_defs = False
         #make sure to find map the instruction to the function that contains it
         # in case there is a duplicate copy of the function in the binary
         graph = StaticDepGraph.get_graph(func, insn)
         if graph is not None:
+            redo_remote_defs = True
             assert (graph.cfg.contains_insn(insn) is True)
             # cf nodes are not merged, they are discarded after info is pasted in!
             if initial_node.is_df is False:
@@ -2175,7 +2194,8 @@ class StaticDepGraph:
             new_local_defs_found = False
             print("[static_dep] Building dependencies for function: " + str(func) + " iteration: " + str(iter))
             iter += 1
-            defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func = graph.build_data_flow_dependencies(func, prog, df_nodes)
+            defs_in_same_func, intermediate_defs_in_same_func, defs_in_diff_func = graph.build_data_flow_dependencies(func, prog, df_nodes, redo_remote_defs)
+            redo_remote_defs = False  # only need to redo once
             all_defs_in_diff_func = all_defs_in_diff_func.union(defs_in_diff_func)
             if len(graph.cfg.ordered_bbs) == 0:
                 print("[static_dep][warn] Previously failed to load the cfg for function: "
@@ -2414,7 +2434,7 @@ class StaticDepGraph:
         # assert prede.mem_load is not None or prede.reg_load is not None, str(prede)
         return prede, group_size
 
-    def build_data_flow_dependencies(self, func, prog, df_nodes=[]):
+    def build_data_flow_dependencies(self, func, prog, df_nodes=[], redo=False):
         print("[static_dep] Building dataflow dependencies local in function: " + str(func))
         defs_in_same_func = set()
         intermediate_defs_in_same_func = set()
@@ -2475,12 +2495,18 @@ class StaticDepGraph:
 
 
         print("[static_dep] Building dataflow dependencies non-local to function: " + str(func))
-        for node in defs_in_same_func:
+        defs_to_redo = set()
+        if redo is True:
+            for n in self.nodes_in_df_slice:
+                if n.mem_load is not None:
+                    defs_to_redo.add(n)
+        for node in itertools.chain(defs_in_same_func, defs_to_redo):
             if VERBOSE: print(str(node))
             #assert node.is_cf is False
             assert node.is_df is True
-            if node.explained is True:
-                continue
+            if redo is False:
+                if node.explained is True:
+                    continue
             #assert node.explained is False
             print("[static_dep] Looking for dataflow dependencies potentially non-local to function: " + str(func) \
                   + " for read " + str(node.mem_load) + " @ " + hex(node.insn))
@@ -2501,13 +2527,26 @@ class StaticDepGraph:
             closest_dep_branch_node = self.get_closest_dep_branch(node)
             if closest_dep_branch_node is not None:
                 farthest_target_node = self.get_farthest_target(closest_dep_branch_node)
+                if farthest_target_node in node.mem_load.targets:
+                    continue
+                node.mem_load.targets.add(farthest_target_node)
+
                 if farthest_target_node is not None:
+                    already_explored = False
+                    for t in node.mem_load.targets:
+                        if t is not None and farthest_target_node.bb.has_prede(t.bb):
+                            already_explored = True
+                            break
+                    if already_explored is True:
+                        continue
                     branch_insn = closest_dep_branch_node.bb.last_insn
                     target_insn = farthest_target_node.insn
-                    print("Closest dependent branch is at " + hex(branch_insn))
-                    print("Farthest target is at " + hex(target_insn))
+                    print("[static_dep] Closest dependent branch is at " + hex(branch_insn))
+                    print("[static_dep] Farthest target is at " + hex(target_insn))
                 else:
                     print("[warn] closest dep branch is found but not the farthest target node?")
+            if node in defs_to_redo:
+                print("[static_dep] Redoing RR request with a new target.")
             try:
                 results = rr_backslice(StaticDepGraph.binary_ptr, prog, branch_insn, target_insn, #4234305, 0x409C41 | 4234325, 0x409C55
                                    node.insn, node.mem_load.reg, node.mem_load.shift, node.mem_load.off,
