@@ -2172,6 +2172,8 @@ class StaticDepGraph:
                         break
                 print("[static_dep] Instantiating callsites for: " + func)
                 for c in itertools.chain(callsites, dyn_callsites):
+                    if c[0] in StaticDepGraph.insns_that_never_executed:
+                        continue
                     print("[static_dep] Callsite is: " + str(c))
                     new_node = StaticDepGraph.make_or_get_cf_node(c[0], None, c[1])
                     new_nodes.add(new_node)
