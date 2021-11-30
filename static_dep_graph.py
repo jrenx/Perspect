@@ -21,6 +21,7 @@ curr_dir = os.path.dirname(os.path.realpath(__file__))
 TRACKS_DIRECT_CALLER = True
 # = False
 USE_BPATCH = False
+FILTER_UNEXECUTED_INSNS = False
 HOST = "localhost"
 PORT = parse_inner_port()
 
@@ -1197,6 +1198,7 @@ class StaticDepGraph:
     rr_result_cache = {}
     sa_result_cache = {}
     bb_result_cache = {}
+    insns_that_never_executed = set()
 
     func_to_callsites = None
     func_first_insn_to_dyn_callsites = None
@@ -1618,6 +1620,14 @@ class StaticDepGraph:
         result_dir, result_file, indice_file, key = StaticDepGraph.build_file_names(starting_events, prog, limit)
         StaticDepGraph.result_file = result_file
         StaticDepGraph.prog = prog
+
+        if FILTER_UNEXECUTED_INSNS is True:
+            un_executed_insns_file = os.path.join(result_dir, 'un_executed_instructions_' + prog + '.json')
+            if os.path.exists(un_executed_insns_file):
+                with open(un_executed_insns_file) as cache_file:
+                    insns = json.load(cache_file)
+                    StaticDepGraph.insns_that_never_executed = set(insns)
+
         if use_cached_static_graph and os.path.isfile(result_file):
             a = time.time()
             StaticDepGraph.loadJSON(result_file)
@@ -1647,8 +1657,25 @@ class StaticDepGraph:
                 StaticDepGraph.bb_result_cache = json.load(cache_file)
                 bb_result_size = len(StaticDepGraph.bb_result_cache)
 
+        if FILTER_UNEXECUTED_INSNS is True:
+            trace_path = os.path.join(curr_dir, 'pin', key + "_" + 'instruction_trace.out.count')
+            if os.path.exists(trace_path):
+                with open(trace_path, 'r') as f:
+                    for l in f.readlines():
+                        insn = int(l.split()[0], 16)
+                        count = int(l.split()[1])
+                        if count == 0:
+                            StaticDepGraph.insns_that_never_executed.add(insn)
+            print("[static_dep] " + str(len(StaticDepGraph.insns_that_never_executed))
+                  + " nodes never executed in the dynamic trace.")
+
+            print("Persisting unexecuted instructions file")
+            with open(un_executed_insns_file, 'w') as f:
+                json.dump(list(StaticDepGraph.insns_that_never_executed), f, indent=4)
+
         try:
             total_node_count = 0
+            full_slice = set()
             StaticDepGraph.func_to_callsites, StaticDepGraph.func_hot_and_cold_path_map = get_func_to_callsites(prog)
             StaticDepGraph.func_first_insn_to_dyn_callsites = get_func_first_insn_to_dyn_callsites(prog)
             StaticDepGraph.binary_ptr = setup(prog)
@@ -1688,23 +1715,37 @@ class StaticDepGraph:
                     print ("[static_dep] " + str(curr_node))
                     continue
 
-                node_count_before = 0
-                graph = StaticDepGraph.get_graph(curr_func, curr_insn)
-                if graph is not None:
-                    node_count_before += len(graph.nodes_in_cf_slice)
-                    node_count_before += len(graph.nodes_in_df_slice)
+                #node_count_before = 0
+                #graph = StaticDepGraph.get_graph(curr_func, curr_insn)
+                #if graph is not None:
+                #    node_count_before += len(graph.nodes_in_cf_slice)
+                #    node_count_before += len(graph.nodes_in_df_slice)
 
                 new_nodes = StaticDepGraph.build_dependencies_in_function(curr_insn, curr_func, curr_prog, curr_node)
                 for new_node in new_nodes:
+                    if new_node.insn in StaticDepGraph.insns_that_never_executed:
+                        print("[static_dep] New node " + new_node.hex_insn + " never occurred in real execution, skipping ...")
+                        continue
+                    if new_node.explained is True:
+                        print("[static_dep] New node " + new_node.hex_insn + " already explained, skipping ...")
+                        continue
                     worklist.append([new_node.insn, new_node.function, prog, new_node]) #FIMXE, ensure there is no duplicate work
 
-                node_count_after = 0
+                #node_count_after = 0
+                #graph = StaticDepGraph.get_graph(curr_func, curr_insn)
+                #if graph is not None:
+                #    node_count_after += len(graph.nodes_in_cf_slice)
+                #    node_count_after += len(graph.nodes_in_df_slice)
+                #total_node_count += (node_count_after - node_count_before)
+                curr_slice = set()
                 graph = StaticDepGraph.get_graph(curr_func, curr_insn)
                 if graph is not None:
-                    node_count_after += len(graph.nodes_in_cf_slice)
-                    node_count_after += len(graph.nodes_in_df_slice)
-                total_node_count += (node_count_after - node_count_before)
+                    for n in itertools.chain(graph.nodes_in_cf_slice, graph.nodes_in_df_slice):
+                        curr_slice.add(n.insn)
+                full_slice = full_slice.union(curr_slice.difference(StaticDepGraph.insns_that_never_executed))
+                total_node_count = len(full_slice)
                 print("[static_dep] Current node count: " + str(total_node_count))
+                print("[static_dep] Current pending count: " + str(len(worklist)))
                 if total_node_count > limit:
                     break
             print("[static_dep] No more events to analyze.")
@@ -2038,7 +2079,11 @@ class StaticDepGraph:
 
     @staticmethod
     def build_dependencies_in_function(insn, func, prog, initial_node):
+
         new_nodes = set()
+        if insn in StaticDepGraph.insns_that_never_executed:
+            print("[static_dep] " + hex(insn) + " did not occur in real execution, ignore ...")
+            return new_nodes
         df_node = None
         if initial_node.is_df is True:
             df_node = initial_node
