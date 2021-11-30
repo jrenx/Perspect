@@ -467,7 +467,17 @@ class CFG:
                     if bb.immed_pdom not in child_bb.pdoms:
                         ignore = True
                         break
-                assert bb.immed_pdom in child_bb.pdoms, str(bb.id) + " " + str(bb.immed_pdom.id) + " " + str([p.id for p in child_bb.pdoms])
+                #FIXME: Ideally, in this case, could 1. increase the iterations of converging,
+                #       or 2. revert back to an earlier pdom as the immed_pdom, because postorder list 
+                #       is not always meaningful when there is a cycle.
+                #       We just do it best-effort for now.
+                if bb.immed_pdom not in child_bb.pdoms:
+                    print("[Simplify/warn] While checking if " + str(bb.id) + " can be removed, " +
+                            "found BB's pdom: " + str(bb.immed_pdom.id) + " is not in child BB " + str(child_bb.id) +
+                            "'s pdoms: " + str([p.id for p in child_bb.pdoms]))
+                    ignore = True
+                    break
+                #assert bb.immed_pdom in child_bb.pdoms, str(bb.id) + " " + str(bb.immed_pdom.id) + " " + str([p.id for p in child_bb.pdoms])
                 all_succes_before_immed_pdom.add(child_bb)
                 for succe in child_bb.succes:
                     worklist.append(succe)
