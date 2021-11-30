@@ -8,12 +8,23 @@ gdb.execute("br bt_cursor.c:693")
 valid = 0
 invalid = 0
 
+def checkCallStack(frame):
+    while frame is not None and frame.is_valid():
+        try:
+            name = frame.name()
+            if name != None and 'doTTLForIndex' in name:
+                return True
+        except Exception:
+            pass
+        frame = frame.older()
+    return False
+
 def br_handler(event):
-    stack = gdb.execute("i stack")
-    if 'doTTLForIndex' not in stack:
+    frame = gdb.newest_frame()
+    if not checkCallStack(frame):
         return
     
-    br_num = event.breakpoints[-1]
+    br_num = int(event.breakpoints[-1].number)
     if br_num == 1:
         global valid
         valid += 1
@@ -31,6 +42,7 @@ def exit_handler(event):
     
 gdb.events.exited.connect(exit_handler)
 
+gdb.execute('set pagination off')
 gdb.execute('run')
 
 while not_exit:
@@ -39,7 +51,7 @@ while not_exit:
     except Exception:
         break
 
-with open('cursur_miss.txt', 'w') as f:
+with open('cursor_miss.txt', 'w') as f:
     f.write(json.dumps({'valid': valid, 'invalid': invalid}, f))
 
 gdb.execute('quit', False, True)
