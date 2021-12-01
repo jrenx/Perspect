@@ -247,7 +247,11 @@ def get_func_to_callsites(prog):
                     print("[sa/warn] Ignore cold path function: " + caller + " callee " + func_name)
                     continue
             callsites.append([call_insn, caller])
-        data_points[func_name] = callsites
+        if func_name in data_points:
+            existing_callsites = data_points[func_name]
+            existing_callsites.extend(callsites)
+        else:
+            data_points[func_name] = callsites
     f.close()
 
     for f in functions:
