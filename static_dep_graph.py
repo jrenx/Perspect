@@ -2534,7 +2534,6 @@ class StaticDepGraph:
                     print("[static_dep] Target already explained: " +
                           (farthest_target_node.hex_insn if farthest_target_node is not None else str(farthest_target_node)))
                     continue
-                node.mem_load.targets.add(farthest_target_node)
 
                 if farthest_target_node is not None:
                     already_explored = False
@@ -2543,7 +2542,8 @@ class StaticDepGraph:
                             already_explored = True
                             break
                     if already_explored is True:
-                        print("[static_dep] Target's predecessor already explained: " + farthest_target_node.hex_insn)
+                        print("[static_dep] Target's predecessor already explained: " + farthest_target_node.hex_insn
+                              + " existing targets: " + str([(t.insn if t is not None else None) for t in node.mem_load.targets]))
                         continue
                     branch_insn = closest_dep_branch_node.bb.last_insn
                     target_insn = farthest_target_node.insn
@@ -2551,6 +2551,8 @@ class StaticDepGraph:
                     print("[static_dep] Farthest target is at " + hex(target_insn))
                 else:
                     print("[warn] closest dep branch is found but not the farthest target node?")
+
+                node.mem_load.targets.add(farthest_target_node)
             if node in defs_to_redo:
                 print("[static_dep] Redoing RR request with a new target.")
             try:
