@@ -1,4 +1,5 @@
-rdi 0x409daa sweep
-rbx 0x407240 runtime.mallocgc
-rdx 0x40742b runtime.mallocgc
-rcx 0x40764c runtime.free
+_ 0x126a2d0 __wt_txn_read 37.98873049945069
+_ 0x12643a0 __wt_txn_read 37.98873049945069
+_ 0x1269010 __wt_txn_upd_value_visible_all 7.423085270007606
+_ 0x12630e0 __wt_txn_upd_value_visible_all 7.423085270007606
+_ 0x128e590 __wt_page_in_func 0.06961120031550184
