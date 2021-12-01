@@ -22,6 +22,7 @@ TRACKS_DIRECT_CALLER = True
 # = False
 USE_BPATCH = False
 FILTER_UNEXECUTED_INSNS = False
+REDO_REMOTE_DEFS = False
 HOST = "localhost"
 PORT = parse_inner_port()
 
@@ -2126,7 +2127,7 @@ class StaticDepGraph:
         # in case there is a duplicate copy of the function in the binary
         graph = StaticDepGraph.get_graph(func, insn)
         if graph is not None:
-            redo_remote_defs = True
+            if REDO_REMOTE_DEFS is True: redo_remote_defs = True
             assert (graph.cfg.contains_insn(insn) is True)
             # cf nodes are not merged, they are discarded after info is pasted in!
             if initial_node.is_df is False:
