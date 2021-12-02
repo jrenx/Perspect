@@ -19,6 +19,7 @@ DEBUG_SLICE = False
 VERBOSE = False
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 TRACKS_DIRECT_CALLER = True
+TRACKS_INDIRECT_CALLER = False
 # = False
 USE_BPATCH = False
 FILTER_UNEXECUTED_INSNS = False
@@ -1705,7 +1706,8 @@ class StaticDepGraph:
             total_node_count = 0
             full_slice = set()
             StaticDepGraph.func_to_callsites, StaticDepGraph.func_hot_and_cold_path_map = get_func_to_callsites(prog)
-            StaticDepGraph.func_first_insn_to_dyn_callsites = get_func_first_insn_to_dyn_callsites(prog)
+            if TRACKS_INDIRECT_CALLER is True:
+                StaticDepGraph.func_first_insn_to_dyn_callsites = get_func_first_insn_to_dyn_callsites(prog)
             StaticDepGraph.binary_ptr = setup(prog)
             if USE_BPATCH is False:
                 StaticDepGraph.binary_ptr2 = setup2(prog)
@@ -2165,12 +2167,13 @@ class StaticDepGraph:
                 if func in StaticDepGraph.func_to_callsites:
                     callsites = StaticDepGraph.func_to_callsites[func]
                 dyn_callsites = []
-                for entry_bb in orig_entry_bbs:
-                    print("[static_dep] first instruction of function " + func + " is " + hex(entry_bb.start_insn))
-                    if entry_bb.start_insn in StaticDepGraph.func_first_insn_to_dyn_callsites:
-                        dyn_callsites = StaticDepGraph.func_first_insn_to_dyn_callsites[entry_bb.start_insn]
-                        print("[static_dep] found dynamic callsites for function " + func + ": " + str(dyn_callsites))
-                        break
+                if TRACKS_INDIRECT_CALLER is True:
+                    for entry_bb in orig_entry_bbs:
+                        print("[static_dep] first instruction of function " + func + " is " + hex(entry_bb.start_insn))
+                        if entry_bb.start_insn in StaticDepGraph.func_first_insn_to_dyn_callsites:
+                            dyn_callsites = StaticDepGraph.func_first_insn_to_dyn_callsites[entry_bb.start_insn]
+                            print("[static_dep] found dynamic callsites for function " + func + ": " + str(dyn_callsites))
+                            break
                 print("[static_dep] Instantiating callsites for: " + func)
                 for c in itertools.chain(callsites, dyn_callsites):
                     if c[0] in StaticDepGraph.insns_that_never_executed:
