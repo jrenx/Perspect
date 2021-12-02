@@ -734,7 +734,8 @@ class DynamicDependence:
         time_record["invoke_pin"] = time.time()
         print("[TIME] Invoking PIN took: ",
               str(time_record["invoke_pin"] - time_record["static_slice"]), flush=True)
-        self.init_graph = self.build_dynamic_dependencies()
+        if PROP_WEIGHT is True:
+            self.init_graph = self.build_dynamic_dependencies()
 
     def detect_dynamic_callees_run_trace(self):
         StaticDepGraph.binary_ptr = setup(self.prog)
