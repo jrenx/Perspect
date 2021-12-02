@@ -21,8 +21,8 @@ curr_dir = os.path.dirname(os.path.realpath(__file__))
 TRACKS_DIRECT_CALLER = True
 # = False
 USE_BPATCH = False
-FILTER_UNEXECUTED_INSNS = False
-REDO_REMOTE_DEFS = False
+FILTER_UNEXECUTED_INSNS = True
+REDO_REMOTE_DEFS = True
 HOST = "localhost"
 PORT = parse_inner_port()
 
