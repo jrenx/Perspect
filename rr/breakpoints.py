@@ -38,7 +38,7 @@ def br_handler(event):
         return
     global target_seen
     if target is not None and target_seen is False:
-        if time_passed > 150:
+        if time_passed > 600:
             print("[rr] Exit the execution because no target has been seen but 5min has past.")
             not_exit = False
             return
@@ -51,13 +51,13 @@ def br_handler(event):
             print("[rr] Too many addrs to investigate, return ...")
             not_exit = False
             return
-        if (reads / (len(addrs) + 1)) > 100.0:
+        if target is None and (reads / (len(addrs) + 1)) > 100.0:
             if time_passed > 150:
                 print("[rr] Exit the execution because there are very few addrs relative to reads.")
                 not_exit = False
                 return
-        #print("[rr] bp to read ratio: " + str(len(trace) / (reads+1)))
         global trace
+        #print("[rr] bp to read ratio: " + str(len(trace) / (reads+1)))
         if (len(trace) / (reads+1)) > 100.0:
             if time_passed > 60:
                 trace = []
