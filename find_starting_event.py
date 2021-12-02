@@ -1,7 +1,7 @@
 import sys
 import json
 import os
-CUT_OFF = 1
+CUT_OFF = 0
 def parse(lines, trace):
     ordered_trace = []
     for l in lines:

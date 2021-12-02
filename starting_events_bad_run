@@ -1,4 +1,3 @@
-rdi 0x409daa sweep
-rbx 0x407240 runtime.mallocgc
-rdx 0x40742b runtime.mallocgc
-rcx 0x40764c runtime.free
+_ 0x47cc80 math/big.mulAddVWW 55.7199683189837
+_ 0x47ca00 math/big.subVV 41.62997633020983
+_ 0x47ccd0 math/big.addMulVVW 1.1199993631956524
