@@ -190,11 +190,11 @@ def run():
                     result = hex(addr) + " " + names1[f] + " " + str(weights1[f]*w1)
                     #result = hex(addr) + " " + names1[f] + " " + str(weights1[f]*time1/100) + " " + str(weights1[f])
                     print(result)
-                    output1[f] = result
+                    output1[str(addr) + "_" + f] = result
                     if f in all_output:
-                        all_output[f] += weights1[f]*w1
+                        all_output[str(addr) + "_" + f] += weights1[f]*w1
                     else:
-                        all_output[f] = weights1[f]*w1
+                        all_output[str(addr) + "_" + f] = weights1[f]*w1
 
 
     print()
@@ -213,26 +213,26 @@ def run():
                     result = hex(addr) + " " + names2[f] + " " + str(weights2[f]*w2)
                     #result = hex(addr) + " " + names2[f] + " " + str(weights2[f]*time2/100) + " " + str(weights2[f])
                     print(result)
-                    output2[f] = result
+                    output2[str(addr) + "_" + f] = result
                     if f in all_output:
-                        all_output[f] += weights2[f]*w2
+                        all_output[str(addr) + "_" + f] += weights2[f]*w2
                     else:
-                        all_output[f] = weights2[f]*w2
+                        all_output[str(addr) + "_" + f] = weights2[f]*w2
 
     all_output_l = []
-    for addr in all_output:
-        all_output_l.append([addr, all_output[addr]])
+    for addr_func_pair in all_output:
+        all_output_l.append([addr_func_pair, all_output[addr_func_pair]])
     sorted_all_output = reversed(sorted(all_output_l, key=lambda pair:pair[1]))
     with open("starting_events_good_run", "w") as f:
-        for (func, weight) in sorted_all_output:
-            if func in output1:
-                f.write("_ " + output1[func]+"\n")
+        for (addr_func_pair, weight) in sorted_all_output:
+            if addr_func_pair in output1:
+                f.write("_ " + output1[addr_func_pair]+"\n")
 
     sorted_all_output = reversed(sorted(all_output_l, key=lambda pair:pair[1]))
     with open("starting_events_bad_run", "w") as f:
-        for (func, weight) in sorted_all_output:
-            if func in output2:
-                f.write("_ " + output2[func]+"\n")
+        for (addr_func_pair, weight) in sorted_all_output:
+            if addr_func_pair in output2:
+                f.write("_ " + output2[addr_func_pair]+"\n")
 
 if __name__ == "__main__":
     print("Usage: perf report (no call graph) of the fast run, duration of the fast run, perf report (no call graph) of the slow run, duration of the slow run, binary of the fast run, binry of the slow run.")
