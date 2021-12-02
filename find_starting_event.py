@@ -75,7 +75,7 @@ def run():
     get_highly_ranked(ordered_trace1, highly_ranked, w1)
     get_highly_ranked(ordered_trace2, highly_ranked, w2)
     print(highly_ranked)
-    print("Got highly ranked")
+    print("Got highly ranked events")
     print("=============")
     # if is not highly ranked and exist in both repros, delete
     common = set()
@@ -87,8 +87,8 @@ def run():
             continue
         del trace1[f]
         del trace2[f]
-    print(len(trace1))
-    print(len(trace2))
+    print("Number events kept from first trace: " + str(len(trace1)))
+    print("Number events kept from first trace: " + str(len(trace2)))
     print("=============")
     # remove starting events regardless of its uniqueness if it contributes to less than 0.1
     sorted_trace1 = []
@@ -134,8 +134,8 @@ def run():
     for f in trace2:
         sorted_trace2.append([f, trace2[f]])
 
-    print(len(trace1))
-    print(len(trace2))
+    print("Number events kept from first trace: " + str(len(trace1)))
+    print("Number events kept from first trace: " + str(len(trace2)))
     print("=============")
 
     trace1 = {}
@@ -165,12 +165,12 @@ def run():
         names2[fname] = pair[0]
         weights2[fname] = pair[1]
 
-    print(len(trace1))
-    print(len(trace2))
+    print("Number events kept from first trace: " + str(len(trace1)))
+    print("Number events kept from first trace: " + str(len(trace2)))
     print("=============")
 
-    print(trace1)
-    print(trace2)
+    print("Events kept from first trace: " + str(trace1))
+    print("Events kept from first trace: " + str(trace2))
     print("=============")
 
     
