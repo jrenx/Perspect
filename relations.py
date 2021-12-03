@@ -5,6 +5,8 @@ import sys, traceback
 
 DEBUG = True
 Weight_Threshold = 0
+PRINT_IGNORE_RATIO = 10
+IGNORE_VARIABLE_CHAIN = False
 
 def get_line(insn, prog):
     if not isinstance(insn, str):
@@ -297,6 +299,8 @@ class RelationGroup:
         s += " weight: " + str(self.weight) + "\n"
         s += " Total number of relations: " + str(len(self.sorted_relations)) + "\n"
         for rel in reversed(self.sorted_relations):
+            if rel.weight.perc_contrib < PRINT_IGNORE_RATIO:
+                continue
             s += str(rel)
         s += "=================================================\n"
         return s
@@ -370,10 +374,11 @@ class RelationGroup:
             if has_only_proportion_succe is False:
                 continue
             to_remove.add(prede)
-        for prede in to_remove:
-            print("[ra] Removing a variable relation whose successors all have variable relations: ")
-            print(self.relations[prede])
-            del self.relations[prede]
+        if IGNORE_VARIABLE_CHAIN is True:
+            for prede in to_remove:
+                print("[ra] Removing a variable relation whose successors all have variable relations: ")
+                print(self.relations[prede])
+                del self.relations[prede]
         self.finished = True
 
     def sort_relations(self):

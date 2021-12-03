@@ -22,6 +22,7 @@ DEBUG = True
 Weight_Threshold = 0
 #worker_addresses = [("10.1.0.23", 15000)]
 curr_dir = os.path.dirname(os.path.realpath(__file__))
+RECURSIVE = False
 
 def sender_receiver_worker(s, q, results_q):
     try:
@@ -226,9 +227,10 @@ class ParallelRelationAnalysis(RelationAnalysis):
                         print("\n" + hex(wavelet.insn) + "@" + wavelet.function + " has a node forward and backward invariant already explained...")
                         continue
 
-                    wavefront.append((weight, wavelet))
-                    starting_weight = 0 if weight is None else weight.total_weight
-                    pending_inputs.put(wavelet.hex_insn + "|" + wavelet.function + "|" + str(starting_weight) + "|" + str(max_contrib))
+                    if RECURSIVE is True:
+                        wavefront.append((weight, wavelet))
+                        starting_weight = 0 if weight is None else weight.total_weight
+                        pending_inputs.put(wavelet.hex_insn + "|" + wavelet.function + "|" + str(starting_weight) + "|" + str(max_contrib))
                     self.print_wavelet(weight, wavelet, "NEW")
 
                 print("=======================================================================")
