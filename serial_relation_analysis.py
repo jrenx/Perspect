@@ -23,6 +23,7 @@ from relation_analysis import *
 DEBUG = True
 Weight_Threshold = 0
 curr_dir = os.path.dirname(os.path.realpath(__file__))
+RECURSIVE = False
 
 class SerialRelationAnalysis(RelationAnalysis):
     def analyze(self):
@@ -127,7 +128,9 @@ class SerialRelationAnalysis(RelationAnalysis):
                     print("\nwavelet " + hex(wavelet.insn) + "@" + wavelet.function + " has a node forward and backward invariant already explained...")
                     continue
 
-                wavefront.append((weight, wavelet, max_contrib))
+
+                if RECURSIVE is True:
+                    wavefront.append((weight, wavelet, max_contrib))
                 starting_weight = 0 if weight is None else weight.total_weight
                 self.print_wavelet(weight, wavelet, "NEW")
 
