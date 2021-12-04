@@ -331,7 +331,7 @@ def get_def(binary_ptr, branch, target, read, reg, shift='0x0', offset='0x0', of
         branch_target = [branch, target]
     timeout = None
     if reg.lower() == 'rsp' or reg.lower() == 'esp' or (USE_X86_CALLING_CONVENTION is True and reg.lower() == 'rbp'):
-        timeout = 150
+        timeout = 300
     for i in range(0,2):
         success, bp_pass_duration = run_breakpoint(branch_target, reg_points, regs, off_regs, offsets, shifts, src_regs, loop_insn_flags, False, False,
                        timeout=timeout, target=target)
@@ -346,11 +346,11 @@ def get_def(binary_ptr, branch, target, read, reg, shift='0x0', offset='0x0', of
 
         if len(taken_indices) == 0:
             if reg.lower() == 'rsp' or reg.lower() == 'esp' or (USE_X86_CALLING_CONVENTION is True and reg.lower() == 'rbp'):
-                timeout += 150
+                timeout += 300
                 continue
             if len(branch_target) != 0:
                 branch_target = []
-                timeout = 90
+                timeout = 180
                 branch = None
                 target = None
                 continue
