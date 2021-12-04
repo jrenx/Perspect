@@ -1,4 +1,3 @@
-rdi 0x409daa sweep
-rbx 0x407240 runtime.mallocgc
-rdx 0x40742b runtime.mallocgc
-rcx 0x40764c runtime.free
+_ 0x455db0 runtime.memclr 22.94854614119204
+_ 0x42b270 runtime.scang 5.1439339726351605
+_ 0x41a8f0 runtime.scanblock 2.606108141003212
