@@ -153,7 +153,7 @@ def read_breakpoint(br_num, frame):
             segs = ret.split()
             number = 0
             for j, seg in enumerate(segs):
-                if j == 0:
+                if j == 0 or j == 1:
                     continue
                 number += (int(seg, 16) if seg.startswith('0x') else int(seg)) << (j - 1) * 8
             value = hex(number)
