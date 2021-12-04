@@ -391,6 +391,7 @@ int main (INT32 argc, CHAR *argv[])
     reg_map["r13"] = REG_R13;
     reg_map["r14"] = REG_R14;
     reg_map["r15"] = REG_R15;
+    reg_map["al"] = REG_AL;
 
     // Register ImageLoad to be called when an image is loaded
     //
