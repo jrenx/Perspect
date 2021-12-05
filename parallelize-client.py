@@ -16,8 +16,6 @@ HOST = "localhost"
 PORT = parse_inner_port()
 q = queue.Queue()
 DEBUG = True
-num_server = 4
-num_processor = 16
 
 num_new_unique_inputs_received = 0
 handled = set()
@@ -121,12 +119,14 @@ def main():
         start_time = datetime.datetime.now()
         print("[client] Execution of iteration 0 starts at {}".format(datetime.datetime.strftime(start_time, "%Y/%m/%d, %H:%M:%S")), flush=True)
 
+        num_processor = parse_parallelization_factor()
         sockets = []
         port = parse_port()
         worker_addresses = []
         with open("servers.config", "r") as f:
             for l in f.readlines():
                 worker_addresses.append((l.strip(), port))
+        num_server = len(worker_addresses)
  
         for addr in worker_addresses:
             for num in range(num_processor):
