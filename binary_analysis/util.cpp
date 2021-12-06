@@ -643,7 +643,22 @@ cJSON *printBBsToJsonHelper(vector<Block *> &bbs,
       }
     }
 #ifdef IGNORE_GO_FUNCTION_ENTRY
-    if (new_entry == bb) predes.clear();
+    if (new_entry == bb) {
+      predes.clear();
+      for (auto bit = blocks_to_ignore.begin(); bit != blocks_to_ignore.end(); bit ++) {
+        Block::edgelist bsources = (*bit)->sources();
+        for (auto beit = bsources.begin(); beit != bsources.end(); beit++) {
+          Block *bsrc = (*beit)->src();
+          if (blockIds.find(bsrc) == blockIds.end()) continue;
+          if (blocks_to_ignore.find(bsrc) != blocks_to_ignore.end()) continue;
+          cout << "[sa] Inserting prede " << hex << bsrc->start() << dec <<
+                  " to new entry: " << hex << bb->start() << dec <<
+                  " after ignoring the block at the beginning of the go routine. " << endl;
+          predes.push_back(bsrc);
+        }
+        continue;
+      }
+    }
 #endif
     cJSON_AddItemToObject(json_bb, "predes",  printBBIdsToJsonHelper(predes, blockIds));
 
@@ -653,6 +668,15 @@ cJSON *printBBsToJsonHelper(vector<Block *> &bbs,
       //if ((*eit)->type() == CALL || (*eit)->type() == RET)
       //  continue;
       Block *trg = (*eit)->trg();
+#ifdef IGNORE_GO_FUNCTION_ENTRY
+      if (blocks_to_ignore.find(trg) != blocks_to_ignore.end()) {
+        cout << "[sa] Replacing succe: " << hex << trg->start() << dec <<
+                " with: " << hex << new_entry->start() << dec <<
+                " for bb: " << hex << bb->start() << dec <<
+                " after ignoring the block at the beginning of the go routine. " << endl;
+        trg = new_entry;
+      }
+#endif
       if (blockIds.find(trg) != blockIds.end()) {
         succes.push_back(trg);
       }
@@ -660,6 +684,9 @@ cJSON *printBBsToJsonHelper(vector<Block *> &bbs,
     cJSON_AddItemToObject(json_bb, "succes",  printBBIdsToJsonHelper(succes, blockIds));
 
     Block * immedDom = f->getImmediateDominator(bb);
+#ifdef IGNORE_GO_FUNCTION_ENTRY
+    if (new_entry == bb) immedDom = f->getImmediateDominator(f->entry());
+#endif
     if (immedDom != NULL)
       cJSON_AddNumberToObject(json_bb, "immed_dom",  blockIds[immedDom]);
 
@@ -683,9 +710,9 @@ cJSON *printBBsToJsonHelper(vector<Block *> &bbs,
       }
     }
 
-    for (auto it = allLines.begin(); it != allLines.end(); it++) {
+    for (auto lit = allLines.begin(); lit != allLines.end(); lit++) {
       cJSON *json_line  = cJSON_CreateObject();
-      cJSON_AddNumberToObject(json_line, "line", *it);
+      cJSON_AddNumberToObject(json_line, "line", *lit);
       cJSON_AddItemToArray(json_lines, json_line);
     }
     cJSON_AddItemToObject(json_bb, "lines", json_lines);
