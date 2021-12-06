@@ -42,7 +42,7 @@ bool DEBUG_BIT = false;
 bool DEBUG_STACK = false;
 bool CRASH_ON_ERROR = false;
 bool USE_X86_CALLING_CONVENTION = false;
-
+//#define IGNORE_GO_FUNCTION_ENTRY
 
 boost::unordered_map<std::string, std::string> regMap =
     {{"al"  ,"rax"}, {"ah"  ,"rax"}, {"ax"  ,"rax"}, {"eax" ,"rax"}, {"rax","rax"},
@@ -534,6 +534,7 @@ cJSON *printBBsToJsonHelper(vector<Block *> &bbs,
                             boost::unordered_map<Block *, vector<Block *>> &backEdges,
                             Function *f, SymtabAPI::Symtab *symTab) {
   cJSON *json_bbs = cJSON_CreateArray();
+
   boost::unordered_map<Block *, int> blockIds;
   int id = 1;
   for(auto it = bbs.begin(); it != bbs.end(); ++it) {
@@ -541,8 +542,72 @@ cJSON *printBBsToJsonHelper(vector<Block *> &bbs,
     blockIds.insert({bb, id});
     id++;
   }
+
+#ifdef IGNORE_GO_FUNCTION_ENTRY
+  boost::unordered_set<Block *> blocks_to_ignore;
+  Block *new_entry = NULL;
+  Block::Insns insns;
+  f->entry()->getInsns(insns);
+  bool rightOff = false;
+  bool rightReg = false;
+  for (auto it = insns.begin(); it != insns.end(); ++it) {
+    Instruction insn = (*it).second;
+    entryID id = insn.getOperation().getID();
+    if (id == e_mov) {
+      long unsigned int addr = (*it).first;
+      //cout << insn.format() << endl;
+      MachRegister machReg; long off = 0;
+      std::vector<Operand> ops;
+      insn.getOperands(ops);
+      for (auto oit = ops.begin(); oit != ops.end(); ++oit) {
+        getRegAndOff((*oit).getValue(), &machReg, &off);
+        if (off == 0xfffffff0) rightOff = true;
+        if (machReg == x86_64::rcx) rightReg = true;
+      }
+    }
+    break;
+  }
+  if (rightOff && rightReg) {
+    //cout << fitsPattern << endl;
+    new_entry = f->getImmediatePostDominator(f->entry());
+    //cout << hex << immedPDom->start() << endl;
+    //cout << hex << immedPDom->end() << endl;
+    if (new_entry) {
+      std::queue<Block *> worklist; // TODO change to a boost queue?
+      worklist.push(f->entry());
+      while (worklist.size() > 0) {
+        Block *curr = worklist.front();
+        worklist.pop();
+        if (blocks_to_ignore.find(curr) != blocks_to_ignore.end()) continue;
+        blocks_to_ignore.insert(curr);
+        Block::edgelist targets = curr->targets();
+        for (auto eit = targets.begin(); eit != targets.end(); eit++) {
+          //if ((*eit)->type() == CALL || (*eit)->type() == RET) continue;
+          Block *trg = (*eit)->trg();
+          if (blockIds.find(trg) == blockIds.end()) continue;
+          if (trg == new_entry) continue;
+          worklist.push(trg);
+        }
+      }
+    }
+  }
+
+  if (blocks_to_ignore.size() > 0) assert(new_entry != NULL);
+  //for (auto it = blocks_to_ignore.begin(); it != blocks_to_ignore.end(); it++) {
+  //  cout << hex << (*it)->start() << dec << endl;
+  //}
+#endif
+
   for(auto it = bbs.begin(); it != bbs.end(); ++it) {
     Block *bb = *it;
+
+#ifdef IGNORE_GO_FUNCTION_ENTRY
+    if (blocks_to_ignore.find(bb) != blocks_to_ignore.end()) {
+      cout << "[sa] Ignoring the block at the beginning of the go routine: " << hex << bb->start() << dec << endl;
+      continue;
+    }
+#endif
+
     cJSON *json_bb  = cJSON_CreateObject();
     int id = blockIds[bb];
     cJSON_AddNumberToObject(json_bb, "id", id);
@@ -559,7 +624,12 @@ cJSON *printBBsToJsonHelper(vector<Block *> &bbs,
     int isBranch = (ret.getCategory() == InsnCategory::c_BranchInsn) ? 1 : 0;
     cJSON_AddNumberToObject(json_bb, "ends_in_branch", isBranch);
     int isEntry = (bb == f->entry()) ? 1 : 0;
+#ifdef IGNORE_GO_FUNCTION_ENTRY
+    if (new_entry != NULL) cJSON_AddNumberToObject(json_bb, "is_entry", (new_entry == bb) ? 1 : 0);
+    else cJSON_AddNumberToObject(json_bb, "is_entry", isEntry);
+#else
     cJSON_AddNumberToObject(json_bb, "is_entry", isEntry);
+#endif
 
     vector<Block *> predes;
     Block::edgelist sources = bb->sources();
@@ -572,6 +642,9 @@ cJSON *printBBsToJsonHelper(vector<Block *> &bbs,
         predes.push_back(src);
       }
     }
+#ifdef IGNORE_GO_FUNCTION_ENTRY
+    if (new_entry == bb) predes.clear();
+#endif
     cJSON_AddItemToObject(json_bb, "predes",  printBBIdsToJsonHelper(predes, blockIds));
 
     vector<Block *> succes;
