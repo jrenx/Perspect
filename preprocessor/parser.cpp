@@ -21,8 +21,9 @@
 #include <string.h>
 
 #define SAMPLE
-#define SAMPLE_THRESHOLD 500
+#define SAMPLE_THRESHOLD 5000
 #define LARGE_THRESOLD  100000
+#define LARGE_THRESOLD1  50000
 #define CHECK_ALL_COUNTS
 
 using namespace std;
@@ -677,6 +678,7 @@ public:
 #endif	
       }
       if (OccurrencesPerCode[code] > LARGE_THRESOLD) parse = false;
+      if (!CodesOfCFNodes[code] && OccurrencesPerCode[code] > LARGE_THRESOLD1) parse = false;
 #else
       bool parse = true;
 #endif
@@ -975,7 +977,11 @@ public:
     osl.open(outLargeFile.c_str());
     for (int i = 1; i < CodeCount; i++) {
       long count = OccurrencesPerCode[i];
-      if (count <= LARGE_THRESOLD) continue;
+      if (!CodesOfCFNodes[i]) {
+        if (count <= LARGE_THRESOLD1) continue;
+      } else {
+        if (count <= LARGE_THRESOLD) continue;
+      }
       //cout << "LARGE_THRESOLD " << i << "\n";
       osl << std::hex << CodeToInsn[i] << std::dec << " " << i << " occurrences: " << count << "\n";
       nodeCount -= count;
