@@ -1723,7 +1723,7 @@ class StaticDepGraph:
                     node.reg_load = reg
                 worklist.append([insn, func, prog, node])
             while len(worklist) > 0:
-                if iteration >= limit:
+                if iteration >= 11272:
                     break
                 if iteration % 10 == 0 and iteration > 0:
                     if rr_result_size != len(StaticDepGraph.rr_result_cache):
