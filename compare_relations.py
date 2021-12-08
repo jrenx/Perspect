@@ -91,7 +91,8 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1):
             #continue
             d = rg.group_weight
             d = round(d)
-            diff.append((d, rg.index_quad, None, rg))
+            #diff.append((d, rg.index_quad, None, rg))
+            diff.append((d, Indices.build_key_from_index_quad(rg.index_quad), None, rg))
     #print(diff)
     sorted_diff = sorted(diff, key=lambda e: (e[0], e[1]))
     #print(sorted_diff)
