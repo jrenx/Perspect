@@ -2556,10 +2556,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--parallelize_id', dest='pa_id', type=int)
     parser.add_argument('--starting_instruction', dest='starting_insn')
+
     parser.add_argument('-c1', '--detect_dyn_callees', dest='detect_dyn_callees', action='store_true')
     parser.set_defaults(detect_dyn_callees=False)
     parser.add_argument('-c2', '--parse_dyn_callees', dest='parse_dyn_callees', action='store_true')
     parser.set_defaults(parse_dyn_callees=False)
+
     parser.add_argument('-s', '--generate_summary', dest='generate_summary', action='store_true')
     parser.set_defaults(generate_summary=False)
     
@@ -2578,6 +2580,7 @@ if __name__ == '__main__':
     else:
         dd = DynamicDependence(starting_events, program, program_args, program_path, starting_insn_to_weight=starting_insn_to_weight)
         dd.prepare_to_build_dynamic_dependencies(limit)
+
         dgs = {}
         for event in starting_events:
             starting_insn = event[1] if args.starting_insn is None else int(args.starting_insn, 16)
