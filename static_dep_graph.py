@@ -3113,7 +3113,7 @@ def main():
     if args.generate_indices is True:
         assert args.parallelize_rr is False
 
-    if args.generate_indices is True:
+    if args.generate_indices is True and args.source_codes_same is False:
         assert args.our_source_code_dir is not None
     if args.align_indices is True:
         assert args.generate_indices is True
