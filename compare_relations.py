@@ -165,8 +165,11 @@ def compare_relations(parent_d, parent_key, left, right):
         weighted_diff.append((weight/max_weight*100, avg_timestamp/max_timestamp*100, weight, avg_timestamp, r_left, r_right))
 
     sorted_diff = sorted(weighted_diff, key=lambda e: ((e[1] + e[0])/2))
+    rank = len(sorted_diff)
     for p in sorted_diff:
         print("-----------------------------------------")
+        print("rank: " + str(rank))
+        rank = rank - 1
         print(str(p[0]) + " " + str(p[1]))
         print(str(p[2]) + " " + str(p[3]))
         print(str(p[4]))
