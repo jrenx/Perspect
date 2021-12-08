@@ -13,12 +13,33 @@ from parallelizable_relation_analysis import *
 from dynamic_dep_graph import *
 from util import *
 from ra_util import *
-
+OUTPUT = True
 PORT = parse_relation_analysis_port()
 #dd = None
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 debug_log_dir = "ra_worker_debug_logs"
 num_processor = parse_relation_analysis_parallelization_factor()
+
+def output_rel_group(rgroup, insn):
+    rgroup.sort_relations()
+    RelationAnalysis.print_rgroups([rgroup])
+
+    json_rgroups = []
+    json_rgroups_simple = []
+    
+    json_rgroups.append(rgroup.toJSON())
+    json_rgroups_simple.append(SimpleRelationGroup.toJSON(rgroup))
+
+    simple_rgroup_file = os.path.join(curr_dir, debug_log_dir, hex(insn) + "_simple_rgroup.json")
+    print("[ra] Writing to " + simple_rgroup_file)
+    with open(simple_rgroup_file, 'w') as f:
+        json.dump(json_rgroups_simple, f, indent=4)
+
+    rgroup_file = os.path.join(curr_dir, debug_log_dir, hex(insn) + "_rgroup.json")
+    print("[ra] Writing to " + rgroup_file)
+    with open(rgroup_file, 'w') as f:
+        json.dump(json_rgroups, f, indent=4)
+
 
 def run_task(id, pipe, prog, arg, path, starting_events, starting_insn_to_weight, steps,
         other_indices_map, other_indices_map_inner, other_simple_relation_groups, node_avg_timestamps):
@@ -55,6 +76,7 @@ def run_task(id, pipe, prog, arg, path, starting_events, starting_insn_to_weight
                                                                              other_simple_relation_groups,\
                                                                              node_avg_timestamps)
 
+            if OUTPUT: output_rel_group(rgroup, insn)
             print("WAVEFRONT: " + str(wavefront))
             print("RGOUP: " + str(rgroup))
             b = time.time()
