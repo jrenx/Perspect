@@ -25,7 +25,8 @@ def compare_relation_groups(f1, f2):
             #print(str(rg.index_quad) + " not found in other set of relations.")
             #continue
             d = rg.group_weight
-            key = rg.index_quad
+            #key = rg.index_quad
+            key = Indices.build_key_from_index_quad(rg.index_quad)
         else:
             #d = abs(rs1[key][0] - rs2[key][0])
             right = rs2.relations_map[key]
