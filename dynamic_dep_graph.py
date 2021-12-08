@@ -2557,10 +2557,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--parallelize_id', dest='pa_id', type=int)
     parser.add_argument('--starting_instruction', dest='starting_insn')
+
     parser.add_argument('-c1', '--detect_dyn_callees', dest='detect_dyn_callees', action='store_true')
     parser.set_defaults(detect_dyn_callees=False)
     parser.add_argument('-c2', '--parse_dyn_callees', dest='parse_dyn_callees', action='store_true')
     parser.set_defaults(parse_dyn_callees=False)
+
+    parser.add_argument('-s', '--generate_summary', dest='generate_summary', action='store_true')
+    parser.set_defaults(generate_summary=False)
+    
     args = parser.parse_args()
     print("Parallel execution id is: " + str(args.pa_id))
     print("Optional starting instruction is: " + str(args.starting_insn))
@@ -2576,7 +2581,29 @@ if __name__ == '__main__':
     else:
         dd = DynamicDependence(starting_events, program, program_args, program_path, starting_insn_to_weight=starting_insn_to_weight)
         dd.prepare_to_build_dynamic_dependencies(limit)
-        dg = dd.build_dynamic_dependencies(0x12be1d0, args.pa_id)
-        #for event in starting_events:
-        #    dg = dd.build_dynamic_dependencies(event[1] if args.starting_insn is None else int(args.starting_insn, 16), args.pa_id)
-    print("took: " + str(time.time() - start))
+
+        dgs = {}
+        for event in starting_events:
+            starting_insn = event[1] if args.starting_insn is None else int(args.starting_insn, 16)
+            dg = dd.build_dynamic_dependencies(starting_insn, args.pa_id)
+            dgs[starting_insn] = dg
+
+        if args.generate_summary is True:
+            print("[dg] Generating summaries")
+            for starting_insn in dgs:
+                dg = dgs[starting_insn]
+                summary = {}
+                for n in dg.dynamic_nodes.values():
+                    insn = n.static_node.insn
+                    s = summary.get(insn, None)
+                    if s == None:
+                        s = set()
+                        summary[insn] = s
+                    for succe in itertools.chain(n.cf_succes, n.df_succes):
+                       s.add(succe.static_node.insn) 
+                result_file = os.path.join(curr_dir, 'cache', program, hex(starting_insn) + "_summary")
+                json_summary = {}
+                for insn in summary:
+                    json_summary[insn] = list(summary[insn])
+                with open(result_file, 'w') as f:
+                    json.dump(json_summary, f, indent=4, ensure_ascii=False)
