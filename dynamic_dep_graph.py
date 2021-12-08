@@ -253,7 +253,7 @@ class DynamicNode(JSONEncoder):
                         continue
                     print("Unhandled bit op: " + str(bit_op.operation))
                     print(self.static_node)
-                    raise Exception
+                    #raise Exception
                 if self.load_bit_mask is None:
                     self.load_bit_mask = load_bit_mask
                 else:
@@ -2553,6 +2553,7 @@ def verify_0x409418_result(dg):
     #    json.dump(predes, f, indent=4, ensure_ascii=False)
 
 if __name__ == '__main__':
+    start = time.time()
     parser = argparse.ArgumentParser()
     parser.add_argument('--parallelize_id', dest='pa_id', type=int)
     parser.add_argument('--starting_instruction', dest='starting_insn')
@@ -2575,5 +2576,7 @@ if __name__ == '__main__':
     else:
         dd = DynamicDependence(starting_events, program, program_args, program_path, starting_insn_to_weight=starting_insn_to_weight)
         dd.prepare_to_build_dynamic_dependencies(limit)
-        for event in starting_events:
-            dg = dd.build_dynamic_dependencies(event[1] if args.starting_insn is None else int(args.starting_insn, 16), args.pa_id)
+        dg = dd.build_dynamic_dependencies(0x12be1d0, args.pa_id)
+        #for event in starting_events:
+        #    dg = dd.build_dynamic_dependencies(event[1] if args.starting_insn is None else int(args.starting_insn, 16), args.pa_id)
+    print("took: " + str(time.time() - start))
