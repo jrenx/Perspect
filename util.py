@@ -292,6 +292,20 @@ def parse_relation_analysis_port():
 
     return port
 
+def parse_other_insn_trace():
+    other_key = None
+
+    with open("relation_analysis.config", "r") as f:
+        for l in f.readlines():
+            segs = l.split("=")
+            if segs[0] == "other_key":
+                other_key = segs[1].strip()
+    other_trace = other_key + "_instruction_trace.out"
+    other_trace = other_trace[1:]
+    print("Other trace is: " + str(other_trace))
+
+    return other_trace
+
 
 if __name__ == '__main__':
     #parse_inputs()
