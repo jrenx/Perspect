@@ -2,6 +2,7 @@ import sys
 import os
 from relations import *
 from util import *
+from ra_util import *
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 
 def parse(f):
@@ -10,11 +11,61 @@ def parse(f):
     #print(simple_relation_groups)
     return simple_relation_groups
 
-def compare_relation_groups(f1, f2):
+def compare_relation_pair(left, right, r1, r2, \
+        summary1, summary2, counts1, counts2, insn_to_insn):
+    if len(summary1) == 0 or len(summary2) == 0:
+        return True
+    print("DEBUG insns: " + hex(r1.insn) + " " + hex(r2.insn))
+    c1 = counts1.get(r1.insn, -1)
+    c2 = counts2.get(r2.insn, -1)
+    print("DEBUG counts: " + str(c1) + " " + str(c2))
+    diff = abs(c1/c2-1)*100 
+    print("DEBUG diff: " + str(diff))
+    if (c1 + c2) <= 10:
+        if diff > 50:
+            return True
+    else:
+        if diff > 25:
+            return True
+    return False
+    succes1 = summary1[r1.insn]
+    succes2 = summary2[r2.insn]
+    # check that they have the same set of successors
+    # then for each that match check that the counts are similar 
+    # put everything in quad to count then repeat the comparison
+    print("DEBUG succes: " + str(len(succes1)) + " " + str(len(succes2)))
+    #if len(succes1) != len(succes2):
+    #    return True
+
+    for succe1 in succes1:
+        succe2 = insn_to_insn.get(succe1, None)
+        if succe2 is None:
+            print(hex(succe1) + " has no matching insn")
+            continue
+            #return True
+        if succe2 not in succes2:
+            print(hex(succe2) + " not in the other set")
+            #return True
+            continue
+
+        c1 = counts1.get(succe1, -1)
+        c2 = counts2.get(succe2, -1)
+        diff = abs(c1/c2-1)*100 
+        print("DEBUG sub diff: " + str(diff))
+        if diff > 25:
+            return True
+    return False
+ 
+def compare_relation_groups(f1, f2, tf1, tf2, d1):
     rs1 = parse(f1)
     #print(rs1)
     rs2 = parse(f2)
     #print(rs2)
+
+    nc1 = load_node_info(tf1)
+    print("node_count_1: " + str(nc1))
+    nc2 = load_node_info(tf2)
+    print("node_count_2: " + str(nc2))
     
     diff = []
     for rg in set(rs1.relations_map.values()):
@@ -51,17 +102,37 @@ def compare_relation_groups(f1, f2):
         print()
         print(str(p[0]) + " " + str(p[1]) + " " + str(p[2]) + " " + str(p[3]))
         print()
-        compare_relations(p[0], p[1], p[2], p[3])
+        compare_relations(p[0], p[1], p[2], p[3], nc1, nc2, d1)
         print()
         print(str(p[0]) + " " + str(p[1]) + " " + str(p[2]) + " " + str(p[3]))
         print()
         print("========================================")
     return sorted_diff
 
-def compare_relations(parent_d, parent_key, left, right):
+def compare_relations(parent_d, parent_key, left, right, left_counts, right_counts, d1):
     if left is None or right is None:
         print("[warn] One relation group is None")
         return
+    left_summary_file = os.path.join(d1, hex(left.insn) + "_summary")
+    print(left_summary_file)
+    left_summary = {}
+    if os.path.exists(left_summary_file):
+        with open(left_summary_file, 'r') as f:
+            in_result = json.load(f)
+            for key in in_result: left_summary[int(key)] = set(in_result[key])
+    print("left_summary: " + str(left_summary))
+
+    right_summary_file = os.path.join(d1, hex(right.insn) + "_summary")
+    print(right_summary_file)
+    right_summary = {}
+    if os.path.exists(right_summary_file):
+        with open(right_summary_file, 'r') as f:
+            in_result = json.load(f)
+            for key in in_result: right_summary[int(key)] = set(in_result[key])
+    print("right_summary: " + str(right_summary))
+
+    insn_to_insn = {}
+
     max_timestamp = 0
     max_weight = 0
     diff = []
@@ -83,7 +154,7 @@ def compare_relations(parent_d, parent_key, left, right):
                 print("[ra] Contribution is too low, ignore the relations")
                 continue
             if r.duplicate is True:
-                print("[ra] Relation is too duplicate, ignore...")
+                print("[ra] Relation is duplicate, ignore...")
                 continue
             left_over_left[prede[0] + "_" + str(prede[1])] = (r.weight.perc_contrib, r.timestamp, r, None)
             #diff.append((r.weight.perc_contrib, r.timestamp, r, None))
@@ -105,6 +176,7 @@ def compare_relations(parent_d, parent_key, left, right):
         else:
             pair = val
         r2 = pair[0]
+        insn_to_insn[r.insn] = r2.insn
         if r.relaxed_equals(r2):
             continue
         avg_contrib = (r2.weight.perc_contrib + r.weight.perc_contrib)/2
@@ -156,6 +228,7 @@ def compare_relations(parent_d, parent_key, left, right):
     max_timestamp = max(max_timestamp, 1)
     max_weight = max(max_weight, 1)
 
+    print("insn_to_insn: " + str(insn_to_insn))
     weighted_diff = []
     for quad in diff:
         weight = quad[0]
@@ -164,13 +237,41 @@ def compare_relations(parent_d, parent_key, left, right):
         r_right = quad[3]
         weighted_diff.append((weight/max_weight*100, avg_timestamp/max_timestamp*100, weight, avg_timestamp, r_left, r_right))
 
+    included_diff = []
     sorted_diff = sorted(weighted_diff, key=lambda e: ((e[1] + e[0])/2))
+    #rank = len(sorted_diff) + 1
     for p in sorted_diff:
+        #rank = rank - 1
         print("-----------------------------------------")
         print(str(p[0]) + " " + str(p[1]))
         print(str(p[2]) + " " + str(p[3]))
         print(str(p[4]))
         print(str(p[5]))
+    
+        r_left = p[4]
+        r_right = p[5]
+        include = True
+        if r_left is not None and r_right is not None:
+            include = compare_relation_pair(left, right, r_left, r_right, left_summary, right_summary, left_counts, right_counts, insn_to_insn)
+        if not include:
+            print("NO RANK")
+            continue
+        print("HAS RANK")
+        #print("rank: " + str(rank))
+        included_diff.append(p)
+
+
+    rank = len(included_diff) + 1
+    for p in included_diff:
+        rank = rank - 1
+        print("-----------------------------------------")
+        print("rank: " + str(rank))
+        print(str(p[0]) + " " + str(p[1]))
+        print(str(p[2]) + " " + str(p[3]))
+        print(str(p[4]))
+        print(str(p[5]))
+    
+
 
 if __name__ == "__main__":
     #f1 = sys.argv[1]
@@ -185,8 +286,11 @@ if __name__ == "__main__":
     cache_dir2 = os.path.join(curr_dir, "cache", other_program)
     #cache_dir2 = "cache/mongod_4.0.13"
 
-    file1 = "rgroups_simple_" + build_key(starting_events) + ".json"
+    key = build_key(starting_events)
+    file1 = "rgroups_simple_" + key + ".json"
     file2 = other_relations_file
+    trace_file1 = key + "_instruction_trace.out.count"
+    trace_file2 = parse_other_insn_trace() + ".count"
 
     d1 = os.path.join(dir1, cache_dir1)
     d2 = os.path.join(dir2, cache_dir2)
@@ -195,4 +299,13 @@ if __name__ == "__main__":
     f2 = os.path.join(dir2, cache_dir2, file2)
     f12 = os.path.join(dir2, cache_dir1, file2)
 
-    compare_relation_groups(f1, f12)
+    tf1 = os.path.join(dir1, "pin", trace_file1)
+    tf12 = os.path.join(dir1, "pin", trace_file2)
+
+    print(f1)
+    print(f12)
+
+    print(tf1)
+    print(tf12)
+
+    compare_relation_groups(f1, f12, tf1, tf12, d1)
