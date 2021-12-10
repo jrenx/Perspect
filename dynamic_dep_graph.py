@@ -2581,16 +2581,12 @@ if __name__ == '__main__':
         dd = DynamicDependence(starting_events, program, program_args, program_path, starting_insn_to_weight=starting_insn_to_weight)
         dd.prepare_to_build_dynamic_dependencies(limit)
 
-        dgs = {}
         for event in starting_events:
             starting_insn = event[1] if args.starting_insn is None else int(args.starting_insn, 16)
             dg = dd.build_dynamic_dependencies(starting_insn, args.pa_id)
-            dgs[starting_insn] = dg
 
-        if args.generate_summary is True:
-            print("[dg] Generating summaries")
-            for starting_insn in dgs:
-                dg = dgs[starting_insn]
+            if args.generate_summary is True:
+                print("[dg] Generating summaries")
                 summary = {}
                 for n in dg.dynamic_nodes.values():
                     insn = n.static_node.insn
