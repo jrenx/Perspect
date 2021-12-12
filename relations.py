@@ -198,7 +198,7 @@ class Relation:
     def relaxed_equals(self, other):
         if not isinstance(other, Relation):
             return False
-        diff = abs(self.weight.perc_contrib == other.weight.perc_contrib)/self.weight.perc_contrib
+        diff = abs(self.weight.perc_contrib - other.weight.perc_contrib)/self.weight.perc_contrib
         return diff < 0.1 and \
                self.weight.corr == other.weight.corr and \
                self.forward.relaxed_equals(other.forward) and \
