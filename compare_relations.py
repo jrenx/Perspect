@@ -122,7 +122,7 @@ def compare_relations(parent_d, parent_key, left, right, left_counts, right_coun
             for key in in_result: left_summary[int(key)] = set(in_result[key])
     print("left_summary: " + str(left_summary))
 
-    right_summary_file = os.path.join(d1, hex(right.insn) + "_summary")
+    right_summary_file = os.path.join(d1, "_" + hex(right.insn) + "_summary")
     print(right_summary_file)
     right_summary = {}
     if os.path.exists(right_summary_file):
