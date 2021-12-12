@@ -240,6 +240,8 @@ def compare_relations(parent_d, parent_key, left, right, left_counts, right_coun
     included_diff = []
     sorted_diff = sorted(weighted_diff, key=lambda e: ((e[1] + e[0])/2))
     #rank = len(sorted_diff) + 1
+    left_seen = []
+    right_seen = []
     for p in sorted_diff:
         #rank = rank - 1
         print("-----------------------------------------")
@@ -253,6 +255,22 @@ def compare_relations(parent_d, parent_key, left, right, left_counts, right_coun
         include = True
         if r_left is not None and r_right is not None:
             include = compare_relation_pair(left, right, r_left, r_right, left_summary, right_summary, left_counts, right_counts, insn_to_insn)
+        elif r_left is not None:
+            print("only has r left: " + str(len(left_seen)))
+            for seen in left_seen:
+                if r_left.relaxed_equals(seen):
+                    include = False
+                    break
+            if include is True:
+                left_seen.append(r_left)
+        elif r_right is not None:
+            print("only has r right: " + str(len(right_seen)))
+            for seen in right_seen:
+                if r_right.relaxed_equals(seen):
+                    include = False
+                    break
+            if include is True:
+                right_seen.append(r_right)
         if not include:
             print("NO RANK")
             continue
