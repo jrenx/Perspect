@@ -51,6 +51,17 @@ class Invariance:
             return True
         return False
 
+    def difference(self, other):
+        if isinstance(other, Invariance):
+            return self.ratio - other.ratio
+        elif isinstance(other, Proportion):
+            return self.ratio - other.mu
+        else:
+            raise Exception
+
+    def magnitude(self):
+        return self.ratio
+
     def __str__(self):
         s = "INVARIANT with ratio: " + str(self.ratio)
         if self.is_conditional is True:
@@ -138,6 +149,17 @@ class Proportion:
         if result.pvalue > 0.95:
             return True
         return False
+
+    def difference(self, other):
+        if isinstance(other, Invariance):
+            return self.mu - other.ratio
+        elif isinstance(other, Proportion):
+            return self.mu - other.mu
+        else:
+            raise Exception
+
+    def magnitude(self):
+        return self.mu
 
     def __str__(self):
         s = "VARIABLE "
