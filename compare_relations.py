@@ -11,7 +11,8 @@ def parse(f):
     #print(simple_relation_groups)
     return simple_relation_groups
 
-def compare_relation_pair(left, right, r1, r2, \
+''' comparing the absolute count of two relations, this is a heuristic '''
+def compare_absolute_count(left, right, r1, r2, \
         summary1, summary2, counts1, counts2, insn_to_insn):
     if len(summary1) == 0 or len(summary2) == 0:
         return True
@@ -21,6 +22,8 @@ def compare_relation_pair(left, right, r1, r2, \
     print("DEBUG counts: " + str(c1) + " " + str(c2))
     diff = abs(c1/c2-1)*100 
     print("DEBUG diff: " + str(diff))
+    ''' if both counts are small, tolerate a higher difference of 50% '''
+    ''' otherwise, only tolerate a difference of 25% '''
     if (c1 + c2) <= 10:
         if diff > 50:
             return True
@@ -28,11 +31,12 @@ def compare_relation_pair(left, right, r1, r2, \
         if diff > 25:
             return True
     return False
+    # rest of the logic is ignored for now
     succes1 = summary1[r1.insn]
     succes2 = summary2[r2.insn]
-    # check that they have the same set of successors
-    # then for each that match check that the counts are similar 
-    # put everything in quad to count then repeat the comparison
+    ''' check that they have the same set of successors '''
+    ''' then for each that match check that the counts are similar '''
+    ''' put everything in quad to count then repeat the comparison '''
     print("DEBUG succes: " + str(len(succes1)) + " " + str(len(succes2)))
     #if len(succes1) != len(succes2):
     #    return True
@@ -68,6 +72,7 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1):
     print("node_count_2: " + str(nc2))
     
     diff = []
+    ''' find matching relation group from the other execution '''
     for rg in set(rs1.relations_map.values()):
         file, line, index, total_count = Indices.parse_index_quad(rg.index_quad)
         key = rs2.indices.get_indices2(file, line, total_count, index)
@@ -76,10 +81,8 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1):
             #print(str(rg.index_quad) + " not found in other set of relations.")
             #continue
             d = rg.group_weight
-            #key = rg.index_quad
             key = Indices.build_key_from_index_quad(rg.index_quad)
         else:
-            #d = abs(rs1[key][0] - rs2[key][0])
             right = rs2.relations_map[key]
             d = abs(rg.group_weight - right.group_weight)
         d = round(d)
@@ -94,6 +97,9 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1):
             d = round(d)
             #diff.append((d, rg.index_quad, None, rg))
             diff.append((d, Indices.build_key_from_index_quad(rg.index_quad), None, rg))
+
+    ''' sort by difference in the base weight of the relation groups '''
+    ''' then compare relations within each group '''
     #print(diff)
     sorted_diff = sorted(diff, key=lambda e: (e[0], e[1]))
     #print(sorted_diff)
@@ -107,6 +113,64 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1):
         print(str(p[0]) + " " + str(p[1]) + " " + str(p[2]) + " " + str(p[3]))
         print()
         print("========================================")
+    return sorted_diff
+
+def sort_relations_complex(diff, max_weight, max_timestamp):
+    # assume left is slow, right is fast
+    #
+    # forward if increased, calculate the increased difference,
+    # times the difference with the total wieght of the slow run to get the impact
+    # ignore when forward decreased
+    #
+    # for backward, for now do not consider the magnitued and
+    # only consider if the % contrib of the relation decreased
+    # (if consider magnitude: backward if decreased, include all those that do not have the same backward count,
+    # or those that dont have the backward event at all
+    # ignore when backward is increased, should not be a negative event then)
+    #
+    # then take the union(max for now) of the two
+    # then put into 10 buckets, and sort within each
+    weighted_diff = []
+    for quad in diff:
+        weight = quad[0]
+        avg_timestamp = quad[1]
+
+        r_left = quad[2]
+        r_right = quad[3]
+
+        if r_left is not None and r_right is not None:
+            forward_impact = r_left.forward.difference(r_right.forward)
+            if forward_impact > 0:
+                forward_impact = forward_impact/r_left.forward.magnitude() * r_left.weight.perc_contrib
+            else:
+                forward_impact = 0
+
+            backward_impact = r_left.weight.perc_contrib - r_right.weight.perc_contrib
+            if backward_impact < 0:
+                backward_impact = abs(backward_impact)
+            else:
+                backward_impact = 0
+            impact = max(forward_impact, backward_impact)
+        else:
+            impact = weight / max_weight * 100
+
+        weighted_diff.append(
+            (impact, avg_timestamp / max_timestamp * 100, weight, avg_timestamp, r_left, r_right))
+
+    sorted_diff = sorted(weighted_diff, key=lambda e: ((e[1] + e[0]) / 2))
+    return sorted_diff
+
+def sort_relations_simple(diff, max_weight, max_timestamp):
+    weighted_diff = []
+    for quad in diff:
+        weight = quad[0]
+        avg_timestamp = quad[1]
+        r_left = quad[2]
+        r_right = quad[3]
+        weighted_diff.append(
+            (weight / max_weight * 100, avg_timestamp / max_timestamp * 100, weight, avg_timestamp, r_left, r_right))
+
+    sorted_diff = sorted(weighted_diff, key=lambda e: ((e[1] + e[0]) / 2))
     return sorted_diff
 
 def compare_relations(parent_d, parent_key, left, right, left_counts, right_counts, d1):
@@ -153,8 +217,11 @@ def compare_relations(parent_d, parent_key, left, right, left_counts, right_coun
             left_over_left[prede[0] + "_" + str(prede[1])] = (r.weight.perc_contrib, r.timestamp, r, None)
             #diff.append((r.weight.perc_contrib, r.timestamp, r, None))
             continue
+
+        ''' Find the matching relation from the right hand side relation group '''
         val = right.relations_map.get(key) #TODO
         if isinstance(val, dict):
+            # when cannot find a precise match, match on ratio
             our_ratio = (index if index is not None else 0)/ max(total_count if total_count is not None else 1, 1)
             min_diff_ratio = 1
             for their_ratio in val:
@@ -171,12 +238,18 @@ def compare_relations(parent_d, parent_key, left, right, left_counts, right_coun
             pair = val
         r2 = pair[0]
         insn_to_insn[r.insn] = r2.insn
+
+        ''' If the two relations are roughly equal, ignore '''
         if r.relaxed_equals(r2):
             continue
+
+        ''' If average contribution of the pair of relations are small, ignore '''
         avg_contrib = (r2.weight.perc_contrib + r.weight.perc_contrib)/2
         if avg_contrib < 5:
             print("[ra] Average contribution is too low, ignore the relations")
             continue
+
+        ''' If average contribution of the pair of relations are small, ignore '''
         d = abs(r2.weight.perc_contrib - r.weight.perc_contrib) #TODO diff by contribution
         avg_timestamp = (r2.timestamp + r.timestamp)/2
         #if d < 5:
@@ -184,6 +257,9 @@ def compare_relations(parent_d, parent_key, left, right, left_counts, right_coun
         diff.append((d, avg_timestamp, r, r2))
         max_timestamp = max(max_timestamp, avg_timestamp)
         max_weight = max(max_weight, d)
+
+    ''' Go through relations from the right hand side relation groups '''
+    ''' that are not matched to a relation from the left hand side '''
     for pair in right.relations:
         r = pair[0]
         prede = pair[1]
@@ -194,10 +270,12 @@ def compare_relations(parent_d, parent_key, left, right, left_counts, right_coun
                 print("[ra] Contribution is too low, ignore the relations")
                 continue
             if r.duplicate is True:
-                print("[ra] Relation is too duplicate, ignore...")
+                print("[ra] Relation is duplicate, ignore...")
                 continue
             left_over_right[prede[0] + "_" + str(prede[1])] = (r.weight.perc_contrib, r.timestamp, None, r)
             #diff.append((r.weight.perc_contrib, r.timestamp, None, r))
+
+    ''' this is just to calculate the max timestamp and weight '''
     for key_short in left_over_left:
         triple_left = left_over_left[key_short]
         r = triple_left[2]
@@ -220,16 +298,10 @@ def compare_relations(parent_d, parent_key, left, right, left_counts, right_coun
     max_weight = max(max_weight, 1)
 
     print("insn_to_insn: " + str(insn_to_insn))
-    weighted_diff = []
-    for quad in diff:
-        weight = quad[0]
-        avg_timestamp = quad[1]
-        r_left = quad[2]
-        r_right = quad[3]
-        weighted_diff.append((weight/max_weight*100, avg_timestamp/max_timestamp*100, weight, avg_timestamp, r_left, r_right))
 
+    #sorted_diff = sort_relations_simple(diff, max_weight, max_timestamp)
+    sorted_diff = sort_relations_complex(diff, max_weight, max_timestamp)
     included_diff = []
-    sorted_diff = sorted(weighted_diff, key=lambda e: ((e[1] + e[0])/2))
     #rank = len(sorted_diff) + 1
     left_seen = []
     right_seen = []
@@ -245,7 +317,7 @@ def compare_relations(parent_d, parent_key, left, right, left_counts, right_coun
         r_right = p[5]
         include = True
         if r_left is not None and r_right is not None:
-            include = compare_relation_pair(left, right, r_left, r_right, left_summary, right_summary, left_counts, right_counts, insn_to_insn)
+            include = compare_absolute_count(left, right, r_left, r_right, left_summary, right_summary, left_counts, right_counts, insn_to_insn)
         elif r_left is not None:
             print("only has r left: " + str(len(left_seen)))
             for seen in left_seen:
@@ -269,7 +341,8 @@ def compare_relations(parent_d, parent_key, left, right, left_counts, right_coun
         #print("rank: " + str(rank))
         included_diff.append(p)
 
-
+    print("===============================================")
+    print("===============================================")
     rank = len(included_diff) + 1
     for p in included_diff:
         rank = rank - 1
