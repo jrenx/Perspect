@@ -3,14 +3,13 @@
 #CXX=cl
 CXX=g++
 CC=gcc
-all: count_node preprocess preprocess_parallel call_site_parser
+all: count_node preprocess preprocess_parallel call_site_parser multiple_preprocess
 
 count_node: count_node.o cJSON.o
 	$(CXX) count_node.o cJSON.o -L$(DYNINST_LIB) -lboost_system -ltbbmalloc_proxy -lcommon -lstdc++ -lm\
 	       	-o count_node -std=c++11
 count_node.o: count_node.cpp
 	$(CXX) -g -c $(CFLAGS) -I$(DYNINST_INCLUDE) count_node.cpp -std=c++11 -O2
-
 
 preprocess: preprocess.o cJSON.o
 	$(CXX) preprocess.o cJSON.o -L$(DYNINST_LIB) -lboost_system -ltbbmalloc_proxy -lcommon -lstdc++ -lm\
@@ -31,6 +30,11 @@ call_site_parser: call_site_parser.o cJSON.o
 call_site_parser.o: call_site_parser.cpp
 	$(CXX) -g -c $(CFLAGS) -I$(DYNINST_INCLUDE) call_site_parser.cpp -std=c++11 -O2
 
+multiple_preprocess: multiple_preprocess.o cJSON.o
+	$(CXX) multiple_preprocess.o cJSON.o -L$(DYNINST_LIB) -lboost_system -ltbbmalloc_proxy -lcommon -lstdc++ -lm\
+	       	-o multiple_preprocess -std=c++11
+multiple_preprocess.o: multiple_preprocess.cpp
+	$(CXX) -g -c $(CFLAGS) -I$(DYNINST_INCLUDE) multiple_preprocess.cpp -std=c++11 -O2
 
 #preprocess: preprocess.o cJSON.o
 #	$(CXX) preprocess.o cJSON.o -L$(DYNINST_LIB) -ldyninstAPI -lboost_system -ltbbmalloc_proxy -linstructionAPI -lparseAPI -lsymtabAPI -lcommon -lstdc++ -lm\
