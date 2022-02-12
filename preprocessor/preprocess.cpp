@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <string.h>
-
+#define PARSE_MULTIPLE
 #include "parser.cpp"
 
 using namespace std;
