@@ -595,6 +595,16 @@ public:
     }
     ofstream osti;
     osti.open(outTraceThreadIdFile.c_str(), ios::out);
+#ifdef PARSE_MULTIPLE
+    string outTraceStartCodesFile(traceFile);
+    outTraceStartCodesFile += ".starting_uids";
+    if (pa_id >= 0) {
+      outTraceStartCodesFile += "_";
+      outTraceStartCodesFile += std::to_string(pa_id);
+    }
+    ofstream ossc;
+    ossc.open(outTraceStartCodesFile.c_str(), ios::out);
+#endif
 #endif
     long nodeCount = 0;
     long prevNodeCount = 0;
@@ -662,20 +672,30 @@ public:
       //if (code == 2 || code == 3) {
       //  cout << "HERE " <<uid << endl;
       //}
-
+      bool parseStartCode = false;
 #ifndef COUNT_ONLY
       bool parse = false;
-      if (CodeOfStartInsns[code] || PendingRemoteDefCodes[code] || ctxt->PendingCodes[code]) {
+
+      if (CodeOfStartInsns[code]) {
         parse = true;
 #ifdef SAMPLE
-        if(CodeOfStartInsns[code] || code == 7 || code == 6 || code == 32 || code == 25 || code == 33 || code == 34 || code == 37) {
-          long startingCodeOcurrences = OccurrencesPerStartingCode[code];
-          if (startingCodeOcurrences % SAMPLE_THRESHOLD != 0) {
-            parse = false;
-	        }
-	        OccurrencesPerStartingCode[code] = startingCodeOcurrences + 1;
-	      }
-#endif	
+        long startingCodeOcurrences = OccurrencesPerStartingCode[code];
+        if (startingCodeOcurrences % SAMPLE_THRESHOLD != 0) {
+          parse = false;
+        }
+        OccurrencesPerStartingCode[code] = startingCodeOcurrences + 1;
+#endif
+      }
+
+#ifdef PARSE_MULTIPLE
+      if (parse) {
+        ossc.write((char *) &uid, sizeof(long));
+        parseStartCode = true;
+      }
+#endif
+
+      if (PendingRemoteDefCodes[code] || ctxt->PendingCodes[code]) {
+        parse = true;
       }
       if (OccurrencesPerCode[code] > LARGE_THRESOLD) parse = false;
       if (!CodesOfCFNodes[code] && OccurrencesPerCode[code] > LARGE_THRESOLD1) parse = false;
@@ -860,10 +880,14 @@ public:
         AverageTimeStampPerCode[code] = avg;
       }
 #endif
-      
-      nodeCount ++;
-#ifndef COUNT_ONLY
 
+      nodeCount++;
+#ifdef COUNT_ONLY
+      goto HANDLE_BIT_VAR;
+#endif
+#ifdef PARSE_MULTIPLE
+      if (!parseStartCode) goto HANDLE_BIT_VAR;
+#endif
       if (ctxt->PendingCfPredeCodes[code]) {
         std::vector<unsigned short> toRemove;
         for(auto it = ctxt->CfPredeCodeToSucceNodes[code].begin(); it != ctxt->CfPredeCodeToSucceNodes[code].end(); it++) {
@@ -937,7 +961,8 @@ public:
           ctxt->PendingCodes[currCode] = true;
         }
       }
-#endif
+
+HANDLE_BIT_VAR:
       ctxt->CodeWithLaterBitOpsExecuted[code] = true;
       continue;
 
@@ -955,6 +980,11 @@ public:
         }
       }
     }
+
+std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
+std::cout << "Parsing took = " << std::chrono::duration_cast<std::chrono::seconds>(t4 - t3).count() << "[s]"
+          << std::endl;
+
 #ifndef COUNT_ONLY
     // print a placeholder thread id in the end
     // the smallest legal thread id is 1 (determined by my PIN logic)
@@ -963,10 +993,10 @@ public:
     os.close();
     osti.close();
 #endif
-    std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
-    std::cout << "Parsing took = " << std::chrono::duration_cast<std::chrono::seconds>(t4 - t3).count() << "[s]" << std::endl;
-
-#ifndef COUNT_ONLY    
+#ifdef PARSE_MULTIPLE
+    ossc.close();
+#endif
+#ifndef COUNT_ONLY
     string outLargeFile(traceFile);
     outLargeFile += ".large";
     if (pa_id >= 0) {
