@@ -661,11 +661,15 @@ public:
       //  cout << "HERE " <<uid << endl;
       //}
       bool parseStartCode = false;
-#ifndef COUNT_ONLY
+      long startingCodeOcurrences = -1;
+#ifdef COUNT_ONLY
+      bool parse = true;
+#else
       bool parse = false;
 
       if (CodeOfStartInsns[code]) {
         parse = true;
+<<<<<<< HEAD
 #ifdef SAMPLE
         if(CodeOfStartInsns[code]) {
           long startingCodeOcurrences = OccurrencesPerStartingCode[code];
@@ -675,21 +679,23 @@ public:
 	        OccurrencesPerStartingCode[code] = startingCodeOcurrences + 1;
 	      }
 #endif	
+=======
+  #ifdef SAMPLE
+        startingCodeOcurrences = OccurrencesPerStartingCode[code];
+        if (startingCodeOcurrences % SAMPLE_THRESHOLD != 0) {
+          parse = false;
+        } else {
+          parseStartCode = true;
+        }
+        OccurrencesPerStartingCode[code] = startingCodeOcurrences + 1;
+  #endif
+>>>>>>> 101ae6f... [prede_rels] Fixes for e728031695655d60d66b8b1ae4b2a13d822bde69.
       }
-
-#ifdef PARSE_MULTIPLE
-      if (parse) {
-        ossc.write((char *) &uid, sizeof(long));
-        parseStartCode = true;
-      }
-#endif
 
       if (PendingRemoteDefCodes[code] || ctxt->PendingCodes[code]) {
         parse = true;
       }
       if (OccurrencesPerCode[code] > LARGE_THRESOLD) parse = false;
-#else
-      bool parse = true;
 #endif
 
       bool isBitOp = isBitOpCode[code];
@@ -855,6 +861,13 @@ public:
         if (DEBUG) cout << "Persisting5 " << code << endl;
         os.write((char*)&regValue, sizeof(long));
       }
+
+  #ifdef PARSE_MULTIPLE
+      if (parseStartCode) {
+        ossc.write((char *) &uid, sizeof(long));
+        if (DEBUG) cout << "DEBUG" << code << ": " << uid << endl;
+      }
+  #endif
 #endif
       //cout << "====" << nodeCount << "\n";
       //cout << "curr code" << code << " index: "<< i <<endl;
@@ -873,9 +886,6 @@ public:
       nodeCount++;
 #ifdef COUNT_ONLY
       goto HANDLE_BIT_VAR;
-#endif
-#ifdef PARSE_MULTIPLE
-      if (!parseStartCode) goto HANDLE_BIT_VAR;
 #endif
       if (ctxt->PendingCfPredeCodes[code]) {
         std::vector<unsigned short> toRemove;
@@ -911,6 +921,10 @@ public:
           if (!ctxt->PendingCfPredeCodes[removeCode]) ctxt->PendingCodes[removeCode] = false;
         }
       }
+
+#ifdef PARSE_MULTIPLE
+      if (!parseStartCode) goto HANDLE_BIT_VAR;
+#endif
 
       loadsMemory = sn->mem_load != NULL;
       if (sn->df_prede_codes.size() > 0) {
@@ -955,7 +969,14 @@ HANDLE_BIT_VAR:
       ctxt->CodeWithLaterBitOpsExecuted[code] = true;
       continue;
 
-      DONT_PARSE:
+DONT_PARSE:
+  #ifdef PARSE_MULTIPLE
+      if (parseStartCode) {
+        assert(startingCodeOcurrences != -1);
+        OccurrencesPerStartingCode[code] = startingCodeOcurrences;
+      }
+  #endif
+
       if (LaterBitOpCodeToCodes[code] != NULL) {
         ctxt->CodeWithLaterBitOpsExecuted[code] = false;
       }

@@ -481,7 +481,7 @@ class SimpleRelationGroup:
             assert(len(sorted_predes) == len(json_simple_relation_group["relations"]))
             for i in range(len(sorted_predes)):
                 index_quad = sorted_predes[i]
-                print(index_quad)
+                #print(index_quad)
                 if "??" in index_quad:
                     print("[ra/warn] no file or linenum found for insn: " + prede_insns[i] if prede_insns is not None else "")
                     continue
@@ -489,7 +489,7 @@ class SimpleRelationGroup:
                 file, line, index, total_count = Indices.parse_index_quad(index_quad)
 
                 weight = Weight.fromJSON(relation_data["weight"])
-                print(weight)
+                #print(weight)
                 relation = Relation(None, None, None, weight, None, lines=line, file=file)
                 if "timestamp" in relation_data: relation.timestamp = relation_data["timestamp"]
                 if "insn" in relation_data: relation.insn = relation_data["insn"]

@@ -169,6 +169,63 @@ def compare_relations(parent_d, parent_key, left, right):
         print(str(p[2]) + " " + str(p[3]))
         print(str(p[4]))
         print(str(p[5]))
+    
+        r_left = p[4]
+        r_right = p[5]
+        include = True
+        if r_left is not None and r_right is not None:
+            include = compare_absolute_count(left, right, r_left, r_right, left_summary, right_summary, left_counts, right_counts, insn_to_insn)
+        elif r_left is not None:
+            print("only has r left: " + str(len(left_seen)))
+            for seen in left_seen:
+                if r_left.relaxed_equals(seen):
+                    include = False
+                    break
+            if include is True:
+                left_seen.append(r_left)
+        elif r_right is not None:
+            print("only has r right: " + str(len(right_seen)))
+            for seen in right_seen:
+                if r_right.relaxed_equals(seen):
+                    include = False
+                    break
+            if include is True:
+                right_seen.append(r_right)
+        if not include:
+            print("NO RANK")
+            continue
+        print("HAS RANK")
+        #print("rank: " + str(rank))
+        included_diff.append(p)
+
+    print("===============================================")
+    print("===============================================")
+    insns_left = []
+    insns_right = []
+    rank = len(included_diff) + 1
+    for p in included_diff:
+        rank = rank - 1
+        print("-----------------------------------------")
+        print("rank: " + str(rank))
+        print(str(p[0]) + " " + str(p[1]))
+        print(str(p[2]) + " " + str(p[3]))
+        print(str(p[4]))
+        print(str(p[5]))
+        r_left = p[4]
+        r_right = p[5]
+        if r_left is not None:
+            insns_left.append(r_left.insn)
+        if r_right is not None:
+            insns_right.append(r_right.insn)
+    
+    with open('insns_left', 'a') as out:
+        for i in insns_left:
+            out.write(str(i) + "\n")
+
+    with open('insns_right', 'a') as out:
+        for i in insns_right:
+            out.write(str(i) + "\n")
+
 
 if __name__ == "__main__":
     #f1 = sys.argv[1]

@@ -264,4 +264,5 @@ if __name__ == "__main__":
                                   starting_insn_to_weight,
                                   other_indices_file=other_indices_file,
                                   other_relations_file=other_relations_file)
+    ra.cleanup()
     ra.analyze(args.use_cache)
