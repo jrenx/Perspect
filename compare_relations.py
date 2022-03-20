@@ -343,6 +343,8 @@ def compare_relations(parent_d, parent_key, left, right, left_counts, right_coun
 
     print("===============================================")
     print("===============================================")
+    insns_left = []
+    insns_right = []
     rank = len(included_diff) + 1
     for p in included_diff:
         rank = rank - 1
@@ -352,7 +354,20 @@ def compare_relations(parent_d, parent_key, left, right, left_counts, right_coun
         print(str(p[2]) + " " + str(p[3]))
         print(str(p[4]))
         print(str(p[5]))
+        r_left = p[4]
+        r_right = p[5]
+        if r_left is not None:
+            insns_left.append(r_left.insn)
+        if r_right is not None:
+            insns_right.append(r_right.insn)
     
+    with open('insns_left', 'a') as out:
+        for i in insns_left:
+            out.write(str(i) + "\n")
+
+    with open('insns_right', 'a') as out:
+        for i in insns_right:
+            out.write(str(i) + "\n")
 
 
 if __name__ == "__main__":
