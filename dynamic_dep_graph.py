@@ -826,7 +826,7 @@ class DynamicDependence:
         print("[TIME] Loading graph from json: ", str(time_record["load_json"] - time_record["start"]), flush=True)
         if len(insns) > 0:
             byte_seq, codes_to_ignore, thread_id_byte_seq, starting_uid_byte_seq = self.invoke_preparser(insns, curr_dir, pa_id=None, parse_multiple=True)
-
+            codes_to_ignore = set()
             #time_record["read_preparse"] = time.time()
             #print("[TIME] Loading preparsed trace took: ", str(time_record["read_preparse"] - time_record["preparse"]), flush=True)
 
@@ -858,7 +858,7 @@ class DynamicDependence:
                     copied_node = DynamicNode.semi_deepcopy(node)
                     curr_dynamic_graph.insert_node(insn, copied_node)
                     for prede in itertools.chain(node.cf_predes, node.df_predes):
-                        copied_prede = DynamicNode.semi_deepcopy(prede)
+                        copied_prede = curr_dynamic_graph.dynamic_nodes.get(prede.id, DynamicNode.semi_deepcopy(prede))
                         curr_dynamic_graph.insert_node(prede.static_node.insn, copied_prede)
 
             for insn in starting_insn_to_dynamic_graph.keys():
@@ -899,6 +899,7 @@ class DynamicDependence:
                 #print("[TIME] Reporting result took: ", str(time_record["report_result"] - time_record["trim_finish"]), flush=True)
 
                 curr_dynamic_graph.sanity_check()
+                curr_dynamic_graph.sanity_check1()
                 print("[TIME] finished Sanity check.")
                 #time_record["sanity_check"] = time.time()
                 #print("[TIME] Sanity check took: ", str(time_record["sanity_check"] - time_record["report_result"]), flush=True)
@@ -927,14 +928,12 @@ class DynamicDependence:
                 #time_record["propogate_weight"] = time.time()
                 #print("[TIME] Propogating weight took: ",
                 #      str(time_record["propogate_weight"] - time_record["reverse_postorder"]), flush=True)
-                
                 with open(result_file + "_" + hex(insn), 'w') as f:
                     json.dump(curr_dynamic_graph.toJSON(), f, indent=4, ensure_ascii=False)
                 print("[TIME] finished Saving graph in json.")
                 #time_record["save_curr_dynamic_graph_as_json"] = time.time()
                 #print("[TIME] Saving graph in json took: ",
                 #      str(time_record["save_curr_dynamic_graph_as_json"] - time_record["trim_finish"]), flush=True)
-
 
                 #if self.init_graph is None:
                 #    #pass
@@ -1514,17 +1513,18 @@ class DynamicDependence:
                 assert n2 in p.cf_succes
             print(str(cf_predes_ids1))
             print(str(cf_predes_ids2))
-            assert cf_predes_ids1 == cf_predes_ids2
+            assert cf_predes_ids1 == cf_predes_ids2, str(cf_predes_ids1) + " " + str(cf_predes_ids2)
 
             df_predes_ids1 = set()
             for p in n1.df_predes:
-                df_predes_id1.add(p.id)
+                df_predes_ids1.add(p.id)
 
             df_predes_ids2 = set()
             for p in n2.df_predes:
-                df_predes_id2.add(p.id)
+                df_predes_ids2.add(p.id)
                 assert n2 in p.df_succes
-            assert df_predes_ids1 == df_predes_ids2
+            assert df_predes_ids1 == df_predes_ids2, str(df_predes_ids1) + " " + str(df_predes_ids2)
+
 
 
 class ParsingContext:
@@ -1983,6 +1983,13 @@ class DynamicGraph:
             if node.static_node.insn in target_insns:
                 self.target_nodes.append(node)
         print("[dyn_dep] total number of target nodes: " + str(len(self.target_nodes)))
+
+    def sanity_check1(self):
+        for n in self.dynamic_nodes.values():
+            assert n in self.insn_to_dyn_nodes[n.static_node.insn]
+        for nodes in self.insn_to_dyn_nodes.values():
+            for n in nodes:
+                assert n == self.dynamic_nodes[n.id]
 
     def sanity_check(self):
         for n in self.dynamic_nodes.values():
