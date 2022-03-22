@@ -101,7 +101,7 @@ VOID record_reg(ADDRINT pc, ADDRINT reg)
     }
 
     prev_size = size;
-    // wnly log the tid after a thread context switch
+    // Only log the previous tid after a thread context switch
     pid_t tid = syscall(SYS_gettid);
     if (tid != curr_tid) {
 	if (curr_tid != -1) {
