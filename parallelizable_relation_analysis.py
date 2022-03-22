@@ -288,6 +288,7 @@ class ParallelizableRelationAnalysis:
         output_set_count_to_nodes = {} #for debugging
         for node in dgraph.insn_to_dyn_nodes[prede_node.insn]:
             output_set_count = node.output_set_count
+            assert output_set_count is not None, str(node)
             output_set_counts.add(output_set_count)
             output_set_count_list.append(output_set_count)
             if output_set_count not in output_set_count_to_nodes:
@@ -439,13 +440,12 @@ class ParallelizableRelationAnalysis:
     def one_pass(dgraph, starting_node, starting_weight, max_contrib, prog, \
                  indices_map=None, indices_map_inner=None, other_simple_relation_groups=None, node_avg_timestamps=None):
         a = time.time()
-        print("Starting forward and backward pass")
+        print("Starting forward and backward pass for starting insn: " + hex(starting_node.insn))
         wavefront = []
         #base_weight = len(dgraph.target_nodes)
         if starting_node.insn not in dgraph.insn_to_dyn_nodes:
             print("[ra] Node not found in the dynamic graph...")
             return wavefront, None
-
         # tests for forward invariance
         ################# Calculate base weight ######################
         ##############################################################
@@ -487,7 +487,6 @@ class ParallelizableRelationAnalysis:
             ParallelizableRelationAnalysis.do_backward_propogation(dgraph, starting_node)
             with open(dgraph.result_file, 'w') as f:
                 json.dump(dgraph.toJSON(), f, indent=4, ensure_ascii=False)
-
         ################### Calculate relations ######################
         ##############################################################
         rgroup = RelationGroup(starting_node, base_weight, prog)
