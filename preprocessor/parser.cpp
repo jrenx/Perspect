@@ -619,12 +619,17 @@ public:
     int regCount2;
 
     unsigned short *bitOps;
-    boost::unordered_map<u_int8_t, Context *> ctxtMap;
 #ifndef COUNT_ONLY
     // Because the parse is read in reverse by the python logic, make sure to always print a place holder of thread first.
     os.write((char*)&code, sizeof(unsigned short));
 #endif
-    Context *ctxt = new Context(CodeCount); // In order to be backward-compatible with single threaded traces.
+
+    boost::unordered_map<u_int8_t, Context *> ctxtMap;
+    // In order to be backward-compatible with single threaded traces.
+    // In single threaded case, this context will be used throughout,
+    // In multi-threaded case, this context will not be used,
+    //  and contexts are allocated based on the current thread.
+    Context *ctxt = new Context(CodeCount); 
     unsigned long i = length;
     for (; i > 0;) {
       regValue = 0;
@@ -634,38 +639,24 @@ public:
       assert(code <= CodeCount);
       assert(code >= 0);
       if (code == 0) {
-        i -= sizeof(u_int8_t);
-	// read all the thread ids printed in the beginning
-	if (nodeCount == 0) {
-          std::memcpy(&threadId, buffer + i, sizeof(u_int8_t));
-	  continue;
-	}
-
-        if (prevNodeCount == nodeCount) continue;
-#ifndef COUNT_ONLY    
-	if (prevNodeCount == 0) {
-          osti.write((char*)&threadId, sizeof(u_int8_t));
-	}
-#endif
-        prevNodeCount = nodeCount;
         u_int8_t prevThreadId = threadId;
+        i -= sizeof(u_int8_t);
         std::memcpy(&threadId, buffer + i, sizeof(u_int8_t));
-
-#ifndef COUNT_ONLY    
-        os.write((char*)&code, sizeof(unsigned short));
-        osti.write((char*)&threadId, sizeof(u_int8_t));
-#endif
-
-        // In order to be backward-compatible with single threaded traces,
-        // always make a context by default in the first place,
-        // only save the context to the map when we get to a new thread.
-        if (prevThreadId == 0) continue; // first thread seen
-        ctxtMap[prevThreadId] = ctxt;
         if (ctxtMap.find(threadId) == ctxtMap.end()) {
           ctxt = new Context(CodeCount);
+	  ctxtMap[threadId] = ctxt;
         } else {
           ctxt = ctxtMap[threadId];
         }
+
+        if (prevNodeCount == nodeCount) continue;
+        prevNodeCount = nodeCount;
+
+#ifndef COUNT_ONLY    
+	assert(prevThreadId != 0);
+        osti.write((char*)&prevThreadId, sizeof(u_int8_t));
+        os.write((char*)&code, sizeof(unsigned short));
+#endif
         continue;
       }
 
@@ -692,10 +683,23 @@ public:
   #endif
       }
 
+
+  #ifdef PARSE_MULTIPLE
+      bool parsePrede = false;
+  #endif
       if (PendingRemoteDefCodes[code] || ctxt->PendingCodes[code]) {
         parse = true;
+  #ifdef PARSE_MULTIPLE
+        parsePrede = true;
+  #endif
       }
       if (OccurrencesPerCode[code] > LARGE_THRESOLD) parse = false;
+  #ifdef PARSE_MULTIPLE
+      if (parse == false && parsePrede == true) {
+        parse = true;
+	parseStartCode = false;
+      }
+  #endif
 #endif
 
       bool isBitOp = isBitOpCode[code];
@@ -998,8 +1002,8 @@ std::cout << "Parsing took = " << std::chrono::duration_cast<std::chrono::second
 #ifndef COUNT_ONLY
     // print a placeholder thread id in the end
     // the smallest legal thread id is 1 (determined by my PIN logic)
-    threadId = 0;
-    osti.write((char*)&threadId, sizeof(u_int8_t));
+    //threadId = 0;
+    if (threadId != 0) osti.write((char*)&threadId, sizeof(u_int8_t));
     os.close();
     osti.close();
 #endif
