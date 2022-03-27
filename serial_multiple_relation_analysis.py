@@ -47,6 +47,9 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
 
         for insn in starting_insn_to_dynamic_graph.keys():
             dgraph = starting_insn_to_dynamic_graph[insn]
+            if len(dgraph.insn_to_dyn_nodes) == 0:
+                print("[ra/warn] dynamic graph starting with insn " + hex(insn) + " has zero nodes, skip!")
+                continue
             dynamic_node = next(iter(dgraph.insn_to_dyn_nodes[insn]))
             func = dynamic_node.static_node.function
             print("[ra] function is: " + str(func) + " insn is: " + hex(insn))
