@@ -855,7 +855,7 @@ class DynamicDependence:
                 if node.is_starting is True:
                     insn = node.static_node.insn
                     curr_dynamic_graph = starting_insn_to_dynamic_graph[insn]
-                    copied_node = DynamicNode.semi_deepcopy(node)
+                    copied_node = curr_dynamic_graph.dynamic_nodes.get(node.id, DynamicNode.semi_deepcopy(node))
                     curr_dynamic_graph.insert_node(insn, copied_node)
                     for prede in itertools.chain(node.cf_predes, node.df_predes):
                         copied_prede = curr_dynamic_graph.dynamic_nodes.get(prede.id, DynamicNode.semi_deepcopy(prede))
@@ -1989,7 +1989,7 @@ class DynamicGraph:
             assert n in self.insn_to_dyn_nodes[n.static_node.insn]
         for nodes in self.insn_to_dyn_nodes.values():
             for n in nodes:
-                assert n == self.dynamic_nodes[n.id]
+                assert n == self.dynamic_nodes[n.id], str(n.id)
 
     def sanity_check(self):
         for n in self.dynamic_nodes.values():
@@ -2870,6 +2870,7 @@ def verify_0x409418_result(dg):
 if __name__ == '__main__':
     #FIXME: dynamic graph logic will always reused already built dynamic graph, 
     # there is currently no option to rebuild forcefully
+    start = time.time()
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--parallelize_id', dest='pa_id', type=int)
     parser.add_argument('-i', '--starting_instruction', dest='starting_insn')
@@ -2945,3 +2946,5 @@ if __name__ == '__main__':
                 prede_insn = int(args.find_paths_to, 16)
                 dg.find_paths_to(prede_insn)
 
+    end = time.time()
+    print("[dyn_graph] Total time: " + str(end - start))

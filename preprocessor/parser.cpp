@@ -680,6 +680,8 @@ public:
           parseStartCode = true;
         }
         OccurrencesPerStartingCode[code] = startingCodeOcurrences + 1;
+  #else
+	parseStartCode = true;
   #endif
       }
 
@@ -976,10 +978,12 @@ HANDLE_BIT_VAR:
 
 DONT_PARSE:
   #ifdef PARSE_MULTIPLE
+    #ifdef SAMPLE
       if (parseStartCode) {
         assert(startingCodeOcurrences != -1);
         OccurrencesPerStartingCode[code] = startingCodeOcurrences;
       }
+    #endif
   #endif
 
       if (LaterBitOpCodeToCodes[code] != NULL) {
