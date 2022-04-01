@@ -2668,6 +2668,33 @@ class DynamicGraph:
             if done:
                 break
 
+    def find_paths_to(self, prede_insn):
+        path_count = 0
+        target_insns = set()
+        for target in self.target_nodes:
+            target_insns.add(target.static_node.insn)
+        for curr in self.insn_to_dyn_nodes[prede_insn]:
+            q = deque()
+            q.appendleft([curr, deque(), 0])
+            while len(q) > 0:
+                n, l, le = q.popleft()
+                while len(l) > le:
+                    l.pop()
+                l.append(n)
+                for s in itertools.chain(n.df_succes, n.cf_succes):
+                    if s.static_node.insn in target_insns:
+                        print("*****************************************")
+                        print("                PATH  # " + str(path_count))
+                        print("                length: " + str(len(l) + 1))
+                        for pn in l:
+                            print(pn)
+                        print(s)
+                        print("*****************************************")
+                        path_count += 1
+                        continue
+                    q.appendleft([s, l, len(l)])
+
+
 def print_path(curr_node, end_id):
     for p in curr_node.df_predes:#itertools.chain(curr_node.cf_predes, curr_node.df_predes):
         if p.id == end_id:
@@ -2841,6 +2868,8 @@ def verify_0x409418_result(dg):
     #    json.dump(predes, f, indent=4, ensure_ascii=False)
 
 if __name__ == '__main__':
+    #FIXME: dynamic graph logic will always reused already built dynamic graph, 
+    # there is currently no option to rebuild forcefully
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--parallelize_id', dest='pa_id', type=int)
     parser.add_argument('-i', '--starting_instruction', dest='starting_insn')
@@ -2858,6 +2887,8 @@ if __name__ == '__main__':
     parser.set_defaults(parse_dyn_callees=False)
     parser.add_argument('-s', '--generate_summary', dest='generate_summary', action='store_true')
     parser.set_defaults(generate_summary=False)
+
+    parser.add_argument('-f', '--find_paths_to', dest='find_paths_to')
     
     args = parser.parse_args()
     print("Parallel execution id is: " + str(args.pa_id))
@@ -2910,3 +2941,7 @@ if __name__ == '__main__':
                     json_summary[insn] = list(summary[insn])
                 with open(result_file, 'w') as f:
                     json.dump(json_summary, f, indent=4, ensure_ascii=False)
+            if args.find_paths_to is not None:
+                prede_insn = int(args.find_paths_to, 16)
+                dg.find_paths_to(prede_insn)
+
