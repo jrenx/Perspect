@@ -66,8 +66,12 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
             self.relation_groups.append(rgroup)
 
 
-        self.rgroup_file = os.path.join(curr_dir, 'cache', self.prog, "multiple_rgroups.json")
-        self.simple_rgroup_file = os.path.join(curr_dir, "cache", self.prog, "multiple_rgroups_simple_" + self.dd.key + ".json")
+        if parent_insn is None:
+            self.rgroup_file = os.path.join(curr_dir, 'cache', self.prog, "multiple_rgroups.json")
+            self.simple_rgroup_file = os.path.join(curr_dir, "cache", self.prog, "multiple_rgroups_simple_" + self.dd.key + ".json")
+        else:
+            self.rgroup_file = os.path.join(curr_dir, 'cache', self.prog, "multiple_context_rgroups.json")
+            self.simple_rgroup_file = os.path.join(curr_dir, "cache", self.prog, "multiple_context_rgroups_simple_" + self.dd.key + ".json")
 
         self.print_rgroups(self.relation_groups)
 
