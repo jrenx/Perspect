@@ -25,7 +25,7 @@ Weight_Threshold = 0
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 
 class SerialMultipleRelationAnalysis(RelationAnalysis):
-    def analyze(self, insns, use_cache=False):
+    def analyze(self, insns, use_cache=False, parent_insn=None):
         print(use_cache)
         a = time.time()
 
@@ -36,7 +36,10 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
         #        return
 
         try:
-            starting_insn_to_dynamic_graph = self.dd.build_multiple_dynamic_dependencies(insns)
+            if parent_insn is None:
+                starting_insn_to_dynamic_graph = self.dd.build_multiple_dynamic_dependencies(insns)
+            else:
+                starting_insn_to_dynamic_graph = self.dd.build_multiple_dynamic_dependencies_in_context(parent_insn, insns)
         except Exception as e:
             print("Caught exception in building multiple dynamic graphs.")
             print(str(e))
@@ -91,6 +94,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--use_cache', dest='use_cache', action='store_true')
     parser.add_argument('-if', '--multiple_insns_file', dest='multiple_insns_file', type=str)
+    parser.add_argument('-i', '--parent_instruction', dest='parent_insn')
     parser.set_defaults(use_cache=False)
     args = parser.parse_args()
 
@@ -104,4 +108,4 @@ if __name__ == "__main__":
     with open(args.multiple_insns_file, "r") as f:
         for l in f.readlines():
             multiple_insns.append(int(l.strip()))
-    ra.analyze(multiple_insns, args.use_cache)
+    ra.analyze(multiple_insns, args.use_cache, int(args.parent_insn, 16) if args.parent_insn is not None else None)
