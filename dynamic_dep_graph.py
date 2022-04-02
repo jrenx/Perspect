@@ -595,7 +595,7 @@ class DynamicDependence:
 
     # TODO, refactor into a more user friendly interface?
     def build_dynamic_dependencies(self, insn=None, pa_id=None):
-        print("Building dynamic graph, starting insn is: " + str(insn) + " pa_id " + str(pa_id))
+        print("Building dynamic graph, starting insn is: " + hex(insn) + " pa_id " + str(pa_id))
         file_name = 'dynamic_graph_result_' + self.key + "_" + (hex(insn) if insn is not None else str(insn))
         result_file = os.path.join(curr_dir, 'cache', self.prog, file_name)
         time_record["start"] = time.time()
@@ -808,7 +808,7 @@ class DynamicDependence:
                 ", total number are: " + str(len(insns)) + " starting insns are: " + str(insns))
         #FIXME may want to version the file.
         file_name = 'dynamic_graph_result_' + self.key + "_multiple_" + str(len(insns))
-        #TODO1 change name
+        insns = set(insns)
         result_file = os.path.join(curr_dir, 'cache', self.prog, file_name)
         time_record["start"] = time.time()
         starting_insn_to_dynamic_graph = {}
@@ -843,9 +843,6 @@ class DynamicDependence:
             time_record["trim_finish"] = time.time()
             print("[TIME] Trimming dynamic graph took: ", str(time_record["trim_finish"] - time_record["build_finish"]), flush=True)
 
-            # TODO need to keep list of starting nodes for each starting instruction
-            # TODO need to make a copy constructor for dynamic node
-            # TODO split into multiple dynamic graphds, make new nodes if necessary
             for insn in insns:
                 starting_insn_to_dynamic_graph[insn] = DynamicGraph(self.starting_events)
 
@@ -853,6 +850,134 @@ class DynamicDependence:
 
             for node in dynamic_graph.dynamic_nodes.values():
                 if node.is_starting is True:
+                    insn = node.static_node.insn
+                    curr_dynamic_graph = starting_insn_to_dynamic_graph[insn]
+                    copied_node = DynamicNode.semi_deepcopy(node)
+                    curr_dynamic_graph.insert_node(insn, copied_node)
+                    for prede in itertools.chain(node.cf_predes, node.df_predes):
+                        copied_prede = curr_dynamic_graph.dynamic_nodes.get(prede.id, DynamicNode.semi_deepcopy(prede))
+                        curr_dynamic_graph.insert_node(prede.static_node.insn, copied_prede)
+
+            for insn in starting_insn_to_dynamic_graph.keys():
+                print("[dg] Building multiple dynamic graphs, currently building: " + str(hex(insn)))
+                curr_dynamic_graph = starting_insn_to_dynamic_graph[insn]
+                for node in curr_dynamic_graph.dynamic_nodes.values():
+                    new_cf_succes = []
+                    for cf_succe in node.cf_succes:
+                        if cf_succe.id in curr_dynamic_graph.id_to_node:
+                            new_cf_succes.append(curr_dynamic_graph.id_to_node[cf_succe.id])
+                    node.cf_succes = new_cf_succes
+
+                    new_df_succes = []
+                    for df_succe in node.df_succes:
+                        if df_succe.id in curr_dynamic_graph.id_to_node:
+                            new_df_succes.append(curr_dynamic_graph.id_to_node[df_succe.id])
+                    node.df_succes = new_df_succes
+
+                    if node.is_starting is False:
+                        continue
+
+                    new_cf_predes = []
+                    for cf_prede in node.cf_predes:
+                        if cf_prede.id in curr_dynamic_graph.id_to_node:
+                            new_cf_predes.append(curr_dynamic_graph.id_to_node[cf_prede.id])
+                    node.cf_predes = new_cf_predes
+
+                    new_df_predes = []
+                    for df_prede in node.df_predes:
+                        if df_prede.id in curr_dynamic_graph.id_to_node:
+                            new_df_predes.append(curr_dynamic_graph.id_to_node[df_prede.id])
+                    node.df_predes = new_df_predes
+
+                #curr_dynamic_graph.report_result()
+                curr_result_file = result_file + "_" + hex(insn)
+                curr_dynamic_graph.result_file = curr_result_file
+                #time_record["report_result"] = time.time()
+                #print("[TIME] Reporting result took: ", str(time_record["report_result"] - time_record["trim_finish"]), flush=True)
+
+                curr_dynamic_graph.sanity_check()
+                curr_dynamic_graph.sanity_check1()
+                print("[TIME] finished Sanity check.")
+                #time_record["sanity_check"] = time.time()
+                #print("[TIME] Sanity check took: ", str(time_record["sanity_check"] - time_record["report_result"]), flush=True)
+
+                curr_dynamic_graph.find_entry_and_exit_nodes()
+                curr_dynamic_graph.find_target_nodes(self.starting_insns if insn is None else set([insn]))
+                print("[TIME] finished Locating entry&exit&target nodes.")
+                #time_record["find_target_nodes"] = time.time()
+                #print("[TIME] Locating entry&exit&target nodes took: ",
+                #      str(time_record["find_target_nodes"] - time_record["sanity_check"]), flush=True)
+
+                curr_dynamic_graph.build_postorder_list()
+                #time_record["postorder"] = time.time()
+                #print("[TIME] Postorder traversal took: ",
+                #      str(time_record["postorder"] - time_record["find_target_nodes"]), flush=True)
+
+                curr_dynamic_graph.build_reverse_postorder_list()
+                #time_record["reverse_postorder"] = time.time()
+                #print("[TIME] Reverse postorder traversal took: ",
+                #      str(time_record["reverse_postorder"] - time_record["postorder"]), flush=True)
+                #if self.init_graph is None:
+                #    curr_dynamic_graph.propogate_initial_graph_weight()
+                #else:
+                #    curr_dynamic_graph.propogate_weight(self.init_graph)
+
+                #time_record["propogate_weight"] = time.time()
+                #print("[TIME] Propogating weight took: ",
+                #      str(time_record["propogate_weight"] - time_record["reverse_postorder"]), flush=True)
+                with open(result_file + "_" + hex(insn), 'w') as f:
+                    json.dump(curr_dynamic_graph.toJSON(), f, indent=4, ensure_ascii=False)
+                print("[TIME] finished Saving graph in json.")
+                #time_record["save_curr_dynamic_graph_as_json"] = time.time()
+                #print("[TIME] Saving graph in json took: ",
+                #      str(time_record["save_curr_dynamic_graph_as_json"] - time_record["trim_finish"]), flush=True)
+
+                #if self.init_graph is None:
+                #    #pass
+                #    #dynamic_graph.verify_initial_graph_weight()
+                #    dynamic_graph.propogate_initial_graph_weight()
+                #else:
+                #    dynamic_graph.propogate_weight(self.init_graph)
+                #    #dynamic_graph.verify_weight(self.init_graph)
+                #    #with open(result_file, 'w') as f:
+                #    #    json.dump(dynamic_graph.toJSON(), f, indent=4, ensure_ascii=False)
+
+                print("[dyn_dep] total number of dynamic nodes: " + str(len(curr_dynamic_graph.dynamic_nodes)))
+                print("[dyn_dep] total number of target nodes: " + str(len(curr_dynamic_graph.target_nodes)))
+        return starting_insn_to_dynamic_graph
+
+    def build_multiple_dynamic_dependencies_in_context(self, parent_insn, insns):
+        print("Building dynamic graph with multiple starting events and each only sliced one step"
+                + " from existing graph: " + hex(parent_insn) +
+                ", total number are: " + str(len(insns)) + " starting insns are: " + str(insns))
+        #FIXME may want to version the file.
+        parent_file_name = 'dynamic_graph_result_' + self.key + "_" + hex(parent_insn)
+        file_name = parent_file_name + "_multiple_" + str(len(insns))
+        insns = set(insns)
+        result_file = os.path.join(curr_dir, 'cache', self.prog, file_name)
+        time_record["start"] = time.time()
+        starting_insn_to_dynamic_graph = {}
+
+        left_over = []
+        for insn in insns:
+            curr_result_file = result_file + "_" + hex(insn)
+            print("Looking for file: " + str(curr_result_file))
+            if os.path.isfile(curr_result_file):
+                starting_insn_to_dynamic_graph[insn] = DynamicGraph.load_graph_from_json(curr_result_file)
+            else:
+                left_over.append(insn)
+        insns = left_over
+        time_record["load_json"] = time.time()
+        print("[TIME] Loading graph from json: ", str(time_record["load_json"] - time_record["start"]), flush=True)
+        if len(insns) > 0:
+            dynamic_graph = self.build_dynamic_dependencies(parent_insn)
+
+            for insn in insns:
+                starting_insn_to_dynamic_graph[insn] = DynamicGraph(self.starting_events)
+
+            print("[dg] Total number of dynamic graphs to build: " + str(len(starting_insn_to_dynamic_graph)))
+            for node in dynamic_graph.dynamic_nodes.values():
+                if node.static_node.insn in insns:
                     insn = node.static_node.insn
                     curr_dynamic_graph = starting_insn_to_dynamic_graph[insn]
                     copied_node = curr_dynamic_graph.dynamic_nodes.get(node.id, DynamicNode.semi_deepcopy(node))
@@ -877,8 +1002,8 @@ class DynamicDependence:
                             new_df_succes.append(curr_dynamic_graph.id_to_node[df_succe.id])
                     node.df_succes = new_df_succes
 
-                    if node.is_starting is False:
-                        continue
+                    #if node.is_starting is False:
+                    #    continue
 
                     new_cf_predes = []
                     for cf_prede in node.cf_predes:
@@ -1485,7 +1610,7 @@ class DynamicDependence:
         graph2 = DynamicGraph.load_graph_from_json(graph_name2)
         nodes1 = graph1.insn_to_dyn_nodes[insn]
         nodes2 = graph2.insn_to_dyn_nodes[insn]
-        assert len(nodes1) == len(nodes2)
+        assert len(nodes1) == len(nodes2), str(len(nodes1)) + " " + str(len(nodes2))
         node_ids1 = set()
         for n in nodes1:
             node_ids1.add(n.id)
@@ -2868,14 +2993,15 @@ def verify_0x409418_result(dg):
     #    json.dump(predes, f, indent=4, ensure_ascii=False)
 
 if __name__ == '__main__':
+    start = time.time()
     #FIXME: dynamic graph logic will always reused already built dynamic graph, 
     # there is currently no option to rebuild forcefully
-    start = time.time()
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--parallelize_id', dest='pa_id', type=int)
     parser.add_argument('-i', '--starting_instruction', dest='starting_insn')
 
     parser.add_argument('-m', '--generate_multiple', dest='generate_multiple', action='store_true')
+    parser.add_argument('-mc', '--generate_multiple_in_context', dest='generate_multiple_in_context', action='store_true')
     parser.add_argument('-if', '--multiple_insns_file', dest='multiple_insns_file', type=str)
 
     parser.add_argument('-c', '--compare', dest='compare', action='store_true')
@@ -2907,12 +3033,21 @@ if __name__ == '__main__':
         dd.prepare_to_build_dynamic_dependencies(limit)
         dd.compare_graphs(args.graph_file1, args.graph_file2, int(args.starting_insn, 16))
     elif args.generate_multiple is True:
+        assert args.generate_multiple_in_context is False
         dd.prepare_to_build_dynamic_dependencies(limit)
         multiple_insns = []
         with open(args.multiple_insns_file, "r") as f:
             for l in f.readlines():
                 multiple_insns.append(int(l.strip()))
         dd.build_multiple_dynamic_dependencies(multiple_insns)
+    elif args.generate_multiple_in_context is True:
+        assert args.generate_multiple is False
+        dd.prepare_to_build_dynamic_dependencies(limit)
+        multiple_insns = []
+        with open(args.multiple_insns_file, "r") as f:
+            for l in f.readlines():
+                multiple_insns.append(int(l.strip()))
+        dd.build_multiple_dynamic_dependencies_in_context(int(args.starting_insn, 16), multiple_insns)
     else:
         dd.prepare_to_build_dynamic_dependencies(limit)
         starting_insns = []
@@ -2945,6 +3080,5 @@ if __name__ == '__main__':
             if args.find_paths_to is not None:
                 prede_insn = int(args.find_paths_to, 16)
                 dg.find_paths_to(prede_insn)
-
     end = time.time()
     print("[dyn_graph] Total time: " + str(end - start))
