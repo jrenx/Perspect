@@ -11,6 +11,113 @@ def parse(f):
     #print(simple_relation_groups)
     return simple_relation_groups
 
+def build_insn_to_relation_group_map(rs):
+    m = {}
+    for rg in rs.relations_map.values():
+        m[rg.insn] = rg
+    return m
+
+def build_insn_to_reverse_relation_group_map(rs):
+    m = {}
+    for rg in rs.relations_map.values():
+        for pair in rg.relations:
+            r = pair[0]
+            prede = pair[1]
+            if r.insn not in m:
+                m[r.insn] = ([], prede)
+            m[r.insn][0].append((r, rg.index_quad))
+    m1 = {}
+    for insn in m:
+        relations, group_index_quad = m[insn]
+        predes = []
+        relations_map = {}
+        for relation, index_quad in relations:
+            predes.append(index_quad)
+            file, line, index, total_count = Indices.parse_index_quad(index_quad)
+            child_key = Indices.build_key_from_index_quad(index_quad)
+            relations_map[child_key] = (relation, index_quad)
+            if total_count == 0 or total_count is None or index is None:
+                child_key_short = file + "_" + str(line)
+                relations_map[child_key_short] = (relation, index_quad)
+            else:
+                child_key_short = file + "_" + str(line)
+                inner_map = relations_map.get(child_key_short, {})
+                if len(inner_map) == 0:
+                    relations_map[child_key_short] = inner_map
+                elif isinstance(inner_map, tuple):
+                    pair = inner_map
+                    inner_map = {}
+                    inner_map[0] = pair
+                ratio = index/max(total_count,1)
+                inner_map[ratio] = (relation, index_quad)
+        predes = Indices.build_indices(predes)
+        file, line, index, total_count = Indices.parse_index_quad(group_index_quad)
+        key = file + "_" + str(line) + "_" + str(total_count) + "_" + str(index)
+        key_short = file + "_" + str(line)
+        simple_relation_group = SimpleRelationGroup(group_index_quad, key, key_short, \
+                                                    None, predes, None, relations, relations_map, None)
+        m1[insn] = simple_relation_group
+    return m1
+
+
+''' TODO, need to handle when binaries are different '''
+def compare_prede_rel(insn1, insn2, mrs1, mrs2):
+    if insn1 not in mrs1 or insn2 not in mrs2:
+        return True
+    left = mrs1[insn1]
+    right = mrs2[insn2]
+    for pair in left.relations:
+        r = pair[0]
+        prede = pair[1]
+        file, line, index, total_count = Indices.parse_index_quad(prede)
+        key = right.predes.get_indices2(file, line, total_count, index)
+        if key is None:
+            if r.weight.perc_contrib < 5:
+                print("[ra] Contribution is too low, ignore the relations")
+                continue
+            else:
+                return True
+
+        ''' Find the matching relation from the right hand side relation group '''
+        val = right.relations_map.get(key) #TODO
+        if isinstance(val, dict):
+            # when cannot find a precise match, match on ratio
+            our_ratio = (index if index is not None else 0)/ max(total_count if total_count is not None else 1, 1)
+            min_diff_ratio = 1
+            for their_ratio in val:
+                ratio_diff = abs(their_ratio-our_ratio)
+                if ratio_diff < min_diff_ratio:
+                    min_diff_ratio = their_ratio
+            if abs(min_diff_ratio-our_ratio) > 0.05:
+                left_over_left[prede[0] + "_" + str(prede[1])] = (r.weight.perc_contrib, r.timestamp, r, None)
+                # diff.append((r.weight.perc_contrib, r.timestamp, r, None))
+                continue
+
+            pair = val[min_diff_ratio]
+        else:
+            pair = val
+        r2 = pair[0]
+
+        ''' If the two relations are roughly equal, ignore '''
+        if r.relaxed_equals(r2):
+            continue
+        else:
+            return True
+
+    for pair in right.relations:
+        r = pair[0]
+        prede = pair[1]
+        file, line, index, total_count = Indices.parse_index_quad(prede)
+        key = left.predes.get_indices2(file, line, total_count, index)
+        if key is None:
+            if r.weight.perc_contrib < 5:
+                print("[ra] Contribution is too low, ignore the relations")
+                continue
+            else:
+                return True
+    return False
+
+
 ''' comparing the absolute count of two relations, this is a heuristic '''
 def compare_absolute_count(left, right, r1, r2, \
         summary1, summary2, counts1, counts2, insn_to_insn):
@@ -60,11 +167,23 @@ def compare_absolute_count(left, right, r1, r2, \
             return True
     return False
  
-def compare_relation_groups(f1, f2, tf1, tf2, d1):
+def compare_relation_groups(f1, f2, tf1, tf2, d1, mf1, mf12):
     rs1 = parse(f1)
     #print(rs1)
     rs2 = parse(f2)
     #print(rs2)
+
+    mrs1 = None
+    if os.path.exists(mf1):
+        #mrs1 = build_insn_to_reverse_relation_group_map(parse(mf1))
+        mrs1 = build_insn_to_relation_group_map(parse(mf1))
+    #print(mrs1)
+    mrs2 = None
+    if os.path.exists(mf12):
+        #mrs2 = build_insn_to_reverse_relation_group_map(parse(mf12))
+        mrs2 = build_insn_to_relation_group_map(parse(mf12))
+    #print(mrs2)
+
 
     nc1 = load_node_info(tf1)
     print("node_count_1: " + str(nc1))
@@ -108,7 +227,7 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1):
         print()
         print(str(p[0]) + " " + str(p[1]) + " " + str(p[2]) + " " + str(p[3]))
         print()
-        compare_relations(p[0], p[1], p[2], p[3], nc1, nc2, d1)
+        compare_relations(p[0], p[1], p[2], p[3], nc1, nc2, d1, mrs1, mrs2)
         print()
         print(str(p[0]) + " " + str(p[1]) + " " + str(p[2]) + " " + str(p[3]))
         print()
@@ -177,7 +296,7 @@ def sort_relations_simple(diff, max_weight, max_timestamp):
     sorted_diff = sorted(weighted_diff, key=lambda e: ((e[1] + e[0]) / 2))
     return sorted_diff
 
-def compare_relations(parent_d, parent_key, left, right, left_counts, right_counts, d1):
+def compare_relations(parent_d, parent_key, left, right, left_counts, right_counts, d1, mrs_left=None, mrs_right=None):
     if left is None or right is None:
         print("[warn] One relation group is None")
         return
@@ -338,6 +457,11 @@ def compare_relations(parent_d, parent_key, left, right, left_counts, right_coun
                     break
             if include is True:
                 right_seen.append(r_right)
+        if include is True and mrs_left is not None and mrs_right is not None:
+            r_insn = r_left.insn if r_left is not None else r_right.insn
+            include = compare_prede_rel(r_insn, r_insn, mrs_left, mrs_right)
+            print("compare prede rel result: " + str(include))
+
         if not include:
             print("NO RANK")
             continue
@@ -390,6 +514,8 @@ if __name__ == "__main__":
     key = build_key(starting_events)
     file1 = "rgroups_simple_" + key + ".json"
     file2 = other_relations_file
+    mfile1 = "multiple_context_" + file1
+    mfile2 = "multiple_context_" + file2
     trace_file1 = key + "_instruction_trace.out.count"
     trace_file2 = parse_other_insn_trace() + ".count"
 
@@ -400,6 +526,10 @@ if __name__ == "__main__":
     f2 = os.path.join(dir2, cache_dir2, file2)
     f12 = os.path.join(dir2, cache_dir1, file2)
 
+    mf1 = os.path.join(dir1, cache_dir1, mfile1)
+    mf2 = os.path.join(dir2, cache_dir2, mfile2)
+    mf12 = os.path.join(dir2, cache_dir1, mfile2)
+
     tf1 = os.path.join(dir1, "pin", trace_file1)
     tf12 = os.path.join(dir1, "pin", trace_file2)
 
@@ -409,4 +539,4 @@ if __name__ == "__main__":
     print(tf1)
     print(tf12)
 
-    compare_relation_groups(f1, f12, tf1, tf12, d1)
+    compare_relation_groups(f1, f12, tf1, tf12, d1, mf1, mf12)
