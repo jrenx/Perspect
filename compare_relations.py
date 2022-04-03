@@ -257,6 +257,8 @@ def sort_relations_complex(diff, max_weight, max_timestamp):
         r_left = quad[2]
         r_right = quad[3]
 
+        corr = 0
+
         if r_left is not None and r_right is not None:
             forward_impact = r_left.forward.difference(r_right.forward)
             if forward_impact > 0:
@@ -270,11 +272,13 @@ def sort_relations_complex(diff, max_weight, max_timestamp):
             else:
                 backward_impact = 0
             impact = max(forward_impact, backward_impact)
+            corr = (r_left.forward.corr() + r_right.forward.corr())/2
         else:
             impact = weight / max_weight * 100
+            corr = r_left.forward.corr() if r_left is not None else r_right.forward.corr()
 
         weighted_diff.append(
-            (impact, avg_timestamp / max_timestamp * 100, weight, avg_timestamp, r_left, r_right))
+            (impact, (avg_timestamp / max_timestamp * 100 + corr * 100)/2, weight, avg_timestamp, r_left, r_right))
 
     sorted_diff = sorted(weighted_diff, key=lambda e: ((e[1] + e[0]) / 2))
     return sorted_diff

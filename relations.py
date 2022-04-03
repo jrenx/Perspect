@@ -64,6 +64,13 @@ class Invariance:
     def magnitude(self):
         return self.ratio
 
+    def corr(self):
+        mag = self.magnitude()
+        if mag > 1:
+            return 1/mag
+        else:
+            return mag
+
     def __str__(self):
         s = "INVARIANT with ratio: " + str(self.ratio)
         if self.is_conditional is True:
@@ -162,6 +169,13 @@ class Proportion:
 
     def magnitude(self):
         return self.mu
+
+    def corr(self):
+        mag = self.magnitude()
+        if mag > 1:
+            return 1/mag
+        else:
+            return mag
 
     def __str__(self):
         s = "VARIABLE "
