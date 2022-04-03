@@ -595,7 +595,7 @@ class DynamicDependence:
 
     # TODO, refactor into a more user friendly interface?
     def build_dynamic_dependencies(self, insn=None, pa_id=None):
-        print("Building dynamic graph, starting insn is: " + hex(insn) + " pa_id " + str(pa_id))
+        print("Building dynamic graph, starting insn is: " + (hex(insn) if insn is not None else str(insn)) + " pa_id " + str(pa_id))
         file_name = 'dynamic_graph_result_' + self.key + "_" + (hex(insn) if insn is not None else str(insn))
         result_file = os.path.join(curr_dir, 'cache', self.prog, file_name)
         time_record["start"] = time.time()
