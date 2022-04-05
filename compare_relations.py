@@ -277,10 +277,12 @@ def sort_relations_complex(diff, max_weight, max_timestamp):
             impact = weight / max_weight * 100
             corr = r_left.forward.corr() if r_left is not None else r_right.forward.corr()
 
-        weighted_diff.append(
-            (impact, (avg_timestamp / max_timestamp * 100 + corr * 100)/2, weight, avg_timestamp, r_left, r_right))
+        corr = corr + (abs(1-corr) - abs(1-corr) * abs(1-corr))
 
-    sorted_diff = sorted(weighted_diff, key=lambda e: ((e[1] + e[0]) / 2))
+        weighted_diff.append(
+            (impact, avg_timestamp / max_timestamp * 100, weight, avg_timestamp, r_left, r_right, corr * 100))
+
+    sorted_diff = sorted(weighted_diff, key=lambda e: ((e[2] + (e[1] + e[6])/2) / 2))
     return sorted_diff
 
 def sort_relations_simple(diff, max_weight, max_timestamp):
@@ -431,7 +433,7 @@ def compare_relations(parent_d, parent_key, left, right, left_counts, right_coun
     for p in sorted_diff:
         #rank = rank - 1
         print("-----------------------------------------")
-        print(str(p[0]) + " " + str(p[1]))
+        print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
         print(str(p[2]) + " " + str(p[3]))
         print(str(p[4]))
         print(str(p[5]))
@@ -478,7 +480,7 @@ def compare_relations(parent_d, parent_key, left, right, left_counts, right_coun
         rank = rank - 1
         print("-----------------------------------------")
         print("rank: " + str(rank))
-        print(str(p[0]) + " " + str(p[1]))
+        print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
         print(str(p[2]) + " " + str(p[3]))
         print(str(p[4]))
         print(str(p[5]))
