@@ -56,7 +56,71 @@ def compare_relation_groups(f1, f2):
         print("========================================")
     return sorted_diff
 
-def compare_relations(parent_d, parent_key, left, right):
+def sort_relations_complex(diff, max_weight, max_timestamp):
+    # assume left is slow, right is fast
+    #
+    # forward if increased, calculate the increased difference,
+    # times the difference with the total wieght of the slow run to get the impact
+    # ignore when forward decreased
+    #
+    # for backward, for now do not consider the magnitued and
+    # only consider if the % contrib of the relation decreased
+    # (if consider magnitude: backward if decreased, include all those that do not have the same backward count,
+    # or those that dont have the backward event at all
+    # ignore when backward is increased, should not be a negative event then)
+    #
+    # then take the union(max for now) of the two
+    # then put into 10 buckets, and sort within each
+    weighted_diff = []
+    for quad in diff:
+        weight = quad[0]
+        avg_timestamp = quad[1]
+
+        r_left = quad[2]
+        r_right = quad[3]
+
+        corr = 0
+
+        if r_left is not None and r_right is not None:
+            forward_impact = r_left.forward.difference(r_right.forward)
+            if forward_impact > 0:
+                forward_impact = forward_impact/r_left.forward.magnitude() * r_left.weight.perc_contrib
+            else:
+                forward_impact = 0
+
+            backward_impact = r_left.weight.perc_contrib - r_right.weight.perc_contrib
+            if backward_impact < 0:
+                backward_impact = abs(backward_impact)
+            else:
+                backward_impact = 0
+            impact = max(forward_impact, backward_impact)
+            corr = (r_left.forward.corr() + r_right.forward.corr())/2
+        else:
+            impact = weight / max_weight * 100
+            corr = r_left.forward.corr() if r_left is not None else r_right.forward.corr()
+
+        corr = corr + (abs(1-corr) - abs(1-corr) * abs(1-corr))
+
+        weighted_diff.append(
+            (impact, avg_timestamp / max_timestamp * 100, weight, avg_timestamp, r_left, r_right, corr * 100))
+
+    sorted_diff = sorted(weighted_diff, key=lambda e: ((e[2] + (e[1] + e[6])/2) / 2))
+    return sorted_diff
+
+def sort_relations_simple(diff, max_weight, max_timestamp):
+    weighted_diff = []
+    for quad in diff:
+        weight = quad[0]
+        avg_timestamp = quad[1]
+        r_left = quad[2]
+        r_right = quad[3]
+        weighted_diff.append(
+            (weight / max_weight * 100, avg_timestamp / max_timestamp * 100, weight, avg_timestamp, r_left, r_right))
+
+    sorted_diff = sorted(weighted_diff, key=lambda e: ((e[1] + e[0]) / 2))
+    return sorted_diff
+
+def compare_relations(parent_d, parent_key, left, right, left_counts, right_counts, d1, mrs_left=None, mrs_right=None):
     if left is None or right is None:
         print("[warn] One relation group is None")
         return
@@ -165,7 +229,7 @@ def compare_relations(parent_d, parent_key, left, right):
     sorted_diff = sorted(weighted_diff, key=lambda e: ((e[1] + e[0])/2))
     for p in sorted_diff:
         print("-----------------------------------------")
-        print(str(p[0]) + " " + str(p[1]))
+        print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
         print(str(p[2]) + " " + str(p[3]))
         print(str(p[4]))
         print(str(p[5]))
@@ -207,7 +271,7 @@ def compare_relations(parent_d, parent_key, left, right):
         rank = rank - 1
         print("-----------------------------------------")
         print("rank: " + str(rank))
-        print(str(p[0]) + " " + str(p[1]))
+        print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
         print(str(p[2]) + " " + str(p[3]))
         print(str(p[4]))
         print(str(p[5]))
