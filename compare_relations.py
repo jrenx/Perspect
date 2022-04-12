@@ -272,7 +272,8 @@ def sort_relations_complex(diff, max_weight, max_timestamp):
             else:
                 backward_impact = 0
             impact = max(forward_impact, backward_impact)
-            corr = (r_left.forward.corr() + r_right.forward.corr())/2
+            #corr = (r_left.forward.corr() + r_right.forward.corr())/2
+            corr = r_left.forward.corr() 
         else:
             impact = weight / max_weight * 100
             corr = r_left.forward.corr() if r_left is not None else r_right.forward.corr()
@@ -280,7 +281,11 @@ def sort_relations_complex(diff, max_weight, max_timestamp):
         weighted_diff.append(
             (impact, (avg_timestamp / max_timestamp * 100 + corr * 100)/2, weight, avg_timestamp, r_left, r_right))
 
+<<<<<<< HEAD
     sorted_diff = sorted(weighted_diff, key=lambda e: ((e[1] + e[0]) / 2))
+=======
+    sorted_diff = sorted(weighted_diff, key=lambda e: ((e[0] + (e[1] + e[6])) / 3))
+>>>>>>> 4081ae8... [compare_relation] Updated to only use the specificity from the bad run.
     return sorted_diff
 
 def sort_relations_simple(diff, max_weight, max_timestamp):
