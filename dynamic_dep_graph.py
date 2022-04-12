@@ -2702,6 +2702,17 @@ class DynamicGraph:
                         continue
                     q.appendleft([s, l, len(l)])
 
+    def calc_avg_time_stamp(self):
+        insn_to_time_stamp = {}
+        for insn in self.insn_to_dyn_nodes:
+            nodes = self.insn_to_dyn_nodes[insn]
+            count = 1
+            avg = 0
+            for n in nodes:
+                avg += (n.id - avg)/count
+                count += 1
+            insn_to_time_stamp[insn] = avg
+        return insn_to_time_stamp
 
 def print_path(curr_node, end_id):
     for p in curr_node.df_predes:#itertools.chain(curr_node.cf_predes, curr_node.df_predes):
