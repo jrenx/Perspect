@@ -15,6 +15,26 @@ def compare_relation_groups(f1, f2):
     #print(rs1)
     rs2 = parse(f2)
     #print(rs2)
+<<<<<<< HEAD
+=======
+
+    mrs1 = None
+    if os.path.exists(mf1):
+        mrs1 = build_insn_to_reverse_relation_group_map(parse(mf1))
+        #mrs1 = build_insn_to_relation_group_map(parse(mf1))
+    #print(mrs1)
+    mrs2 = None
+    if os.path.exists(mf12):
+        mrs2 = build_insn_to_reverse_relation_group_map(parse(mf12))
+        #mrs2 = build_insn_to_relation_group_map(parse(mf12))
+    #print(mrs2)
+
+
+    nc1 = load_node_info(tf1)
+    print("node_count_1: " + str(nc1))
+    nc2 = load_node_info(tf2)
+    print("node_count_2: " + str(nc2))
+>>>>>>> f1b7507... [compare_relation] use build_insn_to_reverse_relation_group_map instead of build_insn_to_relation_group_map.
     
     diff = []
     for rg in set(rs1.relations_map.values()):
