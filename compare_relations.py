@@ -175,13 +175,13 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1, mf1, mf12):
 
     mrs1 = None
     if os.path.exists(mf1):
-        #mrs1 = build_insn_to_reverse_relation_group_map(parse(mf1))
-        mrs1 = build_insn_to_relation_group_map(parse(mf1))
+        mrs1 = build_insn_to_reverse_relation_group_map(parse(mf1))
+        #mrs1 = build_insn_to_relation_group_map(parse(mf1))
     #print(mrs1)
     mrs2 = None
     if os.path.exists(mf12):
-        #mrs2 = build_insn_to_reverse_relation_group_map(parse(mf12))
-        mrs2 = build_insn_to_relation_group_map(parse(mf12))
+        mrs2 = build_insn_to_reverse_relation_group_map(parse(mf12))
+        #mrs2 = build_insn_to_relation_group_map(parse(mf12))
     #print(mrs2)
 
 
