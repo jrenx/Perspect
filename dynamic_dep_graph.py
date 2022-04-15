@@ -733,7 +733,7 @@ class DynamicDependence:
                 if node.is_starting is True:
                     insn = node.static_node.insn
                     curr_dynamic_graph = starting_insn_to_dynamic_graph[insn]
-                    copied_node = DynamicNode.semi_deepcopy(node)
+                    copied_node = curr_dynamic_graph.dynamic_nodes.get(node.id, DynamicNode.semi_deepcopy(node))
                     curr_dynamic_graph.insert_node(insn, copied_node)
                     for prede in itertools.chain(node.cf_predes, node.df_predes):
                         copied_prede = curr_dynamic_graph.dynamic_nodes.get(prede.id, DynamicNode.semi_deepcopy(prede))
