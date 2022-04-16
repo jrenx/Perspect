@@ -37,7 +37,16 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
 
         try:
             if parent_insn is None:
-                starting_insn_to_dynamic_graph = self.dd.build_multiple_dynamic_dependencies(insns)
+                #Identify instead all the successors of these nodes.
+                succe_insns = set()
+                for insn in insns:
+                    print("[ra] instruction: " + hex(insn))
+                    node = self.dd.insn_to_static_node[insn]
+                    for succe in itertools.chain(node.cf_succes, node.df_succes):
+                        print("[ra]     succe: " + hex(succe.insn))
+                        succe_insns.add(succe.insn)
+                print(len(succe_insns))
+                starting_insn_to_dynamic_graph = self.dd.build_multiple_dynamic_dependencies(succe_insns)
             else:
                 starting_insn_to_dynamic_graph = self.dd.build_multiple_dynamic_dependencies_in_context(parent_insn, insns)
         except Exception as e:
@@ -109,7 +118,9 @@ if __name__ == "__main__":
                           other_indices_file=other_indices_file,
                           other_relations_file=other_relations_file)
     multiple_insns = []
-    with open(args.multiple_insns_file, "r") as f:
+    insns_file = args.multiple_insns_file + ("_" + args.parent_insn if args.parent_insn is not None else "")
+    print("[ra] Reading from insns file: " + insns_file)
+    with open(insns_file, "r") as f:
         for l in f.readlines():
             multiple_insns.append(int(l.strip()))
     ra.analyze(multiple_insns, args.use_cache, int(args.parent_insn, 16) if args.parent_insn is not None else None)
