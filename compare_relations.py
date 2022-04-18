@@ -61,7 +61,13 @@ def build_insn_to_reverse_relation_group_map(rs):
 
 ''' TODO, need to handle when binaries are different '''
 # Returns True if the children relations are not equal, else False.
-def compare_children_rels(insn1, insn2, mrs1, mrs2):
+def compare_children_rels(insn1, insn2, mrs1, mrs2,
+                          filter1=None, filter2=None):
+    print("[compare_relation] comparing children relations for " + hex(insn1) + " and " + hex(insn2))
+    print("[compare_relation] only keeping these instructions on the left  "
+          + (str([hex(i) for i in filter1]) if filter1 is not None else ""))
+    print("[compare_relation] only keeping these instructions on the right "
+          + (str([hex(i) for i in filter2]) if filter2 is not None else ""))
     relation_pairs, succes = get_relation_pairs(insn1, insn2, mrs1, mrs2)
     if relation_pairs is None: #no multiple relations provided for either runs, assume not equal.
         return True
@@ -80,8 +86,22 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2):
 
         r_left = p[0]
         r_right = p[1]
-        print(r_left)
-        print(r_right)
+        insn_left = s[0][1] if s[0] is not None else None
+        insn_right = s[1][1] if s[1] is not None else None
+        #print(r_left)
+        #print(r_right)
+        if filter1 is not None:
+            if r_left is None:
+                continue
+            if insn_left not in filter1:
+                continue
+
+        if filter2 is not None:
+            if r_right is None:
+                continue
+            if insn_right not in filter2:
+                continue
+
         if r_left is None:
             assert r_right is not None
             if r_right.weight.perc_contrib < 5:
@@ -307,7 +327,9 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
             insns_right.append(r_right.insn)
 
             #TODO, handle when instructions are not the same
-            equals = not compare_children_rels(r_right.insn, r_right.insn, mrs_left, mrs_right)
+            equals = not compare_children_rels(r_right.insn, r_right.insn, mrs_left, mrs_right,
+                                               filter1=None, filter2=set(summ_right[r_right.insn]))
+            print("[compare_relation] Children relations are equal? " + str(equals))
             assert weight == r_right.weight.perc_contrib
             corr = r_right.forward.corr()
             if equals is True: #TODO, for debugging for now
@@ -325,7 +347,9 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
             insns_left.append(r_left.insn)
             insns_right.append(r_left.insn)
  
-            equals = not compare_children_rels(r_left.insn, r_left.insn, mrs_left, mrs_right)
+            equals = not compare_children_rels(r_left.insn, r_left.insn, mrs_left, mrs_right,
+                                               filter1=set(summ_left[r_left.insn]), filter2=None)
+            print("[compare_relation] Children relations are equal? " + str(equals))
             assert weight == r_left.weight.perc_contrib
             corr = r_left.forward.corr()
             if equals is True: #TODO, for debugging for now
@@ -368,15 +392,16 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
             print("[compare_relation/warn] parent relations equal, do not re-calculate weight.")
             continue
 
+        #Not really handled??
         forward_impact = calculate_forward_impact(r_left, r_right)
         backward_impact = calculate_backward_impact(r_left, r_right)
-        if backward_impact > forward_impact:
-            print("[compare_relation/warn] Backward impact " + str(backward_impact) +
-                  " is greater than forward impact " + str(forward_impact))
-            impact = backward_impact / max_weight * 100
-            weighted_diff.append(
-                (impact, avg_timestamp / max_timestamp * 100, weight, avg_timestamp, r_left, r_right, corr * 100))
-            continue
+        #if backward_impact > forward_impact:
+        #    print("[compare_relation/warn] Backward impact " + str(backward_impact) +
+        #          " is greater than forward impact " + str(forward_impact))
+        #    impact = backward_impact / max_weight * 100
+        #    weighted_diff.append(
+        #        (impact, avg_timestamp / max_timestamp * 100, weight, avg_timestamp, r_left, r_right, corr * 100))
+        #    continue
         # Candidate for in context multiple rels
         succe_insns_right = summ_right[r_right.insn]
         for succe_insn in succe_insns_right:
@@ -440,19 +465,31 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                 equals = p[0].relaxed_equals(p[1])
             print("[compare_relation] Equals? " + str(equals))
 
-            impact, corr = calculate_weight_corr(p[0].weight.perc_contrib, p[0], p[1])
+
+            if p[0] is not None and p[1] is not None:
+                impact = calculate_forward_impact(p[0], p[1])
+            else:
+                impact = p[0].weight.perc_contrib
+            #impact, corr = calculate_weight_corr(p[0].weight.perc_contrib, p[0], p[1])
             if equals is True and impact != 0:
                 print("[compare_relation/warn] relations equal why impact not 0? impact is: " + str(impact))
                 impact = 0
-            print("[compare_relation] impact: " + str(impact) + " corr: " + str(corr))
+            print("[compare_relation] impact: " + str(impact))# + " corr: " + str(corr))
+            if p[0] is not None and isinstance(p[0].backward, Invariance) and p[0].backward.is_conditional is True:
+                proportion = p[0].backward.conditional_proportion
+                succe_weight = succe_weight * proportion
+                print("[compare_relation] Updating successor weight with proportion: " + str(proportion)
+                      + " new weight is: " + str(succe_weight))
             succe_weights.append([impact, succe_weight])
             print("---------------------------------")
         succe_weights = sorted(succe_weights, key=lambda e: e[0])
 
         old_weight = weight_map_left[r_left.insn]
         assert old_weight == r_left.weight.perc_contrib
-        print("[compare_relation] original weights: " + str(old_weight))
+        print("[compare_relation] original weights full: " + str(old_weight))
+        print("[compare_relation] original weights: " + str(forward_impact))
         print("[compare_relation]   succes weights: " + str(succe_weights))
+        old_weight = forward_impact
 
         new_weight = 0
         total_succe_weights_encountered = 0
@@ -475,7 +512,17 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
             assert new_weight <= old_weight, str(new_weight) + " " + str(old_weight)
             print("[compare_relation/warn] Updating the weight to "+ str(new_weight))
 
+        assert new_weight <= old_weight #TODO, remove
         print("[compare_relation] new weights: " + str(new_weight))
+        if backward_impact > forward_impact:
+            impact = backward_impact + new_weight
+            if impact > 100:
+                impact = 100
+            print("[compare_relation/warn] Backward impact " + str(backward_impact) +
+                  " is greater than forward impact " + str(forward_impact) + " combined new weight is: " + str(impact))
+            weighted_diff.append(
+                (impact, avg_timestamp / max_timestamp * 100, weight, avg_timestamp, r_left, r_right, corr * 100))
+            continue
 
         #Check that there are no cases where a relation with the successor exists
         # but the successor does not exist in the summary file.
