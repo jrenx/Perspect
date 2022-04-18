@@ -306,8 +306,23 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1, mcf1, mcf12, mf1, mf12, compar
         print("========================================")
     return sorted_diff
 
+#Rational: a event is more likely a negative event if its total weight always decreased in bad run,
+# otherwise it's more likely that there simple exists another source of the performance impact in the bad run.
+#TODO: Should use the weight of each starting event too, for now, just use the count
+def test_if_likely_true_negative_event(r_left, r_right, left_full_weight, right_full_weight):
+    left_weight = r_left.weight.perc_contrib * left_full_weight / 100
+    right_weight = r_right.weight.perc_contrib * right_full_weight / 100
+    print("[compare_relation] Checking if is likely a true negative event, "
+          "full weight from the left: " + str(left_weight) + " full weight from the right: " + str(right_weight))
+    if left_weight >= right_weight:
+        return False
+    if abs(left_weight - right_weight)/right_weight * 100 < 20:
+        return False
+    return True
+
 def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
-                           mcrs_left, mcrs_right, mrs_left, mrs_right, summ_left, summ_right):
+                           mcrs_left, mcrs_right, mrs_left, mrs_right, summ_left, summ_right,
+                           left_counts, right_counts):
     weighted_diff = []
     weight_map_left = {}
     weight_map_right = {}
@@ -316,6 +331,10 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
 
     insns_left = []
     insns_right = []
+
+    # TODO: Should use the weight of each starting event too, for now, just use the count
+    left_full_weight = left_counts[left.insn]
+    right_full_weight = right_counts[right.insn]
 
     for quad in diff:
         weight = quad[0]
@@ -400,6 +419,13 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
         #Not really handled??
         forward_impact = calculate_forward_impact(r_left, r_right)
         backward_impact = calculate_backward_impact(r_left, r_right)
+        if backward_impact > forward_impact:
+            likely_true_neg_event = test_if_likely_true_negative_event(r_left, r_right, left_full_weight, right_full_weight)
+            if likely_true_neg_event is False:
+                print("[compare_relation] Event likely not a negative event, do not use its backward impact.")
+                backward_impact = 0
+            else:
+                print("[compare_relation] Event likely a true negative event.")
         #if backward_impact > forward_impact:
         #    print("[compare_relation/warn] Backward impact " + str(backward_impact) +
         #          " is greater than forward impact " + str(forward_impact))
@@ -783,7 +809,8 @@ def compare_relations(parent_d, parent_key, left, right, left_counts, right_coun
     #sorted_diff = sort_relations_simple(diff, max_weight, max_timestamp)
     #sorted_diff = sort_relations_complex(diff, max_weight, max_timestamp)
     sorted_diff = sort_relations_precise(diff, max_weight, max_timestamp, left, right,
-                                         mcrs_left, mcrs_right, mrs_left, mrs_right, left_summary, right_summary)
+                                         mcrs_left, mcrs_right, mrs_left, mrs_right, left_summary, right_summary,
+                                         left_counts, right_counts)
 
     included_diff = []
     #rank = len(sorted_diff) + 1
