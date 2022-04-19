@@ -120,7 +120,7 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
                     continue
                 pass_rates[succe.insn] = pass_rate
             node_to_succe_pass_rates[node.insn] = pass_rates
-        pass_rates_file = os.path.join(curr_dir, "cache", self.prog, "pass_rates" + self.dd.key + ".json")
+        pass_rates_file = os.path.join(curr_dir, "cache", self.prog, "pass_rates_" + self.dd.key + ".json")
         with open(pass_rates_file, 'w') as f:
             json.dump(node_to_succe_pass_rates, f, indent=4, ensure_ascii=False)
 
@@ -151,8 +151,8 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
                     #if curr_counts == 0:
                     #    continue
 
-                    for df_succe in curr.df_succes:
-                        df_succes.append(df_succe)
+                    for curr_df_succe in curr.df_succes:
+                        df_succes.append(curr_df_succe)
                     for cf_succe in curr.cf_succes:
                         if cf_succe.insn not in node_to_succe_pass_rates[curr.insn]:
                             continue
@@ -165,7 +165,7 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
             if len(succe_pass_rates) > 0:
                 def_to_use_site_pass_rates[node.insn] = succe_pass_rates
  
-        def_to_use_site_pass_rates_file = os.path.join(curr_dir, "cache", self.prog, "pass_rates_def_to_use_site" + self.dd.key + ".json")
+        def_to_use_site_pass_rates_file = os.path.join(curr_dir, "cache", self.prog, "pass_rates_def_to_use_site_" + self.dd.key + ".json")
         with open(def_to_use_site_pass_rates_file, 'w') as f:
             json.dump(def_to_use_site_pass_rates, f, indent=4, ensure_ascii=False)
 

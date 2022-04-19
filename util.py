@@ -268,6 +268,21 @@ def parse_relation_analysis_inputs():
 
     return ip, dir, prog, simple_relations_file, indices_file
 
+def parse_other_key():
+    other_key = None
+
+    with open("relation_analysis.config", "r") as f:
+        for l in f.readlines():
+            segs = l.split("=")
+            if segs[0] == "other_key":
+                other_key = segs[1].strip()
+            #elif segs[0] == "other_simple_rgroup_file":
+            #    simple_relations_file = segs[1].strip()
+            #elif segs[0] == "other_indices_file":
+            #    indices_file = segs[1].strip()
+    print("Other key is: " + str(other_key))
+    return other_key
+
 def parse_relation_analysis_parallelization_factor():
     pfactor = None
 
