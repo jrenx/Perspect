@@ -62,8 +62,9 @@ def build_insn_to_reverse_relation_group_map(rs):
 
 ''' TODO, need to handle when binaries are different '''
 # Returns True if the children relations are not equal, else False.
-def compare_children_rels(insn1, insn2, mrs1, mrs2,
-                          filter1=None, filter2=None):
+def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
+                          pass_rates1=None, pass_rates2=None,
+                           pass_rates_dataflow1=None, pass_rates_dataflow2=None):
     print("[compare_relation] comparing children relations for " + hex(insn1) + " and " + hex(insn2))
     print("[compare_relation] only keeping these instructions on the left  "
           + (str([hex(i) for i in filter1]) if filter1 is not None else ""))
@@ -118,9 +119,41 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2,
                 return True
 
         if r_left.relaxed_equals(r_right):
+            print("[compare_relation] Relations considered related equal.")
             continue
-        else:
-            return True
+
+        if pass_rates1 is not None and pass_rates2 is not None:
+            pass_rate1 = pass_rates1.get(insn1, {}).get(insn_left, None)
+            pass_rate2 = pass_rates2.get(insn2, {}).get(insn_right, None)
+            print("[compare_relation] Pass rates are: " + str(pass_rate1) + " " + str(pass_rate2))
+            if pass_rate1 is not None and pass_rate2 is not None:
+                if pass_rate1 == pass_rate2:# or abs(pass_rate1-pass_rate2)/pass_rate1*100 < 1:
+                    print("[compare_relation] Relations consider equal because pass rates w.r.t successors are equal.")
+                    continue
+
+        if pass_rates_dataflow1 is not None and pass_rates_dataflow2 is not None:
+
+            pass_rate_dataflow1 = pass_rates_dataflow1.get(insn1, {}).get(insn_left, None)
+            pass_rate_dataflow2 = pass_rates_dataflow2.get(insn2, {}).get(insn_right, None)
+            print(pass_rates_dataflow1.get(insn1, {}))
+            print(pass_rates_dataflow2.get(insn2, {}))
+            print("[compare_relation] Dataflow pass rates are: " + str(pass_rate_dataflow1) + " " + str(pass_rate_dataflow2))
+            if pass_rate_dataflow1 is not None and pass_rate_dataflow2 is not None:
+                equals = len(pass_rate_dataflow1) == len(pass_rate_dataflow2)
+                if equals is True:
+                    for key in pass_rate_dataflow1:
+                        if key not in pass_rate_dataflow2:
+                            equals = False
+                            break
+                        if pass_rate_dataflow1[key] == pass_rate_dataflow2[key]:
+                            continue
+                        if (pass_rate_dataflow1[key] - pass_rate_dataflow2[key]) * 100 < 1:
+                            continue
+                if equals is True:
+                    print("[compare_relation] Relations consider equal because pass rates w.r.t. control flow targets are equal.")
+                    continue
+        return True
+
     return False
 
 def get_relation_pairs(insn1, insn2, mrs1, mrs2):
@@ -244,7 +277,26 @@ def parse_multiple_relations(f):
     #print(mrs)
     return mrs
 
-def compare_relation_groups(f1, f2, tf1, tf2, d1, mcf1, mcf12, mf1, mf12, compare_highest_ranking_rg_only=False):
+def parse_pass_rates(fname):
+    print(fname)
+    if not os.path.exists(fname):
+        raise Exception
+        #return None
+    with open(fname, 'r') as f:
+        json_pass_rates_per_succe = json.load(f)
+        pass_rates_per_succe = {}
+        for json_k in json_pass_rates_per_succe:
+            json_pass_rates = json_pass_rates_per_succe[json_k]
+            k = int(json_k)
+            pass_rates = {}
+            for json_k_inner in json_pass_rates:
+                k_inner = int(json_k_inner)
+                pass_rates[k_inner] = json_pass_rates[json_k_inner]
+            pass_rates_per_succe[k] = pass_rates
+        return pass_rates_per_succe
+
+def compare_relation_groups(f1, f2, tf1, tf2, d1, mcf1, mcf12, mf1, mf12, pf1, pf12, pduf1, pduf12,
+                            compare_highest_ranking_rg_only=False):
     rs1 = parse(f1)
     #print(rs1)
     rs2 = parse(f2)
@@ -259,7 +311,13 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1, mcf1, mcf12, mf1, mf12, compar
     print("node_count_1: " + str(nc1))
     nc2 = load_node_info(tf2)
     print("node_count_2: " + str(nc2))
-    
+
+    pr1 = parse_pass_rates(pf1)
+    pr2 = parse_pass_rates(pf12)
+
+    prdu1 = parse_pass_rates(pduf1)
+    prdu2 = parse_pass_rates(pduf12)
+
     diff = []
     ''' find matching relation group from the other execution '''
     for rg in set(rs1.relations_map.values()):
@@ -299,7 +357,7 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1, mcf1, mcf12, mf1, mf12, compar
         print()
         print(str(p[0]) + " " + str(p[1]) + " " + str(p[2]) + " " + str(p[3]))
         print()
-        compare_relations(p[0], p[1], p[2], p[3], nc1, nc2, d1, mcrs1, mcrs2, mrs1, mrs2)
+        compare_relations(p[0], p[1], p[2], p[3], nc1, nc2, d1, mcrs1, mcrs2, mrs1, mrs2, pr1, pr2, prdu1, prdu2)
         print()
         print(str(p[0]) + " " + str(p[1]) + " " + str(p[2]) + " " + str(p[3]))
         print()
@@ -322,7 +380,12 @@ def test_if_likely_true_negative_event(r_left, r_right, left_full_weight, right_
 
 def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                            mcrs_left, mcrs_right, mrs_left, mrs_right, summ_left, summ_right,
-                           left_counts, right_counts):
+                           counts_left, counts_right, pass_rates_left=None, pass_rates_right=None,
+                           pass_rates_dataflow_left=None, pass_rates_dataflow_right=None):
+    assert pass_rates_left is not None
+    assert pass_rates_right is not None
+    assert pass_rates_dataflow_left is not None
+    assert pass_rates_dataflow_right is not None
     weighted_diff = []
     weight_map_left = {}
     weight_map_right = {}
@@ -333,8 +396,8 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
     insns_right = []
 
     # TODO: Should use the weight of each starting event too, for now, just use the count
-    left_full_weight = left_counts[left.insn]
-    right_full_weight = right_counts[right.insn]
+    left_full_weight = counts_left[left.insn]
+    right_full_weight = counts_right[right.insn]
 
     for quad in diff:
         weight = quad[0]
@@ -352,7 +415,10 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
 
             #TODO, handle when instructions are not the same
             equals = not compare_children_rels(r_right.insn, r_right.insn, mrs_left, mrs_right,
-                                               filter1=None, filter2=set(summ_right[r_right.insn]))
+                                               filter1=None, filter2=set(summ_right[r_right.insn]),
+                                               pass_rates1=pass_rates_left, pass_rates2=pass_rates_right,
+                                               pass_rates_dataflow1=pass_rates_dataflow_left,
+                                               pass_rates_dataflow2=pass_rates_dataflow_right)
             print("[compare_relation] Children relations are equal? " + str(equals))
             assert weight == r_right.weight.perc_contrib
             corr = r_right.forward.corr()
@@ -372,7 +438,10 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
             insns_right.append(r_left.insn)
  
             equals = not compare_children_rels(r_left.insn, r_left.insn, mrs_left, mrs_right,
-                                               filter1=set(summ_left[r_left.insn]), filter2=None)
+                                               filter1=set(summ_left[r_left.insn]), filter2=None,
+                                               pass_rates1=pass_rates_left, pass_rates2=pass_rates_right,
+                                               pass_rates_dataflow1=pass_rates_dataflow_left,
+                                               pass_rates_dataflow2=pass_rates_dataflow_right)
             print("[compare_relation] Children relations are equal? " + str(equals))
             assert weight == r_left.weight.perc_contrib
             corr = r_left.forward.corr()
@@ -675,8 +744,9 @@ def sort_relations_simple(diff, max_weight, max_timestamp):
     sorted_diff = sorted(weighted_diff, key=lambda e: ((e[1] + e[0]) / 2))
     return sorted_diff
 
-def compare_relations(parent_d, parent_key, left, right, left_counts, right_counts, d1, mcrs_left=None, mcrs_right=None,
-                      mrs_left=None, mrs_right=None):
+def compare_relations(parent_d, parent_key, left, right, counts_left, counts_right, d1, mcrs_left=None, mcrs_right=None,
+                      mrs_left=None, mrs_right=None, pass_rates_left=None, pass_rates_right=None,
+                           pass_rates_dataflow_left=None, pass_rates_dataflow_right=None):
     if left is None or right is None:
         print("[warn] One relation group is None")
         return
@@ -808,7 +878,8 @@ def compare_relations(parent_d, parent_key, left, right, left_counts, right_coun
     #sorted_diff = sort_relations_complex(diff, max_weight, max_timestamp)
     sorted_diff = sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                                          mcrs_left, mcrs_right, mrs_left, mrs_right, left_summary, right_summary,
-                                         left_counts, right_counts)
+                                         counts_left, counts_right, pass_rates_left, pass_rates_right,
+                                         pass_rates_dataflow_left, pass_rates_dataflow_right)
 
     included_diff = []
     #rank = len(sorted_diff) + 1
@@ -828,7 +899,8 @@ def compare_relations(parent_d, parent_key, left, right, left_counts, right_coun
         r_right = p[5]
         include = True
         if r_left is not None and r_right is not None:
-            include = compare_absolute_count(left, right, r_left, r_right, left_summary, right_summary, left_counts, right_counts, insn_to_insn)
+            include = compare_absolute_count(left, right, r_left, r_right, left_summary, right_summary,
+                                             counts_left, counts_right, insn_to_insn)
             if include is False:
                 print("[compare_relation] absolute count of event same in both runs, ignore...")
         elif r_left is not None:
@@ -919,6 +991,13 @@ if __name__ == "__main__":
     mfile1 = "multiple_" + file1
     mfile2 = "multiple_" + file2
 
+    other_key = parse_other_key()
+    pfile1 = "pass_rates_" + key + ".json"
+    pfile2 = "pass_rates" + other_key + ".json"
+
+    pdufile1 = "pass_rates_def_to_use_site_" + key + ".json"
+    pdufile2 = "pass_rates_def_to_use_site" + other_key + ".json"
+
     trace_file1 = key + "_instruction_trace.out.count"
     trace_file2 = parse_other_insn_trace() + ".count"
 
@@ -937,6 +1016,14 @@ if __name__ == "__main__":
     #mf2 = os.path.join(dir2, cache_dir2, mfile2)
     mf12 = os.path.join(dir2, cache_dir1, mfile2)
 
+    pf1 = os.path.join(dir1, cache_dir1, pfile1)
+    #pf2 = os.path.join(dir2, cache_dir2, pfile2)
+    pf12 = os.path.join(dir2, cache_dir1, pfile2)
+
+    pduf1 = os.path.join(dir1, cache_dir1, pdufile1)
+    #pduf2 = os.path.join(dir2, cache_dir2, pdufile2)
+    pduf12 = os.path.join(dir2, cache_dir1, pdufile2)
+
     tf1 = os.path.join(dir1, "pin", trace_file1)
     tf12 = os.path.join(dir1, "pin", trace_file2)
 
@@ -952,4 +1039,4 @@ if __name__ == "__main__":
     print(mf1)
     print(mf12)
 
-    compare_relation_groups(f1, f12, tf1, tf12, d1, mcf1, mcf12, mf1, mf12, True)
+    compare_relation_groups(f1, f12, tf1, tf12, d1, mcf1, mcf12, mf1, mf12, pf1, pf12, pduf1, pduf12, True)
