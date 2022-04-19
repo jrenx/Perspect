@@ -103,12 +103,80 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
         b = time.time()
         print("[ra] took " + str(b-a))
 
+    def generate_pass_rates(self):
+        node_to_succe_pass_rates = {}
+        for node in self.dd.insn_to_static_node.values():
+            if node.insn not in self.node_counts:
+                continue
+            total_counts = self.node_counts[node.insn]
+            if total_counts == 0:
+                continue
+            pass_rates = {}
+            for succe in itertools.chain(node.cf_succes, node.df_succes):
+                if succe.insn not in self.node_counts:
+                    continue
+                pass_rate = self.node_counts[succe.insn]/total_counts
+                if pass_rate == 0:
+                    continue
+                pass_rates[succe.insn] = pass_rate
+            node_to_succe_pass_rates[node.insn] = pass_rates
+        pass_rates_file = os.path.join(curr_dir, "cache", self.prog, "pass_rates" + self.dd.key + ".json")
+        with open(pass_rates_file, 'w') as f:
+            json.dump(node_to_succe_pass_rates, f, indent=4, ensure_ascii=False)
+
+        def_to_use_site_pass_rates = {}
+        for node in self.dd.insn_to_static_node.values():
+            if node.insn not in self.node_counts:
+                continue
+            total_counts = self.node_counts[node.insn]
+            if total_counts == 0:
+                continue
+        
+            succe_pass_rates = {}
+            for df_succe in node.df_succes:
+                visited = set()
+                pass_rates = {}
+                df_succes = deque()
+                df_succes.append(df_succe)
+                while len(df_succes) > 0:
+                    curr = df_succes.popleft()
+                    if curr.insn in visited:
+                        continue
+                    visited.add(curr.insn)
+                    if curr.insn not in node_to_succe_pass_rates:
+                        continue
+                    #if curr.insn not in self.node_counts:
+                    #    continue
+                    #curr_counts = self.node_counts[curr.insn]
+                    #if curr_counts == 0:
+                    #    continue
+
+                    for df_succe in curr.df_succes:
+                        df_succes.append(df_succe)
+                    for cf_succe in curr.cf_succes:
+                        if cf_succe.insn not in node_to_succe_pass_rates[curr.insn]:
+                            continue
+                        pass_rate = node_to_succe_pass_rates[curr.insn][cf_succe.insn]
+                        key = hex(curr.insn) + "_" + hex(cf_succe.insn)
+                        assert key not in pass_rates
+                        pass_rates[key] = pass_rate
+                succe_pass_rates[df_succe.insn] = pass_rates
+                
+            if len(succe_pass_rates) > 0:
+                def_to_use_site_pass_rates[node.insn] = succe_pass_rates
+ 
+        def_to_use_site_pass_rates_file = os.path.join(curr_dir, "cache", self.prog, "pass_rates_def_to_use_site" + self.dd.key + ".json")
+        with open(def_to_use_site_pass_rates_file, 'w') as f:
+            json.dump(def_to_use_site_pass_rates, f, indent=4, ensure_ascii=False)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--use_cache', dest='use_cache', action='store_true')
+    parser.add_argument('-c', '--use_cache', dest='use_cache', action='store_true')
+    parser.set_defaults(use_cache=False)
     parser.add_argument('-if', '--multiple_insns_file', dest='multiple_insns_file', type=str)
     parser.add_argument('-i', '--parent_instruction', dest='parent_insn')
-    parser.set_defaults(use_cache=False)
+    parser.add_argument('-p', '--generate_pass_rates', dest='generate_pass_rates', action='store_true')
+    parser.set_defaults(generate_pass_rates=False)
     args = parser.parse_args()
 
     limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
@@ -117,10 +185,13 @@ if __name__ == "__main__":
                           starting_insn_to_weight,
                           other_indices_file=other_indices_file,
                           other_relations_file=other_relations_file)
-    multiple_insns = []
-    insns_file = args.multiple_insns_file + ("_" + args.parent_insn if args.parent_insn is not None else "")
-    print("[ra] Reading from insns file: " + insns_file)
-    with open(insns_file, "r") as f:
-        for l in f.readlines():
-            multiple_insns.append(int(l.strip()))
-    ra.analyze(multiple_insns, args.use_cache, int(args.parent_insn, 16) if args.parent_insn is not None else None)
+    if args.generate_pass_rates is True:
+        ra.generate_pass_rates()
+    else:
+        multiple_insns = []
+        insns_file = args.multiple_insns_file + ("_" + args.parent_insn if args.parent_insn is not None else "")
+        print("[ra] Reading from insns file: " + insns_file)
+        with open(insns_file, "r") as f:
+            for l in f.readlines():
+                multiple_insns.append(int(l.strip()))
+        ra.analyze(multiple_insns, args.use_cache, int(args.parent_insn, 16) if args.parent_insn is not None else None)
