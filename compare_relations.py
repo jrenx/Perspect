@@ -58,6 +58,25 @@ def build_insn_to_reverse_relation_group_map(rs):
         m1[insn] = simple_relation_group
     return m1
 
+def dataflow_pass_rates_equal(pass_rates_dataflow1, pass_rates_dataflow2, insn1, insn2, insn_left, insn_right):
+    pass_rate_dataflow1 = pass_rates_dataflow1.get(insn1, {}).get(insn_left, None)
+    pass_rate_dataflow2 = pass_rates_dataflow2.get(insn2, {}).get(insn_right, None)
+    # print(pass_rates_dataflow1.get(insn1, {}))
+    # print(pass_rates_dataflow2.get(insn2, {}))
+    print("[compare_relation] Dataflow pass rates are: " + str(pass_rate_dataflow1) + " " + str(pass_rate_dataflow2))
+    if pass_rate_dataflow1 is None or pass_rate_dataflow2 is None:
+        return False
+    if len(pass_rate_dataflow1) != len(pass_rate_dataflow2):
+        return False
+    for key in pass_rate_dataflow1:
+        if key not in pass_rate_dataflow2:
+            return False
+        if pass_rate_dataflow1[key] == pass_rate_dataflow2[key]:
+            continue
+        if abs(pass_rate_dataflow1[key] - pass_rate_dataflow2[key]) * 100 <= 5:
+            continue
+        return False
+    return True
 
 ''' TODO, need to handle when binaries are different '''
 # Returns True if the children relations are not equal, else False.
@@ -72,7 +91,8 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
     relation_pairs, succes = get_relation_pairs(insn1, insn2, mrs1, mrs2)
     if relation_pairs is None: #no multiple relations provided for either runs, assume not equal.
         return True
-    
+
+    ret = False
     for i in range(len(relation_pairs)):
         p = relation_pairs[i]
         s = succes[i]
@@ -92,41 +112,47 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
         #print(r_left)
         #print(r_right)
         if filter1 is not None:
-            if r_left is None:
-                continue
-            if insn_left not in filter1:
+            if r_left is None or insn_left not in filter1:
+                print("[compare_relation] instruction filtered out")
                 continue
 
         if filter2 is not None:
-            if r_right is None:
-                continue
-            if insn_right not in filter2:
+            if r_right is None or insn_right not in filter2:
+                print("[compare_relation] instruction filtered out")
                 continue
 
         if r_left is None:
             assert r_right is not None
             if r_right.weight.perc_contrib < 5:
+                print("[compare_relation] ignore relation with less than 5% impact")
                 continue
             else:
-                return True
+                print("[compare_relation] missing r_right")
+                ret = True
 
         if r_right is None:
             assert r_left is not None
             if r_left.weight.perc_contrib < 5:
+                print("[compare_relation] ignore relation with less than 5% impact")
                 continue
             else:
-                return True
+                print("[compare_relation] missing r_left")
+                ret = True
 
-        if r_left.relaxed_equals(r_right):
-            print("[compare_relation] Relations considered related equal.")
-            continue
+        print("[compare_relation] Actually comparing...")
+
+        #TODO: Right now the pass rate is the combined result of both ratio and probability of passing.
+        #TODO: so we use pass rate to override relation comparison.
+        #if r_left.relaxed_equals(r_right):
+        #    print("[compare_relation] Relations considered related equal.")
+        #    continue
 
         if pass_rates1 is not None and pass_rates2 is not None:
             pass_rate1 = pass_rates1.get(insn1, {}).get(insn_left, None)
             pass_rate2 = pass_rates2.get(insn2, {}).get(insn_right, None)
             print("[compare_relation] Pass rates are: " + str(pass_rate1) + " " + str(pass_rate2))
             if pass_rate1 is not None and pass_rate2 is not None:
-                if pass_rate1 == pass_rate2:# or abs(pass_rate1-pass_rate2)/pass_rate1*100 < 1:
+                if pass_rate1 == pass_rate2 or abs(pass_rate1-pass_rate2) * 100 <= 5:
                     print("[compare_relation] Relations consider equal because pass rates w.r.t successors are equal.")
                     continue
 
@@ -146,14 +172,15 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
                             break
                         if pass_rate_dataflow1[key] == pass_rate_dataflow2[key]:
                             continue
-                        if (pass_rate_dataflow1[key] - pass_rate_dataflow2[key]) * 100 < 1:
+                        if abs(pass_rate_dataflow1[key] - pass_rate_dataflow2[key]) * 100 <= 5:
                             continue
+                        equals = False
                 if equals is True:
                     print("[compare_relation] Relations consider equal because pass rates w.r.t. control flow targets are equal.")
                     continue
-        return True
 
-    return False
+        ret = True
+    return ret
 
 def get_relation_pairs(insn1, insn2, mrs1, mrs2):
     if mrs1 is None and mrs2 is None:
@@ -476,6 +503,7 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
 
         print(r_left)
         print(r_right)
+        #TODO, should we consider pass rate when deciding if they are equal?
         if r_left.relaxed_equals(r_right):
             print("[compare_relation/warn] parent relations equal, do not re-calculate weight.")
             continue
@@ -560,7 +588,6 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                 equals = p[0].relaxed_equals(p[1])
             print("[compare_relation] Equals? " + str(equals))
 
-
             if p[0] is not None and p[1] is not None:
                 impact = calculate_forward_impact(p[0], p[1])
             else:
@@ -575,6 +602,27 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                 succe_weight = succe_weight * proportion
                 print("[compare_relation] Updating successor weight with proportion: " + str(proportion)
                       + " new weight is: " + str(succe_weight))
+
+            print("[compare_relation] impact is: " + str(impact))
+            if pass_rates_left is not None and pass_rates_right is not None:
+                pass_rate1 = pass_rates_left.get(r_left.insn, {}).get(s[0][1] if s[0] is not None else None, None)
+                pass_rate2 = pass_rates_right.get(r_right.insn, {}).get(s[1][1] if s[1] is not None else None, None)
+                print("[compare_relation] 2 Pass rates are: " + str(pass_rate1) + " " + str(pass_rate2))
+                if pass_rate1 is not None and pass_rate2 is not None:
+                    pass_rate_ratio = (pass_rate1 - pass_rate2)/pass_rate1
+                    print("[compare_relation] Pass rates ratio is: " + str(pass_rate_ratio))
+                    if pass_rate_ratio > 0:
+                        old_impact = impact
+                        impact = min((100 - impact)*pass_rate_ratio+impact,100)
+                        print("[compare_relation] updating impact from: " + str(old_impact) + " to: " + str(impact))
+
+            #TODO: Should still include the control flow impacts.
+            if impact != 0 and pass_rates_dataflow_left is not None and pass_rates_dataflow_right is not None:
+                dataflow_equals = dataflow_pass_rates_equal(pass_rates_dataflow_left, pass_rates_dataflow_right, r_left.insn, r_right.insn,
+                                          s[0][1] if s[0] is not None else None, s[1][1] if s[1] is not None else None)
+                if dataflow_equals is True:
+                    print("[compare_relation] setting impact from " + str(impact) + " to 0 because pass rates w.r.t. control flow targets are equal.")
+                    impact = 0
             succe_weights.append([impact, succe_weight])
             print("---------------------------------")
         succe_weights = sorted(succe_weights, key=lambda e: e[0])
@@ -593,8 +641,8 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
             succe_weight = weight_pair[1]
             total_succe_weights_encountered += succe_weight
             new_weight += impact * succe_weight / 100
-            if new_weight > old_weight:
-                new_weight = old_weight
+            if new_weight > r_left.weight.perc_contrib: #FIXME
+                new_weight = r_left.weight.perc_contrib
                 break
         if len(succe_weights) == 0:
             print("[compare_relation] no succes, use original weight. ")
@@ -607,7 +655,7 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
             assert new_weight <= old_weight, str(new_weight) + " " + str(old_weight)
             print("[compare_relation/warn] Updating the weight to "+ str(new_weight))
 
-        assert new_weight <= old_weight #TODO, remove
+        #assert new_weight <= old_weight #TODO, remove
         print("[compare_relation] new weights: " + str(new_weight))
         if backward_impact > forward_impact:
             impact = backward_impact + new_weight
