@@ -184,7 +184,7 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
     return ret
 
 def get_relation_pairs(insn1, insn2, mrs1, mrs2):
-    if mrs1 is None and mrs2 is None:
+    if mrs1 is None or mrs2 is None:
         return None, None
     left = mrs1[insn1] if insn1 in mrs1 else None
     right = mrs2[insn2] if insn2 in mrs2 else None
@@ -307,8 +307,8 @@ def parse_multiple_relations(f):
 def parse_pass_rates(fname):
     print(fname)
     if not os.path.exists(fname):
-        raise Exception
-        #return None
+        #raise Exception
+        return None
     with open(fname, 'r') as f:
         json_pass_rates_per_succe = json.load(f)
         pass_rates_per_succe = {}
@@ -409,10 +409,10 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                            mcrs_left, mcrs_right, mrs_left, mrs_right, summ_left, summ_right,
                            counts_left, counts_right, pass_rates_left=None, pass_rates_right=None,
                            pass_rates_dataflow_left=None, pass_rates_dataflow_right=None):
-    assert pass_rates_left is not None
-    assert pass_rates_right is not None
-    assert pass_rates_dataflow_left is not None
-    assert pass_rates_dataflow_right is not None
+    #assert pass_rates_left is not None
+    #assert pass_rates_right is not None
+    #assert pass_rates_dataflow_left is not None
+    #assert pass_rates_dataflow_right is not None
     weighted_diff = []
     weight_map_left = {}
     weight_map_right = {}
