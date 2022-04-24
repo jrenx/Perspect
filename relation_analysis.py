@@ -194,6 +194,6 @@ class RelationAnalysis:
                 rgroups = []
                 for json_rgroup in json_rgroups:
                     rgroups.append(RelationGroup.fromJSON(json_rgroup, prog))
-                RelationAnalysis.print_rgroups(rgroups)
-            return True
-        return False
+                #RelationAnalysis.print_rgroups(rgroups)
+            return rgroups
+        return None
