@@ -25,31 +25,34 @@ def build_insn_to_reverse_relation_group_map(rs):
             prede = pair[1]
             if r.insn not in m:
                 m[r.insn] = ([], prede)
-            m[r.insn][0].append((r, rg.index_quad))
+            else:
+                assert prede == m[r.insn][1], str(prede) + " " + str(m[r.insn][1])
+            m[r.insn][0].append((r, rg.index_quad, rg.insn))
+            #r.insn = rg.insn
     m1 = {}
     for insn in m:
         relations, group_index_quad = m[insn]
         predes = []
         relations_map = {}
-        for relation, index_quad in relations:
+        for relation, index_quad, new_insn in relations:
             predes.append(index_quad)
             file, line, index, total_count = Indices.parse_index_quad(index_quad)
             child_key = Indices.build_key_from_index_quad(index_quad)
-            relations_map[child_key] = (relation, index_quad)
+            relations_map[child_key] = (relation, index_quad, new_insn)
             if total_count == 0 or total_count is None or index is None:
                 child_key_short = file + "_" + str(line)
-                relations_map[child_key_short] = (relation, index_quad)
+                relations_map[child_key_short] = (relation, index_quad, new_insn)
             else:
                 child_key_short = file + "_" + str(line)
                 inner_map = relations_map.get(child_key_short, {})
                 if len(inner_map) == 0:
                     relations_map[child_key_short] = inner_map
-                elif isinstance(inner_map, tuple):
+                elif not isinstance(inner_map, dict):
                     pair = inner_map
                     inner_map = {}
                     inner_map[0] = pair
                 ratio = index/max(total_count,1)
-                inner_map[ratio] = (relation, index_quad)
+                inner_map[ratio] = (relation, index_quad, new_insn)
         predes = Indices.build_indices(predes)
         file, line, index, total_count = Indices.parse_index_quad(group_index_quad)
         key = file + "_" + str(line) + "_" + str(total_count) + "_" + str(index)
@@ -89,7 +92,7 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
           + (str([hex(i) for i in filter1]) if filter1 is not None else ""))
     print("[compare_relation] only keeping these instructions on the right "
           + (str([hex(i) for i in filter2]) if filter2 is not None else ""))
-    relation_pairs, succes = get_relation_pairs(insn1, insn2, mrs1, mrs2)
+    relation_pairs, succes, insns = get_relation_pairs(insn1, insn2, mrs1, mrs2)
     if relation_pairs is None: #no multiple relations provided for either runs, assume not equal.
         return True
 
@@ -97,21 +100,22 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
     for i in range(len(relation_pairs)):
         p = relation_pairs[i]
         s = succes[i]
+        ip = insns[i]
 
         print("---------------------------------")
-        print(str(s[0]) + " " + (hex(s[0][1]) if s[0] is not None else ""))
+        print(str(s[0]) + " " + str(ip[0]))
         print(p[0])
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-        print(str(s[1]) + " " + (hex(s[1][1]) if s[1] is not None else ""))
+        print(str(s[1]) + " " + str(ip[1]))
         print(p[1])
         print("---------------------------------")
 
         r_left = p[0]
         r_right = p[1]
-        insn_left = s[0][1] if s[0] is not None else None
-        insn_right = s[1][1] if s[1] is not None else None
-        #print(r_left)
-        #print(r_right)
+        insn_left = ip[0]
+        insn_right = ip[1]
+        print("[compare_relation] Instruction on the left: " + hex(insn_left) if insn_left is not None else str(insn_left))
+        print("[compare_relation] Instruction on the right: " + hex(insn_right) if insn_right is not None else str(insn_right))
         if filter1 is not None:
             if r_left is None or insn_left not in filter1:
                 print("[compare_relation] instruction filtered out")
@@ -183,37 +187,48 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
         ret = True
     return ret
 
+#TODO, merge this logic and the logic being used in the main comparison loop!!
 def get_relation_pairs(insn1, insn2, mrs1, mrs2):
+    print("[compare_relation] Looking for relation pairs, insn1: " + hex(insn1) + " insn2: " + hex(insn2))
     if mrs1 is None or mrs2 is None:
-        return None, None
+        return None, None, None
     left = mrs1[insn1] if insn1 in mrs1 else None
     right = mrs2[insn2] if insn2 in mrs2 else None
     if left is None and right is None:
-        return None, None
+        return None, None, None
     relation_pairs = []
-    prede_pairs = []
+    index_pairs = []
+    insn_pairs = []
+
     if left is None and right is not None:
         for pair in right.relations:
             relation_pairs.append([None, pair[0]])
-            prede_pairs.append([None, pair[1]])
-        return relation_pairs, prede_pairs
+            index_pairs.append([None, pair[1]])
+            insn_pairs.append([None, pair[2]])
+        return relation_pairs, index_pairs, insn_pairs
     if left is not None and right is None:
         for pair in left.relations:
             relation_pairs.append([pair[0], None])
-            prede_pairs.append([pair[1], None])
-        return relation_pairs, prede_pairs
+            index_pairs.append([pair[1], None])
+            insn_pairs.append([pair[2], None])
+        return relation_pairs, index_pairs, insn_pairs
     if left is None and right is None:
-        return relation_pairs, prede_pairs
+        return relation_pairs, index_pairs, insn_pairs
+
+    right_seen = set()
     for pair in left.relations:
         r = pair[0]
         prede = pair[1]
+        insn = pair[2]
         file, line, index, total_count = Indices.parse_index_quad(prede)
         key = right.predes.get_indices2(file, line, total_count, index)
         if key is None:
             relation_pairs.append([r, None])
-            prede_pairs.append([prede, None])
+            index_pairs.append([prede, None])
+            insn_pairs.append([insn, None])
             continue
 
+        #TODO: this logic is duplicated in several places, try to merge them in the future
         ''' Find the matching relation from the right hand side relation group '''
         val = right.relations_map.get(key) #TODO
         if isinstance(val, dict):
@@ -225,8 +240,10 @@ def get_relation_pairs(insn1, insn2, mrs1, mrs2):
                 if ratio_diff < min_diff_ratio:
                     min_diff_ratio = their_ratio
             if abs(min_diff_ratio-our_ratio) > 0.05:
-                left_over_left[prede[0] + "_" + str(prede[1])] = (r.weight.perc_contrib, r.timestamp, r, None)
-                # diff.append((r.weight.perc_contrib, r.timestamp, r, None))
+                #left_over_left[prede[0] + "_" + str(prede[1])] = (r.weight.perc_contrib, r.timestamp, r, None)
+                relation_pairs.append([r, None])
+                index_pairs.append([prede, None])
+                insn_pairs.append([insn, None])
                 continue
 
             pair = val[min_diff_ratio]
@@ -234,18 +251,25 @@ def get_relation_pairs(insn1, insn2, mrs1, mrs2):
             pair = val
         r2 = pair[0]
         prede2 = pair[1]
+        insn2 = pair[2]
+        right_seen.add(insn2)
         relation_pairs.append([r, r2])
-        prede_pairs.append([prede, prede2])
+        index_pairs.append([prede, prede2])
+        insn_pairs.append([insn, insn2])
 
     for pair in right.relations:
         r = pair[0]
         prede = pair[1]
+        insn = pair[2]
+        if insn in right_seen:
+            continue
         file, line, index, total_count = Indices.parse_index_quad(prede)
         key = left.predes.get_indices2(file, line, total_count, index)
-        if key is None:
-            relation_pairs.append([None, r])
-            prede_pairs.append([None, prede])
-    return relation_pairs, prede_pairs
+        assert key is None
+        relation_pairs.append([None, r])
+        index_pairs.append([None, prede])
+        insn_pairs.append([None, insn])
+    return relation_pairs, index_pairs, insn_pairs
 
 ''' comparing the absolute count of two relations, this is a heuristic '''
 def compare_absolute_count(left, right, r1, r2, \
@@ -346,6 +370,7 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1, mcf1, mcf12, mf1, mf12, pf1, p
     prdu2 = parse_pass_rates(pduf12)
 
     diff = []
+    #TODO, this does not include the detailed ratio level match
     ''' find matching relation group from the other execution '''
     for rg in set(rs1.relations_map.values()):
         file, line, index, total_count = Indices.parse_index_quad(rg.index_quad)
@@ -453,6 +478,7 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                 corr = "EQUAL!"
                 continue
         else:
+            print("[compare_relation] Adding node to weight map on the left: " + hex(r_left.insn))
             weight_map_left[r_left.insn] = r_left.weight.perc_contrib
 
         if r_right is None:
@@ -476,6 +502,7 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                 corr = "EQUAL!"
                 continue
         else:
+            print("[compare_relation] Adding node to weight map on the right: " + hex(r_right.insn))
             weight_map_right[r_right.insn] = r_right.weight.perc_contrib
 
         if r_left is None or r_right is None:
@@ -532,10 +559,12 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
         #    continue
         # Candidate for in context multiple rels
         succe_insns_right = summ_right[r_right.insn]
+        print("[compare_relation] succes on the right " + str([hex(i) for i in succe_insns_right]))
         for succe_insn in succe_insns_right:
             if succe_insn in weight_map_right:
                 insns_right.add(succe_insn)
         succe_insns_left = summ_left[r_left.insn]
+        print("[compare_relation] succes on the left " + str([hex(i) for i in succe_insns_left]))
         for succe_insn in succe_insns_left:
             if succe_insn in weight_map_left:
                 insns_left.add(succe_insn)
@@ -543,25 +572,26 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
         # Getting any existing in context multiple rels
         left_succe_to_rels = {}
         rigt_succe_to_rels = {} #TODO, what to do in this case?
-        pairs, succes = get_relation_pairs(r_left.insn, r_left.insn, mcrs_left, mcrs_right) #TODO, handle when they are diff
+        pairs, succes, insns = get_relation_pairs(r_left.insn, r_right.insn, mcrs_left, mcrs_right)
         if pairs is not None:
             for i in range(len(pairs)):
                 p = pairs[i]
                 s = succes[i]
+                ip = insns[i]
 
-                if s[0] is not None:
-                    if s[0][1] == r_left.insn:
+                if ip[0] is not None:
+                    if ip[0] == r_left.insn:
                         continue
-                    left_succe_to_rels[s[0][1]] = [p, s]
+                    left_succe_to_rels[ip[0]] = [p, s]
                 else:
-                    rigt_succe_to_rels[s[1][1]] = [p, s]
+                    rigt_succe_to_rels[ip[1]] = [p, s]
 
                 print("---------------------------------")
-                print(str(s[0]) + " " + (hex(s[0][1]) if s[0] is not None else ""))
-                #print(p[0])
+                print(str(s[0]) + " " + str(ip[0]))
+                print(p[0])
                 #print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                print(str(s[1]) + " " + (hex(s[1][1]) if s[1] is not None else ""))
-                #print(p[1])
+                print(str(s[1]) + " " + str(ip[1]))
+                print(p[1])
                 print("---------------------------------")
 
         succe_weights = []
@@ -579,13 +609,14 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                         + " likely need to re-run the multi-level relation gen again...")
                 continue
 
-            p, s = left_succe_to_rels[succe_insn]
+            #p, s = left_succe_to_rels[succe_insn]
+            p, _ = left_succe_to_rels[succe_insn]
 
             print("---------------------------------")
-            print(str(s[0]) + " " + (hex(s[0][1]) if s[0] is not None else ""))
+            #print(str(s[0]) + " " + (hex(s[0][1]) if s[0] is not None else ""))
             print(p[0])
             #print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-            print(str(s[1]) + " " + (hex(s[1][1]) if s[1] is not None else ""))
+            #print(str(s[1]) + " " + (hex(s[1][1]) if s[1] is not None else ""))
             print(p[1])
 
             equals = False
@@ -610,8 +641,8 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
 
             print("[compare_relation] impact is: " + str(impact))
             if pass_rates_left is not None and pass_rates_right is not None:
-                pass_rate1 = pass_rates_left.get(r_left.insn, {}).get(s[0][1] if s[0] is not None else None, None)
-                pass_rate2 = pass_rates_right.get(r_right.insn, {}).get(s[1][1] if s[1] is not None else None, None)
+                pass_rate1 = pass_rates_left.get(r_left.insn, {}).get(ip[0], None)
+                pass_rate2 = pass_rates_right.get(r_right.insn, {}).get(ip[1], None)
                 print("[compare_relation] 2 Pass rates are: " + str(pass_rate1) + " " + str(pass_rate2))
                 if pass_rate1 is not None and pass_rate2 is not None:
                     pass_rate_ratio = (pass_rate1 - pass_rate2)/pass_rate1
@@ -623,8 +654,8 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
 
             #TODO: Should still include the control flow impacts.
             if impact != 0 and pass_rates_dataflow_left is not None and pass_rates_dataflow_right is not None:
-                dataflow_equals = dataflow_pass_rates_equal(pass_rates_dataflow_left, pass_rates_dataflow_right, r_left.insn, r_right.insn,
-                                          s[0][1] if s[0] is not None else None, s[1][1] if s[1] is not None else None)
+                dataflow_equals = dataflow_pass_rates_equal(pass_rates_dataflow_left, pass_rates_dataflow_right,
+                                                            r_left.insn, r_right.insn, ip[0], ip[1])
                 if dataflow_equals is True:
                     print("[compare_relation] setting impact from " + str(impact) + " to 0 because pass rates w.r.t. control flow targets are equal.")
                     impact = 0
@@ -690,7 +721,7 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
         for i in insns_left:
             out.write(str(i) + "\n")
 
-    with open('insns_right_' + hex(left.insn), 'w') as out:
+    with open('insns_right_' + hex(right.insn), 'w') as out:
         for i in insns_right:
             out.write(str(i) + "\n")
 
