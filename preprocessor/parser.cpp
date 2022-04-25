@@ -603,6 +603,22 @@ public:
     }
     ofstream ossc;
     ossc.open(outTraceStartCodesFile.c_str(), ios::out);
+
+    // TODO, changed to unsigned long in other places.
+    unsigned long *CodeToFullCount = new unsigned long[CodeCount];
+    for (int i = 0; i < CodeCount; i++) CodeToFullCount[i] = ULONG_MAX;
+
+    string inCountFile(traceFile);
+    inCountFile += ".count";
+    ifstream isc(inCountFile);
+    if (isc.good()) {
+      unsigned long insn, count;
+      while (isc >> std::hex >> insn >> std::dec >> count) {
+        cout << std::hex << insn << std::dec << " " << count << endl;
+        short code = InsnToCode[insn];
+        CodeToFullCount[code] = count;
+      }
+    }
 #endif
 #endif
     long nodeCount = 0;
@@ -670,13 +686,23 @@ public:
       if (CodeOfStartInsns[code]) {
         parse = true;
   #ifdef SAMPLE
+        bool sample = true;
+    #ifdef PARSE_MULTIPLE
+        unsigned long full_count = CodeToFullCount[code];
+        if (full_count < 100)  {
+          cout << "[preparse] Avoid sampling because full count is smaller than 100...\n";
+          sample = false;
+        }
+    #endif
         startingCodeOcurrences = OccurrencesPerStartingCode[code];
-        if (startingCodeOcurrences % SAMPLE_THRESHOLD != 0) {
+        if (sample && startingCodeOcurrences % SAMPLE_THRESHOLD != 0) {
           parse = false;
         } else {
           parseStartCode = true;
         }
         OccurrencesPerStartingCode[code] = startingCodeOcurrences + 1;
+  #else
+	      parseStartCode = true;
   #endif
       }
 
@@ -684,6 +710,12 @@ public:
         parse = true;
       }
       if (OccurrencesPerCode[code] > LARGE_THRESOLD) parse = false;
+  #ifdef PARSE_MULTIPLE
+      if (parse == false && parsePrede == true) {
+        parse = true;
+	      parseStartCode = false;
+      }
+  #endif
 #endif
 
       bool isBitOp = isBitOpCode[code];
