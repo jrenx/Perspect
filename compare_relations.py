@@ -36,23 +36,8 @@ def build_insn_to_reverse_relation_group_map(rs):
         relations_map = {}
         for relation, index_quad, new_insn in relations:
             predes.append(index_quad)
-            file, line, index, total_count = Indices.parse_index_quad(index_quad)
-            child_key = Indices.build_key_from_index_quad(index_quad)
-            relations_map[child_key] = (relation, index_quad, new_insn)
-            if total_count == 0 or total_count is None or index is None:
-                child_key_short = file + "_" + str(line)
-                relations_map[child_key_short] = (relation, index_quad, new_insn)
-            else:
-                child_key_short = file + "_" + str(line)
-                inner_map = relations_map.get(child_key_short, {})
-                if len(inner_map) == 0:
-                    relations_map[child_key_short] = inner_map
-                elif not isinstance(inner_map, dict):
-                    pair = inner_map
-                    inner_map = {}
-                    inner_map[0] = pair
-                ratio = index/max(total_count,1)
-                inner_map[ratio] = (relation, index_quad, new_insn)
+            Indices.insert_to_external_indice_to_item_map(relations_map, index_quad, relation, new_insn)
+
         predes = Indices.build_indices(predes)
         file, line, index, total_count = Indices.parse_index_quad(group_index_quad)
         key = file + "_" + str(line) + "_" + str(total_count) + "_" + str(index)
@@ -220,35 +205,12 @@ def get_relation_pairs(insn1, insn2, mrs1, mrs2):
         r = pair[0]
         prede = pair[1]
         insn = pair[2]
-        file, line, index, total_count = Indices.parse_index_quad(prede)
-        key = right.predes.get_indices2(file, line, total_count, index)
-        if key is None:
+        pair = Indices.get_item_from_external_indice_map(right.predes, right.relations_map, prede)
+        if pair is None:
             relation_pairs.append([r, None])
             index_pairs.append([prede, None])
             insn_pairs.append([insn, None])
             continue
-
-        #TODO: this logic is duplicated in several places, try to merge them in the future
-        ''' Find the matching relation from the right hand side relation group '''
-        val = right.relations_map.get(key) #TODO
-        if isinstance(val, dict):
-            # when cannot find a precise match, match on ratio
-            our_ratio = (index if index is not None else 0)/ max(total_count if total_count is not None else 1, 1)
-            min_diff_ratio = 1
-            for their_ratio in val:
-                ratio_diff = abs(their_ratio-our_ratio)
-                if ratio_diff < min_diff_ratio:
-                    min_diff_ratio = their_ratio
-            if abs(min_diff_ratio-our_ratio) > 0.05:
-                #left_over_left[prede[0] + "_" + str(prede[1])] = (r.weight.perc_contrib, r.timestamp, r, None)
-                relation_pairs.append([r, None])
-                index_pairs.append([prede, None])
-                insn_pairs.append([insn, None])
-                continue
-
-            pair = val[min_diff_ratio]
-        else:
-            pair = val
         r2 = pair[0]
         prede2 = pair[1]
         insn2 = pair[2]
@@ -261,11 +223,11 @@ def get_relation_pairs(insn1, insn2, mrs1, mrs2):
         r = pair[0]
         prede = pair[1]
         insn = pair[2]
+        pair = Indices.get_item_from_external_indice_map(left.predes, left.relations_map, prede)
         if insn in right_seen:
+            assert pair is not None
             continue
-        file, line, index, total_count = Indices.parse_index_quad(prede)
-        key = left.predes.get_indices2(file, line, total_count, index)
-        assert key is None
+        assert pair is None
         relation_pairs.append([None, r])
         index_pairs.append([None, prede])
         insn_pairs.append([None, insn])
@@ -458,7 +420,7 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
         r_right = quad[3]
         if r_left is None:
             print("======================================================================")
-            print("[compare_relation] Examining node: " + hex(r_right.insn))
+            print("[compare_relation] Examining node1: " + hex(r_right.insn))
 
             # Candidate for contextless multiple rels
             # TODO, if good and bad run code differ, need reverse lookup to find the matching instruction
@@ -466,6 +428,7 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
             insns_right.append(r_right.insn)
 
             #TODO, handle when instructions are not the same
+            #TODO, get the corresponding insn on the left...
             equals = not compare_children_rels(r_right.insn, r_right.insn, mrs_left, mrs_right,
                                                filter1=None, filter2=set(summ_right[r_right.insn]),
                                                pass_rates1=pass_rates_left, pass_rates2=pass_rates_right,
@@ -483,7 +446,7 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
 
         if r_right is None:
             print("======================================================================")
-            print("[compare_relation] Examining node: " + hex(r_left.insn))
+            print("[compare_relation] Examining node2: " + hex(r_left.insn))
 
             # Candidate for contextless multiple rels
             # TODO, if good and bad run code differ, need reverse lookup to find the matching instruction
@@ -506,6 +469,7 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
             weight_map_right[r_right.insn] = r_right.weight.perc_contrib
 
         if r_left is None or r_right is None:
+            print("[compare_relation] One of the relations is None.")
             impact = weight / max_weight * 100
             weighted_diff.append(
                 (impact, avg_timestamp / max_timestamp * 100, weight, avg_timestamp, r_left, r_right, corr * 100))
@@ -856,12 +820,13 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
     diff = []
     left_over_left = {}
     left_over_right = {}
+    right_insns_seen = set()
     for pair in left.relations:
         r = pair[0]
         prede = pair[1]
-        file, line, index, total_count = Indices.parse_index_quad(prede)
-        key = right.predes.get_indices2(file, line, total_count, index)
-        if key is None:
+        ''' Find the matching relation from the right hand side relation group '''
+        pair = Indices.get_item_from_external_indice_map(right.predes, right.relations_map, prede)
+        if pair is None:
             if r.weight.perc_contrib < 5:
                 print("[ra] Contribution is too low, ignore the relations: " + hex(r.insn))
                 continue
@@ -872,24 +837,6 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
             #diff.append((r.weight.perc_contrib, r.timestamp, r, None))
             continue
 
-        ''' Find the matching relation from the right hand side relation group '''
-        val = right.relations_map.get(key) #TODO
-        if isinstance(val, dict):
-            # when cannot find a precise match, match on ratio
-            our_ratio = (index if index is not None else 0)/ max(total_count if total_count is not None else 1, 1)
-            min_diff_ratio = 1
-            for their_ratio in val:
-                ratio_diff = abs(their_ratio-our_ratio)
-                if ratio_diff < min_diff_ratio:
-                    min_diff_ratio = their_ratio
-            if abs(min_diff_ratio-our_ratio) > 0.05:
-                left_over_left[prede[0] + "_" + str(prede[1])] = (r.weight.perc_contrib, r.timestamp, r, None)
-                # diff.append((r.weight.perc_contrib, r.timestamp, r, None))
-                continue
-
-            pair = val[min_diff_ratio]
-        else:
-            pair = val
         r2 = pair[0]
         insn_to_insn[r.insn] = r2.insn
 
@@ -909,6 +856,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         avg_timestamp = (r2.timestamp + r.timestamp)/2
         #if d < 5:
         #    continue
+        right_insns_seen.add(r2.insn)
         diff.append((d, avg_timestamp, r, r2))
         max_timestamp = max(max_timestamp, avg_timestamp)
         max_weight = max(max_weight, d)
@@ -918,9 +866,13 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
     for pair in right.relations:
         r = pair[0]
         prede = pair[1]
-        file, line, index, total_count = Indices.parse_index_quad(prede)
-        key = left.predes.get_indices2(file, line, total_count, index)
-        if key is None:
+        pair = Indices.get_item_from_external_indice_map(left.predes, left.relations_map, prede)
+        if r.insn in right_insns_seen:
+            #assert pair is not None
+            continue
+
+        if pair is None:
+            #assert pair is None
             if r.weight.perc_contrib < 5:
                 print("[ra] Contribution is too low, ignore the relations: " + hex(r.insn))
                 continue
@@ -929,6 +881,30 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                 continue
             left_over_right[prede[0] + "_" + str(prede[1])] = (r.weight.perc_contrib, r.timestamp, None, r)
             #diff.append((r.weight.perc_contrib, r.timestamp, None, r))
+            continue
+
+        #TODO: I don't know why an instruction would fail to match in the first check and match here...
+        r1 = pair[0]
+        insn_to_insn[r1.insn] = r.insn
+
+        if r1.relaxed_equals(r):
+            print("[ra] Relations roughly equal, ignore the relations: " + hex(r1.insn) + " " + hex(r.insn))
+            continue
+
+        ''' If average contribution of the pair of relations are small, ignore '''
+        avg_contrib = (r1.weight.perc_contrib + r.weight.perc_contrib) / 2
+        if avg_contrib < 5:
+            print("[ra] Average contribution is too low, ignore the relations: " + hex(r1.insn) + " " + hex(r.insn))
+            continue
+
+        ''' If average contribution of the pair of relations are small, ignore '''
+        d = abs(r1.weight.perc_contrib - r.weight.perc_contrib)  # TODO diff by contribution
+        avg_timestamp = (r1.timestamp + r.timestamp) / 2
+        # if d < 5:
+        #    continue
+        diff.append((d, avg_timestamp, r1, r))
+        max_timestamp = max(max_timestamp, avg_timestamp)
+        max_weight = max(max_weight, d)
 
     ''' this is just to calculate the max timestamp and weight '''
     for key_short in left_over_left:
@@ -1029,8 +1005,8 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         print(str(p[2]) + " " + str(p[3]))
         print(str(p[4]))
         print(str(p[5]))
-        r_left = p[4]
-        r_right = p[5]
+        #r_left = p[4]
+        #r_right = p[5]
         # Candidate for contextless multiple rels
         # TODO, if good and bad run code differ, need reverse lookup to find the matching instruction
         #if r_left is None:
