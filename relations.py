@@ -540,23 +540,8 @@ class SimpleRelationGroup:
                         if backward["is_invariant"] is False else Invariance.fromJSON(backward)
                 relations.append((relation, index_quad))
 
-                child_key = Indices.build_key_from_index_quad(index_quad)
-                relations_map[child_key] = (relation, index_quad)
-                if total_count == 0 or total_count is None or index is None:
-                    child_key_short = file + "_" + str(line)
-                    relations_map[child_key_short] = (relation, index_quad)
-                else:
-                    child_key_short = file + "_" + str(line)
-                    inner_map = relations_map.get(child_key_short, {})
-                    if len(inner_map) == 0:
-                        relations_map[child_key_short] = inner_map
-                    elif isinstance(inner_map, tuple):
-                        pair = inner_map
-                        inner_map = {}
-                        inner_map[0] = pair
-                    ratio = index/max(total_count,1)
-                    inner_map[ratio] = (relation, index_quad)
-                    #relations_map[child_key_short] = (relation, index_quad)
+                Indices.insert_to_external_indice_to_item_map(relations_map, index_quad, relation)
+
         wavefront = None
         if "wavefront" in json_simple_relation_group:
             wavefront = []
@@ -627,6 +612,52 @@ class Indices:
                 
         return Indices(indices_map)
 
+    @staticmethod
+    def insert_to_external_indice_to_item_map(extern_map, index_quad, item1, item2=None):
+        file, line, index, total_count = Indices.parse_index_quad(index_quad)
+        child_key = Indices.build_key_from_index_quad(index_quad)
+        if item2 is None: extern_map[child_key] = (item1, index_quad)
+        else: extern_map[child_key] = (item1, index_quad, item2)
+        if total_count == 0 or total_count is None or index is None:
+            child_key_short = file + "_" + str(line)
+            if item2 is None: extern_map[child_key_short] = (item1, index_quad)
+            else: extern_map[child_key_short] = (item1, index_quad, item2)
+        else:
+            child_key_short = file + "_" + str(line)
+            inner_map = extern_map.get(child_key_short, {})
+            if len(inner_map) == 0:
+                extern_map[child_key_short] = inner_map
+            elif not isinstance(inner_map, dict):
+                pair = inner_map
+                inner_map = {}
+                inner_map[0] = pair
+            ratio = index / max(total_count, 1)
+            if item2 is None: inner_map[ratio] = (item1, index_quad)
+            else: extern_map[child_key_short] = (item1, index_quad, item2)
+
+    @staticmethod
+    def get_item_from_external_indice_map(indices, extern_map, index_quad):
+        file, line, index, total_count = Indices.parse_index_quad(index_quad)
+        key = indices.get_indices2(file, line, total_count, index)
+        if key is None:
+            return None
+
+        val = extern_map.get(key)
+        if isinstance(val, dict):
+            # when cannot find a precise match, match on ratio
+            our_ratio = (index if index is not None else 0)/ max(total_count if total_count is not None else 1, 1)
+            min_diff_ratio = 1
+            for their_ratio in val:
+                ratio_diff = abs(their_ratio-our_ratio)
+                if ratio_diff < min_diff_ratio:
+                    min_diff_ratio = their_ratio
+            if abs(min_diff_ratio-our_ratio) > 0.05:
+                return None
+            item = val[min_diff_ratio]
+        else:
+            item = val
+        return item
+
     def get_indices(self, n):
         return self.get_indices2(n.file, n.line, n.total_count, n.index)
 
@@ -665,6 +696,25 @@ class Indices:
                 return True
         return False
 
+class IndiceToInsnMap():
+    def __init__(self):
+        self.indices = None
+        self.index_to_insn = {}
+
+    def build(self, indices_file_path, insns_file_path):
+        assert os.path.exists(indices_file_path)
+        with open(indices_file_path, 'r') as f:
+            index_quads = json.load(f)
+        with open(insns_file_path, 'r') as f:
+            insns = json.load(f)
+        assert(len(index_quads) == len(insns))
+        self.indices = Indices.build_indices(index_quads)
+        for i in range(len(index_quads)):
+            index_quad = index_quads[i]
+            insn = insns[i]
+            Indices.insert_to_external_indice_to_item_map(self.index_to_insn, index_quad, insn)
+
+    #def get_matching_insn(self):
 
 class Weight:
     def __init__(self, actual_weight, base_weight, perc_contrib, corr, order):
