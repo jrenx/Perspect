@@ -39,18 +39,27 @@ class Invariance:
                 self.is_conditional == other.is_conditional and \
                 self.conditional_proportion == other.conditional_proportion
 
-    def relaxed_equals(self, other):
+    def relaxed_equals(self, other, self_count=None, other_count=None):
         if not isinstance(other, Invariance):
             return False
         if self.ratio != other.ratio:
             return False
         if self.is_conditional != other.is_conditional:
+            # If one is conditional and another is not but the conditional proportional is almost 100, return True.
+            if self.conditional_proportion is not None and self.conditional_proportion >= 0.99 or \
+                other.conditional_proportion is not None and other.conditional_proportion >= 0.99:
+                    return True
             return False
         if self.conditional_proportion == other.conditional_proportion:
             return True
         diff = abs(self.conditional_proportion - other.conditional_proportion)
         if diff/self.conditional_proportion < 0.1 or diff < 0.01:
             return True
+        if self_count is not None and other_count is not None:
+            self_prede_count = round(self_count * self.conditional_proportion)
+            other_prede_count = round(other_count * other.conditional_proportion)
+            if self_prede_count == other_prede_count:
+                return True
         return False
 
     def difference(self, other):
@@ -145,7 +154,7 @@ class Proportion:
                 self.w_mu == other.w_mu and \
                 self.w_std == other.w_std
 
-    def relaxed_equals(self, other):
+    def relaxed_equals(self, other, self_count=None, other_count=None):
         if not isinstance(other, Proportion):
             return False
         result = ks_2samp(self.distribution, other.distribution)
@@ -231,14 +240,18 @@ class Relation:
                 self.forward == other.forward and \
                 self.backward == other.backward
 
-    def relaxed_equals(self, other):
+    def relaxed_equals(self, other, self_count=None, other_count=None):
+        #print("[relation] self_count: " + str(self_count) + " other_count: " + str(other_count))
         if not isinstance(other, Relation):
             return False
-        diff = abs(self.weight.perc_contrib - other.weight.perc_contrib)/self.weight.perc_contrib
-        return diff < 0.1 and \
-               self.weight.corr == other.weight.corr and \
-               self.forward.relaxed_equals(other.forward) and \
-                self.backward.relaxed_equals(other.backward)
+        #diff = abs(self.weight.perc_contrib - other.weight.perc_contrib)/self.weight.perc_contrib
+        #return diff < 0.1 and \
+        #       self.weight.corr == other.weight.corr and \
+        #       self.forward.relaxed_equals(other.forward) and \
+        #        self.backward.relaxed_equals(other.backward)
+
+        return self.forward.relaxed_equals(other.forward) and \
+                self.backward.relaxed_equals(other.backward, self_count, other_count)
 
     def __str__(self):
         s = ""
