@@ -120,10 +120,29 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
                     continue
                 pass_rates[succe.insn] = pass_rate
             node_to_succe_pass_rates[node.insn] = pass_rates
-        pass_rates_file = os.path.join(curr_dir, "cache", self.prog, "pass_rates_" + self.dd.key + ".json")
-        with open(pass_rates_file, 'w') as f:
-            json.dump(node_to_succe_pass_rates, f, indent=4, ensure_ascii=False)
+        #pass_rates_file = os.path.join(curr_dir, "cache", self.prog, "pass_rates_" + self.dd.key + ".json")
+        #with open(pass_rates_file, 'w') as f:
+        #    json.dump(node_to_succe_pass_rates, f, indent=4, ensure_ascii=False)
 
+        prede_to_succe_counts = None
+        if os.path.exists("pin/cf_pass_rates"):
+            prede_to_succe_counts = {}
+            with open("pin/cf_pass_rates", 'r') as f:
+                for l in f.readlines():
+                    print(l)
+                    segs = l.split()
+                    prede = int(segs[0], 16)
+                    succe = int(segs[1], 16)
+                    count = int(segs[2])
+                    succes = prede_to_succe_counts.get(prede, None)
+                    if succes is None:
+                        succes = {}
+                        prede_to_succe_counts[prede] = succes
+                    assert succe not in succes
+                    succes[succe] = count
+            print(prede_to_succe_counts)
+
+        prede_to_succe_pairs = set()
         def_to_use_site_pass_rates = {}
         for node in self.dd.insn_to_static_node.values():
             if node.insn not in self.node_counts:
@@ -156,8 +175,11 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
                     for cf_succe in curr.cf_succes:
                         if cf_succe.insn not in node_to_succe_pass_rates[curr.insn]:
                             continue
-                        pass_rate = node_to_succe_pass_rates[curr.insn][cf_succe.insn]
+                        #pass_rate = node_to_succe_pass_rates[curr.insn][cf_succe.insn]
+                        if prede_to_succe_counts is not None:
+                            pass_rate = prede_to_succe_counts[curr.insn][cf_succe.insn]/self.node_counts[curr.insn]
                         key = hex(curr.insn) + "_" + hex(cf_succe.insn)
+                        prede_to_succe_pairs.add(str(curr.insn) + "_" + str(cf_succe.insn))
                         assert key not in pass_rates
                         pass_rates[key] = pass_rate
                 succe_pass_rates[df_succe.insn] = pass_rates
@@ -168,6 +190,18 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
         def_to_use_site_pass_rates_file = os.path.join(curr_dir, "cache", self.prog, "pass_rates_def_to_use_site_" + self.dd.key + ".json")
         with open(def_to_use_site_pass_rates_file, 'w') as f:
             json.dump(def_to_use_site_pass_rates, f, indent=4, ensure_ascii=False)
+
+        prede_to_succe_pairs_list = []
+        for prede_to_succe_pair in prede_to_succe_pairs:
+            split_pair = prede_to_succe_pair.split('_')
+            prede_to_succe_pairs_list.append((int(split_pair[0]), int(split_pair[1])))
+
+        preprocess_pass_rate_data = {
+            "prede_to_succe_pairs": prede_to_succe_pairs_list
+        }
+        preprocess_pass_rate_data_file = os.path.join(curr_dir, 'preprocess_cf_pass_rate_data')
+        with open(preprocess_pass_rate_data_file, 'w') as f:
+            json.dump(preprocess_pass_rate_data, f, indent=4, ensure_ascii=False)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
