@@ -71,7 +71,8 @@ def dataflow_pass_rates_equal(pass_rates_dataflow1, pass_rates_dataflow2, insn1,
 # Returns True if the children relations are not equal, else False.
 def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
                           pass_rates1=None, pass_rates2=None,
-                           pass_rates_dataflow1=None, pass_rates_dataflow2=None):
+                           pass_rates_dataflow1=None, pass_rates_dataflow2=None,
+                          counts_left=None, counts_right=None):
     print("[compare_relation] comparing children relations for " + hex(insn1) + " and " + hex(insn2))
     print("[compare_relation] only keeping these instructions on the left  "
           + (str([hex(i) for i in filter1]) if filter1 is not None else ""))
@@ -88,10 +89,10 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
         ip = insns[i]
 
         print("---------------------------------")
-        print(str(s[0]) + " " + str(ip[0]))
+        print(str(s[0]) + " " + (hex(ip[0]) if ip[0] is not None else "None"))
         print(p[0])
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-        print(str(s[1]) + " " + str(ip[1]))
+        print(str(s[1]) + " " + (hex(ip[1]) if ip[1] is not None else "None"))
         print(p[1])
         print("---------------------------------")
 
@@ -103,12 +104,12 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
         print("[compare_relation] Instruction on the right: " + hex(insn_right) if insn_right is not None else str(insn_right))
         if filter1 is not None:
             if r_left is None or insn_left not in filter1:
-                print("[compare_relation] instruction filtered out")
+                print("[compare_relation] instruction filtered out on the left")
                 continue
 
         if filter2 is not None:
             if r_right is None or insn_right not in filter2:
-                print("[compare_relation] instruction filtered out")
+                print("[compare_relation] instruction filtered out on the right")
                 continue
 
         if r_left is None:
@@ -133,21 +134,26 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
 
         #TODO: Right now the pass rate is the combined result of both ratio and probability of passing.
         #TODO: so we use pass rate to override relation comparison.
-        #if r_left.relaxed_equals(r_right):
-        #    print("[compare_relation] Relations considered related equal.")
-        #    continue
+        if r_left is not None and r_right is not None:
+            if r_left.relaxed_equals(r_right, counts_left.get(r_left.insn, None) if counts_left is not None else None, \
+                                      counts_right.get(r_right.insn, None) if counts_right is not None else None):
+                print("[compare_relation] Relations considered equal.")
+                continue
 
-        if pass_rates1 is not None and pass_rates2 is not None:
-            pass_rate1 = pass_rates1.get(insn1, {}).get(insn_left, None)
-            pass_rate2 = pass_rates2.get(insn2, {}).get(insn_right, None)
-            print("[compare_relation] Pass rates are: " + str(pass_rate1) + " " + str(pass_rate2))
-            if pass_rate1 is not None and pass_rate2 is not None:
-                if pass_rate1 == pass_rate2 or abs(pass_rate1-pass_rate2) * 100 <= 5:
-                    print("[compare_relation] Relations consider equal because pass rates w.r.t successors are equal.")
-                    continue
+        #if pass_rates1 is not None and pass_rates2 is not None:
+        #    pass_rate1 = pass_rates1.get(insn1, {}).get(insn_left, None)
+        #    pass_rate2 = pass_rates2.get(insn2, {}).get(insn_right, None)
+        #    print("[compare_relation] Pass rates are: " + str(pass_rate1) + " " + str(pass_rate2))
+        #    if pass_rate1 is not None and pass_rate2 is not None:
+        #        if pass_rate1 == pass_rate2 or abs(pass_rate1-pass_rate2) * 100 <= 5:
+        #            print("[compare_relation] Relations consider equal because pass rates w.r.t successors are equal.")
+        #            continue
 
         if pass_rates_dataflow1 is not None and pass_rates_dataflow2 is not None:
-
+            print("[compare_relation] left  keys for dataflow pass rates are: "
+                  + (hex(insn1) if insn1 is not None else "") + " " + (hex(insn_left) if insn_left is not None else ""))
+            print("[compare_relation] right keys for dataflow pass rates are: "
+                  + (hex(insn2) if insn2 is not None else "") + " " + (hex(insn_right) if insn_right is not None else ""))
             pass_rate_dataflow1 = pass_rates_dataflow1.get(insn1, {}).get(insn_left, None)
             pass_rate_dataflow2 = pass_rates_dataflow2.get(insn2, {}).get(insn_right, None)
             print(pass_rates_dataflow1.get(insn1, {}))
@@ -433,7 +439,8 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                                                filter1=None, filter2=set(summ_right[r_right.insn]),
                                                pass_rates1=pass_rates_left, pass_rates2=pass_rates_right,
                                                pass_rates_dataflow1=pass_rates_dataflow_left,
-                                               pass_rates_dataflow2=pass_rates_dataflow_right)
+                                               pass_rates_dataflow2=pass_rates_dataflow_right,
+                                               counts_left=counts_left, counts_right=counts_right)
             print("[compare_relation] Children relations are equal? " + str(equals))
             assert weight == r_right.weight.perc_contrib
             corr = r_right.forward.corr()
@@ -457,7 +464,8 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                                                filter1=set(summ_left[r_left.insn]), filter2=None,
                                                pass_rates1=pass_rates_left, pass_rates2=pass_rates_right,
                                                pass_rates_dataflow1=pass_rates_dataflow_left,
-                                               pass_rates_dataflow2=pass_rates_dataflow_right)
+                                               pass_rates_dataflow2=pass_rates_dataflow_right,
+                                               counts_left=counts_left, counts_right=counts_right)
             print("[compare_relation] Children relations are equal? " + str(equals))
             assert weight == r_left.weight.perc_contrib
             corr = r_left.forward.corr()
@@ -546,17 +554,17 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                 if ip[0] is not None:
                     if ip[0] == r_left.insn:
                         continue
-                    left_succe_to_rels[ip[0]] = [p, s]
+                    left_succe_to_rels[ip[0]] = [p, s, ip]
                 else:
-                    rigt_succe_to_rels[ip[1]] = [p, s]
+                    rigt_succe_to_rels[ip[1]] = [p, s, ip]
 
-                print("---------------------------------")
-                print(str(s[0]) + " " + str(ip[0]))
-                print(p[0])
-                #print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-                print(str(s[1]) + " " + str(ip[1]))
-                print(p[1])
-                print("---------------------------------")
+                #print("---------------------------------")
+                #print(str(s[0]) + " " + (hex(ip[0]) if ip[0] is not None else "None"))
+                #print(p[0])
+                ##print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                #print(str(s[1]) + " " + (hex(ip[1]) if ip[1] is not None else "None"))
+                #print(p[1])
+                #print("---------------------------------")
 
         succe_weights = []
         for succe_insn in succe_insns_left:
@@ -573,15 +581,15 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                         + " likely need to re-run the multi-level relation gen again...")
                 continue
 
-            #p, s = left_succe_to_rels[succe_insn]
-            p, _ = left_succe_to_rels[succe_insn]
+            p, s, ip = left_succe_to_rels[succe_insn]
 
             print("---------------------------------")
-            #print(str(s[0]) + " " + (hex(s[0][1]) if s[0] is not None else ""))
+            print(str(s[0]) + " " + (hex(ip[0]) if ip[0] is not None else "None"))
             print(p[0])
-            #print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-            #print(str(s[1]) + " " + (hex(s[1][1]) if s[1] is not None else ""))
+            # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+            print(str(s[1]) + " " + (hex(ip[1]) if ip[1] is not None else "None"))
             print(p[1])
+            print("---------------------------------")
 
             equals = False
             if p[0] is not None and p[1] is not None:
