@@ -687,7 +687,8 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
         weighted_diff.append(
             (new_weight, avg_timestamp / max_timestamp * 100, weight, avg_timestamp, r_left, r_right, corr * 100))
         count += 1
-    sorted_diff = sorted(weighted_diff, key=lambda e: ((e[0] + e[1]) / 2))
+    #sorted_diff = sorted(weighted_diff, key=lambda e: ((e[0] + e[1]) / 2))
+    sorted_diff = sorted(weighted_diff, key=lambda e: ((e[0]) / 2))
 
     with open('insns_left_' + hex(left.insn), 'w') as out:
         for i in insns_left:
