@@ -48,6 +48,46 @@ def build_insn_to_reverse_relation_group_map(rs):
         m1[insn] = simple_relation_group
     return m1
 
+def dataflow_pass_rates_equal2(pass_rates_dataflow1, pass_rates_dataflow2, insn1, insn2, insn_left, insn_right,
+        weight_map1, weight_map2, indices1=None, indices2=None):
+    if indices1 is None or indices2 is None:
+        assert indices1 is None and indices2 is None
+        if insn_left is None: insn_left = insn_right
+        if insn_right is None: insn_right = insn_left
+    pass_rate_dataflow1 = pass_rates_dataflow1.get(insn1, {}).get(insn_left, None)
+    pass_rate_dataflow2 = pass_rates_dataflow2.get(insn2, {}).get(insn_right, None)
+    # print(pass_rates_dataflow1.get(insn1, {}))
+    # print(pass_rates_dataflow2.get(insn2, {}))
+    print("[compare_relation] Dataflow pass rates are: " + str(pass_rate_dataflow1) + " " + str(pass_rate_dataflow2))
+    if pass_rate_dataflow1 is None or pass_rate_dataflow2 is None:
+        print("[compare_relation] Returning because not both sets of dataflow pass rates are found.")
+        return False
+    succe_weights = []
+    for key1 in pass_rate_dataflow1:
+        segs = key.split('_')
+        succe = int(segs[1], 16)
+        if succe not in weight_map1:# and succe not in weight_map2:
+            continue
+        rate1 = pass_rate_dataflow1[key1]
+        if indices1 is None and indices2 is None:
+            key2 = key1
+        if key not in pass_rate_dataflow2:
+            rate2 = 0
+        else:
+            rate2 = pass_rate_dataflow2[key2]
+        print("[compare_relation] dataflow pass rates: " + str(rate1) + " " + str(rate2))
+        if rate1 == rate2:
+            continue
+        impact = rate1 - rate2
+        if impact * 100 <= 5:
+            continue
+        if impact < 0:
+            continue
+        return False
+    print("[compare_relation] dataflow succe weights are: " + str(succe_weights))
+    return True
+
+
 def dataflow_pass_rates_equal(pass_rates_dataflow1, pass_rates_dataflow2, insn1, insn2, insn_left, insn_right):
     pass_rate_dataflow1 = pass_rates_dataflow1.get(insn1, {}).get(insn_left, None)
     pass_rate_dataflow2 = pass_rates_dataflow2.get(insn2, {}).get(insn_right, None)
@@ -670,11 +710,13 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
 
             #TODO: Should still include the control flow impacts.
             if impact != 0 and pass_rates_dataflow_left is not None and pass_rates_dataflow_right is not None:
-                dataflow_equals = dataflow_pass_rates_equal(pass_rates_dataflow_left, pass_rates_dataflow_right,
-                                                            r_left.insn, r_right.insn, ip[0], ip[1])
+                dataflow_equals = dataflow_pass_rates_equal2(pass_rates_dataflow_left, pass_rates_dataflow_right,
+                                                            r_left.insn, r_right.insn, ip[0], ip[1],
+                                                            weight_map_left, weight_map_right, None, None)
                 if dataflow_equals is True:
                     print("[compare_relation] setting impact from " + str(impact) + " to 0 because pass rates w.r.t. control flow targets are equal.")
                     impact = 0
+
             succe_weights.append([impact, succe_weight])
             print("---------------------------------")
         succe_weights = sorted(succe_weights, key=lambda e: e[0])
