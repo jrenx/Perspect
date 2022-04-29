@@ -421,6 +421,8 @@ def test_if_likely_true_negative_event(r_left, r_right, left_full_weight, right_
         return False
     if abs(left_weight - right_weight)/right_weight * 100 < 20:
         return False
+    if r_left.weight.actual_weight > r_right.weight.actual_weight:
+        return False
     return True
 
 def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
@@ -654,17 +656,17 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                       + " new weight is: " + str(succe_weight))
 
             print("[compare_relation] impact is: " + str(impact))
-            if pass_rates_left is not None and pass_rates_right is not None:
-                pass_rate1 = pass_rates_left.get(r_left.insn, {}).get(ip[0], None)
-                pass_rate2 = pass_rates_right.get(r_right.insn, {}).get(ip[1], None)
-                print("[compare_relation] 2 Pass rates are: " + str(pass_rate1) + " " + str(pass_rate2))
-                if pass_rate1 is not None and pass_rate2 is not None:
-                    pass_rate_ratio = (pass_rate1 - pass_rate2)/pass_rate1
-                    print("[compare_relation] Pass rates ratio is: " + str(pass_rate_ratio))
-                    if pass_rate_ratio > 0:
-                        old_impact = impact
-                        impact = min((100 - impact)*pass_rate_ratio+impact,100)
-                        print("[compare_relation] updating impact from: " + str(old_impact) + " to: " + str(impact))
+            #if pass_rates_left is not None and pass_rates_right is not None:
+            #    pass_rate1 = pass_rates_left.get(r_left.insn, {}).get(ip[0], None)
+            #    pass_rate2 = pass_rates_right.get(r_right.insn, {}).get(ip[1], None)
+            #    print("[compare_relation] 2 Pass rates are: " + str(pass_rate1) + " " + str(pass_rate2))
+            #    if pass_rate1 is not None and pass_rate2 is not None:
+            #        pass_rate_ratio = (pass_rate1 - pass_rate2)/pass_rate1
+            #        print("[compare_relation] Pass rates ratio is: " + str(pass_rate_ratio))
+            #        if pass_rate_ratio > 0:
+            #            old_impact = impact
+            #            impact = min((100 - impact)*pass_rate_ratio+impact,100)
+            #            print("[compare_relation] updating impact from: " + str(old_impact) + " to: " + str(impact))
 
             #TODO: Should still include the control flow impacts.
             if impact != 0 and pass_rates_dataflow_left is not None and pass_rates_dataflow_right is not None:
