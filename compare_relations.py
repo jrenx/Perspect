@@ -13,13 +13,14 @@ def parse(f):
 
 def build_insn_to_relation_group_map(rs):
     m = {}
-    for rg in rs.relations_map.values():
+    for rg in rs.relations:
         m[rg.insn] = rg
     return m
 
 def build_insn_to_reverse_relation_group_map(rs):
     m = {}
-    for rg in rs.relations_map.values():
+    print(len(rs.relation_groups))
+    for rg in rs.relation_groups:
         for pair in rg.relations:
             r = pair[0]
             prede = pair[1]
@@ -233,7 +234,17 @@ def get_relation_pairs(insn1, insn2, mrs1, mrs2):
         if insn in right_seen:
             assert pair is not None
             continue
-        assert pair is None
+        #assert pair is None
+        #TODO: Why should left to right match fail but not the other way around?
+        # Maybe because multiple from the right match to the same one on the left.
+        if pair is not None:
+            r1 = pair[0]
+            prede1 = pair[1]
+            insn1 = pair[2]
+            relation_pairs.append([r1, r])
+            index_pairs.append([prede1, prede])
+            insn_pairs.append([insn1, insn])
+            continue
         relation_pairs.append([None, r])
         index_pairs.append([None, prede])
         insn_pairs.append([None, insn])
@@ -242,6 +253,7 @@ def get_relation_pairs(insn1, insn2, mrs1, mrs2):
 ''' comparing the absolute count of two relations, this is a heuristic '''
 def compare_absolute_count(left, right, r1, r2, \
         summary1, summary2, counts1, counts2, insn_to_insn):
+    return True
     if len(summary1) == 0 or len(summary2) == 0:
         return True
     print("DEBUG insns: " + hex(r1.insn) + " " + hex(r2.insn))
@@ -291,6 +303,7 @@ def compare_absolute_count(left, right, r1, r2, \
 def parse_multiple_relations(f):
     mrs = None
     if os.path.exists(f):
+        print("File: " + str(f))
         mrs = build_insn_to_reverse_relation_group_map(parse(f))
         #mrs = build_insn_to_relation_group_map(parse(f))
     #print(mrs)
@@ -314,7 +327,15 @@ def parse_pass_rates(fname):
             pass_rates_per_succe[k] = pass_rates
         return pass_rates_per_succe
 
+def build_indices(idf, inf):
+    indices = None
+    if os.path.exists(idf) and os.path.exists(inf):
+        indices = IndiceToInsnMap()
+        indices.build(idf, inf)
+    return indices
+
 def compare_relation_groups(f1, f2, tf1, tf2, d1, mcf1, mcf12, mf1, mf12, pf1, pf12, pduf1, pduf12,
+                            idf1, idf12, inf1, inf12,
                             compare_highest_ranking_rg_only=False):
     rs1 = parse(f1)
     #print(rs1)
@@ -337,10 +358,13 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1, mcf1, mcf12, mf1, mf12, pf1, p
     prdu1 = parse_pass_rates(pduf1)
     prdu2 = parse_pass_rates(pduf12)
 
+    indices1 = build_indices(idf1, inf1)
+    indices2 = build_indices(idf12, inf12)
+
     diff = []
     #TODO, this does not include the detailed ratio level match
     ''' find matching relation group from the other execution '''
-    for rg in set(rs1.relations_map.values()):
+    for rg in rs1.relation_groups:
         file, line, index, total_count = Indices.parse_index_quad(rg.index_quad)
         key = rs2.indices.get_indices2(file, line, total_count, index)
         right = None
@@ -354,7 +378,7 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1, mcf1, mcf12, mf1, mf12, pf1, p
             d = abs(rg.group_weight - right.group_weight)
         d = round(d)
         diff.append((d, key, rg, right))
-    for rg in set(rs2.relations_map.values()):
+    for rg in rs2.relation_groups:
         file, line, index, total_count = Indices.parse_index_quad(rg.index_quad)
         key = rs1.indices.get_indices2(file, line, total_count, index)
         if key is None:
@@ -377,7 +401,8 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1, mcf1, mcf12, mf1, mf12, pf1, p
         print()
         print(str(p[0]) + " " + str(p[1]) + " " + str(p[2]) + " " + str(p[3]))
         print()
-        compare_relations(p[0], p[1], p[2], p[3], nc1, nc2, d1, mcrs1, mcrs2, mrs1, mrs2, pr1, pr2, prdu1, prdu2)
+        compare_relations(p[0], p[1], p[2], p[3], nc1, nc2, d1, mcrs1, mcrs2, mrs1, mrs2,
+                          pr1, pr2, prdu1, prdu2, indices1, indices2)
         print()
         print(str(p[0]) + " " + str(p[1]) + " " + str(p[2]) + " " + str(p[3]))
         print()
@@ -401,7 +426,8 @@ def test_if_likely_true_negative_event(r_left, r_right, left_full_weight, right_
 def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                            mcrs_left, mcrs_right, mrs_left, mrs_right, summ_left, summ_right,
                            counts_left, counts_right, pass_rates_left=None, pass_rates_right=None,
-                           pass_rates_dataflow_left=None, pass_rates_dataflow_right=None):
+                           pass_rates_dataflow_left=None, pass_rates_dataflow_right=None,
+                           indices_left=None, indices_right=None):
     #assert pass_rates_left is not None
     #assert pass_rates_right is not None
     #assert pass_rates_dataflow_left is not None
@@ -431,7 +457,15 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
             # Candidate for contextless multiple rels
             # TODO, if good and bad run code differ, need reverse lookup to find the matching instruction
             insns_left.append(r_right.insn)
-            insns_right.append(r_right.insn)
+            if indices_left is not None and indices_right is not None:
+                matching_insn = IndiceToInsnMap.translate_insn(r_right.insn, indices_right, indices_left)
+                print("[compare_relation] " + hex(r_right.insn) + " matching instruction is: "
+                      + (hex(matching_insn) if matching_insn is not None else "None"))
+                if matching_insn is not None:
+                    insns_left.append(matching_insn)
+            else:
+                insns_left.append(r_right.insn)
+            print([hex(s) for s in summ_right[r_right.insn]])
 
             #TODO, handle when instructions are not the same
             #TODO, get the corresponding insn on the left...
@@ -458,8 +492,16 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
             # Candidate for contextless multiple rels
             # TODO, if good and bad run code differ, need reverse lookup to find the matching instruction
             insns_left.append(r_left.insn)
-            insns_right.append(r_left.insn)
- 
+            if indices_left is not None and indices_right is not None:
+                matching_insn = IndiceToInsnMap.translate_insn(r_left.insn,indices_left, indices_right)
+                print("[compare_relation] " + hex(r_left.insn) + " matching instruction is: "
+                      + (hex(matching_insn) if matching_insn is not None else "None"))
+                if matching_insn is not None:
+                    insns_left.append(matching_insn)
+            else:
+                insns_left.append(r_left.insn)
+            print([hex(s) for s in summ_left[r_left.insn]])
+
             equals = not compare_children_rels(r_left.insn, r_left.insn, mrs_left, mrs_right,
                                                filter1=set(summ_left[r_left.insn]), filter2=None,
                                                pass_rates1=pass_rates_left, pass_rates2=pass_rates_right,
@@ -533,13 +575,13 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
         succe_insns_right = summ_right[r_right.insn]
         print("[compare_relation] succes on the right " + str([hex(i) for i in succe_insns_right]))
         for succe_insn in succe_insns_right:
-            if succe_insn in weight_map_right:
-                insns_right.add(succe_insn)
+            #if succe_insn in weight_map_right:
+            insns_right.add(succe_insn)
         succe_insns_left = summ_left[r_left.insn]
         print("[compare_relation] succes on the left " + str([hex(i) for i in succe_insns_left]))
         for succe_insn in succe_insns_left:
-            if succe_insn in weight_map_left:
-                insns_left.add(succe_insn)
+            #if succe_insn in weight_map_left:
+            insns_left.add(succe_insn)
 
         # Getting any existing in context multiple rels
         left_succe_to_rels = {}
@@ -795,9 +837,11 @@ def sort_relations_simple(diff, max_weight, max_timestamp):
     sorted_diff = sorted(weighted_diff, key=lambda e: ((e[1] + e[0]) / 2))
     return sorted_diff
 
-def compare_relations(parent_d, parent_key, left, right, counts_left, counts_right, d1, mcrs_left=None, mcrs_right=None,
-                      mrs_left=None, mrs_right=None, pass_rates_left=None, pass_rates_right=None,
-                           pass_rates_dataflow_left=None, pass_rates_dataflow_right=None):
+def compare_relations(parent_d, parent_key, left, right, counts_left, counts_right, d1,
+                      mcrs_left=None, mcrs_right=None, mrs_left=None, mrs_right=None,
+                      pass_rates_left=None, pass_rates_right=None,
+                      pass_rates_dataflow_left=None, pass_rates_dataflow_right=None,
+                      indices_left=None, indices_right=None):
     if left is None or right is None:
         print("[warn] One relation group is None")
         return
@@ -942,7 +986,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
     sorted_diff = sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                                          mcrs_left, mcrs_right, mrs_left, mrs_right, left_summary, right_summary,
                                          counts_left, counts_right, pass_rates_left, pass_rates_right,
-                                         pass_rates_dataflow_left, pass_rates_dataflow_right)
+                                         pass_rates_dataflow_left, pass_rates_dataflow_right, indices_left, indices_right)
 
     included_diff = []
     #rank = len(sorted_diff) + 1
@@ -1045,61 +1089,74 @@ if __name__ == "__main__":
     #cache_dir2 = "cache/mongod_4.0.13"
 
     key = build_key(starting_events)
-    file1 = "rgroups_simple_" + key + ".json"
-    file2 = other_relations_file
-
-    mcfile1 = "multiple_context_" + file1
-    mcfile2 = "multiple_context_" + file2
-
-    mfile1 = "multiple_" + file1
-    mfile2 = "multiple_" + file2
-
-    other_key = parse_other_key()
-    pfile1 = "pass_rates_" + key + ".json"
-    pfile2 = "pass_rates" + other_key + ".json"
-
-    pdufile1 = "pass_rates_def_to_use_site_" + key + ".json"
-    pdufile2 = "pass_rates_def_to_use_site" + other_key + ".json"
-
-    trace_file1 = key + "_instruction_trace.out.count"
-    trace_file2 = parse_other_insn_trace() + ".count"
 
     d1 = os.path.join(dir1, cache_dir1)
     d2 = os.path.join(dir2, cache_dir2)
 
+    file1 = "rgroups_simple_" + key + ".json"
+    file2 = other_relations_file
     f1 = os.path.join(dir1, cache_dir1, file1)
     f2 = os.path.join(dir2, cache_dir2, file2)
     f12 = os.path.join(dir2, cache_dir1, file2)
-
-    mcf1 = os.path.join(dir1, cache_dir1, mcfile1)
-    #mcf2 = os.path.join(dir2, cache_dir2, mcfile2)
-    mcf12 = os.path.join(dir2, cache_dir1, mcfile2)
-
-    mf1 = os.path.join(dir1, cache_dir1, mfile1)
-    #mf2 = os.path.join(dir2, cache_dir2, mfile2)
-    mf12 = os.path.join(dir2, cache_dir1, mfile2)
-
-    pf1 = os.path.join(dir1, cache_dir1, pfile1)
-    #pf2 = os.path.join(dir2, cache_dir2, pfile2)
-    pf12 = os.path.join(dir2, cache_dir1, pfile2)
-
-    pduf1 = os.path.join(dir1, cache_dir1, pdufile1)
-    #pduf2 = os.path.join(dir2, cache_dir2, pdufile2)
-    pduf12 = os.path.join(dir2, cache_dir1, pdufile2)
-
-    tf1 = os.path.join(dir1, "pin", trace_file1)
-    tf12 = os.path.join(dir1, "pin", trace_file2)
-
     print(f1)
     print(f12)
 
-    print(tf1)
-    print(tf12)
-
+    mcfile1 = "multiple_context_" + file1
+    mcfile2 = "multiple_context_" + file2
+    mcf1 = os.path.join(dir1, cache_dir1, mcfile1)
+    #mcf2 = os.path.join(dir2, cache_dir2, mcfile2)
+    mcf12 = os.path.join(dir2, cache_dir1, mcfile2)
     print(mcf1)
     print(mcf12)
 
+    mfile1 = "multiple_" + file1
+    mfile2 = "multiple_" + file2
+    mf1 = os.path.join(dir1, cache_dir1, mfile1)
+    #mf2 = os.path.join(dir2, cache_dir2, mfile2)
+    mf12 = os.path.join(dir2, cache_dir1, mfile2)
     print(mf1)
     print(mf12)
 
-    compare_relation_groups(f1, f12, tf1, tf12, d1, mcf1, mcf12, mf1, mf12, pf1, pf12, pduf1, pduf12, True)
+    trace_file1 = key + "_instruction_trace.out.count"
+    trace_file2 = parse_other_insn_trace() + ".count"
+    tf1 = os.path.join(dir1, "pin", trace_file1)
+    tf12 = os.path.join(dir1, "pin", trace_file2)
+    print(tf1)
+    print(tf12)
+
+    other_key = parse_other_key()
+    pfile1 = "pass_rates_" + key + ".json"
+    pfile2 = "pass_rates" + other_key + ".json"
+    pf1 = os.path.join(dir1, cache_dir1, pfile1)
+    #pf2 = os.path.join(dir2, cache_dir2, pfile2)
+    pf12 = os.path.join(dir2, cache_dir1, pfile2)
+    print(pf1)
+    print(pf12)
+
+    pdufile1 = "pass_rates_def_to_use_site_" + key + ".json"
+    pdufile2 = "pass_rates_def_to_use_site" + other_key + ".json"
+    pduf1 = os.path.join(dir1, cache_dir1, pdufile1)
+    #pduf2 = os.path.join(dir2, cache_dir2, pdufile2)
+    pduf12 = os.path.join(dir2, cache_dir1, pdufile2)
+    print(pduf1)
+    print(pduf12)
+
+    indices_file1 = "indices_" + key
+    indices_file2 = "indices" + other_key
+    idf1 = os.path.join(dir1, cache_dir1, indices_file1)
+    #idf2 = os.path.join(dir2, cache_dir2, indices_file2)
+    idf12 = os.path.join(dir2, cache_dir1, indices_file2)
+    print(idf1)
+    print(idf12)
+
+    insns_file1 = "indices_" + key + "_insns"
+    insns_file2 = "indices" + other_key + "_insns"
+    inf1 = os.path.join(dir1, cache_dir1, insns_file1)
+    #inf2 = os.path.join(dir2, cache_dir2, insns_file2)
+    inf12 = os.path.join(dir2, cache_dir1, insns_file2)
+    print(inf1)
+    print(inf12)
+
+    compare_relation_groups(f1, f12, tf1, tf12, d1, mcf1, mcf12, mf1, mf12, pf1, pf12, pduf1, pduf12,
+                            idf1, idf12, inf1, inf12,
+                            compare_highest_ranking_rg_only=True)
