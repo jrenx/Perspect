@@ -938,8 +938,9 @@ def plot_successors(G, labels, colours, rank, r1, r2, rel_map1, rel_map2, summ1,
                 if hex(inner_node) not in G:
                     G.add_node(hex(inner_node))
 
+                label = hex(inner_node) + "_" + str(round(rel_map1[inner_node][0]))
                 if hex(inner_node) not in labels or len(label) < len(labels[hex(inner_node)]):
-                    label = hex(inner_node) + "_" + str(round(rel_map1[inner_node][0]))
+                    labels[hex(inner_node)] = label
                 if not G.has_edge(n, hex(inner_node)):
                     G.add_edge(n, hex(inner_node))
                     print("[compare_relation] Connecting to child node: " + hex(inner_node))
@@ -956,7 +957,7 @@ def plot_successors(G, labels, colours, rank, r1, r2, rel_map1, rel_map2, summ1,
         #if iter >= 5:
         #    break
 
-def plot(included_diff):
+def plot(included_diff, rel_map1, rel_map2, left_summary, right_summary, left, right):
     #nx.draw(G, labels=labels, with_labels=True)
 
     G = nx.DiGraph()
@@ -1295,7 +1296,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
     #with open('insns_right', 'w') as out:
     #    for i in insns_right:
     #        out.write(str(i) + "\n")
-    plot(included_diff)
+    plot(included_diff, rel_map1, rel_map2, left_summary, right_summary, left, right)
 
 if __name__ == "__main__":
     #f1 = sys.argv[1]
