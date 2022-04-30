@@ -3,6 +3,14 @@ import os
 from relations import *
 from util import *
 from ra_util import *
+import networkx as nx
+import numpy as py
+import matplotlib.pyplot as plt
+from collections import deque
+#import chart_studio.plotly as go
+#from plotly.graph_objs import *
+import plotly.graph_objects as go
+
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 
 def parse(f):
@@ -846,6 +854,159 @@ def sort_relations_simple(diff, max_weight, max_timestamp):
     sorted_diff = sorted(weighted_diff, key=lambda e: ((e[1] + e[0]) / 2))
     return sorted_diff
 
+def plot_successors(G, labels, colours, rank, r1, r2, rel_map1, rel_map2, summ1, summ2, root1, root2):
+    #vertex = hex(insn1) + "_" + hex(insn2)
+    #G.add_node(vertex)
+    if r1 == None:
+        return
+    insn1 = r1.insn
+    assert insn1 in rel_map1
+    print("HERE " + str(len(rel_map1)))
+
+    G.add_node(hex(insn1))
+    labels[hex(insn1)] = hex(insn1) + "_" + str(round(rel_map1[insn1][0])) + "_rank" + str(rank)
+    colours[hex(insn1)] = rel_map1[insn1][0] / 100
+    G.add_node(hex(root1))
+    labels[hex(root1)] = hex(root1) + "_SYMPTOM"
+    colours[hex(root1)] = 1
+
+    q = deque()
+    q.append(insn1)
+    visited = set()
+    iter = 0
+    while len(q) > 0:
+        iter += 1
+        node = q.popleft()
+        if node in visited:
+            continue
+        visited.add(node)
+        n = hex(node)
+        print("[compare_relation] Current node: " + n)
+
+        inner_q = deque()
+        inner_q.append(node)
+        inner_visited = set()
+        while(len(inner_q)) > 0:
+            inner_node = inner_q.popleft()
+            if inner_node in inner_visited:
+                continue
+            inner_visited.add(inner_node)
+            if inner_node in rel_map1 and inner_node != node and rel_map1[inner_node][0] > 10:
+                colours[hex(inner_node)] = rel_map1[inner_node][0]/100
+                if hex(inner_node) not in G:
+                    G.add_node(hex(inner_node))
+
+                if hex(inner_node) not in labels or len(label) < len(labels[hex(inner_node)]):
+                    label = hex(inner_node) + "_" + str(round(rel_map1[inner_node][0]))
+                if not G.has_edge(n, hex(inner_node)):
+                    G.add_edge(n, hex(inner_node))
+                    print("[compare_relation] Connecting to child node: " + hex(inner_node))
+                q.append(inner_node)
+            elif inner_node == root1:
+                if hex(inner_node) not in G:
+                    G.add_node(hex(inner_node))
+                if not G.has_edge(n, hex(inner_node)):
+                    G.add_edge(n, hex(inner_node))
+                    print("[compare_relation] Connecting to child node: " + hex(inner_node))
+            else:
+                for succe in summ1[inner_node]:
+                    inner_q.append(succe)
+        #if iter >= 5:
+        #    break
+
+def plot(included_diff):
+    #nx.draw(G, labels=labels, with_labels=True)
+
+    G = nx.DiGraph()
+    labels = {}
+    colours = {}
+    rank = len(included_diff) + 1
+    for p in reversed(included_diff):
+        rank = rank - 1
+        print("-----------------------------------------")
+        print("rank: " + str(rank))
+        print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
+        print(str(p[2]) + " " + str(p[3]))
+        print(str(p[4]))
+        print(str(p[5]))
+        if rank < 11:
+            plot_successors(G, labels, colours, rank, p[4], p[5], rel_map1, rel_map2, left_summary, right_summary, left.insn, right.insn)
+    values = [colours.get(node, 0) for node in G.nodes()]
+    nx.draw(G, cmap=plt.get_cmap('seismic'), node_color=values, labels=labels, with_labels=True)
+    plt.show()
+    '''
+    plt.savefig('fig.png')
+
+    pos = nx.fruchterman_reingold_layout(G)
+    edge_x = []
+    edge_y = []
+    for edge in G.edges():
+        edge_x += [pos[edge[0]][0], pos[edge[1]][0], None]
+        edge_y += [pos[edge[0]][1], pos[edge[1]][1], None]
+
+    edge_trace = go.Scatter(
+        x=edge_x, y=edge_y,
+        line=dict(width=0.5, color='#888'),
+        hoverinfo='none',
+        mode='lines')
+
+    node_x = []
+    node_y = []
+    for node in G.nodes():
+        node_x += pos[node][0]
+        node_y += pos[node][1]
+
+    print(node_x)
+    print(node_y)
+    node_trace = go.Scatter(
+        x=node_x, y=node_y,
+        mode='markers',
+        hoverinfo='text',
+        marker=dict(
+            symbol='circle-dot',
+            #showscale=True,
+            # colorscale options
+            # 'Greys' | 'YlGnBu' | 'Greens' | 'YlOrRd' | 'Bluered' | 'RdBu' |
+            # 'Reds' | 'Blues' | 'Picnic' | 'Rainbow' | 'Portland' | 'Jet' |
+            # 'Hot' | 'Blackbody' | 'Earth' | 'Electric' | 'Viridis' |
+            #colorscale='YlGnBu',
+            #reversescale=True,
+            color='#6959CD',#[],
+            size=100,
+            #colorbar=dict(
+            #    thickness=15,
+            #    title='Node Connections',
+            #    xanchor='left',
+            #    titleside='right'
+            #),
+            line_width=2))
+
+    node_colours = []
+    for node in G.nodes():
+        node_colours.append(colours[node])
+
+    #node_trace.marker.color = node_colours
+    #node_trace.text = node_text
+
+    fig = go.Figure(data=[edge_trace, node_trace],
+                    layout=go.Layout(
+                        #title='<br>Network graph made with Python',
+                        titlefont_size=16,
+                        showlegend=False,
+                        hovermode='closest',
+                        margin=dict(b=20, l=5, r=5, t=40),
+                        annotations=[dict(
+                            #text="Python code: <a href='https://plotly.com/ipython-notebooks/network-graphs/'> https://plotly.com/ipython-notebooks/network-graphs/</a>",
+                            showarrow=False,
+                            xref="paper", yref="paper",
+                            x=0.005, y=-0.002)],
+                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
+                    )
+    fig.show()
+    fig.write_image('fig1.png')
+    '''
+
 def compare_relations(parent_d, parent_key, left, right, counts_left, counts_right, d1, mcrs_left=None, mcrs_right=None,
                       mrs_left=None, mrs_right=None, pass_rates_left=None, pass_rates_right=None,
                            pass_rates_dataflow_left=None, pass_rates_dataflow_right=None):
@@ -1049,10 +1210,13 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         #print("rank: " + str(rank))
         included_diff.append(p)
 
+
     print("===============================================")
     print("===============================================")
     #insns_left = []
     #insns_right = []
+    rel_map1 = {}
+    rel_map2 = {}
     rank = len(included_diff) + 1
     for p in reversed(included_diff):
         rank = rank - 1
@@ -1062,6 +1226,12 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         print(str(p[2]) + " " + str(p[3]))
         print(str(p[4]))
         print(str(p[5]))
+        if p[4] is not None:
+            rel_map1[p[4].insn] = p
+        if p[5] is not None:
+            rel_map2[p[5].insn] = p
+        #if has a node in the graph, add a label...
+
         #r_left = p[4]
         #r_right = p[5]
         # Candidate for contextless multiple rels
@@ -1080,7 +1250,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
     #with open('insns_right', 'w') as out:
     #    for i in insns_right:
     #        out.write(str(i) + "\n")
-
+    plot(included_diff)
 
 if __name__ == "__main__":
     #f1 = sys.argv[1]
