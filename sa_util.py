@@ -518,6 +518,21 @@ def get_addr_indices(binary_ptr, func, start_addr, end_addr, addrs):
     if DEBUG_CTYPE: print("[main] returned " + str(json_addrs))
     return json_addrs
 
+def get_addr_indices2(binary_ptr, func, addrs):
+    print()
+    print( "[main] getting the indexes for addrs2: ")
+    if DEBUG_CTYPE: print( "[main] func: " + func)
+    if DEBUG_CTYPE: print("[main] addrs: " + str(addrs))
+    if DEBUG_CTYPE: print("[main] : " + "Calling C", flush=True)
+    func_name = c_char_p(str.encode(func))
+    addrs_str = c_char_p(str.encode(json.dumps(addrs)))
+    lib.getAddrIndices2(c_ulong(binary_ptr), func_name, addrs_str)
+    f = open(os.path.join(curr_dir, 'getAddrIndices2_result'))
+    json_addrs = json.load(f)
+    f.close()
+    if DEBUG_CTYPE: print("[main] returned " + str(json_addrs))
+    return json_addrs
+
 def getImmedDom(binary_ptr, insn_addr, func):
     print()
     print( "[main] getting the immediate dominator: ")
