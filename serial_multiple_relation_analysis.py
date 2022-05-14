@@ -38,16 +38,15 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
         try:
             if parent_insn is None:
                 #Identify instead all the successors of these nodes.
-                #succe_insns = set()
-                #for insn in insns:
-                #    print("[ra] instruction: " + hex(insn))
-                #    node = self.dd.insn_to_static_node[insn]
-                #    for succe in itertools.chain(node.cf_succes, node.df_succes):
-                #        print("[ra]     succe: " + hex(succe.insn))
-                #        succe_insns.add(succe.insn)
-                #print(len(succe_insns))
-                #starting_insn_to_dynamic_graph = self.dd.build_multiple_dynamic_dependencies(succe_insns)
-                starting_insn_to_dynamic_graph = self.dd.build_multiple_dynamic_dependencies(insns)
+                succe_insns = set()
+                for insn in insns:
+                    print("[ra] instruction: " + hex(insn))
+                    node = self.dd.insn_to_static_node[insn]
+                    for succe in itertools.chain(node.cf_succes, node.df_succes):
+                        print("[ra]     succe: " + hex(succe.insn))
+                        succe_insns.add(succe.insn)
+                print(len(succe_insns))
+                starting_insn_to_dynamic_graph = self.dd.build_multiple_dynamic_dependencies(succe_insns)
             else:
                 starting_insn_to_dynamic_graph = self.dd.build_multiple_dynamic_dependencies_in_context(parent_insn, insns)
         except Exception as e:
