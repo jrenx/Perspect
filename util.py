@@ -87,8 +87,15 @@ def execute_cmd_in_parallel(all_inputs, script_name, prefix, num_processor, prog
             continue
         print("[indices] File: " + file_name + ".out is ready ", flush=True)
         with open(file_name + ".out") as f:
+            curr = []
             for l in f.readlines():
-                ret.append(l)
+                if l.strip() != "DELIMINATOR":
+                    curr.append(l)
+                else:
+                    ret.append(curr)
+                    curr = []
+        print("[indices] parsed result: " + str(ret))
+        #ret.append(curr)
         #os.remove(file_name + "_DONE")
         #os.remove(file_name + ".out")
     return ret
@@ -96,12 +103,23 @@ def execute_cmd_in_parallel(all_inputs, script_name, prefix, num_processor, prog
 def get_line(insn, prog):
     if not isinstance(insn, str):
         insn = hex(insn)
-    cmd = ['addr2line', '-e', prog, insn]
+    cmd = ['addr2line', '-e', prog, insn, '-i']
     #print("[main] running command: " + str(cmd))
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
-    return parse_get_line_output(result.stdout.decode('ascii'))
+    return parse_get_line_output(result.stdout.decode('ascii').strip().splitlines())
+
+def get_caller_files(result):
+    caller_files = ""
+    for line in result:
+        file = line.split()[0].strip().split(":")[0].split("/")[-1]
+        caller_files += file + "_"
+    print("[index] caller files: " + caller_files)
+    return caller_files
 
 def parse_get_line_output(result):
+    caller_files = get_caller_files(result[1:])
+    result = result[0]
+    result = result.split()[0]
     result_seg = result.strip().split(":")
     file = result_seg[0]#.split("/")[-1]
     try:
@@ -109,7 +127,7 @@ def parse_get_line_output(result):
         #print("[main] command returned: " + str(line))
     except ValueError:
         line = None
-    return file, line
+    return file, line, caller_files
 
 def get_insn_offsets(line, file, prog):
     cmd = 'gdb ./'+ prog + ' -ex "info line ' + file + ':' + str(line)+'" --batch > infoLine_result'
@@ -145,6 +163,44 @@ def demangle(func):
         result = result.split("(")[0]
     print("Demangled name is: " + str(result))
     return result
+
+def parse_binary_file(binary_file):
+    insn_to_insn_str = {}
+    if binary_file is None or not os.path.exists(binary_file):
+        return insn_to_insn_str
+
+    with open(binary_file, 'r') as f:
+        prev_insn = None
+        prev_segs = None
+        for l in f.readlines():
+            # heuristic for parsing the binary file
+            # will omit the last insn in the file, but probably OK
+            segs = l.split()
+            if len(segs) == 0:
+                continue
+            if not segs[0].endswith(":"):
+                continue
+            try:
+                insn = int(segs[0].strip(":"), 16)
+            except:
+                continue
+    
+            if prev_insn is None:
+                prev_insn = insn
+                prev_segs = segs
+                continue
+    
+            offset = insn - prev_insn
+            #print(segs)
+            #print("offset: " + str(offset+1))
+            prev_insn_str = ' '.join(prev_segs[offset + 1:])
+    
+            assert prev_insn not in insn_to_insn_str
+            insn_to_insn_str[prev_insn] = prev_insn_str
+                
+            prev_insn = insn
+            prev_segs = segs
+    return insn_to_insn_str
 
 def build_key(starting_events):
     key = ""
