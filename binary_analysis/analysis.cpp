@@ -294,6 +294,7 @@ void getImmedPred(vector<Function *> *allFuncs, char *funcName, long unsigned in
   //TODO
 }
 
+
 void getAddrIndices(vector<Function *> *allFuncs, char *funcName, long unsigned int startAddr, long unsigned int endAddr, char *addrs_string){
   if(DEBUG) cout << "[sa] ================================" << endl;
   if(DEBUG) cout << "[sa] Getting the indexes for addrs: " << endl;
@@ -318,12 +319,12 @@ void getAddrIndices(vector<Function *> *allFuncs, char *funcName, long unsigned 
     std::map<long unsigned int, Block *> bs;
     for (auto bit = f->blocks().begin(); bit != f->blocks().end(); ++bit) {
       Block *b = *bit;
-  
+
       Address last = b->last();
       Address start = b->start();
       //cout << "start " << hex << start << endl;
       //cout << "last " << last << dec << endl;
-  
+
       if (startAddr <= start && start < endAddr ||
           startAddr <= last && last < endAddr) {
         assert(bs.find(start) == bs.end());
@@ -331,7 +332,7 @@ void getAddrIndices(vector<Function *> *allFuncs, char *funcName, long unsigned 
         //cout << "Added " << endl;
       }
     }
-  
+
     int index = 0;
     for (auto bit = bs.begin(); bit != bs.end(); ++bit) {
       Block *bb = bit->second;
@@ -348,7 +349,7 @@ void getAddrIndices(vector<Function *> *allFuncs, char *funcName, long unsigned 
         index ++;
       }
     }
-  }  
+  }
   //cout << addrToIndex.size() << endl;
   cJSON *json_indices = cJSON_CreateArray();
   //std::vector<int> indices;
@@ -373,6 +374,68 @@ void getAddrIndices(vector<Function *> *allFuncs, char *funcName, long unsigned 
   out.close();
 
   if(DEBUG) cout << "[sa] all results saved to \"getAddrIndices_result\"";
+  if(DEBUG) cout << endl;
+}
+
+void getAddrIndices2(vector<Function *> *allFuncs, char *funcName, char *addrs_string){
+  if(DEBUG) cout << "[sa] ================================" << endl;
+  if(DEBUG) cout << "[sa] Getting the indexes for addrs: " << endl;
+  if(DEBUG) cout << "[sa] func: " << funcName << endl;
+  if(DEBUG) cout << "[sa]      addrs:  " << addrs_string << endl;
+  if(DEBUG) cout << endl;
+  cJSON *json_addrs = cJSON_Parse(addrs_string);
+  int size = cJSON_GetArraySize(json_addrs);
+  if (DEBUG) cout << "[sa] num of addrs is:　" << size << endl;
+  std::vector<long unsigned int> addrs;
+  for (int i = 0; i < size; i++) {
+    cJSON *json_addr = cJSON_GetArrayItem(json_addrs, i);
+    long unsigned int addr = json_addr->valuedouble;
+    addrs.push_back(addr);
+  }
+
+  std::unordered_map<long unsigned int, int> addrToIndex;
+  Function *f = getFunction2(allFuncs, funcName, *addrs.begin());
+  if (f != NULL) {
+    for (auto bit = f->blocks().begin(); bit != f->blocks().end(); ++bit) {
+      Block *bb = *bit;
+      Block::Insns insns;
+      bb->getInsns(insns);
+      int index = 1;
+      for (auto it = insns.begin(); it != insns.end(); ++it) {
+        Instruction insn = (*it).second;
+        long unsigned int addr = (*it).first;
+        //cout << hex << addr << dec << endl;
+        assert(addrToIndex.find(addr) == addrToIndex.end());
+        addrToIndex[addr] = index;
+        index++;
+      }
+    }
+  }
+
+  //cout << addrToIndex.size() << endl;
+  cJSON *json_indices = cJSON_CreateArray();
+  //std::vector<int> indices;
+  for (auto ait = addrs.begin(); ait != addrs.end(); ++ait) {
+    //cout<< "addr" << *ait << endl;
+    cJSON *json_indice;
+    if (addrToIndex.find(*ait) == addrToIndex.end()) {
+      json_indice = cJSON_CreateNumber(-1);
+    } else {
+      json_indice = cJSON_CreateNumber(addrToIndex.at(*ait));
+    }
+    cJSON_AddItemToArray(json_indices, json_indice);
+    //indices.push_back(addrToIndex.at(*ait));
+  }
+  //cJSON *json_indice = cJSON_CreateNumber(addrToIndex.size());
+  //cJSON_AddItemToArray(json_indices, json_indice);
+
+  char *rendered = cJSON_Print(json_indices);
+  cJSON_Delete(json_indices);
+  std::ofstream out("getAddrIndices2_result");
+  out << rendered;
+  out.close();
+
+  if(DEBUG) cout << "[sa] all results saved to \"getAddrIndices2_result\"";
   if(DEBUG) cout << endl;
 }
 
