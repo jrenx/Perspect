@@ -503,8 +503,10 @@ class SimpleRelationGroup:
     @staticmethod
     def toJSON(relation_group):
         data = {}
-        data["starting_node"] = [relation_group.starting_node.file, relation_group.starting_node.line,\
-                                 relation_group.starting_node.index, relation_group.starting_node.total_count]
+        sn = relation_group.starting_node
+        data["starting_node"] = [(get_callers_str(sn.caller_files) if sn.caller_files is not None else "") + 
+                                 sn.file, sn.line,\
+                                 sn.index, sn.total_count]
         data["use_weight"] = relation_group.use_weight
         data["weight"] = relation_group.weight
         predes = []
@@ -512,7 +514,7 @@ class SimpleRelationGroup:
         if relation_group.relations is not None:
             for r in relation_group.relations.values():
                 n = r.prede_node
-                predes.append([(n.caller_files if n.caller_files is not None else "") + 
+                predes.append([(get_callers_str(n.caller_files) if n.caller_files is not None else "") + 
                     n.file, n.line, n.index, n.total_count])
                 prede_insns.append(n.hex_insn)
         data["predes"] = predes
@@ -813,17 +815,18 @@ class IndiceToInsnMap():
             assert os.path.exists(insn_strs_file_path)
             with open(insn_strs_file_path, 'r') as f:
                 insn_strs = json.load(f)
+            assert(len(index_quads) == len(insn_strs))
 
         assert(len(index_quads) == len(insns))
-        assert(len(index_quads) == len(insn_strs))
         self.indices = Indices.build_indices(index_quads)
         for i in range(len(index_quads)):
             index_quad = index_quads[i]
             insn = insns[i]
             insn_str = insn_strs[i] if insn_strs is not None else None
-            assert insn_str is not None
+            #assert insn_str is not None
             Indices.insert_to_external_indice_to_item_map(self.index_to_insn, index_quad, insn)
-            Indices.insert_to_external_indice_to_item_map(self.index_to_insn_str, index_quad, insn_str)
+            if insn_str is not None:
+                Indices.insert_to_external_indice_to_item_map(self.index_to_insn_str, index_quad, insn_str)
             self.insn_to_quad[insn] = index_quad
 
     def get_insn(self, index_quad):
@@ -840,6 +843,8 @@ class IndiceToInsnMap():
     @staticmethod
     def translate_insn(insn, my_indices, other_indices):
         index_quad = my_indices.get_index_quad(insn)
+        if index_quad is None:
+            return None
         return other_indices.get_insn(index_quad)
 
 class Weight:

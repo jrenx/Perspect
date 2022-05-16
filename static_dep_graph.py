@@ -1755,6 +1755,7 @@ class StaticDepGraph:
         indices = []
         inner_indices = []
         insns = []
+        inner_insns = []
         insn_strs = []
         for graph in StaticDepGraph.func_to_graph.values():
             for node in itertools.chain(graph.none_df_starting_nodes, \
@@ -1762,9 +1763,9 @@ class StaticDepGraph:
                                         graph.nodes_in_df_slice.keys()):
                 if node.explained is False:
                     continue
-                #insns.append(node.insn)
-                #insn_strs.append(insn_to_insn_str[node.insn])
-                indices.append([(node.caller_files if node.caller_files is not None else "") +
+                insns.append(node.insn)
+                insn_strs.append(insn_to_insn_str[node.insn])
+                indices.append([(get_callers_str(node.caller_files) if node.caller_files is not None else "") +
                      node.file, node.line, node.index, node.total_count])
 
                 is_inner = True
@@ -1774,16 +1775,19 @@ class StaticDepGraph:
                         break
                 if is_inner is False:
                     continue
-                inner_indices.append([(node.caller_files if node.caller_files is not None else "") + 
+                inner_indices.append([(get_callers_str(node.caller_files) if node.caller_files is not None else "") + 
                     node.file, node.line, node.index, node.total_count])
+                inner_insns.append(node.insn)
         with open(result_file, 'w') as f:
             json.dump(indices, f, indent=4)
         with open(result_file + "_inner", 'w') as f:
             json.dump(inner_indices, f, indent=4)
-        #with open(result_file + "_insns", 'w') as f:
-        #    json.dump(insns, f, indent=4)
-        #with open(result_file + "_insn_strs", 'w') as f:
-        #    json.dump(insn_strs, f, indent=4)
+        with open(result_file + "_inner_insns", 'w') as f:
+            json.dump(inner_insns, f, indent=4)
+        with open(result_file + "_insns", 'w') as f:
+            json.dump(insns, f, indent=4)
+        with open(result_file + "_insn_strs", 'w') as f:
+            json.dump(insn_strs, f, indent=4)
 
     @staticmethod
     def insert_file_line_to_map(node, file, line, graph=None):
@@ -1837,7 +1841,15 @@ class StaticDepGraph:
                 #node.file = file_line[0] if our_source_code_dir is None else \
                 #    file_line[0][file_line[0].startswith(our_source_code_dir) and len(our_source_code_dir):]
                 #node.line = file_line[1]
-                node.caller_files = file_line[2] if file_line[2] != "" else None
+                stripped_callers = []
+                for caller in file_line[2]:
+                    file = caller[0] if our_source_code_dir is None else \
+                        caller[0][caller[0].startswith(our_source_code_dir) and len(our_source_code_dir):]
+                    line = caller[1]
+                    stripped_callers.append([file,line])
+                node.caller_files = stripped_callers
+                if len(node.caller_files) == 0:
+                    node.caller_files = None
                 print("[indices] assignment insn: " + hex(node.insn) + " file " + node.file
                         + " line " + str(node.line) + " caller_files " + str(node.caller_files), flush=True)
                 StaticDepGraph.insert_file_line_to_map(node, node.file, node.line, graph)
@@ -2018,6 +2030,9 @@ class StaticDepGraph:
                                         graph.nodes_in_df_slice.keys()):
                 if node.file is not None:
                     files.add(node.file)
+                if node.caller_files is not None:
+                    for caller in node.caller_files:
+                        files.add(caller[0])
 
         file_to_mapping = {}
         file_to_skip = set()
@@ -2045,20 +2060,24 @@ class StaticDepGraph:
             for node in itertools.chain(graph.none_df_starting_nodes,
                                         graph.nodes_in_cf_slice.keys(),
                                         graph.nodes_in_df_slice.keys()):
-                if node.insn in seen:
+                # we don't want to realign a line number twice, it will be inaccurate
+                if node in seen:
                     continue
-                seen.add(node.insn)
+                seen.add(node)
                 if node.file in file_to_skip:
                     print("[indices] Skipping file that could not be found: " + str(node.file))
                     continue
-                map = file_to_mapping[node.file]
-                assert node.line in map, node.file + " " + str(node.line) + " " + hex(node.insn)
-                old_line = node.line
-                node.line = map[node.line]
-                old_file = node.file
-                if node.file in file_path_changed:
-                    node.file = node.file.split("/")[-1]
-                print("[indices] Changing " + old_file + ":" + str(old_line) + " to " + node.file + ":" + str(node.line))
+                new_file, new_line = convert_file_line(file_to_mapping, file_path_changed, node.file, node.line)
+                print("[indices] Changing " + node.file + ":" + str(node.line) + " to " + new_file + ":" + str(new_line))
+                node.file = new_file
+                node.line = new_line
+                if node.caller_files is not None:
+                    new_callers = []
+                    for caller in node.caller_files:
+                        new_file, new_line = convert_file_line(file_to_mapping, file_path_changed, caller[0], caller[1])
+                        print("[indices] Changing2 " + caller[0] + ":" + str(caller[1]) + " to " + new_file + ":" + str(new_line))
+                        new_callers.append([new_file, new_line])
+                    node.caller_files = new_callers
         b = time.time()
         print("[indices] realign file line for all reachable_nodes took: " + str(b-a))
 

@@ -107,16 +107,42 @@ def get_line(insn, prog):
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
     return parse_get_line_output(result.stdout.decode('ascii').strip().splitlines())
 
-def get_caller_files(result):
-    caller_files = ""
-    for line in result:
-        file = line.split()[0].strip().split(":")[0].split("/")[-1]
-        caller_files += file + "_"
-    print("[index] caller files: " + caller_files)
-    return caller_files
+def convert_file_line(file_to_mapping, file_path_changed, file, line):
+    map = file_to_mapping[file]
+    assert line in map, file + " " + str(line)
+    new_line = map[line]
+    if file in file_path_changed:
+        new_file = file.split("/")[-1]
+    else:
+        new_file = file
+    return new_file, new_line
+
+def get_callers(results):
+    callers = []
+    print(results)
+    for result in results:
+        result = result.strip().split()[0]
+        result_seg = result.strip().split(":")
+        file = result_seg[0]#.split("/")[-1]
+        try:
+            print(result_seg)
+            line = int(result_seg[1].split()[0])
+            #print("[main] command returned: " + str(line))
+        except ValueError:
+            line = None
+        callers.append([file, line])
+
+    print("[index] caller files: " + str(callers))
+    return callers
+
+def get_callers_str(callers):
+    callers_str = ""
+    for caller in callers:
+        callers_str += caller[0] + ":" + str(caller[1]) + "|"
+    return callers_str
 
 def parse_get_line_output(result):
-    caller_files = get_caller_files(result[1:])
+    callers = get_callers(result[1:])
     result = result[0]
     result = result.split()[0]
     result_seg = result.strip().split(":")
@@ -126,7 +152,7 @@ def parse_get_line_output(result):
         #print("[main] command returned: " + str(line))
     except ValueError:
         line = None
-    return file, line, caller_files
+    return file, line, callers
 
 def get_insn_offsets(line, file, prog):
     cmd = 'gdb ./'+ prog + ' -ex "info line ' + file + ':' + str(line)+'" --batch > infoLine_result'

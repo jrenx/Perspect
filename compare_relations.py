@@ -384,15 +384,15 @@ def parse_pass_rates(fname):
             pass_rates_per_succe[k] = pass_rates
         return pass_rates_per_succe
 
-def build_indices(idf, inf):
+def build_indices(idf, inf, isf):
     indices = None
     if os.path.exists(idf) and os.path.exists(inf):
         indices = IndiceToInsnMap()
-        indices.build(idf, inf, inf[0:-1] + "_strs")
+        indices.build(idf, inf, isf)
     return indices
 
 def compare_relation_groups(f1, f2, tf1, tf2, d1, mcf1, mcf12, mf1, mf12, pf1, pf12, pduf1, pduf12,
-                            idf1, idf12, inf1, inf12,
+                            idf1, idf12,
                             compare_highest_ranking_rg_only=False):
     rs1 = parse(f1)
     #print(rs1)
@@ -415,8 +415,11 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1, mcf1, mcf12, mf1, mf12, pf1, p
     prdu1 = parse_pass_rates(pduf1)
     prdu2 = parse_pass_rates(pduf12)
 
-    indices1 = build_indices(idf1, inf1)
-    indices2 = build_indices(idf12, inf12)
+    indices1 = build_indices(idf1, idf1 + "_insns", idf1 + "_insn_strs")
+    indices2 = build_indices(idf12, idf12 + "_insns", idf12 + "_insn_strs")
+
+    inner_indices1 = build_indices(idf1 + "_inner", idf1 + "_inner_insns", None)
+    inner_indices2 = build_indices(idf12 + "_inner", idf12 + "_inner_insns", None)
 
     diff = []
     #TODO, this does not include the detailed ratio level match
@@ -459,7 +462,7 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1, mcf1, mcf12, mf1, mf12, pf1, p
         print(str(p[0]) + " " + str(p[1]) + " " + str(p[2]) + " " + str(p[3]))
         print()
         compare_relations(p[0], p[1], p[2], p[3], nc1, nc2, d1, mcrs1, mcrs2, mrs1, mrs2,
-                          pr1, pr2, prdu1, prdu2, indices1, indices2)
+                          pr1, pr2, prdu1, prdu2, indices1, indices2, inner_indices1, inner_indices2)
         print()
         print(str(p[0]) + " " + str(p[1]) + " " + str(p[2]) + " " + str(p[3]))
         print()
@@ -1206,7 +1209,8 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                       mcrs_left=None, mcrs_right=None, mrs_left=None, mrs_right=None,
                       pass_rates_left=None, pass_rates_right=None,
                       pass_rates_dataflow_left=None, pass_rates_dataflow_right=None,
-                      indices_left=None, indices_right=None):
+                      indices_left=None, indices_right=None,
+                      inner_indices_left=None, inner_indices_right=None):
 
     if left is None or right is None:
         print("[warn] One relation group is None")
@@ -1394,6 +1398,15 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                     print("[compare_relation] already seen a similar relation, ignore...")
                     include = False
                     break
+            succe_in_other_slice = False
+            for succe in left_summary[r_left.insn]:
+                matching_insn = IndiceToInsnMap.translate_insn(succe, inner_indices_left, inner_indices_right)
+                if matching_insn is not None:
+                    succe_in_other_slice = True
+                    break
+            if not succe_in_other_slice:
+                print("[compare_relation/warn] None of the successors are in the other slice1")
+                include = False
             if include is True:
                 left_seen.append(r_left)
         elif r_right is not None:
@@ -1403,6 +1416,16 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                     print("[compare_relation] already seen a similar relation, ignore...")
                     include = False
                     break
+            succe_in_other_slice = False
+            for succe in right_summary[r_right.insn]:
+                matching_insn = IndiceToInsnMap.translate_insn(succe, inner_indices_right, inner_indices_left)
+                if matching_insn is not None:
+                    succe_in_other_slice = True
+                    break
+            if not succe_in_other_slice:
+                print("[compare_relation/warn] None of the successors are in the other slice2")
+                include = False
+
             if include is True:
                 right_seen.append(r_right)
         if include is True and mcrs_left is not None and mcrs_right is not None:
@@ -1533,15 +1556,15 @@ if __name__ == "__main__":
     print(idf1)
     print(idf12)
 
-    #FIXME: no need for these...  possibly simplify
-    insns_file1 = "indices_" + key + "_insns"
-    insns_file2 = "indices" + other_key + "_insns"
-    inf1 = os.path.join(dir1, cache_dir1, insns_file1)
-    #inf2 = os.path.join(dir2, cache_dir2, insns_file2)
-    inf12 = os.path.join(dir2, cache_dir1, insns_file2)
-    print(inf1)
-    print(inf12)
+    ##FIXME: no need for these...  possibly simplify
+    #insns_file1 = "indices_" + key + "_insns"
+    #insns_file2 = "indices" + other_key + "_insns"
+    #inf1 = os.path.join(dir1, cache_dir1, insns_file1)
+    ##inf2 = os.path.join(dir2, cache_dir2, insns_file2)
+    #inf12 = os.path.join(dir2, cache_dir1, insns_file2)
+    #print(inf1)
+    #print(inf12)
 
     compare_relation_groups(f1, f12, tf1, tf12, d1, mcf1, mcf12, mf1, mf12, pf1, pf12, pduf1, pduf12,
-                            idf1, idf12, inf1, inf12,
+                            idf1, idf12,
                             compare_highest_ranking_rg_only=True)
