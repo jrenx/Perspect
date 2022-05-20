@@ -95,8 +95,8 @@ def execute_cmd_in_parallel(all_inputs, script_name, prefix, num_processor, prog
                     curr = []
         print("[indices] parsed result: " + str(ret))
         #ret.append(curr)
-        #os.remove(file_name + "_DONE")
-        #os.remove(file_name + ".out")
+        os.remove(file_name + "_DONE")
+        os.remove(file_name + ".out")
     return ret
 
 def get_line(insn, prog):
@@ -117,6 +117,23 @@ def convert_file_line(file_to_mapping, file_path_changed, file, line):
         new_file = file
     return new_file, new_line
 
+def callers_file_line_to_index(callers, file, line):
+    index = (get_callers_str(callers)) + "|" + file + "|" + str(line)
+    return index
+
+def strip_callers(callers, our_source_code_dir):
+    stripped_callers = []
+    for caller in callers:
+        file = caller[0] if our_source_code_dir is None else \
+            caller[0][caller[0].startswith(our_source_code_dir) and len(our_source_code_dir):]
+        line = caller[1]
+        stripped_callers.append([file,line])
+    return stripped_callers
+
+def strip_file(file, our_source_code_dir):
+    return file if our_source_code_dir is None else \
+      file[file.startswith(our_source_code_dir) and len(our_source_code_dir):]
+ 
 def get_callers(results):
     callers = []
     print(results)
@@ -137,8 +154,9 @@ def get_callers(results):
 
 def get_callers_str(callers):
     callers_str = ""
-    for caller in callers:
-        callers_str += caller[0] + ":" + str(caller[1]) + "|"
+    if callers is not None:
+        for caller in reversed(callers):
+            callers_str += caller[0] + ":" + str(caller[1]) + "|"
     return callers_str
 
 def parse_get_line_output(result):

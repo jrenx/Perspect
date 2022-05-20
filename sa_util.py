@@ -607,6 +607,19 @@ def getLastInstrInBB(binary_ptr, insn_addr, func):
     if DEBUG_CTYPE: print( "[main] last instr: " + str(last_insn_addr))
     return last_insn_addr
 
+def getAllAddrsInBB(binary_ptr, insn_addr, func):
+    print()
+    print( "[main] getting all insn addrs in basic block: ")
+    if DEBUG_CTYPE: print( "[main] func: " + func)
+    if DEBUG_CTYPE: print( "[main] insn_addr: " + hex(insn_addr), flush=True)
+    func_name = c_char_p(str.encode(func))
+    lib.getAllAddrsInBB(c_ulong(binary_ptr), func_name, c_ulong(insn_addr))
+    f = open(os.path.join(curr_dir, 'getAllAddrsInBB_result'))
+    json_insns = json.load(f)
+    f.close()
+    print(json_insns)
+    return json_insns
+
 def setup(prog):
     print()
     print( "[main] Setting up analysis: ")

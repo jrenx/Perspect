@@ -33,8 +33,16 @@ class BasicBlock:
         self.start_insn = None
         self.last_insn = None
         self.lines = lines
-        self.line = None
-        self.rank_in_same_line = None
+        
+        #TODO json
+        #for building indices
+        self.line = None #ignore for now
+        self.rank_in_same_line = None #ignore for now
+        self.start_index = None
+        self.last_index = None
+        self.insn_to_index = None
+        self.index_to_rank = None
+
         self.ends_in_branch = ends_in_branch
         self.is_entry = is_entry
         self.is_new_entry = False
@@ -54,6 +62,15 @@ class BasicBlock:
         data["lines"] = self.lines
         data["line"] = self.line
         data["rank_in_same_line"] = self.rank_in_same_line
+        if self.index_to_rank is not None:
+            data["index_to_rank"] = self.index_to_rank
+        if self.insn_to_index is not None:
+            data["insn_to_index"] = self.insn_to_index
+        if self.start_index is not None:
+            data["start_index"] = self.start_index
+        if self.last_index is not None:
+            data["last_index"] = self.last_index
+ 
         data["ends_in_branch"] = self.ends_in_branch
         data["is_entry"] = self.is_entry
         data["is_new_entry"] = self.is_new_entry
@@ -107,6 +124,17 @@ class BasicBlock:
             bb.line = data["line"]
         if "rank_in_same_line" in data:
             bb.rank_in_same_line = data["rank_in_same_line"]
+        if "insn_to_index" in data:
+            insn_to_index = data["insn_to_index"]
+            bb.insn_to_index = {}
+            for key in insn_to_index:
+                bb.insn_to_index[int(key)] = insn_to_index[key]
+        if "index_to_rank" in data:
+            bb.index_to_rank = data["index_to_rank"]
+        if "start_index" in data:
+            bb.start_index = data["start_index"]
+        if "last_index" in data:
+            bb.last_index = data["last_index"]
 
         if 'immed_dom' in data:
             bb.immed_dom = data['immed_dom']
@@ -1576,8 +1604,8 @@ class StaticDepGraph:
 
         if align_indices is False:
             StaticDepGraph.generate_file_line_for_all_reachable_nodes(prog, our_source_code_dir)
-            StaticDepGraph.generate_rank_for_bbs(prog)
             StaticDepGraph.binary_ptr = setup(prog)
+            StaticDepGraph.generate_rank_for_bbs(prog, our_source_code_dir)
             #StaticDepGraph.build_binary_indices(prog)
             StaticDepGraph.build_binary_indices2(prog)
             StaticDepGraph.output_indices_mapping(indice_file, our_binary)
@@ -1838,16 +1866,9 @@ class StaticDepGraph:
                 #if node.insn not in insn_to_file_line:
                 #    continue
                 file_line = insn_to_file_line[node.insn]
-                #node.file = file_line[0] if our_source_code_dir is None else \
-                #    file_line[0][file_line[0].startswith(our_source_code_dir) and len(our_source_code_dir):]
-                #node.line = file_line[1]
-                stripped_callers = []
-                for caller in file_line[2]:
-                    file = caller[0] if our_source_code_dir is None else \
-                        caller[0][caller[0].startswith(our_source_code_dir) and len(our_source_code_dir):]
-                    line = caller[1]
-                    stripped_callers.append([file,line])
-                node.caller_files = stripped_callers
+                node.file = strip_file(file_line[0], our_source_code_dir)
+                node.line = file_line[1]
+                node.caller_files = strip_callers(file_line[2], our_source_code_dir)
                 if len(node.caller_files) == 0:
                     node.caller_files = None
                 print("[indices] assignment insn: " + hex(node.insn) + " file " + node.file
@@ -1857,19 +1878,22 @@ class StaticDepGraph:
         print("[indices] generate file line for all reachable_nodes took: " + str(b-a), flush=True)
 
     @staticmethod
-    def generate_rank_for_bbs(prog):
+    def generate_rank_for_bbs(prog, our_source_code_dir):
         a = time.time()
+
         all_insns = set()
-        insn_to_bbs = {}
+        all_bbs = []
         for graph in StaticDepGraph.func_to_graph.values():
             assert len(graph.cfg.postorder_list) == len(graph.cfg.ordered_bbs)
             for bb in graph.cfg.postorder_list:
-                all_insns.add(bb.start_insn)
-                if bb.start_insn not in insn_to_bbs:
-                    insn_to_bbs[bb.start_insn] = set()
-                insn_to_bbs[bb.start_insn].add(bb)
-                #if len(all_insns) > 100:
-                #    break
+                all_bbs.append(bb)
+                bb.index_to_rank = {}
+                bb.insn_to_index = {}
+                addrs = getAllAddrsInBB(StaticDepGraph.binary_ptr, bb.start_insn, graph.func)
+                assert len(addrs) > 0
+                for addr in addrs: 
+                    all_insns.add(addr)
+                    bb.insn_to_index[addr] = -1
 
         all_insns = list(all_insns)
         ret = execute_cmd_in_parallel([hex(insn) for insn in all_insns], 'get_file_line.sh', 'insns_', num_processor, prog)
@@ -1877,25 +1901,37 @@ class StaticDepGraph:
         assert(len(ret) == len(all_insns))
         i = 0
         print("[indices] total number of file lines to parse: " + str(len(ret)))
+        insn_to_index = {}
         for l in ret:
-            file, line, caller_files = parse_get_line_output(l)
+            file, line, callers = parse_get_line_output(l)
             insn = all_insns[i]
-            for bb in insn_to_bbs[insn]:
-                bb.line = line
+            insn_to_index[insn] = [strip_file(file, our_source_code_dir), line, strip_callers(callers, our_source_code_dir)]
             i += 1
             print("[indices] initial parse insn: " + hex(insn) + " file: " + file + " line: " + str(line))
 
+        for bb in all_bbs:
+            assert bb.insn_to_index is not None
+            for addr in bb.insn_to_index:
+                index = insn_to_index[addr]
+                file = index[0]
+                line = index[1]
+                callers = index[2]
+                index_str = callers_file_line_to_index(callers, file, line)
+                bb.insn_to_index[addr] = index_str
+                if index_str not in bb.index_to_rank:
+                    bb.index_to_rank[index_str] = -1
+
         for graph in StaticDepGraph.func_to_graph.values():
-            line_to_rank = {}
+            index_to_rank = {}
             bbs = list(graph.cfg.postorder_list)
             sorted_bbs = sorted(bbs, key=lambda e: e.start_insn)
             for bb in sorted_bbs:
-                assert bb.line is not None
-                if bb.line not in line_to_rank:
-                    line_to_rank[bb.line] = 1
-                rank = line_to_rank[bb.line]
-                bb.rank_in_same_line = rank
-                line_to_rank[bb.line] = rank + 1
+                for index in bb.index_to_rank.keys():
+                    if index not in index_to_rank:
+                        index_to_rank[index] = 1
+                    rank = index_to_rank[index]
+                    bb.index_to_rank[index] = rank
+                    index_to_rank[index] = rank + 1
 
         b = time.time()
         print("[indices] generate file line for all reachable_nodes took: " + str(b-a), flush=True)
@@ -2013,9 +2049,23 @@ class StaticDepGraph:
                     print(indices)
                     print(len(indices))
                     for i in range(len(nodes)):
-                        nodes[i].index = indices[i]
-                        assert nodes[i].index > 0
-                        nodes[i].total_count = nodes[i].bb.rank_in_same_line
+                        node = nodes[i]
+                        node.index = indices[i]
+                        assert node.index > 0
+                        index = callers_file_line_to_index(node.caller_files, node.file, node.line)
+                        if node.bb.insn_to_index is not None:
+                            found = False
+                            for insn in node.bb.insn_to_index:
+                                if insn == node.insn:
+                                    found = True
+                                    assert node.bb.insn_to_index[insn] == index
+                                    break
+
+                                if node.bb.insn_to_index[insn] != index:
+                                    node.index -= 1
+                            assert node.index > 0
+                            assert found == True
+                        node.total_count = node.bb.index_to_rank[index]
         b = time.time()
         print("[indices] build binary indices took: " + str(b-a))
 
