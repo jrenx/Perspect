@@ -64,22 +64,39 @@ def calculate_dataflow_pass_rates_impact(pass_rates_dataflow1, pass_rates_datafl
         if insn_right is None: insn_right = insn_left
     pass_rate_dataflow1 = pass_rates_dataflow1.get(insn1, {}).get(insn_left, None)
     pass_rate_dataflow2 = pass_rates_dataflow2.get(insn2, {}).get(insn_right, None)
-    # print(pass_rates_dataflow1.get(insn1, {}))
-    # print(pass_rates_dataflow2.get(insn2, {}))
     print("[compare_relation] Dataflow pass rates are: " + str(pass_rate_dataflow1) + " " + str(pass_rate_dataflow2))
-    if pass_rate_dataflow1 is None or pass_rate_dataflow2 is None:
-        print("[compare_relation] Returning because not both sets of dataflow pass rates are found.")
+    if pass_rate_dataflow1 is None and pass_rate_dataflow2 is None:
+        print("[compare_relation] Returning because both sets of dataflow pass rates are notfound.")
         return None
     succe_weights = []
+    if pass_rate_dataflow1 is None or pass_rate_dataflow2 is None:
+        print("[compare_relation] Returning because not both sets of dataflow pass rates are found.")
+        succe_weights.append([0,100])
+        return succe_weights
     for key1 in pass_rate_dataflow1:
         segs = key1.split('_')
         succe = int(segs[1], 16)
         #print("[compare_relation] Succe is: " + hex(succe))
         if succe not in weight_map1:# and succe not in weight_map2:
+            print("[compare_relation] Ignore because left succe not in weight map")
+            continue
+        if IndiceToInsnMap.translate_insn(succe, indices1, indices2) not in weight_map2:
+            print("[compare_relation] Ignore because right succe not in weight map")
             continue
         rate1 = pass_rate_dataflow1[key1]
         if indices1 is None and indices2 is None:
             key2 = key1
+        else:
+            key2 = ""
+            for seg in segs:
+                s_insn = int(seg, 16)
+                matching_s_insn = IndiceToInsnMap.translate_insn(s_insn, indices1, indices2)
+                if matching_s_insn is None:
+                    print("[compare_relation] fail to matching dataflow key")
+                    continue
+                key2 += hex(matching_s_insn) + "_"
+            key2 = key2[:-1]
+            print("[compare_relation] translated key is: " + key2)
         if key2 not in pass_rate_dataflow2:
             rate2 = 0
         else:
@@ -683,8 +700,12 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                 if succe_insn in left_succe_to_rels:
                     print("[compare_relation/warn] " + hex(succe_insn) + " has a one level relation but not full relation: " +  hex(succe_insn)
                             + " likely because relation was ignored due to low weight...")
-                continue
-            succe_weight = weight_map_left[succe_insn]
+                    succe_weight = weight_map_left[r_left.insn]
+                    print("[compare_relations] Approximate using the weight of the prede instruction: " + str(succe_weight))
+                else:
+                    continue
+            else:
+                succe_weight = weight_map_left[succe_insn]
             print("[compare_relation] " + hex(succe_insn) + " succe weights is: " + str(succe_weight))
             if succe_insn not in left_succe_to_rels:
                 print("[compare_relation/warn] " + hex(succe_insn) + " has a full relation but not a one level relation, "
@@ -738,7 +759,7 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
             if impact != 0 and pass_rates_dataflow_left is not None and pass_rates_dataflow_right is not None:
                 dataflow_impacts = calculate_dataflow_pass_rates_impact(pass_rates_dataflow_left, pass_rates_dataflow_right,
                                                             r_left.insn, r_right.insn, ip[0], ip[1],
-                                                            weight_map_left, weight_map_right, None, None)
+                                                            weight_map_left, weight_map_right, indices_left, indices_right)
                 if dataflow_impacts is not None:
                     #print("[compare_relation] setting impact from " + str(impact) + " to 0 because pass rates w.r.t. control flow targets are equal.")
                     succe_weights.extend(dataflow_impacts)
