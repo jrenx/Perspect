@@ -126,7 +126,8 @@ def dataflow_pass_rates_equal(pass_rates_dataflow1, pass_rates_dataflow2, insn1,
 def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
                           pass_rates1=None, pass_rates2=None,
                            pass_rates_dataflow1=None, pass_rates_dataflow2=None,
-                          counts_left=None, counts_right=None):
+                          counts_left=None, counts_right=None,
+                          indices1=None, indices2=None):
     if insn1 is None or insn2 is None:
         return True
     print("[compare_relation] comparing children relations for " + hex(insn1) + " and " + hex(insn2))
@@ -134,7 +135,7 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
           + (str([hex(i) for i in filter1]) if filter1 is not None else ""))
     print("[compare_relation] only keeping these instructions on the right "
           + (str([hex(i) for i in filter2]) if filter2 is not None else ""))
-    relation_pairs, succes, insns = get_relation_pairs(insn1, insn2, mrs1, mrs2)
+    relation_pairs, succes, insns = get_relation_pairs(insn1, insn2, mrs1, mrs2, indices1, indices2)
     if relation_pairs is None: #no multiple relations provided for either runs, assume not equal.
         return True
 
@@ -534,7 +535,8 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                                                pass_rates1=pass_rates_left, pass_rates2=pass_rates_right,
                                                pass_rates_dataflow1=pass_rates_dataflow_left,
                                                pass_rates_dataflow2=pass_rates_dataflow_right,
-                                               counts_left=counts_left, counts_right=counts_right)
+                                               counts_left=counts_left, counts_right=counts_right,
+                                               indices1=indices_left, indices2=indices_right)
             print("[compare_relation] Children relations are equal? " + str(equals))
             assert weight == r_right.weight.perc_contrib
             corr = r_right.forward.corr()
@@ -568,7 +570,8 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                                                pass_rates1=pass_rates_left, pass_rates2=pass_rates_right,
                                                pass_rates_dataflow1=pass_rates_dataflow_left,
                                                pass_rates_dataflow2=pass_rates_dataflow_right,
-                                               counts_left=counts_left, counts_right=counts_right)
+                                               counts_left=counts_left, counts_right=counts_right,
+                                               indices1=indices_left, indices2=indices_right)
             print("[compare_relation] Children relations are equal? " + str(equals))
             assert weight == r_left.weight.perc_contrib
             corr = r_left.forward.corr()
@@ -1206,8 +1209,8 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                       mcrs_left=None, mcrs_right=None, mrs_left=None, mrs_right=None,
                       pass_rates_left=None, pass_rates_right=None,
                       pass_rates_dataflow_left=None, pass_rates_dataflow_right=None,
-                      indices_left=None, indices_right=None):
-
+                      indices_left=None, indices_right=None,
+                      inner_indices_left=None, inner_indices_right=None):
     if left is None or right is None:
         print("[warn] One relation group is None")
         return
@@ -1426,11 +1429,11 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
 
             if include is True:
                 right_seen.append(r_right)
-        if include is True and mcrs_left is not None and mcrs_right is not None:
-            r_insn = r_left.insn if r_left is not None else r_right.insn
-            #TODO, this wont work if source codes are different
-            include = compare_children_rels(r_insn, r_insn, mcrs_left, mcrs_right)
-            print("[compare_relation] compare immediate successor rel result: " + str(include))
+        #if include is True and mcrs_left is not None and mcrs_right is not None:
+        #    r_insn = r_left.insn if r_left is not None else r_right.insn
+        #    #TODO, this wont work if source codes are different
+        #    include = compare_children_rels(r_insn, r_insn, mcrs_left, mcrs_right, indices_right, indices_left)
+        #    print("[compare_relation] compare immediate successor rel result: " + str(include))
 
         if not include:
             print("NO RANK, ignore the relations: " + (hex(r_left.insn) if r_left is not None else "")

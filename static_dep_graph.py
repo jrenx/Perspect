@@ -1914,8 +1914,13 @@ class StaticDepGraph:
                 if node.explained is False:
                     continue
                 insns.append(node.insn)
-                insn_strs.append(insn_to_insn_str[node.insn])
-                indices.append([(node.caller_files if node.caller_files is not None else "") +
+                insn_str = insn_to_insn_str[node.insn]
+                insn_str_segs = insn_str.split()
+                args = ' '.join(insn_str_segs[1:])
+                op = insn_str_segs[0]
+                insn_str = op + ' ' + ''.join([i for i in args if (not i.isalpha() and not i.isdigit())])
+                insn_strs.append(insn_str)
+                indices.append([(get_callers_str(node.caller_files) if node.caller_files is not None else "") +
                      node.file, node.line, node.index, node.total_count])
 
                 is_inner = True
