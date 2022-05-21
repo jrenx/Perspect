@@ -1394,6 +1394,16 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                     print("[compare_relation] already seen a similar relation, ignore...")
                     include = False
                     break
+            succe_in_other_slice = True
+            if indices_left is not None and indices_right is not None:
+                for succe in left_summary[r_left.insn]:
+                    matching_insn = IndiceToInsnMap.translate_insn(succe, indices_left, indices_right)
+                    if matching_insn is None:
+                        succe_in_other_slice = False
+                        break
+            if not succe_in_other_slice:
+                print("[compare_relation/warn] None of the successors are in the other slice1")
+                include = False
             if include is True:
                 left_seen.append(r_left)
         elif r_right is not None:
@@ -1403,6 +1413,17 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                     print("[compare_relation] already seen a similar relation, ignore...")
                     include = False
                     break
+            succe_in_other_slice = True
+            if indices_left is not None and indices_right is not None:
+                for succe in right_summary[r_right.insn]:
+                    matching_insn = IndiceToInsnMap.translate_insn(succe, indices_right, indices_left)
+                    if matching_insn is None:
+                        succe_in_other_slice = False
+                        break
+            if not succe_in_other_slice:
+                print("[compare_relation/warn] None of the successors are in the other slice2")
+                include = False
+
             if include is True:
                 right_seen.append(r_right)
         if include is True and mcrs_left is not None and mcrs_right is not None:
