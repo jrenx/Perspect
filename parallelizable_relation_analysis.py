@@ -276,7 +276,7 @@ class ParallelizableRelationAnalysis:
 
     @staticmethod
     def build_relation_with_predecessor(dgraph, starting_node, prede_node, rgroup, wavefront,
-                                                 use_weight, base_weight, prog, indices_not_found, timestamp, other_predes, ignore_low_weight=True):
+                                                 use_weight, base_weight, prog, indices_not_found, timestamp, other_predes, ignore_low_weight=False):
         #insn = prede_node.insn
         #hex_insn = prede_node.hex_insn
         if DEBUG: print("-------")
@@ -374,12 +374,12 @@ class ParallelizableRelationAnalysis:
                 if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " only has a "
                                 + str(weight.perc_contrib) + "% contribution to the output event, ignore ...")
                 return False
-        else:
-            #FIXME: Not sure how this is possible...
-            if key is None and round(weight.perc_contrib, 1) == 0.0:
-                if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " only has a "
-                                + str(weight.perc_contrib) + "% contribution to the output event, ignore ...")
-                return False
+        #else:
+        #    #FIXME: Not sure how this is possible...
+        #    if key is None and round(weight.perc_contrib, 1) == 0.0:
+        #        if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " only has a "
+        #                        + str(weight.perc_contrib) + "% contribution to the output event, ignore ...")
+        #        return False
  
         if Invariance.is_irrelevant(output_set_counts) and Invariance.is_irrelevant(input_set_counts):
             if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " is irrelevant  the output event, ignore ...")
@@ -445,7 +445,7 @@ class ParallelizableRelationAnalysis:
 
     @staticmethod
     def one_pass(dgraph, starting_node, starting_weight, max_contrib, prog, \
-                 indices_map=None, indices_map_inner=None, other_simple_relation_groups=None, node_avg_timestamps=None, ignore_low_weight=True):
+                 indices_map=None, indices_map_inner=None, other_simple_relation_groups=None, node_avg_timestamps=None, ignore_low_weight=False):
         a = time.time()
         print("Starting forward and backward pass for starting insn: " + hex(starting_node.insn))
         wavefront = []
@@ -478,10 +478,11 @@ class ParallelizableRelationAnalysis:
             base_weight = starting_weight
         else:
             assert use_weight is True
-        if (base_weight if other_used_weight is True else starting_weight) < (max_contrib*0.01):
-            print("[ra] Base weight is less than 1% of the max weight, ignore the node "
-                  + starting_node.hex_insn + "@" + starting_node.function)
-            return wavefront, None
+        if ignore_low_weight is True:
+            if (base_weight if other_used_weight is True else starting_weight) < (max_contrib*0.01):
+                print("[ra] Base weight is less than 1% of the max weight, ignore the node "
+                      + starting_node.hex_insn + "@" + starting_node.function)
+                return wavefront, None
 
         if dgraph.reachable_output_events_per_static_node is None:
             dgraph.reachable_output_events_per_static_node = {}
