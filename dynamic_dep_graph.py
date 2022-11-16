@@ -433,12 +433,12 @@ class DynamicDependence:
             i += 1
             self.code_to_insn[i] = insn
             
-            if self.insn_to_static_node[insn].mem_load is not None:
-                self.insn_to_static_node[insn].mem_load = None
-                print("[warn] Ignoring the mem load of a starting node")
-            if self.insn_to_static_node[insn].mem_store is not None:
-                self.insn_to_static_node[insn].mem_store = None
-                print("[warn] Ignoring the mem store of a starting node")
+            #if self.insn_to_static_node[insn].mem_load is not None:
+            #    self.insn_to_static_node[insn].mem_load = None
+            #    print("[warn] Ignoring the mem load of a starting node")
+            #if self.insn_to_static_node[insn].mem_store is not None:
+            #    self.insn_to_static_node[insn].mem_store = None
+            #    print("[warn] Ignoring the mem store of a starting node")
  
             if reg != "":
                 instructions.append([hex(insn), reg, i])
@@ -524,12 +524,12 @@ class DynamicDependence:
             self.code_to_insn[i] = node.insn
             instructions.append([node.hex_insn, 'pc', i])
 
-            if self.insn_to_static_node[node.insn].mem_load is not None:
-                self.insn_to_static_node[node.insn].mem_load = None
-                print("[warn] Ignoring the mem load of a CF node")
-            if self.insn_to_static_node[node.insn].mem_store is not None:
-                self.insn_to_static_node[node.insn].mem_store = None
-                print("[warn] Ignoring the mem store of a CF node")
+            #if self.insn_to_static_node[node.insn].mem_load is not None:
+            #    self.insn_to_static_node[node.insn].mem_load = None
+            #    print("[warn] Ignoring the mem load of a CF node")
+            #if self.insn_to_static_node[node.insn].mem_store is not None:
+            #    self.insn_to_static_node[node.insn].mem_store = None
+            #    print("[warn] Ignoring the mem store of a CF node")
  
         self.max_code_with_static_node = i
 
@@ -963,7 +963,8 @@ class DynamicDependence:
             curr_result_file = result_file + "_" + hex(insn)
             print("Looking for file: " + str(curr_result_file))
             if os.path.isfile(curr_result_file):
-                starting_insn_to_dynamic_graph[insn] = DynamicGraph.load_graph_from_json(curr_result_file)
+                #starting_insn_to_dynamic_graph[insn] = DynamicGraph.load_graph_from_json(curr_result_file)
+                pass
             else:
                 left_over.append(insn)
         insns = left_over
@@ -1129,7 +1130,6 @@ class DynamicDependence:
                 print("-" * 60)
             print(stdout)
             print(stderr)
-
         with open(self.trace_path + ".parsed" + ('' if pa_id is None else ('_' + str(pa_id))), 'rb') as f:
             byte_seq = f.read()  # more than twice faster than readlines!
 
@@ -1392,6 +1392,7 @@ class DynamicDependence:
                             print("[warn] a rep mov %ds:(%rsi),%es:(%rdi) with dst addr of 0x0? ignore insn " + hex(insn))
                             continue
                     else:
+                        print(hex(insn))
                         mem_store_addr = DynamicGraph.calculate_mem_addr(reg_value, static_node.mem_store,
                                                          None if ctxt.pending_regs is None else ctxt.pending_regs[0])
                 ctxt.hasPrevValues = False
@@ -2819,7 +2820,7 @@ class DynamicGraph:
                         continue
                     q.appendleft([s, l, len(l)])
 
-    def calc_avg_time_stamp(self):
+    def calc_avg_time_stamp(self): #TODO use this
         insn_to_time_stamp = {}
         for insn in self.insn_to_dyn_nodes:
             nodes = self.insn_to_dyn_nodes[insn]
