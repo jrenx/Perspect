@@ -267,8 +267,8 @@ class Relation:
         #       self.forward.relaxed_equals(other.forward) and \
         #        self.backward.relaxed_equals(other.backward)
 
-        return self.forward.relaxed_equals(other.forward) and \
-                self.backward.relaxed_equals(other.backward, self_count, other_count)
+        return ((self.forward == None and other.forward == None) or self.forward.relaxed_equals(other.forward)) and \
+                ((self.backward == None and other.backward == None) or self.backward.relaxed_equals(other.backward, self_count, other_count))
 
     def __str__(self):
         s = ""
