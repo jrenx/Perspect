@@ -50,8 +50,8 @@ class Invariance:
             return False
         if self.is_conditional != other.is_conditional:
             # If one is conditional and another is not but the conditional proportional is almost 100, return True.
-            if self.conditional_proportion is not None and self.conditional_proportion >= 0.99 or \
-                other.conditional_proportion is not None and other.conditional_proportion >= 0.99:
+            if self.conditional_proportion is not None and self.conditional_proportion >= 0.80 or \
+                other.conditional_proportion is not None and other.conditional_proportion >= 0.80: #TODO make threshold
                     return True
             return False
         if self.conditional_proportion == other.conditional_proportion:
@@ -267,8 +267,8 @@ class Relation:
         #       self.forward.relaxed_equals(other.forward) and \
         #        self.backward.relaxed_equals(other.backward)
 
-        return self.forward.relaxed_equals(other.forward) and \
-                self.backward.relaxed_equals(other.backward, self_count, other_count)
+        return ((self.forward == None and other.forward == None) or self.forward.relaxed_equals(other.forward)) and \
+                ((self.backward == None and other.backward == None) or self.backward.relaxed_equals(other.backward, self_count, other_count))
 
     def __str__(self):
         s = ""
