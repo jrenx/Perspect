@@ -70,8 +70,8 @@ class BasicBlock:
         data["start_insn"] = self.start_insn
         data["last_insn"] = self.last_insn
         data["lines"] = self.lines
-        data["line"] = self.line
-        data["rank_in_same_line"] = self.rank_in_same_line
+        #data["line"] = self.line
+        #data["rank_in_same_line"] = self.rank_in_same_line
         data["ends_in_branch"] = self.ends_in_branch
         data["is_entry"] = self.is_entry
         data["is_new_entry"] = self.is_new_entry
@@ -1096,8 +1096,20 @@ class StaticNode:
         if "bb" in data:
             sn.bb = data["bb"]
 
-        sn.cf_predes = data['cf_predes']
-        sn.cf_succes = data['cf_succes']
+        cf_predes = set()
+        sn.cf_predes = []
+        for cf_prede in data['cf_predes']:
+            if cf_prede not in cf_predes:
+                sn.cf_predes.append(cf_prede)
+                cf_predes.add(cf_prede)
+
+        cf_succes = set()
+        sn.cf_succes = []
+        for cf_succe in data['cf_succes']:
+            if cf_succe not in cf_succes:
+                sn.cf_succes.append(cf_succe)
+                cf_succes.add(cf_succe)
+
         sn.is_df = data["is_df"]
 
         sn.mem_load = data["mem_load"]
@@ -1114,8 +1126,19 @@ class StaticNode:
         if sn.reg_store is not None and '::' in sn.reg_store:
             sn.reg_store = sn.reg_store.split("::")[1]
 
-        sn.df_predes = data['df_predes']
-        sn.df_succes = data['df_succes']
+        df_predes = set()
+        sn.df_predes = []
+        for df_prede in data['df_predes']:
+            if df_prede not in df_predes:
+                sn.df_predes.append(df_prede)
+                df_predes.add(df_prede)
+
+        df_succes = set()
+        sn.df_succes = []
+        for df_succe in data['df_succes']:
+            if df_succe not in df_succes:
+                sn.df_succes.append(df_succe)
+                df_succes.add(df_succe)
 
         sn.backedge_targets = set(data['node_backedge_targets'])
         sn.backedge_sources = set(data['node_backedge_sources'])
