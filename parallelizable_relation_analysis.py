@@ -369,10 +369,10 @@ class ParallelizableRelationAnalysis:
                         + " " + str(input_set_count_list))
 
         key = other_predes.get_indices(prede_node) if other_predes is not None else None
-        if key is None and weight.perc_contrib < 1:
-            if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " only has a "
-                            + str(weight.perc_contrib) + "% contribution to the output event, ignore ...")
-            return False
+        #if key is None and weight.perc_contrib < 1:
+        #    if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " only has a "
+        #                    + str(weight.perc_contrib) + "% contribution to the output event, ignore ...")
+        #    return False
 
         if Invariance.is_irrelevant(output_set_counts) and Invariance.is_irrelevant(input_set_counts):
             if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " is irrelevant  the output event, ignore ...")
@@ -471,10 +471,10 @@ class ParallelizableRelationAnalysis:
             base_weight = starting_weight
         else:
             assert use_weight is True
-        if (base_weight if other_used_weight is True else starting_weight) < (max_contrib*0.01):
-            print("[ra] Base weight is less than 1% of the max weight, ignore the node "
-                  + starting_node.hex_insn + "@" + starting_node.function)
-            return wavefront, None
+        #if (base_weight if other_used_weight is True else starting_weight) < (max_contrib*0.01):
+        #    print("[ra] Base weight is less than 1% of the max weight, ignore the node "
+        #          + starting_node.hex_insn + "@" + starting_node.function)
+        #    return wavefront, None
 
         if dgraph.reachable_output_events_per_static_node is None:
             dgraph.reachable_output_events_per_static_node = {}
