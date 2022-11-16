@@ -25,6 +25,69 @@ Weight_Threshold = 0
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 
 class SerialMultipleRelationAnalysis(RelationAnalysis):
+
+    def build_multiple_dynamic_dependencies(self, insns):
+        print("Building dynamic graph with multiple starting events and each only sliced one step"
+                ", total number are: " + str(len(insns)) + " starting insns are: " + str(insns))
+        file_name = 'dynamic_graph_result_' + self.dd.key + "_multiple_" + str(len(insns))
+        insns = set(insns)
+        result_file = os.path.join(curr_dir, 'cache', self.dd.prog, file_name)
+        time_record["start"] = time.time()
+        starting_insn_to_dynamic_graph = {}
+
+        left_over = []
+        for insn in insns:
+            curr_result_file = result_file + "_" + hex(insn)
+            print("Looking for file: " + str(curr_result_file))
+            if os.path.isfile(curr_result_file):
+                dgraph = DynamicGraph.load_graph_from_json(curr_result_file)
+                if len(dgraph.insn_to_dyn_nodes) == 0:
+                    print("[ra/warn] dynamic graph starting with insn " + hex(insn) + " has zero nodes, skip!")
+                    continue
+                dynamic_node = next(iter(dgraph.insn_to_dyn_nodes[insn]))
+                func = dynamic_node.static_node.function
+                print("[ra] function is: " + str(func) + " insn is: " + hex(insn))
+                graph = StaticDepGraph.get_graph(func, insn)
+                starting_node = graph.insn_to_node[insn]
+                curr_wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, starting_node, 100, 100, self.prog, \
+                                                                                 None, None, None, None)
+                print("[ra] Got results for: " + hex(starting_node.insn))
+                assert rgroup is not None
+                rgroup.sort_relations()
+                self.relation_groups.append(rgroup)
+
+    def build_multiple_dynamic_dependencies_in_context(self, parent_insn, insns):
+        print("Building dynamic graph with multiple starting events and each only sliced one step"
+                + " from existing graph: " + hex(parent_insn) +
+                ", total number are: " + str(len(insns)) + " starting insns are: " + str(insns))
+        parent_file_name = 'dynamic_graph_result_' + self.dd.key + "_" + hex(parent_insn)
+        file_name = parent_file_name + "_multiple_" + str(len(insns))
+        insns = set(insns)
+        result_file = os.path.join(curr_dir, 'cache', self.dd.prog, file_name)
+        time_record["start"] = time.time()
+        starting_insn_to_dynamic_graph = {}
+
+        left_over = []
+        for insn in insns:
+            curr_result_file = result_file + "_" + hex(insn)
+            print("Looking for file: " + str(curr_result_file))
+            if os.path.isfile(curr_result_file):
+                dgraph = DynamicGraph.load_graph_from_json(curr_result_file)
+                if len(dgraph.insn_to_dyn_nodes) == 0:
+                    print("[ra/warn] dynamic graph starting with insn " + hex(insn) + " has zero nodes, skip!")
+                    continue
+                dynamic_node = next(iter(dgraph.insn_to_dyn_nodes[insn]))
+                func = dynamic_node.static_node.function
+                print("[ra] function is: " + str(func) + " insn is: " + hex(insn))
+                graph = StaticDepGraph.get_graph(func, insn)
+                starting_node = graph.insn_to_node[insn]
+                curr_wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, starting_node, 100, 100, self.prog, \
+                                                                                 None, None, None, None)
+                print("[ra] Got results for: " + hex(starting_node.insn))
+                assert rgroup is not None
+                rgroup.sort_relations()
+                self.relation_groups.append(rgroup)
+
     def analyze(self, insns, use_cache=False, parent_insn=None):
         print(use_cache)
         a = time.time()
@@ -46,9 +109,11 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
                         print("[ra]     succe: " + hex(succe.insn))
                         succe_insns.add(succe.insn)
                 print(len(succe_insns))
-                starting_insn_to_dynamic_graph = self.dd.build_multiple_dynamic_dependencies(succe_insns)
+                _ = self.dd.build_multiple_dynamic_dependencies(succe_insns)
+                self.build_multiple_dynamic_dependencies(succe_insns)
             else:
-                starting_insn_to_dynamic_graph = self.dd.build_multiple_dynamic_dependencies_in_context(parent_insn, insns)
+                _  = self.dd.build_multiple_dynamic_dependencies_in_context(parent_insn, insns)
+                self.build_multiple_dynamic_dependencies_in_context(parent_insn, insns)
         except Exception as e:
             print("Caught exception in building multiple dynamic graphs.")
             print(str(e))
@@ -57,22 +122,23 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
             print("-" * 60)
             return
 
-        for insn in starting_insn_to_dynamic_graph.keys():
-            dgraph = starting_insn_to_dynamic_graph[insn]
-            if len(dgraph.insn_to_dyn_nodes) == 0:
-                print("[ra/warn] dynamic graph starting with insn " + hex(insn) + " has zero nodes, skip!")
-                continue
-            dynamic_node = next(iter(dgraph.insn_to_dyn_nodes[insn]))
-            func = dynamic_node.static_node.function
-            print("[ra] function is: " + str(func) + " insn is: " + hex(insn))
-            graph = StaticDepGraph.get_graph(func, insn)
-            starting_node = graph.insn_to_node[insn]
-            curr_wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, starting_node, 100, 100, self.prog, \
-                                                                             None, None, None, None, ignore_low_weight=False)
-            print("[ra] Got results for: " + hex(starting_node.insn))
-            assert rgroup is not None
-            rgroup.sort_relations()
-            self.relation_groups.append(rgroup)
+        #for insn in starting_insn_to_dynamic_graph.keys():
+        #    dgraph = starting_insn_to_dynamic_graph[insn]
+        #    if len(dgraph.insn_to_dyn_nodes) == 0:
+        #        print("[ra/warn] dynamic graph starting with insn " + hex(insn) + " has zero nodes, skip!")
+        #        continue
+        #    dynamic_node = next(iter(dgraph.insn_to_dyn_nodes[insn]))
+        #    func = dynamic_node.static_node.function
+        #    print("[ra] function is: " + str(func) + " insn is: " + hex(insn))
+        #    graph = StaticDepGraph.get_graph(func, insn)
+        #    starting_node = graph.insn_to_node[insn]
+        #    curr_wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, starting_node, 100, 100, self.prog, \
+        #                                                                     None, None, None, None)
+        #    print("[ra] Got results for: " + hex(starting_node.insn))
+        #    assert rgroup is not None
+        #    rgroup.sort_relations()
+        #    self.relation_groups.append(rgroup)
+>>>>>>> 73b5aed... [optimization/serial_multiple_relation] To reduce space complexity, do not build all the dynamic graphs then build multiple relations on them, this can be a memory issue if we have lots of dynamic graphs, instead, build one graph, build the relations, discard the data and then move on to the next
 
 
         if parent_insn is None:
