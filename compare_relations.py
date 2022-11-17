@@ -6,6 +6,8 @@ from ra_util import *
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 ignored = set()
 
+dd = None
+
 def parse(f):
     with open(f, 'r') as ff:
         simple_relation_groups = SimpleRelationGroups.fromJSON(json.load(ff))
@@ -1266,6 +1268,8 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
     left_over_right = {}
     right_insns_seen = set()
     insn_to_index = {}
+
+    new_rels = {}
     for pair in left.relations:
         r = pair[0]
         prede = pair[1]
@@ -1276,6 +1280,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         ''' Find the matching relation from the right hand side relation group '''
         pair = Indices.get_item_from_external_indice_map2(right.predes, right.relations_map, prede, indices_left, indices_right)
         if pair is None:
+            new_rels[r.insn] = r
             if r.weight.perc_contrib < 5:
                 print("[ra] Contribution is too low, ignore the relations: " + hex(r.insn))
                 continue
@@ -1472,6 +1477,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                 del right_seen[replace]
                 right_seen[r_right.insn] = r_right
 
+    diverged_rels = {}
     for p in reversed(sorted_diff):
         #rank = rank - 1
         print("-----------------------------------------")
@@ -1498,6 +1504,25 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
             if r_right.insn not in right_seen:
                 print("[compare_relation] already seen a similar relation, ignore...")
                 continue
+
+        if p[4] is not None:
+            ignore = False
+            index = insn_to_index[p[4].insn]
+            func = index[0]
+            insn = index[1]
+            graph = StaticDepGraph.get_graph(func, insn)
+            node = graph.insn_to_node[insn] if graph is not None else None
+            if node is not None:
+                print("FOUNDDD")
+                for cf_prede in node.cf_predes:
+                    if cf_prede.insn in new_rels:
+                        print("RELATION SHOULD BE IGNORED!")
+                        ignore = True
+                        break
+            if ignore is True:
+                diverged_rels[insn] = p[4]
+                continue
+
         included_diff.append(p)
 
     # Reverse the list so if there are multiple equal relations,
@@ -1558,10 +1583,21 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
     print("===============================================")
     #insns_left = []
     #insns_right = []
-    rank = len(included_diff) + 1
+    rank = len(included_diff)
 
     for p in reversed(included_diff):
-        rank = rank - 1
+        if p[4] is not None:
+            index = insn_to_index[p[4].insn]
+            func = index[0]
+            insn = index[1]
+            graph = StaticDepGraph.get_graph(func, insn)
+            node = graph.insn_to_node[insn] if graph is not None else None
+            if node is not None:
+                print("FOUNDDD")
+            for df_succe in node.df_succes:
+                if df_succe.insn in diverged_rels:
+                    print("SHOULD IGNORE!")
+
         print("-----------------------------------------")
         print("rank: " + str(rank))
         print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
@@ -1570,6 +1606,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         print(str(p[4]))
         if p[5] is not None: print(insn_to_index[p[5].insn])
         print(str(p[5]))
+        rank = rank - 1
         #if has a node in the graph, add a label...
 
         #r_left = p[4]
@@ -1598,6 +1635,9 @@ if __name__ == "__main__":
     #f2 = sys.argv[2]
     limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
     _, other_dir, other_program, other_relations_file, _ = parse_relation_analysis_inputs()
+
+    dd = DynamicDependence(starting_events, program, program_args, program_path, starting_insn_to_weight)
+    dd.prepare_to_build_dynamic_dependencies(limit)
 
     dir1 = curr_dir
     dir2 = other_dir
