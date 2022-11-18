@@ -1,0 +1,4325 @@
+{
+    "starting_events": [
+        [
+            "esi",
+            134548502,
+            "sweep"
+        ],
+        [
+            "ebx",
+            134538268,
+            "runtime.mallocgc"
+        ],
+        [
+            "eax",
+            134538747,
+            "runtime.mallocgc"
+        ],
+        [
+            "eax",
+            134539268,
+            "runtime.free"
+        ]
+    ],
+    "insn_to_id": {
+        "134556135": 2,
+        "134556102": 3,
+        "134538458": 4,
+        "134538357": 5,
+        "134538334": 6,
+        "134538324": 7,
+        "134538821": 8,
+        "134538163": 9,
+        "134538075": 10,
+        "134538027": 11,
+        "134555838": 12
+    },
+    "dynamic_nodes": [
+        {
+            "id": 915949574,
+            "insn_id": 2,
+            "hex_insn": "0x80529e7",
+            "func": "setaddrbucket",
+            "static_node": 471,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                915968236
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                915949576
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "1662": 1,
+                "69": 1,
+                "3008": 1,
+                "68": 1,
+                "99": 1,
+                "62": 1,
+                "57": 1,
+                "471": 2,
+                "2175": 1,
+                "55": 1,
+                "2046": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 915949576,
+            "insn_id": 3,
+            "hex_insn": "0x80529c6",
+            "func": "setaddrbucket",
+            "static_node": 2175,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                915968236
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                915949578
+            ],
+            "df_succes": [
+                915949574
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 915949578,
+            "insn_id": 4,
+            "hex_insn": "0x804e4da",
+            "func": "runtime.mallocgc",
+            "static_node": 1662,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                915949588
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                915949576
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 915949588,
+            "insn_id": 5,
+            "hex_insn": "0x804e475",
+            "func": "runtime.mallocgc",
+            "static_node": 69,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                915949591
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                915949578
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 915949591,
+            "insn_id": 6,
+            "hex_insn": "0x804e45e",
+            "func": "runtime.mallocgc",
+            "static_node": 68,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                915949605
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                915949588
+            ],
+            "df_predes": [
+                915949592
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 915949592,
+            "insn_id": 7,
+            "hex_insn": "0x804e454",
+            "func": "runtime.mallocgc",
+            "static_node": 3008,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                915949605
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                915949591
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 915949605,
+            "insn_id": 8,
+            "hex_insn": "0x804e645",
+            "func": "runtime.mallocgc",
+            "static_node": 99,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                915968230
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                915949592,
+                915949591
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 915968230,
+            "insn_id": 9,
+            "hex_insn": "0x804e3b3",
+            "func": "runtime.mallocgc",
+            "static_node": 62,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                915968232
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                915949605
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 915968232,
+            "insn_id": 10,
+            "hex_insn": "0x804e35b",
+            "func": "runtime.mallocgc",
+            "static_node": 57,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                915968233
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                915968230
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 915968233,
+            "insn_id": 11,
+            "hex_insn": "0x804e32b",
+            "func": "runtime.mallocgc",
+            "static_node": 55,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                915968232
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 915968236,
+            "insn_id": 12,
+            "hex_insn": "0x80528be",
+            "func": "setaddrbucket",
+            "static_node": 2046,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                915949574,
+                915949576
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1495097759,
+            "insn_id": 2,
+            "hex_insn": "0x80529e7",
+            "func": "setaddrbucket",
+            "static_node": 471,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1495116439
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                1495097761
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "471": 2,
+                "2175": 1,
+                "1662": 1,
+                "69": 1,
+                "68": 1,
+                "3008": 1,
+                "99": 1,
+                "62": 1,
+                "57": 1,
+                "2046": 1,
+                "55": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1495097761,
+            "insn_id": 3,
+            "hex_insn": "0x80529c6",
+            "func": "setaddrbucket",
+            "static_node": 2175,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1495116439
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                1495097763
+            ],
+            "df_succes": [
+                1495097759
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1495097763,
+            "insn_id": 4,
+            "hex_insn": "0x804e4da",
+            "func": "runtime.mallocgc",
+            "static_node": 1662,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1495097773
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                1495097761
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1495097773,
+            "insn_id": 5,
+            "hex_insn": "0x804e475",
+            "func": "runtime.mallocgc",
+            "static_node": 69,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1495097776
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1495097763
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1495097776,
+            "insn_id": 6,
+            "hex_insn": "0x804e45e",
+            "func": "runtime.mallocgc",
+            "static_node": 68,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1495097790
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1495097773
+            ],
+            "df_predes": [
+                1495097777
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1495097777,
+            "insn_id": 7,
+            "hex_insn": "0x804e454",
+            "func": "runtime.mallocgc",
+            "static_node": 3008,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1495097790
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                1495097776
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1495097790,
+            "insn_id": 8,
+            "hex_insn": "0x804e645",
+            "func": "runtime.mallocgc",
+            "static_node": 99,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1495116433
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1495097776,
+                1495097777
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1495116433,
+            "insn_id": 9,
+            "hex_insn": "0x804e3b3",
+            "func": "runtime.mallocgc",
+            "static_node": 62,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1495116435
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1495097790
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1495116435,
+            "insn_id": 10,
+            "hex_insn": "0x804e35b",
+            "func": "runtime.mallocgc",
+            "static_node": 57,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1495116436
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1495116433
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1495116436,
+            "insn_id": 11,
+            "hex_insn": "0x804e32b",
+            "func": "runtime.mallocgc",
+            "static_node": 55,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1495116435
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1495116439,
+            "insn_id": 12,
+            "hex_insn": "0x80528be",
+            "func": "setaddrbucket",
+            "static_node": 2046,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1495097759,
+                1495097761
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1791206975,
+            "insn_id": 2,
+            "hex_insn": "0x80529e7",
+            "func": "setaddrbucket",
+            "static_node": 471,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1791225673
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                1791206977
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "1662": 1,
+                "69": 1,
+                "68": 1,
+                "3008": 1,
+                "99": 1,
+                "62": 1,
+                "57": 1,
+                "471": 2,
+                "2175": 1,
+                "55": 1,
+                "2046": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1791206977,
+            "insn_id": 3,
+            "hex_insn": "0x80529c6",
+            "func": "setaddrbucket",
+            "static_node": 2175,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1791225673
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                1791206979
+            ],
+            "df_succes": [
+                1791206975
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1791206979,
+            "insn_id": 4,
+            "hex_insn": "0x804e4da",
+            "func": "runtime.mallocgc",
+            "static_node": 1662,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1791206989
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                1791206977
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1791206989,
+            "insn_id": 5,
+            "hex_insn": "0x804e475",
+            "func": "runtime.mallocgc",
+            "static_node": 69,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1791206992
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1791206979
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1791206992,
+            "insn_id": 6,
+            "hex_insn": "0x804e45e",
+            "func": "runtime.mallocgc",
+            "static_node": 68,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1791207006
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1791206989
+            ],
+            "df_predes": [
+                1791206993
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1791206993,
+            "insn_id": 7,
+            "hex_insn": "0x804e454",
+            "func": "runtime.mallocgc",
+            "static_node": 3008,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1791207006
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                1791206992
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1791207006,
+            "insn_id": 8,
+            "hex_insn": "0x804e645",
+            "func": "runtime.mallocgc",
+            "static_node": 99,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1791225667
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1791206992,
+                1791206993
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1791225667,
+            "insn_id": 9,
+            "hex_insn": "0x804e3b3",
+            "func": "runtime.mallocgc",
+            "static_node": 62,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1791225669
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1791207006
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1791225669,
+            "insn_id": 10,
+            "hex_insn": "0x804e35b",
+            "func": "runtime.mallocgc",
+            "static_node": 57,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1791225670
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1791225667
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1791225670,
+            "insn_id": 11,
+            "hex_insn": "0x804e32b",
+            "func": "runtime.mallocgc",
+            "static_node": 55,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1791225669
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1791225673,
+            "insn_id": 12,
+            "hex_insn": "0x80528be",
+            "func": "setaddrbucket",
+            "static_node": 2046,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1791206975,
+                1791206977
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1941711419,
+            "insn_id": 2,
+            "hex_insn": "0x80529e7",
+            "func": "setaddrbucket",
+            "static_node": 471,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1941730135
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                1941711421
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "1662": 1,
+                "69": 1,
+                "68": 1,
+                "3008": 1,
+                "99": 1,
+                "62": 1,
+                "57": 1,
+                "471": 2,
+                "2175": 1,
+                "55": 1,
+                "2046": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1941711421,
+            "insn_id": 3,
+            "hex_insn": "0x80529c6",
+            "func": "setaddrbucket",
+            "static_node": 2175,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1941730135
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                1941711423
+            ],
+            "df_succes": [
+                1941711419
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1941711423,
+            "insn_id": 4,
+            "hex_insn": "0x804e4da",
+            "func": "runtime.mallocgc",
+            "static_node": 1662,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1941711433
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                1941711421
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1941711433,
+            "insn_id": 5,
+            "hex_insn": "0x804e475",
+            "func": "runtime.mallocgc",
+            "static_node": 69,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1941711436
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1941711423
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1941711436,
+            "insn_id": 6,
+            "hex_insn": "0x804e45e",
+            "func": "runtime.mallocgc",
+            "static_node": 68,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1941711450
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1941711433
+            ],
+            "df_predes": [
+                1941711437
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1941711437,
+            "insn_id": 7,
+            "hex_insn": "0x804e454",
+            "func": "runtime.mallocgc",
+            "static_node": 3008,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1941711450
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                1941711436
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1941711450,
+            "insn_id": 8,
+            "hex_insn": "0x804e645",
+            "func": "runtime.mallocgc",
+            "static_node": 99,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1941730129
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1941711436,
+                1941711437
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1941730129,
+            "insn_id": 9,
+            "hex_insn": "0x804e3b3",
+            "func": "runtime.mallocgc",
+            "static_node": 62,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1941730131
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1941711450
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1941730131,
+            "insn_id": 10,
+            "hex_insn": "0x804e35b",
+            "func": "runtime.mallocgc",
+            "static_node": 57,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1941730132
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1941730129
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1941730132,
+            "insn_id": 11,
+            "hex_insn": "0x804e32b",
+            "func": "runtime.mallocgc",
+            "static_node": 55,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1941730131
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 1941730135,
+            "insn_id": 12,
+            "hex_insn": "0x80528be",
+            "func": "setaddrbucket",
+            "static_node": 2046,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1941711419,
+                1941711421
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2014522031,
+            "insn_id": 2,
+            "hex_insn": "0x80529e7",
+            "func": "setaddrbucket",
+            "static_node": 471,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2014522205
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                2014522033
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "471": 2,
+                "2175": 1,
+                "1662": 1,
+                "69": 1,
+                "3008": 1,
+                "68": 1,
+                "99": 1,
+                "62": 1,
+                "57": 1,
+                "2046": 1,
+                "55": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2014522033,
+            "insn_id": 3,
+            "hex_insn": "0x80529c6",
+            "func": "setaddrbucket",
+            "static_node": 2175,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2014522205
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                2014522035
+            ],
+            "df_succes": [
+                2014522031
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2014522035,
+            "insn_id": 4,
+            "hex_insn": "0x804e4da",
+            "func": "runtime.mallocgc",
+            "static_node": 1662,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2014522045
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                2014522033
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2014522045,
+            "insn_id": 5,
+            "hex_insn": "0x804e475",
+            "func": "runtime.mallocgc",
+            "static_node": 69,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2014522048
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2014522035
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2014522048,
+            "insn_id": 6,
+            "hex_insn": "0x804e45e",
+            "func": "runtime.mallocgc",
+            "static_node": 68,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2014522062
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2014522045
+            ],
+            "df_predes": [
+                2014522049
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2014522049,
+            "insn_id": 7,
+            "hex_insn": "0x804e454",
+            "func": "runtime.mallocgc",
+            "static_node": 3008,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2014522062
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                2014522048
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2014522062,
+            "insn_id": 8,
+            "hex_insn": "0x804e645",
+            "func": "runtime.mallocgc",
+            "static_node": 99,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2014522199
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2014522049,
+                2014522048
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2014522199,
+            "insn_id": 9,
+            "hex_insn": "0x804e3b3",
+            "func": "runtime.mallocgc",
+            "static_node": 62,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2014522201
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2014522062
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2014522201,
+            "insn_id": 10,
+            "hex_insn": "0x804e35b",
+            "func": "runtime.mallocgc",
+            "static_node": 57,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2014522202
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2014522199
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2014522202,
+            "insn_id": 11,
+            "hex_insn": "0x804e32b",
+            "func": "runtime.mallocgc",
+            "static_node": 55,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2014522201
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2014522205,
+            "insn_id": 12,
+            "hex_insn": "0x80528be",
+            "func": "setaddrbucket",
+            "static_node": 2046,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2014522031,
+                2014522033
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2081223206,
+            "insn_id": 2,
+            "hex_insn": "0x80529e7",
+            "func": "setaddrbucket",
+            "static_node": 471,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2081223590
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                2081223208
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "1662": 1,
+                "69": 1,
+                "3008": 1,
+                "68": 1,
+                "99": 1,
+                "62": 1,
+                "57": 1,
+                "2175": 1,
+                "471": 2,
+                "55": 1,
+                "2046": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2081223208,
+            "insn_id": 3,
+            "hex_insn": "0x80529c6",
+            "func": "setaddrbucket",
+            "static_node": 2175,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2081223590
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                2081223210
+            ],
+            "df_succes": [
+                2081223206
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2081223210,
+            "insn_id": 4,
+            "hex_insn": "0x804e4da",
+            "func": "runtime.mallocgc",
+            "static_node": 1662,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2081223220
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                2081223208
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2081223220,
+            "insn_id": 5,
+            "hex_insn": "0x804e475",
+            "func": "runtime.mallocgc",
+            "static_node": 69,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2081223223
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2081223210
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2081223223,
+            "insn_id": 6,
+            "hex_insn": "0x804e45e",
+            "func": "runtime.mallocgc",
+            "static_node": 68,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2081223237
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2081223220
+            ],
+            "df_predes": [
+                2081223224
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2081223224,
+            "insn_id": 7,
+            "hex_insn": "0x804e454",
+            "func": "runtime.mallocgc",
+            "static_node": 3008,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2081223237
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                2081223223
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2081223237,
+            "insn_id": 8,
+            "hex_insn": "0x804e645",
+            "func": "runtime.mallocgc",
+            "static_node": 99,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2081223584
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2081223224,
+                2081223223
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2081223584,
+            "insn_id": 9,
+            "hex_insn": "0x804e3b3",
+            "func": "runtime.mallocgc",
+            "static_node": 62,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2081223586
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2081223237
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2081223586,
+            "insn_id": 10,
+            "hex_insn": "0x804e35b",
+            "func": "runtime.mallocgc",
+            "static_node": 57,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2081223587
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2081223584
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2081223587,
+            "insn_id": 11,
+            "hex_insn": "0x804e32b",
+            "func": "runtime.mallocgc",
+            "static_node": 55,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2081223586
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2081223590,
+            "insn_id": 12,
+            "hex_insn": "0x80528be",
+            "func": "setaddrbucket",
+            "static_node": 2046,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2081223208,
+                2081223206
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2998798152,
+            "insn_id": 2,
+            "hex_insn": "0x80529e7",
+            "func": "setaddrbucket",
+            "static_node": 471,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2998816794
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                2998798154
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "1662": 1,
+                "69": 1,
+                "68": 1,
+                "3008": 1,
+                "99": 1,
+                "62": 1,
+                "57": 1,
+                "471": 2,
+                "2175": 1,
+                "55": 1,
+                "2046": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2998798154,
+            "insn_id": 3,
+            "hex_insn": "0x80529c6",
+            "func": "setaddrbucket",
+            "static_node": 2175,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2998816794
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                2998798156
+            ],
+            "df_succes": [
+                2998798152
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2998798156,
+            "insn_id": 4,
+            "hex_insn": "0x804e4da",
+            "func": "runtime.mallocgc",
+            "static_node": 1662,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2998798166
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                2998798154
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2998798166,
+            "insn_id": 5,
+            "hex_insn": "0x804e475",
+            "func": "runtime.mallocgc",
+            "static_node": 69,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2998798169
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2998798156
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2998798169,
+            "insn_id": 6,
+            "hex_insn": "0x804e45e",
+            "func": "runtime.mallocgc",
+            "static_node": 68,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2998798183
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2998798166
+            ],
+            "df_predes": [
+                2998798170
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2998798170,
+            "insn_id": 7,
+            "hex_insn": "0x804e454",
+            "func": "runtime.mallocgc",
+            "static_node": 3008,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2998798183
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                2998798169
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2998798183,
+            "insn_id": 8,
+            "hex_insn": "0x804e645",
+            "func": "runtime.mallocgc",
+            "static_node": 99,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2998816788
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2998798169,
+                2998798170
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2998816788,
+            "insn_id": 9,
+            "hex_insn": "0x804e3b3",
+            "func": "runtime.mallocgc",
+            "static_node": 62,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2998816790
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2998798183
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2998816790,
+            "insn_id": 10,
+            "hex_insn": "0x804e35b",
+            "func": "runtime.mallocgc",
+            "static_node": 57,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2998816791
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2998816788
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2998816791,
+            "insn_id": 11,
+            "hex_insn": "0x804e32b",
+            "func": "runtime.mallocgc",
+            "static_node": 55,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2998816790
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 2998816794,
+            "insn_id": 12,
+            "hex_insn": "0x80528be",
+            "func": "setaddrbucket",
+            "static_node": 2046,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2998798152,
+                2998798154
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3579038260,
+            "insn_id": 2,
+            "hex_insn": "0x80529e7",
+            "func": "setaddrbucket",
+            "static_node": 471,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3579056920
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                3579038262
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "1662": 1,
+                "69": 1,
+                "68": 1,
+                "3008": 1,
+                "99": 1,
+                "62": 1,
+                "57": 1,
+                "2175": 1,
+                "471": 2,
+                "55": 1,
+                "2046": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3579038262,
+            "insn_id": 3,
+            "hex_insn": "0x80529c6",
+            "func": "setaddrbucket",
+            "static_node": 2175,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3579056920
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                3579038264
+            ],
+            "df_succes": [
+                3579038260
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3579038264,
+            "insn_id": 4,
+            "hex_insn": "0x804e4da",
+            "func": "runtime.mallocgc",
+            "static_node": 1662,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3579038274
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                3579038262
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3579038274,
+            "insn_id": 5,
+            "hex_insn": "0x804e475",
+            "func": "runtime.mallocgc",
+            "static_node": 69,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3579038277
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3579038264
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3579038277,
+            "insn_id": 6,
+            "hex_insn": "0x804e45e",
+            "func": "runtime.mallocgc",
+            "static_node": 68,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3579038291
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3579038274
+            ],
+            "df_predes": [
+                3579038278
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3579038278,
+            "insn_id": 7,
+            "hex_insn": "0x804e454",
+            "func": "runtime.mallocgc",
+            "static_node": 3008,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3579038291
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                3579038277
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3579038291,
+            "insn_id": 8,
+            "hex_insn": "0x804e645",
+            "func": "runtime.mallocgc",
+            "static_node": 99,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3579056914
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3579038277,
+                3579038278
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3579056914,
+            "insn_id": 9,
+            "hex_insn": "0x804e3b3",
+            "func": "runtime.mallocgc",
+            "static_node": 62,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3579056916
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3579038291
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3579056916,
+            "insn_id": 10,
+            "hex_insn": "0x804e35b",
+            "func": "runtime.mallocgc",
+            "static_node": 57,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3579056917
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3579056914
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3579056917,
+            "insn_id": 11,
+            "hex_insn": "0x804e32b",
+            "func": "runtime.mallocgc",
+            "static_node": 55,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3579056916
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3579056920,
+            "insn_id": 12,
+            "hex_insn": "0x80528be",
+            "func": "setaddrbucket",
+            "static_node": 2046,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3579038262,
+                3579038260
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3876165172,
+            "insn_id": 2,
+            "hex_insn": "0x80529e7",
+            "func": "setaddrbucket",
+            "static_node": 471,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3876183850
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                3876165174
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "471": 2,
+                "2175": 1,
+                "1662": 1,
+                "69": 1,
+                "3008": 1,
+                "68": 1,
+                "99": 1,
+                "62": 1,
+                "57": 1,
+                "2046": 1,
+                "55": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3876165174,
+            "insn_id": 3,
+            "hex_insn": "0x80529c6",
+            "func": "setaddrbucket",
+            "static_node": 2175,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3876183850
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                3876165176
+            ],
+            "df_succes": [
+                3876165172
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3876165176,
+            "insn_id": 4,
+            "hex_insn": "0x804e4da",
+            "func": "runtime.mallocgc",
+            "static_node": 1662,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3876165186
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                3876165174
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3876165186,
+            "insn_id": 5,
+            "hex_insn": "0x804e475",
+            "func": "runtime.mallocgc",
+            "static_node": 69,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3876165189
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3876165176
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3876165189,
+            "insn_id": 6,
+            "hex_insn": "0x804e45e",
+            "func": "runtime.mallocgc",
+            "static_node": 68,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3876165203
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3876165186
+            ],
+            "df_predes": [
+                3876165190
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3876165190,
+            "insn_id": 7,
+            "hex_insn": "0x804e454",
+            "func": "runtime.mallocgc",
+            "static_node": 3008,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3876165203
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                3876165189
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3876165203,
+            "insn_id": 8,
+            "hex_insn": "0x804e645",
+            "func": "runtime.mallocgc",
+            "static_node": 99,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3876183844
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3876165190,
+                3876165189
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3876183844,
+            "insn_id": 9,
+            "hex_insn": "0x804e3b3",
+            "func": "runtime.mallocgc",
+            "static_node": 62,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3876183846
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3876165203
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3876183846,
+            "insn_id": 10,
+            "hex_insn": "0x804e35b",
+            "func": "runtime.mallocgc",
+            "static_node": 57,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3876183847
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3876183844
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3876183847,
+            "insn_id": 11,
+            "hex_insn": "0x804e32b",
+            "func": "runtime.mallocgc",
+            "static_node": 55,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3876183846
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 3876183850,
+            "insn_id": 12,
+            "hex_insn": "0x80528be",
+            "func": "setaddrbucket",
+            "static_node": 2046,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3876165174,
+                3876165172
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4026669596,
+            "insn_id": 2,
+            "hex_insn": "0x80529e7",
+            "func": "setaddrbucket",
+            "static_node": 471,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4026688292
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4026669598
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "1662": 1,
+                "69": 1,
+                "3008": 1,
+                "68": 1,
+                "99": 1,
+                "62": 1,
+                "57": 1,
+                "471": 2,
+                "2175": 1,
+                "55": 1,
+                "2046": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4026669598,
+            "insn_id": 3,
+            "hex_insn": "0x80529c6",
+            "func": "setaddrbucket",
+            "static_node": 2175,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4026688292
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4026669600
+            ],
+            "df_succes": [
+                4026669596
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4026669600,
+            "insn_id": 4,
+            "hex_insn": "0x804e4da",
+            "func": "runtime.mallocgc",
+            "static_node": 1662,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4026669610
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                4026669598
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4026669610,
+            "insn_id": 5,
+            "hex_insn": "0x804e475",
+            "func": "runtime.mallocgc",
+            "static_node": 69,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4026669613
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4026669600
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4026669613,
+            "insn_id": 6,
+            "hex_insn": "0x804e45e",
+            "func": "runtime.mallocgc",
+            "static_node": 68,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4026669627
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4026669610
+            ],
+            "df_predes": [
+                4026669614
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4026669614,
+            "insn_id": 7,
+            "hex_insn": "0x804e454",
+            "func": "runtime.mallocgc",
+            "static_node": 3008,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4026669627
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                4026669613
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4026669627,
+            "insn_id": 8,
+            "hex_insn": "0x804e645",
+            "func": "runtime.mallocgc",
+            "static_node": 99,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4026688286
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4026669614,
+                4026669613
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4026688286,
+            "insn_id": 9,
+            "hex_insn": "0x804e3b3",
+            "func": "runtime.mallocgc",
+            "static_node": 62,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4026688288
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4026669627
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4026688288,
+            "insn_id": 10,
+            "hex_insn": "0x804e35b",
+            "func": "runtime.mallocgc",
+            "static_node": 57,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4026688289
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4026688286
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4026688289,
+            "insn_id": 11,
+            "hex_insn": "0x804e32b",
+            "func": "runtime.mallocgc",
+            "static_node": 55,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4026688288
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4026688292,
+            "insn_id": 12,
+            "hex_insn": "0x80528be",
+            "func": "setaddrbucket",
+            "static_node": 2046,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4026669596,
+                4026669598
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4100349271,
+            "insn_id": 2,
+            "hex_insn": "0x80529e7",
+            "func": "setaddrbucket",
+            "static_node": 471,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4100367921
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4100349273
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "471": 2,
+                "2175": 1,
+                "1662": 1,
+                "69": 1,
+                "68": 1,
+                "3008": 1,
+                "99": 1,
+                "62": 1,
+                "57": 1,
+                "2046": 1,
+                "55": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4100349273,
+            "insn_id": 3,
+            "hex_insn": "0x80529c6",
+            "func": "setaddrbucket",
+            "static_node": 2175,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4100367921
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4100349275
+            ],
+            "df_succes": [
+                4100349271
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4100349275,
+            "insn_id": 4,
+            "hex_insn": "0x804e4da",
+            "func": "runtime.mallocgc",
+            "static_node": 1662,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4100349285
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                4100349273
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4100349285,
+            "insn_id": 5,
+            "hex_insn": "0x804e475",
+            "func": "runtime.mallocgc",
+            "static_node": 69,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4100349288
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4100349275
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4100349288,
+            "insn_id": 6,
+            "hex_insn": "0x804e45e",
+            "func": "runtime.mallocgc",
+            "static_node": 68,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4100349302
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4100349285
+            ],
+            "df_predes": [
+                4100349289
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4100349289,
+            "insn_id": 7,
+            "hex_insn": "0x804e454",
+            "func": "runtime.mallocgc",
+            "static_node": 3008,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4100349302
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                4100349288
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4100349302,
+            "insn_id": 8,
+            "hex_insn": "0x804e645",
+            "func": "runtime.mallocgc",
+            "static_node": 99,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4100367915
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4100349288,
+                4100349289
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4100367915,
+            "insn_id": 9,
+            "hex_insn": "0x804e3b3",
+            "func": "runtime.mallocgc",
+            "static_node": 62,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4100367917
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4100349302
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4100367917,
+            "insn_id": 10,
+            "hex_insn": "0x804e35b",
+            "func": "runtime.mallocgc",
+            "static_node": 57,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4100367918
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4100367915
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4100367918,
+            "insn_id": 11,
+            "hex_insn": "0x804e32b",
+            "func": "runtime.mallocgc",
+            "static_node": 55,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4100367917
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4100367921,
+            "insn_id": 12,
+            "hex_insn": "0x80528be",
+            "func": "setaddrbucket",
+            "static_node": 2046,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4100349271,
+                4100349273
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4157038066,
+            "insn_id": 2,
+            "hex_insn": "0x80529e7",
+            "func": "setaddrbucket",
+            "static_node": 471,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4157038542
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4157038068
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "471": 2,
+                "2175": 1,
+                "1662": 1,
+                "69": 1,
+                "68": 1,
+                "3008": 1,
+                "99": 1,
+                "62": 1,
+                "57": 1,
+                "2046": 1,
+                "55": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4157038068,
+            "insn_id": 3,
+            "hex_insn": "0x80529c6",
+            "func": "setaddrbucket",
+            "static_node": 2175,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4157038542
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4157038070
+            ],
+            "df_succes": [
+                4157038066
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4157038070,
+            "insn_id": 4,
+            "hex_insn": "0x804e4da",
+            "func": "runtime.mallocgc",
+            "static_node": 1662,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4157038080
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                4157038068
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4157038080,
+            "insn_id": 5,
+            "hex_insn": "0x804e475",
+            "func": "runtime.mallocgc",
+            "static_node": 69,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4157038083
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4157038070
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4157038083,
+            "insn_id": 6,
+            "hex_insn": "0x804e45e",
+            "func": "runtime.mallocgc",
+            "static_node": 68,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4157038097
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4157038080
+            ],
+            "df_predes": [
+                4157038084
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4157038084,
+            "insn_id": 7,
+            "hex_insn": "0x804e454",
+            "func": "runtime.mallocgc",
+            "static_node": 3008,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4157038097
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                4157038083
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4157038097,
+            "insn_id": 8,
+            "hex_insn": "0x804e645",
+            "func": "runtime.mallocgc",
+            "static_node": 99,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4157038536
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4157038083,
+                4157038084
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4157038536,
+            "insn_id": 9,
+            "hex_insn": "0x804e3b3",
+            "func": "runtime.mallocgc",
+            "static_node": 62,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4157038538
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4157038097
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4157038538,
+            "insn_id": 10,
+            "hex_insn": "0x804e35b",
+            "func": "runtime.mallocgc",
+            "static_node": 57,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4157038539
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4157038536
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4157038539,
+            "insn_id": 11,
+            "hex_insn": "0x804e32b",
+            "func": "runtime.mallocgc",
+            "static_node": 55,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4157038538
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4157038542,
+            "insn_id": 12,
+            "hex_insn": "0x80528be",
+            "func": "setaddrbucket",
+            "static_node": 2046,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4157038068,
+                4157038066
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4165354776,
+            "insn_id": 2,
+            "hex_insn": "0x80529e7",
+            "func": "setaddrbucket",
+            "static_node": 471,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4165355142
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4165354778
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "1662": 1,
+                "69": 1,
+                "68": 1,
+                "3008": 1,
+                "99": 1,
+                "62": 1,
+                "57": 1,
+                "2175": 1,
+                "471": 2,
+                "55": 1,
+                "2046": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4165354778,
+            "insn_id": 3,
+            "hex_insn": "0x80529c6",
+            "func": "setaddrbucket",
+            "static_node": 2175,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4165355142
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4165354780
+            ],
+            "df_succes": [
+                4165354776
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4165354780,
+            "insn_id": 4,
+            "hex_insn": "0x804e4da",
+            "func": "runtime.mallocgc",
+            "static_node": 1662,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4165354790
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                4165354778
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4165354790,
+            "insn_id": 5,
+            "hex_insn": "0x804e475",
+            "func": "runtime.mallocgc",
+            "static_node": 69,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4165354793
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4165354780
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4165354793,
+            "insn_id": 6,
+            "hex_insn": "0x804e45e",
+            "func": "runtime.mallocgc",
+            "static_node": 68,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4165354807
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4165354790
+            ],
+            "df_predes": [
+                4165354794
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4165354794,
+            "insn_id": 7,
+            "hex_insn": "0x804e454",
+            "func": "runtime.mallocgc",
+            "static_node": 3008,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4165354807
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                4165354793
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4165354807,
+            "insn_id": 8,
+            "hex_insn": "0x804e645",
+            "func": "runtime.mallocgc",
+            "static_node": 99,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4165355136
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4165354793,
+                4165354794
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4165355136,
+            "insn_id": 9,
+            "hex_insn": "0x804e3b3",
+            "func": "runtime.mallocgc",
+            "static_node": 62,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4165355138
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4165354807
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4165355138,
+            "insn_id": 10,
+            "hex_insn": "0x804e35b",
+            "func": "runtime.mallocgc",
+            "static_node": 57,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4165355139
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4165355136
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4165355139,
+            "insn_id": 11,
+            "hex_insn": "0x804e32b",
+            "func": "runtime.mallocgc",
+            "static_node": 55,
+            "weight": 36864,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4165355138
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        },
+        {
+            "id": 4165355142,
+            "insn_id": 12,
+            "hex_insn": "0x80528be",
+            "func": "setaddrbucket",
+            "static_node": 2046,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4165354778,
+                4165354776
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 36864
+        }
+    ],
+    "node_frequencies": {},
+    "postorder_list": [
+        2014522031,
+        2014522033,
+        2014522205,
+        4157038066,
+        4157038068,
+        4157038542,
+        1941711419,
+        1941711421,
+        1941711423,
+        1941711433,
+        1941711436,
+        1941711437,
+        1941711450,
+        1941730129,
+        1941730131,
+        1941730132,
+        2081223206,
+        2081223208,
+        2081223210,
+        2081223220,
+        2081223223,
+        2081223224,
+        2081223237,
+        2081223584,
+        2081223586,
+        2081223587,
+        1791206975,
+        1791206977,
+        1791206979,
+        1791206989,
+        1791206992,
+        1791206993,
+        1791207006,
+        1791225667,
+        1791225669,
+        1791225670,
+        1495097759,
+        1495097761,
+        1495116439,
+        3579038260,
+        3579038262,
+        3579038264,
+        3579038274,
+        3579038277,
+        3579038278,
+        3579038291,
+        3579056914,
+        3579056916,
+        3579056917,
+        4100349271,
+        4100349273,
+        4100367921,
+        2014522035,
+        2014522045,
+        2014522048,
+        2014522049,
+        2014522062,
+        2014522199,
+        2014522201,
+        2014522202,
+        3876165172,
+        3876165174,
+        3876183850,
+        4100349275,
+        4100349285,
+        4100349288,
+        4100349289,
+        4100349302,
+        4100367915,
+        4100367917,
+        4100367918,
+        2081223590,
+        3876165176,
+        3876165186,
+        3876165189,
+        3876165190,
+        3876165203,
+        3876183844,
+        3876183846,
+        3876183847,
+        4165354776,
+        4165354778,
+        4165354780,
+        4165354790,
+        4165354793,
+        4165354794,
+        4165354807,
+        4165355136,
+        4165355138,
+        4165355139,
+        1495097763,
+        1495097773,
+        1495097776,
+        1495097777,
+        1495097790,
+        1495116433,
+        1495116435,
+        1495116436,
+        2998798152,
+        2998798154,
+        2998798156,
+        2998798166,
+        2998798169,
+        2998798170,
+        2998798183,
+        2998816788,
+        2998816790,
+        2998816791,
+        1941730135,
+        3579056920,
+        4026669596,
+        4026669598,
+        4026669600,
+        4026669610,
+        4026669613,
+        4026669614,
+        4026669627,
+        4026688286,
+        4026688288,
+        4026688289,
+        4165355142,
+        1791225673,
+        4157038070,
+        4157038080,
+        4157038083,
+        4157038084,
+        4157038097,
+        4157038536,
+        4157038538,
+        4157038539,
+        915949574,
+        915949576,
+        915949578,
+        915949588,
+        915949591,
+        915949592,
+        915949605,
+        915968230,
+        915968232,
+        915968233,
+        2998816794,
+        4026688292,
+        915968236
+    ],
+    "reverse_postorder_list": [
+        1495116439,
+        1495116436,
+        1495116435,
+        1495116433,
+        1495097790,
+        1495097777,
+        1495097776,
+        1495097773,
+        1495097763,
+        1495097761,
+        1495097759,
+        1791225673,
+        1791225670,
+        1791225669,
+        1791225667,
+        1791207006,
+        1791206993,
+        1791206992,
+        1791206989,
+        1791206979,
+        1791206977,
+        1791206975,
+        2998816794,
+        2998816791,
+        2998816790,
+        2998816788,
+        2998798183,
+        2998798170,
+        2998798169,
+        2998798166,
+        2998798156,
+        2998798154,
+        2998798152,
+        4026688292,
+        4026688289,
+        4026688288,
+        4026688286,
+        4026669627,
+        4026669614,
+        4026669613,
+        4026669610,
+        4026669600,
+        4026669598,
+        4026669596,
+        915968236,
+        915968233,
+        915968232,
+        915968230,
+        915949605,
+        915949592,
+        915949591,
+        915949588,
+        915949578,
+        915949576,
+        915949574,
+        2081223590,
+        2081223587,
+        2081223586,
+        2081223584,
+        2081223237,
+        2081223224,
+        2081223223,
+        2081223220,
+        2081223210,
+        2081223208,
+        2081223206,
+        4100367921,
+        4100367918,
+        4100367917,
+        4100367915,
+        4100349302,
+        4100349289,
+        4100349288,
+        4100349285,
+        4100349275,
+        4100349273,
+        4100349271,
+        1941730135,
+        1941730132,
+        1941730131,
+        1941730129,
+        1941711450,
+        1941711437,
+        1941711436,
+        1941711433,
+        1941711423,
+        1941711421,
+        1941711419,
+        3876183850,
+        3876183847,
+        3876183846,
+        3876183844,
+        3876165203,
+        3876165190,
+        3876165189,
+        3876165186,
+        3876165176,
+        3876165174,
+        3876165172,
+        4157038542,
+        4157038539,
+        4157038538,
+        4157038536,
+        4157038097,
+        4157038084,
+        4157038083,
+        4157038080,
+        4157038070,
+        4157038068,
+        4157038066,
+        4165355142,
+        4165355139,
+        4165355138,
+        4165355136,
+        4165354807,
+        4165354794,
+        4165354793,
+        4165354790,
+        4165354780,
+        4165354778,
+        4165354776,
+        2014522205,
+        2014522202,
+        2014522201,
+        2014522199,
+        2014522062,
+        2014522049,
+        2014522048,
+        2014522045,
+        2014522035,
+        2014522033,
+        2014522031,
+        3579056920,
+        3579056917,
+        3579056916,
+        3579056914,
+        3579038291,
+        3579038278,
+        3579038277,
+        3579038274,
+        3579038264,
+        3579038262,
+        3579038260
+    ],
+    "entry_nodes": [
+        2081223587,
+        4026688292,
+        1791225673,
+        4100367921,
+        2998816794,
+        2081223590,
+        1941730135,
+        4026688289,
+        2014522202,
+        2014522205,
+        1941730132,
+        4165355139,
+        2998816791,
+        1791225670,
+        3876183850,
+        4100367918,
+        1495116439,
+        915968236,
+        3876183847,
+        1495116436,
+        4165355142,
+        3579056920,
+        4157038539,
+        4157038542,
+        915968233,
+        3579056917
+    ],
+    "exit_nodes": [
+        915949574,
+        4165354776,
+        1791206975,
+        4026669596,
+        1495097759,
+        2081223206,
+        4100349271,
+        4157038066,
+        2998798152,
+        1941711419,
+        2014522031,
+        3579038260,
+        3876165172
+    ],
+    "target_nodes": [
+        915949574,
+        4165354776,
+        1791206975,
+        4026669596,
+        1495097759,
+        2081223206,
+        3876165172,
+        4100349271,
+        4157038066,
+        1941711419,
+        2998798152,
+        3579038260,
+        2014522031
+    ],
+    "reachable_output_events_per_static_node": {
+        "471": [
+            4165354776,
+            915949574,
+            1791206975,
+            4026669596,
+            2081223206,
+            1495097759,
+            4100349271,
+            4157038066,
+            1941711419,
+            3579038260,
+            2014522031,
+            2998798152,
+            3876165172
+        ],
+        "1662": [
+            4165354776,
+            915949574,
+            1791206975,
+            4026669596,
+            2081223206,
+            1495097759,
+            4100349271,
+            4157038066,
+            1941711419,
+            3579038260,
+            2014522031,
+            2998798152,
+            3876165172
+        ],
+        "69": [
+            4165354776,
+            915949574,
+            1791206975,
+            4026669596,
+            2081223206,
+            1495097759,
+            4100349271,
+            4157038066,
+            1941711419,
+            3579038260,
+            2014522031,
+            2998798152,
+            3876165172
+        ],
+        "68": [
+            4165354776,
+            915949574,
+            1791206975,
+            4026669596,
+            2081223206,
+            1495097759,
+            4100349271,
+            4157038066,
+            1941711419,
+            3579038260,
+            2014522031,
+            2998798152,
+            3876165172
+        ],
+        "3008": [
+            4165354776,
+            915949574,
+            1791206975,
+            4026669596,
+            2081223206,
+            1495097759,
+            4100349271,
+            4157038066,
+            1941711419,
+            3579038260,
+            2014522031,
+            2998798152,
+            3876165172
+        ],
+        "99": [
+            4165354776,
+            915949574,
+            1791206975,
+            4026669596,
+            2081223206,
+            1495097759,
+            4100349271,
+            4157038066,
+            1941711419,
+            3579038260,
+            2014522031,
+            2998798152,
+            3876165172
+        ],
+        "62": [
+            4165354776,
+            915949574,
+            1791206975,
+            4026669596,
+            2081223206,
+            1495097759,
+            4100349271,
+            4157038066,
+            1941711419,
+            3579038260,
+            2014522031,
+            2998798152,
+            3876165172
+        ],
+        "57": [
+            4165354776,
+            915949574,
+            1791206975,
+            4026669596,
+            2081223206,
+            1495097759,
+            4100349271,
+            4157038066,
+            1941711419,
+            3579038260,
+            2014522031,
+            2998798152,
+            3876165172
+        ],
+        "2175": [
+            4165354776,
+            915949574,
+            1791206975,
+            4026669596,
+            1495097759,
+            2081223206,
+            3876165172,
+            4100349271,
+            4157038066,
+            1941711419,
+            3579038260,
+            2998798152,
+            2014522031
+        ],
+        "2046": [
+            4165354776,
+            915949574,
+            1791206975,
+            4026669596,
+            2081223206,
+            1495097759,
+            4100349271,
+            4157038066,
+            1941711419,
+            3579038260,
+            2014522031,
+            2998798152,
+            3876165172
+        ],
+        "55": [
+            4165354776,
+            915949574,
+            1791206975,
+            4026669596,
+            2081223206,
+            1495097759,
+            4100349271,
+            4157038066,
+            1941711419,
+            3579038260,
+            2014522031,
+            2998798152,
+            3876165172
+        ]
+    }
+}

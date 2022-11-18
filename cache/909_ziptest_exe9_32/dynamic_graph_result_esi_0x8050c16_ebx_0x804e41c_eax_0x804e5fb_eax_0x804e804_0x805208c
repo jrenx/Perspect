@@ -1,0 +1,814 @@
+{
+    "starting_events": [
+        [
+            "esi",
+            134548502,
+            "sweep"
+        ],
+        [
+            "ebx",
+            134538268,
+            "runtime.mallocgc"
+        ],
+        [
+            "eax",
+            134538747,
+            "runtime.mallocgc"
+        ],
+        [
+            "eax",
+            134539268,
+            "runtime.free"
+        ]
+    ],
+    "insn_to_id": {
+        "134553740": 2,
+        "134553696": 3
+    },
+    "dynamic_nodes": [
+        {
+            "id": 915968917,
+            "insn_id": 2,
+            "hex_insn": "0x805208c",
+            "func": "MHeap_Grow",
+            "static_node": 3857,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                915968926
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "3857": 2,
+                "3854": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 915968926,
+            "insn_id": 3,
+            "hex_insn": "0x8052060",
+            "func": "MHeap_Grow",
+            "static_node": 3854,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                915968917
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 1495117120,
+            "insn_id": 2,
+            "hex_insn": "0x805208c",
+            "func": "MHeap_Grow",
+            "static_node": 3857,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1495117129
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "3857": 2,
+                "3854": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 1495117129,
+            "insn_id": 3,
+            "hex_insn": "0x8052060",
+            "func": "MHeap_Grow",
+            "static_node": 3854,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1495117120
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 1791226354,
+            "insn_id": 2,
+            "hex_insn": "0x805208c",
+            "func": "MHeap_Grow",
+            "static_node": 3857,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1791226363
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "3857": 2,
+                "3854": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 1791226363,
+            "insn_id": 3,
+            "hex_insn": "0x8052060",
+            "func": "MHeap_Grow",
+            "static_node": 3854,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1791226354
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 1941730816,
+            "insn_id": 2,
+            "hex_insn": "0x805208c",
+            "func": "MHeap_Grow",
+            "static_node": 3857,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1941730825
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "3857": 2,
+                "3854": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 1941730825,
+            "insn_id": 3,
+            "hex_insn": "0x8052060",
+            "func": "MHeap_Grow",
+            "static_node": 3854,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1941730816
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 2014522886,
+            "insn_id": 2,
+            "hex_insn": "0x805208c",
+            "func": "MHeap_Grow",
+            "static_node": 3857,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2014522895
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "3857": 2,
+                "3854": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 2014522895,
+            "insn_id": 3,
+            "hex_insn": "0x8052060",
+            "func": "MHeap_Grow",
+            "static_node": 3854,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2014522886
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 2998817459,
+            "insn_id": 2,
+            "hex_insn": "0x805208c",
+            "func": "MHeap_Grow",
+            "static_node": 3857,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2998817468
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "3857": 2,
+                "3854": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 2998817468,
+            "insn_id": 3,
+            "hex_insn": "0x8052060",
+            "func": "MHeap_Grow",
+            "static_node": 3854,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2998817459
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 3579057601,
+            "insn_id": 2,
+            "hex_insn": "0x805208c",
+            "func": "MHeap_Grow",
+            "static_node": 3857,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3579057610
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "3857": 2,
+                "3854": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 3579057610,
+            "insn_id": 3,
+            "hex_insn": "0x8052060",
+            "func": "MHeap_Grow",
+            "static_node": 3854,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3579057601
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 3876184531,
+            "insn_id": 2,
+            "hex_insn": "0x805208c",
+            "func": "MHeap_Grow",
+            "static_node": 3857,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3876184540
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "3857": 2,
+                "3854": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 3876184540,
+            "insn_id": 3,
+            "hex_insn": "0x8052060",
+            "func": "MHeap_Grow",
+            "static_node": 3854,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3876184531
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 4026688957,
+            "insn_id": 2,
+            "hex_insn": "0x805208c",
+            "func": "MHeap_Grow",
+            "static_node": 3857,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4026688966
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "3857": 2,
+                "3854": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 4026688966,
+            "insn_id": 3,
+            "hex_insn": "0x8052060",
+            "func": "MHeap_Grow",
+            "static_node": 3854,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4026688957
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 4100368586,
+            "insn_id": 2,
+            "hex_insn": "0x805208c",
+            "func": "MHeap_Grow",
+            "static_node": 3857,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4100368595
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "3857": 2,
+                "3854": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 4100368595,
+            "insn_id": 3,
+            "hex_insn": "0x8052060",
+            "func": "MHeap_Grow",
+            "static_node": 3854,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4100368586
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 4137369712,
+            "insn_id": 2,
+            "hex_insn": "0x805208c",
+            "func": "MHeap_Grow",
+            "static_node": 3857,
+            "weight": 1048576,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4137369721
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "3857": 2,
+                "3854": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 4137369721,
+            "insn_id": 3,
+            "hex_insn": "0x8052060",
+            "func": "MHeap_Grow",
+            "static_node": 3854,
+            "weight": 1048576,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4137369712
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 4157039223,
+            "insn_id": 2,
+            "hex_insn": "0x805208c",
+            "func": "MHeap_Grow",
+            "static_node": 3857,
+            "weight": 524288,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4157039232
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "3857": 2,
+                "3854": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 4157039232,
+            "insn_id": 3,
+            "hex_insn": "0x8052060",
+            "func": "MHeap_Grow",
+            "static_node": 3854,
+            "weight": 524288,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4157039223
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 4173342307,
+            "insn_id": 2,
+            "hex_insn": "0x805208c",
+            "func": "MHeap_Grow",
+            "static_node": 3857,
+            "weight": 65536,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4173342316
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "3857": 2,
+                "3854": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null
+        },
+        {
+            "id": 4173342316,
+            "insn_id": 3,
+            "hex_insn": "0x8052060",
+            "func": "MHeap_Grow",
+            "static_node": 3854,
+            "weight": 65536,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4173342307
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null
+        }
+    ],
+    "node_frequencies": {},
+    "postorder_list": [
+        4157039223,
+        4157039232,
+        1791226354,
+        1791226363,
+        915968917,
+        915968926,
+        1495117120,
+        1495117129,
+        4026688957,
+        4026688966,
+        3876184531,
+        3876184540,
+        4137369712,
+        4137369721,
+        4173342307,
+        4173342316,
+        2998817459,
+        2998817468,
+        4100368586,
+        4100368595,
+        3579057601,
+        3579057610,
+        2014522886,
+        2014522895,
+        1941730816,
+        1941730825
+    ],
+    "reverse_postorder_list": [
+        3876184540,
+        3876184531,
+        4157039232,
+        4157039223,
+        915968926,
+        915968917,
+        4173342316,
+        4173342307,
+        3579057610,
+        3579057601,
+        1941730825,
+        1941730816,
+        2998817468,
+        2998817459,
+        4100368595,
+        4100368586,
+        1791226363,
+        1791226354,
+        4026688966,
+        4026688957,
+        1495117129,
+        1495117120,
+        2014522895,
+        2014522886,
+        4137369721,
+        4137369712
+    ],
+    "entry_nodes": [
+        4157039232,
+        1791226363,
+        915968926,
+        1495117129,
+        4026688966,
+        3876184540,
+        4137369721,
+        4173342316,
+        2998817468,
+        4100368595,
+        3579057610,
+        2014522895,
+        1941730825
+    ],
+    "exit_nodes": [
+        3876184531,
+        4157039223,
+        915968917,
+        4173342307,
+        3579057601,
+        1941730816,
+        2998817459,
+        4100368586,
+        1791226354,
+        4026688957,
+        1495117120,
+        2014522886,
+        4137369712
+    ],
+    "target_nodes": [
+        915968917,
+        1495117120,
+        1791226354,
+        1941730816,
+        2014522886,
+        2998817459,
+        3579057601,
+        3876184531,
+        4026688957,
+        4100368586,
+        4137369712,
+        4157039223,
+        4173342307
+    ],
+    "reachable_output_events_per_static_node": {
+        "3857": [
+            4157039223,
+            3876184531,
+            4137369712,
+            915968917,
+            3579057601,
+            2998817459,
+            1941730816,
+            4100368586,
+            1791226354,
+            1495117120,
+            4026688957,
+            4173342307,
+            2014522886
+        ],
+        "3854": [
+            4157039223,
+            3876184531,
+            4137369712,
+            915968917,
+            3579057601,
+            2998817459,
+            1941730816,
+            4100368586,
+            1791226354,
+            1495117120,
+            4026688957,
+            4173342307,
+            2014522886
+        ]
+    }
+}
