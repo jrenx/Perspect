@@ -1,0 +1,4 @@
+esi 0x8050c16 sweep
+ebx 0x804e41c runtime.mallocgc
+eax 0x804e5fb runtime.mallocgc
+eax 0x804e804 runtime.free
