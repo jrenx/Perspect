@@ -288,7 +288,7 @@ def parse_inputs():
         with open(starting_event_file, "r") as f:
             for l in f.readlines():
                 segs = l.split()
-                reg = "" if segs[0] == "_" else regs[0]
+                reg = "" if segs[0] == "_" else segs[0]
                 insn = int(segs[1], 16)
                 func = segs[2]
                 func = demangle(func)
