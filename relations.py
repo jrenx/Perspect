@@ -827,15 +827,17 @@ class IndiceToInsnMap():
                 insn_strs = json.load(f)
 
         assert(len(index_quads) == len(insns))
-        assert(len(index_quads) == len(insn_strs))
+        if insn_strs is not None:
+            assert(len(index_quads) == len(insn_strs))
         self.indices = Indices.build_indices(index_quads)
         for i in range(len(index_quads)):
             index_quad = index_quads[i]
             insn = insns[i]
             insn_str = insn_strs[i] if insn_strs is not None else None
-            assert insn_str is not None
+            #assert insn_str is not None
             Indices.insert_to_external_indice_to_item_map(self.index_to_insn, index_quad, insn)
-            Indices.insert_to_external_indice_to_item_map(self.index_to_insn_str, index_quad, insn_str)
+            if insn_str is not None:
+                Indices.insert_to_external_indice_to_item_map(self.index_to_insn_str, index_quad, insn_str)
             self.insn_to_quad[insn] = index_quad
 
     def get_insn(self, index_quad, my_insn_indices, other_insn_indices):
