@@ -407,7 +407,8 @@ def build_indices(idf, inf):
     indices = None
     if os.path.exists(idf) and os.path.exists(inf):
         indices = IndiceToInsnMap()
-        indices.build(idf, inf, inf[0:-1] + "_strs")
+        ins = inf[0:-1] + "_strs"
+        indices.build(idf, inf, ins if os.path.exists(ins) else None)
     return indices
 
 def compare_relation_groups(f1, f2, tf1, tf2, d1, mcf1, mcf12, mf1, mf12, pf1, pf12, pduf1, pduf12,
