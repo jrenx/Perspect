@@ -138,8 +138,6 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
         #    assert rgroup is not None
         #    rgroup.sort_relations()
         #    self.relation_groups.append(rgroup)
->>>>>>> 73b5aed... [optimization/serial_multiple_relation] To reduce space complexity, do not build all the dynamic graphs then build multiple relations on them, this can be a memory issue if we have lots of dynamic graphs, instead, build one graph, build the relations, discard the data and then move on to the next
-
 
         if parent_insn is None:
             self.rgroup_file = os.path.join(curr_dir, 'cache', self.prog, "multiple_rgroups.json")
