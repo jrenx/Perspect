@@ -471,7 +471,7 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1, mcf1, mcf12, mf1, mf12, pf1, p
     #print(diff)
     sorted_diff = sorted(diff, key=lambda e: (e[0], e[1]))
     if compare_highest_ranking_rg_only is True:
-        sorted_diff = [sorted_diff[-1]]
+        sorted_diff = [sorted_diff[-4]]
     #print(sorted_diff)
     print("========================================")
     for p in sorted_diff:
@@ -506,7 +506,7 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                            mcrs_left, mcrs_right, mrs_left, mrs_right, summ_left, summ_right,
                            counts_left, counts_right, pass_rates_left=None, pass_rates_right=None,
                            pass_rates_dataflow_left=None, pass_rates_dataflow_right=None,
-                           indices_left=None, indices_right=None):
+                           indices_left=None, indices_right=None, extra_weight=None):
     #assert pass_rates_left is not None
     #assert pass_rates_right is not None
     #assert pass_rates_dataflow_left is not None
@@ -644,6 +644,7 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
         #Not really handled??
         forward_impact = calculate_forward_impact(r_left, r_right)
         backward_impact = calculate_backward_impact(r_left, r_right)
+        print("[compare_relation] forward impact is: " + str(forward_impact) + " backward impact is: " + str(backward_impact))
         if backward_impact > forward_impact:
             likely_true_neg_event = test_if_likely_true_negative_event(r_left, r_right, left_full_weight, right_full_weight)
             if likely_true_neg_event is False:
@@ -807,6 +808,10 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                 impact = 100
             print("[compare_relation/warn] Backward impact " + str(backward_impact) +
                   " is greater than forward impact " + str(forward_impact) + " combined new weight is: " + str(impact))
+            print("HERE: " + str(r_right.insn) + " " + str(extra_weight))
+            if r_right.insn == 0x4072e5 and extra_weight is not None:
+                impact += extra_weight
+
             weighted_diff.append(
                 (impact, avg_timestamp / max_timestamp * 100, weight, avg_timestamp, r_left, r_right, corr * 100))
             continue
@@ -1264,6 +1269,14 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
     left_over_right = {}
     right_insns_seen = set()
     insn_to_index = {}
+
+    extra_weight = None
+    for pair in right.relations:
+        r = pair[0]
+        if r.insn == 0x40744b:
+            extra_weight = r.weight.perc_contrib
+            print("Extra weight is " + str(extra_weight))
+
     for pair in left.relations:
         r = pair[0]
         prede = pair[1]
@@ -1298,8 +1311,9 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
             print("[ra] Average contribution is too low, ignore the relations: " + hex(r.insn) + " " + hex(r2.insn))
             continue
 
-        ''' If average contribution of the pair of relations are small, ignore '''
         d = abs(r2.weight.perc_contrib - r.weight.perc_contrib) #TODO diff by contribution
+        #''' If average contribution of the pair of relations are small, ignore '''
+        #d = abs(r2.weight.perc_contrib - r.weight.perc_contrib) #TODO diff by contribution
         avg_timestamp = (r2.timestamp + r.timestamp)/2
         #if d < 5:
         #    continue
@@ -1387,7 +1401,8 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
     sorted_diff = sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                                          mcrs_left, mcrs_right, mrs_left, mrs_right, left_summary, right_summary,
                                          counts_left, counts_right, pass_rates_left, pass_rates_right,
-                                         pass_rates_dataflow_left, pass_rates_dataflow_right, indices_left, indices_right)
+                                         pass_rates_dataflow_left, pass_rates_dataflow_right, indices_left, indices_right,
+                                         extra_weight)
 
     included_diff = []
     #rank = len(sorted_diff) + 1
