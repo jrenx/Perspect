@@ -12,6 +12,8 @@ from collections import deque
 import plotly.graph_objects as go
 
 curr_dir = os.path.dirname(os.path.realpath(__file__))
+dd = None
+rel_map_left = {}
 
 def parse(f):
     with open(f, 'r') as ff:
@@ -157,6 +159,7 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
     if relation_pairs is None: #no multiple relations provided for either runs, assume not equal.
         return True
 
+    ignore = False
     ret = False
     for i in range(len(relation_pairs)):
         p = relation_pairs[i]
@@ -210,6 +213,19 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
         #TODO: Right now the pass rate is the combined result of both ratio and probability of passing.
         #TODO: so we use pass rate to override relation comparison.
         if r_left is not None and r_right is not None:
+            if insn1 in rel_map_left and r_left.insn in rel_map_left:
+                m2 = rel_map_left[insn1].forward.magnitude()
+                m1 = rel_map_left[r_left.insn].forward.magnitude()
+                print("[compare_relation] parent magnitude2: " + str(m2) + " child magnitude: " + str(m1))
+                mdiff = abs((m2 - m1) / m2) * 100
+                print("[compare_relation] magnitude2 diff: " + str(mdiff))
+                if mdiff < 20:
+                    ignore = True
+                    print("[compare_relation] Ignore relation1.2")
+                elif m1 > m2:
+                    ignore = True
+                    print("[compare_relation] Ignore relation2.2")
+
             if r_left.relaxed_equals(r_right, counts_left.get(r_left.insn, None) if counts_left is not None else None, \
                                       counts_right.get(r_right.insn, None) if counts_right is not None else None):
                 print("[compare_relation] Relations considered equal.")
@@ -251,7 +267,7 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
                     continue
 
         ret = True
-    return ret
+    return (ret and (not ignore))
 
 #TODO, merge this logic and the logic being used in the main comparison loop!!
 def get_relation_pairs(insn1, insn2, mrs1, mrs2, indices1=None, indices2=None):
@@ -674,6 +690,7 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
         # Getting any existing in context multiple rels
         left_succe_to_rels = {}
         rigt_succe_to_rels = {} #TODO, what to do in this case?
+        max_matched_magnitude = 0
         pairs, succes, insns = get_relation_pairs(r_left.insn, r_right.insn, mcrs_left, mcrs_right, indices1=indices_left, indices2=indices_right)
         if pairs is not None:
             for i in range(len(pairs)):
@@ -685,6 +702,8 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                     if ip[0] == r_left.insn:
                         continue
                     left_succe_to_rels[ip[0]] = [p, s, ip]
+                    if ip[1] is not None:
+                        max_matched_magnitude = max(max_matched_magnitude, rel_map_left[p[0].insn].forward.magnitude())
                 else:
                     rigt_succe_to_rels[ip[1]] = [p, s, ip]
 
@@ -695,7 +714,8 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                 #print(str(s[1]) + " " + (hex(ip[1]) if ip[1] is not None else "None"))
                 #print(p[1])
                 #print("---------------------------------")
-
+        print("[compare_relation] max matched child magnitude: " + str(max_matched_magnitude))
+        ignore = False
         succe_weights = []
         for succe_insn in succe_insns_left:
             if succe_insn not in weight_map_left:
@@ -732,8 +752,26 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
 
             if p[0] is not None and p[1] is not None:
                 impact = calculate_forward_impact(p[0], p[1])
+                if ip[0] in rel_map_left:
+                    m1 = rel_map_left[ip[0]].forward.magnitude()
+                    m2 = r_left.forward.magnitude()
+                    print("[compare_relation] parent magnitude: " + str(m2) + " child magnitude: " + str(m1))
+                    mdiff = abs((m2 - m1) / m2) * 100
+                    print("[compare_relation] magnitude diff: " + str(mdiff))
+                    if mdiff < 20:
+                        ignore = True
+                        print("[compare_relation] Ignore relation1")
+                    elif m1 > m2:
+                        ignore = True
+                        print("[compare_relation] Ignore relation2")
             else:
                 impact = 100#p[0].weight.perc_contrib
+                if p[0] is not None:
+                    if ip[0] in rel_map_left:
+                        m1 = rel_map_left[ip[0]].forward.magnitude()
+                        if m1 <= max_matched_magnitude:
+                            impact = 0
+ 
             #impact, corr = calculate_weight_corr(p[0].weight.perc_contrib, p[0], p[1])
             if equals is True and impact != 0:
                 print("[compare_relation/warn] relations equal why impact not 0? impact is: " + str(impact))
@@ -770,6 +808,9 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
 
             succe_weights.append([impact, succe_weight])
             print("---------------------------------")
+        if ignore is True:
+            print("[compare_relation] Ignore relation even though it leads to different children.")
+            continue
         succe_weights = sorted(succe_weights, key=lambda e: e[0])
 
         old_weight = weight_map_left[r_left.insn]
@@ -1281,6 +1322,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         r = pair[0]
         prede = pair[1]
         insn_to_index[r.insn] = prede
+        rel_map_left[r.insn] = r
         print("[compare_relation] Looking for match relation on the left:")
         print(prede)
         print(r)
@@ -1510,7 +1552,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         #if r_right is None:
         #    insns_left.append(r_left.insn)
         #    insns_right.append(r_left.insn)
-    
+
     #with open('insns_left', 'w') as out:
     #    for i in insns_left:
     #        out.write(str(i) + "\n")
