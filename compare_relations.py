@@ -3,6 +3,8 @@ import os
 from relations import *
 from util import *
 from ra_util import *
+from collections import deque
+import itertools
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 ignored = set()
 
@@ -1273,6 +1275,33 @@ def plot(included_diff, rel_map1, rel_map2, left_summary, right_summary, left, r
     #fig =px.scatter(x=range(10), y=range(10))
     fig.write_html("file.html")
 
+def traverse(curr, visited, prev_mean, rel_group_map, included_diff_map2, q, depth):
+    if curr.insn in visited:
+        return
+
+    if curr.insn in included_diff_map2:
+        curr_mean = included_diff_map2[curr.insn][4].forward.magnitude()
+        if prev_mean is None:
+            prev_mean = curr_mean
+        if abs((curr_mean - prev_mean)/prev_mean*100) < 20:
+            group = rel_group_map.get(prev_mean, None)
+            if group is None:
+                group = []
+                rel_group_map[prev_mean] = group
+            group.append(included_diff_map2[curr.insn])
+        else:
+            prev_mean = curr_mean
+            q.append([curr, prev_mean])
+            return
+    if depth >= 100:
+        q.append([curr, prev_mean])
+        return
+    visited.add(curr.insn)
+    depth += 1
+    for succe in itertools.chain(curr.cf_succes, curr.df_succes):
+        traverse(succe, visited, prev_mean, rel_group_map, included_diff_map2, q, depth)
+
+
 def compare_relations(parent_d, parent_key, left, right, counts_left, counts_right, d1,
                       mcrs_left=None, mcrs_right=None, mrs_left=None, mrs_right=None,
                       pass_rates_left=None, pass_rates_right=None,
@@ -1624,9 +1653,17 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
     print("===============================================")
     #insns_left = []
     #insns_right = []
-    rank = len(included_diff)
+    #rank = len(included_diff)
+    included_diff2 = []
+    included_diff_map2 = {}
+    rank = 0
+    for p in reversed(included_diff):
+        if p[0] < 30: continue
+        rank += 1
 
     for p in reversed(included_diff):
+        if p[0] < 30: continue
+        ignore = False
         if p[4] is not None:
             index = insn_to_index[p[4].insn]
             func = index[0]
@@ -1638,7 +1675,10 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
             for df_succe in node.df_succes:
                 if df_succe.insn in diverged_rels:
                     print("SHOULD IGNORE!")
-
+                    ignore = True
+        if ignore is False: 
+            included_diff2.append(p)
+            if p[4] is not None: included_diff_map2[p[4].insn] = p
         print("-----------------------------------------")
         print("rank: " + str(rank))
         print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
@@ -1661,6 +1701,84 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         #    insns_left.append(r_left.insn)
         #    insns_right.append(r_left.insn)
 
+
+    visited = set()
+    StaticDepGraph.find_entry_and_exit_nodes()
+    assert(len(StaticDepGraph.entry_nodes) > 0)
+    print("[compare_relation] Number of entry nodes for the graph is: " + str(len(StaticDepGraph.entry_nodes)))
+
+    q = deque()
+    visited = set()
+    rel_group_map = {}
+    q = deque()
+    for entry in StaticDepGraph.entry_nodes:
+        q.append([entry, None])
+
+    while len(q) > 0:
+        depth = 0
+        [n, mean] = q.popleft()
+        traverse(n, visited, mean, rel_group_map, included_diff_map2, q, depth)
+   
+    ignore_map = set()
+    for mean in rel_group_map:
+        group = rel_group_map[mean]
+        print("================================================")
+        print("[compare_relation] mean: " + str(mean) + " num rels: " + str(len(group)))
+        inner_diff = []
+        for rel in group:
+            inner_diff.append([rel[1], rel])
+            p = rel
+            print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
+            print(str(p[2]) + " " + str(p[3]))
+            if p[4] is not None: print(insn_to_index[p[4].insn])
+            print(str(p[4]))
+            if p[5] is not None: print(insn_to_index[p[5].insn])
+            print(str(p[5]))
+            print("---------------------------------------------")
+
+        sorted_inner_diff = sorted(inner_diff, key=lambda e: (e[0]))
+        [ts, p] = sorted_inner_diff[-1]
+        print("[compare_relation] kept relation is: ")
+        print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
+        print(str(p[2]) + " " + str(p[3]))
+        if p[4] is not None: print(insn_to_index[p[4].insn])
+        print(str(p[4]))
+        if p[5] is not None: print(insn_to_index[p[5].insn])
+        print(str(p[5]))
+        print("---------------------------------------------")
+
+
+        for rel in sorted_inner_diff[0:-1]:
+            ignore_map.add(rel[1][4].insn)
+
+    rank = 0
+    for p in included_diff2:
+        if p[4] is not None:
+            if p[4].insn in ignore_map:
+                continue
+            if p[4].insn not in roots:
+                continue
+        rank += 1
+
+    for p in included_diff2:
+        if p[4] is not None:
+            if p[4].insn in ignore_map:
+                continue
+            if p[4].insn not in roots:
+                continue
+ 
+        print("-----------------------------------------")
+        print("rank: " + str(rank))
+        print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
+        print(str(p[2]) + " " + str(p[3]))
+        if p[4] is not None: print(insn_to_index[p[4].insn])
+        print(str(p[4]))
+        if p[5] is not None: print(insn_to_index[p[5].insn])
+        print(str(p[5]))
+        rank = rank - 1
+ 
+        
+    
     #with open('insns_left', 'w') as out:
     #    for i in insns_left:
     #        out.write(str(i) + "\n")
@@ -1670,6 +1788,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
     #        out.write(str(i) + "\n")
 
     #plot(included_diff, rel_map1, rel_map2, left_summary, right_summary, left, right)
+
 
 if __name__ == "__main__":
     #f1 = sys.argv[1]
