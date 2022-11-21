@@ -1752,19 +1752,62 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
             ignore_map.add(rel[1][4].insn)
 
     rank = 0
+    ignore_set = set()
     for p in included_diff2:
         if p[4] is not None:
             if p[4].insn in ignore_map:
                 continue
-            if p[4].insn not in roots:
-                continue
+            #if p[4].insn not in roots:
+            #    continue
+            print("-----------------------------------------")
+            print("rank: " + str(rank))
+            print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
+            print(str(p[2]) + " " + str(p[3]))
+            if p[4] is not None: print(insn_to_index[p[4].insn])
+            print(str(p[4]))
+            if p[5] is not None: print(insn_to_index[p[5].insn])
+            print(str(p[5]))
+ 
+            index = insn_to_index[p[4].insn]
+            func = index[0]
+            insn = index[1]
+            graph = StaticDepGraph.get_graph(func, insn)
+            node = graph.insn_to_node[insn] if graph is not None else None
+            if node is not None:
+                print("FOUNDDD")
+                ignore = False
+                for prede in itertools.chain(node.cf_predes, node.df_predes):
+                    if prede.insn not in rel_map_left:
+                        continue
+                    print("Prede found: " + hex(prede.insn))
+                    p_rel = rel_map_left[prede.insn]
+                    if p_rel.relaxed_equals(p[4]):
+                        print("Prede equal to curr rel")
+                        continue
+                    for succe in itertools.chain(node.cf_succes, node.df_succes):
+                        if succe.insn not in rel_map_left:
+                            continue
+                        print("Succe found: " + hex(succe.insn))
+                        s_rel = rel_map_left[succe.insn]
+                        if p_rel.relaxed_equals(s_rel):
+                            print("Succe and Prede rel equal")
+                            ignore = True
+                            break
+                    if ignore is True:
+                        ignore_set.add(insn)
+                        break
+                if ignore is True:
+                    continue
+
         rank += 1
 
     for p in included_diff2:
         if p[4] is not None:
             if p[4].insn in ignore_map:
                 continue
-            if p[4].insn not in roots:
+            #if p[4].insn not in roots:
+            #    continue
+            if p[4].insn in ignore_set:
                 continue
  
         print("-----------------------------------------")
