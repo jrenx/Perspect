@@ -1275,6 +1275,24 @@ def plot(included_diff, rel_map1, rel_map2, left_summary, right_summary, left, r
     #fig =px.scatter(x=range(10), y=range(10))
     fig.write_html("file.html")
 
+def find_roots(curr, visited, roots, included_diff_map3, q, depth):
+    if curr.insn in visited:
+        return
+    if curr.insn in included_diff_map3:
+        roots.add(curr.insn)
+        visited.add(curr.insn)
+        return
+
+    if depth >= 100:
+        q.append(curr)
+        return
+    visited.add(curr.insn)
+    depth += 1
+    for succe in itertools.chain(curr.cf_succes, curr.df_succes):
+        find_roots(succe, visited, roots, included_diff_map3, q, depth)
+
+
+
 def traverse(curr, visited, prev_mean, rel_group_map, included_diff_map2, q, depth):
     if curr.insn in visited:
         return
@@ -1702,12 +1720,10 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         #    insns_right.append(r_left.insn)
 
 
-    visited = set()
     StaticDepGraph.find_entry_and_exit_nodes()
     assert(len(StaticDepGraph.entry_nodes) > 0)
     print("[compare_relation] Number of entry nodes for the graph is: " + str(len(StaticDepGraph.entry_nodes)))
 
-    q = deque()
     visited = set()
     rel_group_map = {}
     q = deque()
@@ -1751,6 +1767,9 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         for rel in sorted_inner_diff[0:-1]:
             ignore_map.add(rel[1][4].insn)
 
+
+
+
     rank = 0
     ignore_set = set()
     for p in included_diff2:
@@ -1759,14 +1778,14 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                 continue
             #if p[4].insn not in roots:
             #    continue
-            print("-----------------------------------------")
-            print("rank: " + str(rank))
-            print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
-            print(str(p[2]) + " " + str(p[3]))
-            if p[4] is not None: print(insn_to_index[p[4].insn])
-            print(str(p[4]))
-            if p[5] is not None: print(insn_to_index[p[5].insn])
-            print(str(p[5]))
+            #print("-----------------------------------------")
+            #print("rank: " + str(rank))
+            #print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
+            #print(str(p[2]) + " " + str(p[3]))
+            #if p[4] is not None: print(insn_to_index[p[4].insn])
+            #print(str(p[4]))
+            #if p[5] is not None: print(insn_to_index[p[5].insn])
+            #print(str(p[5]))
  
             index = insn_to_index[p[4].insn]
             func = index[0]
@@ -1801,6 +1820,8 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
 
         rank += 1
 
+    included_diff3 = []
+    included_diff_map3 = {}
     for p in included_diff2:
         if p[4] is not None:
             if p[4].insn in ignore_map:
@@ -1810,6 +1831,40 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
             if p[4].insn in ignore_set:
                 continue
  
+        #print("-----------------------------------------")
+        #print("rank: " + str(rank))
+        #print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
+        #print(str(p[2]) + " " + str(p[3]))
+        #if p[4] is not None: print(insn_to_index[p[4].insn])
+        #print(str(p[4]))
+        #if p[5] is not None: print(insn_to_index[p[5].insn])
+        #print(str(p[5]))
+        #rank = rank - 1
+        included_diff3.append(p)
+        if p[4] is not None: included_diff_map3[p[4].insn] = p
+ 
+    visited = set()
+    roots = set()
+    q = deque()
+    for entry in StaticDepGraph.entry_nodes:
+        q.append(entry)
+
+    while len(q) > 0:
+        depth = 0
+        n = q.popleft()
+        find_roots(n, visited, roots, included_diff_map3, q, depth)
+
+    rank = 0
+    for p in included_diff3:
+        if p[4] is not None:
+            if p[4].insn not in roots:
+                continue
+        rank += 1
+ 
+    for p in included_diff3:
+        if p[4] is not None:
+            if p[4].insn not in roots:
+                continue
         print("-----------------------------------------")
         print("rank: " + str(rank))
         print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
@@ -1819,8 +1874,6 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         if p[5] is not None: print(insn_to_index[p[5].insn])
         print(str(p[5]))
         rank = rank - 1
- 
-        
     
     #with open('insns_left', 'w') as out:
     #    for i in insns_left:
