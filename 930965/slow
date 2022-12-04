@@ -1,0 +1,378 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 62
+#
+# Samples: 2K of event 'cycles:ppp'
+# Event count (approx.): 21743649595
+#
+# Children      Self  Command  Shared Object      Symbol                                        
+# ........  ........  .......  .................  ..............................................
+#
+    82.70%     1.72%  seq      libc-2.27.so       [.] __printf_chk
+            |          
+            |--80.98%--__printf_chk
+            |          |          
+            |          |--77.83%--vfprintf
+            |          |          |          
+            |          |          |--26.21%--__mpn_divrem
+            |          |          |          
+            |          |          |--22.57%--__GI___printf_fp_l
+            |          |          |          |          
+            |          |          |          |--0.67%--__mpn_mul
+            |          |          |          |          
+            |          |          |           --0.52%--__GI___printf_fp_l
+            |          |          |          
+            |          |          |--8.92%--hack_digit
+            |          |          |          
+            |          |          |--3.91%--__mpn_extract_long_double
+            |          |          |          
+            |          |          |--1.25%--__libc_alloca_cutoff
+            |          |          |          
+            |          |           --0.66%--__mpn_mul
+            |          |          
+            |           --2.63%--__strchrnul_avx2
+            |          
+            |--1.16%--0
+            |          __printf_chk
+            |          
+             --0.56%--0x1403420
+                       0x4
+                       __printf_chk
+
+    81.87%     0.00%  seq      [unknown]          [.] 0x0000000001403420
+            |
+            ---0x1403420
+               |          
+                --81.65%--0x4
+                          |          
+                           --81.54%--__printf_chk
+                                     |          
+                                     |--77.83%--vfprintf
+                                     |          |          
+                                     |          |--26.21%--__mpn_divrem
+                                     |          |          
+                                     |          |--22.57%--__GI___printf_fp_l
+                                     |          |          |          
+                                     |          |          |--0.67%--__mpn_mul
+                                     |          |          |          
+                                     |          |           --0.52%--__GI___printf_fp_l
+                                     |          |          
+                                     |          |--8.92%--hack_digit
+                                     |          |          
+                                     |          |--3.91%--__mpn_extract_long_double
+                                     |          |          
+                                     |          |--1.25%--__libc_alloca_cutoff
+                                     |          |          
+                                     |           --0.66%--__mpn_mul
+                                     |          
+                                      --2.63%--__strchrnul_avx2
+
+    81.65%     0.00%  seq      [unknown]          [.] 0x0000000000000004
+            |
+            ---0x4
+               |          
+                --81.54%--__printf_chk
+                          |          
+                          |--77.83%--vfprintf
+                          |          |          
+                          |          |--26.21%--__mpn_divrem
+                          |          |          
+                          |          |--22.57%--__GI___printf_fp_l
+                          |          |          |          
+                          |          |          |--0.67%--__mpn_mul
+                          |          |          |          
+                          |          |           --0.52%--__GI___printf_fp_l
+                          |          |          
+                          |          |--8.92%--hack_digit
+                          |          |          
+                          |          |--3.91%--__mpn_extract_long_double
+                          |          |          
+                          |          |--1.25%--__libc_alloca_cutoff
+                          |          |          
+                          |           --0.66%--__mpn_mul
+                          |          
+                           --2.63%--__strchrnul_avx2
+
+    77.95%    12.83%  seq      libc-2.27.so       [.] vfprintf
+            |          
+            |--65.12%--vfprintf
+            |          |          
+            |          |--26.21%--__mpn_divrem
+            |          |          
+            |          |--22.57%--__GI___printf_fp_l
+            |          |          |          
+            |          |          |--0.67%--__mpn_mul
+            |          |          |          
+            |          |           --0.52%--__GI___printf_fp_l
+            |          |          
+            |          |--8.92%--hack_digit
+            |          |          
+            |          |--3.91%--__mpn_extract_long_double
+            |          |          
+            |          |--1.25%--__libc_alloca_cutoff
+            |          |          
+            |           --0.66%--__mpn_mul
+            |          
+             --12.83%--0x1403420
+                       0x4
+                       |          
+                        --12.72%--__printf_chk
+                                  vfprintf
+
+    26.21%    26.20%  seq      libc-2.27.so       [.] __mpn_divrem
+            |          
+             --26.20%--0x1403420
+                       0x4
+                       __printf_chk
+                       vfprintf
+                       __mpn_divrem
+
+    22.58%    20.92%  seq      libc-2.27.so       [.] __GI___printf_fp_l
+            |          
+            |--20.92%--0x1403420
+            |          0x4
+            |          __printf_chk
+            |          |          
+            |           --20.90%--vfprintf
+            |                     __GI___printf_fp_l
+            |          
+             --1.67%--__GI___printf_fp_l
+                       |          
+                       |--0.67%--__mpn_mul
+                       |          
+                        --0.52%--__GI___printf_fp_l
+
+    17.93%    14.09%  seq      libc-2.27.so       [.] hack_digit
+            |          
+            |--9.11%--hack_digit
+            |          |          
+            |           --3.76%--hack_digit
+            |          
+             --8.82%--0x1403420
+                       0x4
+                       __printf_chk
+                       vfprintf
+                       hack_digit
+
+     3.91%     3.91%  seq      libc-2.27.so       [.] __mpn_extract_long_double
+            |
+            ---0x1403420
+               0x4
+               __printf_chk
+               vfprintf
+               __mpn_extract_long_double
+
+     3.74%     3.74%  seq      [unknown]          [k] 0x00007ffba927e945
+            |
+            ---hack_digit
+               hack_digit
+
+     3.14%     0.00%  seq      [unknown]          [.] 0000000000000000
+            |
+            ---0
+               |          
+               |--1.80%--main
+               |          
+                --1.16%--__printf_chk
+
+     3.12%     3.11%  seq      libc-2.27.so       [.] __mpn_mul_1
+            |          
+             --2.66%--__mpn_mul_1
+
+     2.63%     2.62%  seq      libc-2.27.so       [.] __strchrnul_avx2
+            |          
+             --2.62%--0x1403420
+                       0x4
+                       __printf_chk
+                       __strchrnul_avx2
+
+     1.80%     1.80%  seq      seq                [.] main
+            |          
+             --1.80%--0
+                       main
+
+     1.62%     0.00%  seq      [unknown]          [.] 0x6f74207367756220
+            |
+            ---0x6f74207367756220
+               |          
+                --1.16%--__strlen_avx2
+
+     1.57%     1.57%  seq      libc-2.27.so       [.] __strlen_avx2
+            |          
+             --1.16%--0x6f74207367756220
+                       __strlen_avx2
+
+     1.38%     1.08%  seq      libc-2.27.so       [.] _IO_file_xsputn@@GLIBC_2.2.5
+            |          
+             --0.79%--_IO_file_xsputn@@GLIBC_2.2.5
+
+     1.33%     1.04%  seq      libc-2.27.so       [.] __mpn_mul
+            |          
+             --1.04%--0x1403420
+                       0x4
+                       __printf_chk
+                       vfprintf
+                       |          
+                       |--0.54%--__GI___printf_fp_l
+                       |          __mpn_mul
+                       |          
+                        --0.50%--__mpn_mul
+
+     1.25%     1.25%  seq      libc-2.27.so       [.] __libc_alloca_cutoff
+            |
+            ---0x1403420
+               0x4
+               __printf_chk
+               vfprintf
+               __libc_alloca_cutoff
+
+     1.08%     1.01%  seq      libc-2.27.so       [.] __memmove_avx_unaligned_erms
+            |          
+             --0.98%--__memmove_avx_unaligned_erms
+
+     0.48%     0.48%  seq      libc-2.27.so       [.] __mpn_cmp
+     0.28%     0.28%  seq      [unknown]          [k] 0x00007ffba92ab998
+     0.25%     0.25%  seq      libc-2.27.so       [.] __GI___fputs_unlocked
+     0.24%     0.24%  seq      [unknown]          [k] 0x00007ffba928088b
+     0.24%     0.21%  seq      libc-2.27.so       [.] _IO_padn
+     0.17%     0.17%  seq      libc-2.27.so       [.] @plt
+     0.16%     0.15%  seq      libc-2.27.so       [.] __mpn_rshift
+     0.15%     0.15%  seq      [unknown]          [k] 0x00007ffba9273540
+     0.15%     0.15%  seq      [unknown]          [k] 0x00007ffba92800d0
+     0.14%     0.14%  seq      seq                [.] fputs_unlocked@plt
+     0.13%     0.00%  seq      [kernel.kallsyms]  [k] apic_timer_interrupt
+     0.13%     0.00%  seq      [kernel.kallsyms]  [k] smp_apic_timer_interrupt
+     0.13%     0.00%  seq      [kernel.kallsyms]  [k] hrtimer_interrupt
+     0.13%     0.00%  seq      [kernel.kallsyms]  [k] __hrtimer_run_queues
+     0.13%     0.00%  seq      [kernel.kallsyms]  [k] tick_sched_timer
+     0.13%     0.00%  seq      [kernel.kallsyms]  [k] tick_sched_handle
+     0.13%     0.00%  seq      [kernel.kallsyms]  [k] update_process_times
+     0.12%     0.12%  seq      [unknown]          [k] 0x00007ffba92734d3
+     0.09%     0.09%  seq      libc-2.27.so       [.] __printf_fp
+     0.08%     0.08%  seq      [kernel.kallsyms]  [k] irq_work_run_list
+     0.08%     0.00%  seq      [kernel.kallsyms]  [k] irq_work_tick
+     0.07%     0.07%  seq      [unknown]          [k] 0x00007ffba93aeb3e
+     0.06%     0.06%  seq      libc-2.27.so       [.] @plt
+     0.04%     0.04%  seq      [kernel.kallsyms]  [k] update_curr
+     0.04%     0.00%  seq      [kernel.kallsyms]  [k] scheduler_tick
+     0.04%     0.00%  seq      [kernel.kallsyms]  [k] task_tick_fair
+     0.04%     0.04%  seq      libc-2.27.so       [.] __mpn_lshift
+     0.03%     0.03%  seq      libc-2.27.so       [.] calloc@plt
+     0.03%     0.03%  seq      [unknown]          [k] 0x00007ffba927f16d
+     0.03%     0.03%  seq      [unknown]          [k] 0x00007ffba92a0260
+     0.03%     0.00%  seq      libc-2.27.so       [.] __GI___libc_write
+     0.02%     0.02%  seq      [unknown]          [k] 0x00007ffba927f37e
+     0.02%     0.00%  seq      [kernel.kallsyms]  [k] entry_SYSCALL_64_after_hwframe
+     0.02%     0.00%  seq      [kernel.kallsyms]  [k] do_syscall_64
+     0.02%     0.00%  seq      [kernel.kallsyms]  [k] sys_write
+     0.02%     0.00%  seq      [kernel.kallsyms]  [k] vfs_write
+     0.01%     0.01%  seq      [unknown]          [k] 0x00007ffba9273491
+     0.01%     0.01%  seq      [unknown]          [k] 0x00007ffba927c982
+     0.01%     0.01%  seq      [kernel.kallsyms]  [k] __fsnotify_parent
+     0.01%     0.00%  seq      [unknown]          [k] 0x333434300a393936
+     0.01%     0.01%  seq      [unknown]          [k] 0x00007ffba927c952
+     0.01%     0.01%  seq      [unknown]          [k] 0x00007ffba927b675
+     0.01%     0.01%  seq      [unknown]          [k] 0x00007ffba927394c
+     0.01%     0.01%  seq      [unknown]          [k] 0x00007ffba927f15f
+     0.01%     0.01%  seq      [unknown]          [k] 0x00007ffba927f37c
+     0.01%     0.01%  seq      [unknown]          [k] 0x00007ffba9280837
+     0.01%     0.01%  seq      [unknown]          [k] 0x00007ffba9273396
+     0.01%     0.01%  seq      [unknown]          [k] 0x00007ffba9280887
+     0.01%     0.01%  seq      [unknown]          [k] 0x00007ffba92ab9b2
+     0.01%     0.01%  seq      [unknown]          [k] 0x00007ffba927e8ad
+     0.01%     0.01%  seq      [unknown]          [k] 0x00007ffba927f7d8
+     0.01%     0.01%  seq      [unknown]          [k] 0x00007ffba9272f94
+     0.01%     0.01%  seq      [unknown]          [k] 0x00007ffba9280ace
+     0.01%     0.01%  seq      [unknown]          [k] 0x00007ffba93ae239
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba9352323
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba927f640
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba927d34f
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba927c9aa
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba927e896
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] common_file_perm
+     0.00%     0.00%  seq      [unknown]          [k] 0x30300a3333373830
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] rw_verify_area
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] security_file_permission
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] apparmor_file_permission
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba927f606
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba927b5a7
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba92739d8
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba93ae230
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba9273539
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba93aeb22
+     0.00%     0.00%  seq      seq                [.] __printf_chk@plt
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba927ecc2
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba927f61b
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba9280988
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba927b3ad
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba927f8ec
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba92ab97c
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba9280878
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba92ab932
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba927c928
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba92aa692
+     0.00%     0.00%  seq      [unknown]          [k] 0xfffffe0000242025
+     0.00%     0.00%  seq      [unknown]          [k] 0x363436303033300a
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba927c98a
+     0.00%     0.00%  seq      libc-2.27.so       [.] @plt
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba927e890
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba928102d
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007ffba927b9c6
+     0.00%     0.00%  seq      [unknown]          [k] 0x39373130300a3431
+     0.00%     0.00%  seq      [unknown]          [k] 0xfffffe000024201b
+     0.00%     0.00%  seq      [unknown]          [k] 0x33300a3337353032
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] fput
+     0.00%     0.00%  seq      [unknown]          [k] 0x0000000000000040
+     0.00%     0.00%  seq      ld-2.27.so         [.] _dl_sysdep_start
+     0.00%     0.00%  seq      ld-2.27.so         [.] munmap
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] sys_munmap
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] vm_munmap
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] do_munmap
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] remove_vma
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] vma_do_fput
+     0.00%     0.00%  seq      ld-2.27.so         [.] dl_main
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] vma_adjust_trans_huge
+     0.00%     0.00%  seq      [unknown]          [k] 0x00007f26b2c8ae37
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] sys_execve
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] do_execveat_common.isra.34
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] search_binary_handler
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] load_elf_binary
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] setup_arg_pages
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] shift_arg_pages
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] swapgs_restore_regs_and_return_to_usermode
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] prepare_exit_to_usermode
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] exit_to_usermode_loop
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] schedule
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] __schedule
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] finish_task_switch
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] __perf_event_task_sched_in
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] x86_pmu_enable
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] intel_pmu_enable_all
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] __intel_pmu_enable_all.constprop.19
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] nmi_restore
+     0.00%     0.00%  perf     [unknown]          [k] 0x00007f26b2c8ae37
+     0.00%     0.00%  perf     [kernel.kallsyms]  [k] entry_SYSCALL_64_after_hwframe
+     0.00%     0.00%  perf     [kernel.kallsyms]  [k] do_syscall_64
+     0.00%     0.00%  perf     [kernel.kallsyms]  [k] sys_execve
+     0.00%     0.00%  perf     [kernel.kallsyms]  [k] do_execveat_common.isra.34
+     0.00%     0.00%  perf     [kernel.kallsyms]  [k] search_binary_handler
+     0.00%     0.00%  perf     [kernel.kallsyms]  [k] load_elf_binary
+     0.00%     0.00%  perf     [kernel.kallsyms]  [k] setup_new_exec
+     0.00%     0.00%  perf     [kernel.kallsyms]  [k] perf_event_exec
+     0.00%     0.00%  perf     [kernel.kallsyms]  [k] ctx_resched
+     0.00%     0.00%  perf     [kernel.kallsyms]  [k] x86_pmu_enable
+     0.00%     0.00%  perf     [kernel.kallsyms]  [k] intel_pmu_enable_all
+     0.00%     0.00%  perf     [kernel.kallsyms]  [k] __intel_pmu_enable_all.constprop.19
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] end_repeat_nmi
+     0.00%     0.00%  perf     [kernel.kallsyms]  [k] default_do_nmi
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] native_flush_tlb_one_user
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] intel_pmu_handle_irq
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] native_write_msr
+     0.00%     0.00%  perf     [kernel.kallsyms]  [k] native_write_msr
+     0.00%     0.00%  seq      [kernel.kallsyms]  [k] native_apic_msr_write
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#
