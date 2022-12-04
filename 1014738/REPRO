@@ -1,0 +1,2 @@
+time out/cmd/du asdfg > /dev/null
+time out/cmd/du asdfg --exclude dupa > /dev/null
