@@ -1902,7 +1902,7 @@ class StaticDepGraph:
 
     @staticmethod
     def output_indices_mapping(result_file, binary_file=None):
-        insn_to_insn_str = parse_binary_file(binary_file)
+        if binary_file is not None: insn_to_insn_str = parse_binary_file(binary_file)
         indices = []
         inner_indices = []
         insns = []
@@ -1914,12 +1914,13 @@ class StaticDepGraph:
                 if node.explained is False:
                     continue
                 insns.append(node.insn)
-                insn_str = insn_to_insn_str[node.insn]
-                insn_str_segs = insn_str.split()
-                args = ' '.join(insn_str_segs[1:])
-                op = insn_str_segs[0]
-                insn_str = op + ' ' + ''.join([i for i in args if (not i.isalpha() and not i.isdigit())])
-                insn_strs.append(insn_str)
+                if binary_file is not None: 
+                    insn_str = insn_to_insn_str[node.insn]
+                    insn_str_segs = insn_str.split()
+                    args = ' '.join(insn_str_segs[1:])
+                    op = insn_str_segs[0]
+                    insn_str = op + ' ' + ''.join([i for i in args if (not i.isalpha() and not i.isdigit())])
+                    insn_strs.append(insn_str)
                 indices.append([(get_callers_str(node.caller_files) if node.caller_files is not None else "") +
                      node.file, node.line, node.index, node.total_count])
 
@@ -1938,8 +1939,9 @@ class StaticDepGraph:
             json.dump(inner_indices, f, indent=4)
         with open(result_file + "_insns", 'w') as f:
             json.dump(insns, f, indent=4)
-        with open(result_file + "_insn_strs", 'w') as f:
-            json.dump(insn_strs, f, indent=4)
+        if binary_file is not None:
+            with open(result_file + "_insn_strs", 'w') as f:
+                json.dump(insn_strs, f, indent=4)
 
     @staticmethod
     def insert_file_line_to_map(node, file, line, graph=None):
