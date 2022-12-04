@@ -97,7 +97,7 @@ def server_thread(server):
         server.serve_forever()
 
 def main():
-
+    orig_start_time = datetime.datetime.now()
     server = socketserver.TCPServer((HOST, PORT), MyTCPHandler)
     server_t = threading.Thread(target=server_thread, args=(server, ))
     server_t.start()
@@ -262,7 +262,7 @@ def main():
     server.shutdown()
     server_t.join()
     server.server_close()
-    duration = datetime.datetime.now() - start_time
+    duration = datetime.datetime.now() - orig_start_time
     print("[client] Running uses {} seconds".format(duration))
 
 if __name__ == '__main__':
