@@ -19,7 +19,7 @@ DEBUG_SLICE = False
 VERBOSE = False
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 TRACKS_DIRECT_CALLER = True
-TRACKS_INDIRECT_CALLER = False
+TRACKS_INDIRECT_CALLER = True
 # = False
 USE_BPATCH = False
 FILTER_UNEXECUTED_INSNS = False
@@ -2344,6 +2344,7 @@ class StaticDepGraph:
                             break
                 print("[static_dep] Instantiating callsites for: " + func)
                 for c in itertools.chain(callsites, dyn_callsites):
+                    print("[static_dep] Callsite is: " + str(c))
                     if c[0] in StaticDepGraph.insns_that_never_executed:
                         continue
                     print("[static_dep] Callsite is: " + str(c))
