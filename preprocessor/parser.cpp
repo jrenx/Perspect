@@ -112,7 +112,7 @@ public:
   bool *CodeWithLaterBitOpsExecuted = NULL;
   long *codeToBitOperand;
   bool *codeToBitOperandIsValid;
-  bool *PendingLocalDefCodes;
+  bool * PendingLocalDefCodes;
   bool *PendingCfPredeCodes;
   std::vector<StaticNode*> *CfPredeCodeToSucceNodes;
   std::vector<StaticNode*> *DfPredeCodeToSucceNodes;
@@ -157,10 +157,10 @@ public:
   bool *isBitOpCode;
   bool *containsBitOpCode;
 
-  short **CodeToPriorBitOpCodes;
+  unsigned short **CodeToPriorBitOpCodes;
   int *CodeToPriorBitOpCodeCount;
 
-  short **LaterBitOpCodeToCodes;
+  unsigned short **LaterBitOpCodeToCodes;
   int *LaterBitOpCodeToCodeCount;
 
   unordered_set<long> StartInsns;
@@ -171,16 +171,16 @@ public:
   bool *CodesWithRegs;
 
   unordered_set<long> InsnOfCFNodes;
-  bool *CodesOfCFNodes;
+  bool * CodesOfCFNodes;
 
   unordered_set<long> InsnOfDFNodes;
-  bool *CodesOfDFNodes;
+  bool * CodesOfDFNodes;
 
   unordered_set<long> InsnOfLocalDFNodes;
-  bool *CodesOfMemLoadNodes;
+  bool * CodesOfMemLoadNodes;
 
   unordered_set<long> InsnOfRemoteDFNodes;
-  bool *CodesOfMemStoreNodes;
+  bool * CodesOfMemStoreNodes;
 
   long StartInsn;
 
@@ -202,7 +202,8 @@ public:
   unsigned short ** SucceToPredeCodes;
 #endif
 
-  long GetFileSize(std::string filename) {
+  long GetFileSize(std::string filename)
+  {
     struct stat stat_buf;
     int rc = stat(filename.c_str(), &stat_buf);
     return rc == 0 ? stat_buf.st_size : -1;
@@ -212,10 +213,10 @@ public:
     int size = cJSON_GetArraySize(json_Map);
     for (int i = 0; i < size; i++) {
       cJSON *ele = cJSON_GetArrayItem(json_Map, i);
-      long key = atol(ele->string);
+      long key = atol (ele->string);
       //cout << key << endl;
       //cout << ele->valueint << endl;
-      map.insert({key, (long) ele->valueint}); //TODO long?? save as string??
+      map.insert({key, (long)ele->valueint}); //TODO long?? save as string??
     }
   }
 
@@ -223,13 +224,11 @@ public:
     int size = cJSON_GetArraySize(json_List);
     for (int i = 0; i < size; i++) {
       cJSON *ele = cJSON_GetArrayItem(json_List, i);
-      set.insert((long) ele->valueint); //TODO long?? save as string??
+      set.insert((long)ele->valueint); //TODO long?? save as string??
     }
   }
 
-  void parseJsonMapOfLists(cJSON *json_Map, unordered_map<long, unordered_set < long> *
-
-  > &map) {
+  void parseJsonMapOfLists(cJSON *json_Map, unordered_map<long, unordered_set<long>*> &map) {
     int size = cJSON_GetArraySize(json_Map);
     for (int i = 0; i < size; i++) {
       cJSON *ele = cJSON_GetArrayItem(json_Map, i);
@@ -245,9 +244,9 @@ public:
   static char *readFile(char *filename, unsigned long &length) {
     ifstream is;
     is.open(filename, ios::in);
-    is.seekg(0, is.end);
+    is.seekg (0, is.end);
     length = is.tellg();
-    is.seekg(0, is.beg);
+    is.seekg (0, is.beg);
     char *buffer = new char[length];
     is.read(buffer, length);
     is.close();
@@ -278,11 +277,12 @@ public:
     }
 
     if (memAccess->off_reg == "") memAccess->has_off_reg = false;
-    else if (memAccess->off_reg == "ES") {// || memAccess->off_reg == "DS") {
+    else if (memAccess->off_reg == "ES"){// || memAccess->off_reg == "DS") {
       //cout << "Ignore ES" << endl;
       memAccess->has_off_reg = false;
       memAccess->offset = 0;
-    } else memAccess->has_off_reg = true;
+    }
+    else memAccess->has_off_reg = true;
     cJSON *json_readSameAsWrite = cJSON_GetObjectItem(json_memAccess, "read_same_as_write");
     memAccess->read_same_as_write = json_readSameAsWrite->valueint == 1;
     return memAccess;
@@ -294,7 +294,7 @@ public:
     cJSON *data = cJSON_Parse(buffer);
     delete[] buffer;
 
-    CodeToStaticNode = new StaticNode *[CodeCount];
+    CodeToStaticNode = new StaticNode*[CodeCount];
     cJSON *json_staticGraphs = cJSON_GetObjectItem(data, "out_result");
     int numGraphs = cJSON_GetArraySize(json_staticGraphs);
     for (int i = 0; i < numGraphs; i++) {
@@ -308,7 +308,7 @@ public:
         StaticNodeIdToInsn.insert({id, insn});
         //cout << "Parsing insn: " << std::hex << insn << std::dec <<endl;
         if (InsnToCode.find(insn) == InsnToCode.end()) continue;
-        unsigned short currCode = InsnToCode[insn];
+        unsigned short currCode =  InsnToCode[insn];
         //cout << "Parsing code: " << currCode << endl;
         // FIXME: reduce array accesses here :p
         CodeToStaticNode[currCode] = new StaticNode();
@@ -354,28 +354,28 @@ public:
 
         cJSON *json_cfPredes = cJSON_GetObjectItem(json_staticNode, "cf_predes");
         int count = cJSON_GetArraySize(json_cfPredes);
-        for (int k = 0; k < count; k++) {
+        for (int k = 0; k < count; k++){
           cJSON *json_Id = cJSON_GetArrayItem(json_cfPredes, k);
           CodeToStaticNode[currCode]->cf_prede_ids.push_back(json_Id->valueint);
         }
 
         cJSON *json_cfSucces = cJSON_GetObjectItem(json_staticNode, "cf_succes");
         count = cJSON_GetArraySize(json_cfSucces);
-        for (int k = 0; k < count; k++) {
+        for (int k = 0; k < count; k++){
           cJSON *json_Id = cJSON_GetArrayItem(json_cfSucces, k);
           CodeToStaticNode[currCode]->cf_succe_ids.push_back(json_Id->valueint);
         }
 
         cJSON *json_dfPredes = cJSON_GetObjectItem(json_staticNode, "df_predes");
         count = cJSON_GetArraySize(json_dfPredes);
-        for (int k = 0; k < count; k++) {
+        for (int k = 0; k < count; k++){
           cJSON *json_Id = cJSON_GetArrayItem(json_dfPredes, k);
           CodeToStaticNode[currCode]->df_prede_ids.push_back(json_Id->valueint);
         }
 
         cJSON *json_dfSucces = cJSON_GetObjectItem(json_staticNode, "df_succes");
         count = cJSON_GetArraySize(json_dfSucces);
-        for (int k = 0; k < count; k++) {
+        for (int k = 0; k < count; k++){
           cJSON *json_Id = cJSON_GetArrayItem(json_dfSucces, k);
           CodeToStaticNode[currCode]->df_succe_ids.push_back(json_Id->valueint);
         }
@@ -413,12 +413,12 @@ public:
   void initData(int pa_id) {
     std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
     unsigned long length;
-    string preprocessDataFile((char *) "preprocess_data");
+    string preprocessDataFile((char *)"preprocess_data");
     if (pa_id >= 0) {
       preprocessDataFile += "_";
       preprocessDataFile += std::to_string(pa_id);
     }
-    char *buffer = Parser::readFile((char *) preprocessDataFile.c_str(), length);//TODO delete
+    char *buffer = Parser::readFile((char *)preprocessDataFile.c_str(), length);//TODO delete
 
     cJSON *data = cJSON_Parse(buffer);
     delete[] buffer;
@@ -432,11 +432,11 @@ public:
     CodeToInsn = new long[CodeCount];
     for (auto it = map1.begin(); it != map1.end(); it++) {
       CodeToInsn[(*it).first] = (*it).second;
-      InsnToCode.insert({(*it).second, (unsigned short) (*it).first});
+      InsnToCode.insert({(*it).second, (unsigned short)(*it).first});
     }
     OccurrencesPerCode = new long[CodeCount];
     for (int i = 0; i < CodeCount; i++) OccurrencesPerCode[i] = 0;
-
+ 
 #ifdef COUNT_ONLY
     AverageTimeStampPerCode = new unsigned long[CodeCount];
     for (int i = 0; i < CodeCount; i++) AverageTimeStampPerCode[i] = 0;
@@ -448,7 +448,7 @@ public:
       CodeOfStartInsns = new bool[CodeCount];
       for (int i = 0; i < CodeCount; i++) CodeOfStartInsns[i] = false;
       for (auto it = StartInsns.begin(); it != StartInsns.end(); it++) {
-        short code = InsnToCode[(*it)];
+        unsigned short code = InsnToCode[(*it)];
         if (code > MaxStartCode) MaxStartCode = code;
         CodeOfStartInsns[code] = true;
         cout << InsnToCode[(*it)] << " is start code " << endl;
@@ -508,7 +508,7 @@ public:
     CodeToRegCount = new int[CodeCount];
     for (int i = 0; i < CodeCount; i++) CodeToRegCount[i] = 0;
     for (auto it = map2.begin(); it != map2.end(); it++) {
-      CodeToRegCount[InsnToCode[(long) (*it).first]] = (int) (*it).second;
+      CodeToRegCount[InsnToCode[(long)(*it).first]] = (int)(*it).second;
     }
 
     cJSON *json_insnToRegCount2 = cJSON_GetObjectItem(data, "insn_to_reg_count2");
@@ -517,7 +517,7 @@ public:
     CodeToRegCount2 = new int[CodeCount];
     for (int i = 0; i < CodeCount; i++) CodeToRegCount2[i] = 0;
     for (auto it = map3.begin(); it != map3.end(); it++) {
-      CodeToRegCount2[InsnToCode[(long) (*it).first]] = (int) (*it).second;
+      CodeToRegCount2[InsnToCode[(long)(*it).first]] = (int)(*it).second;
     }
 
     isBitOpCode = new bool[CodeCount];
@@ -527,21 +527,21 @@ public:
     for (int i = 0; i < CodeCount; i++) containsBitOpCode[i] = false;
 
     cJSON *json_loadInsnToBitOps = cJSON_GetObjectItem(data, "load_insn_to_bit_ops");
-    unordered_map < long, unordered_set < long > * > map4;
+    unordered_map<long, unordered_set<long>*> map4;
     parseJsonMapOfLists(json_loadInsnToBitOps, map4);
-    CodeToPriorBitOpCodes = new short *[CodeCount];
+    CodeToPriorBitOpCodes = new unsigned short*[CodeCount];
     CodeToPriorBitOpCodeCount = new int[CodeCount];
     for (int i = 0; i < CodeCount; i++) CodeToPriorBitOpCodes[i] = NULL;
     for (int i = 0; i < CodeCount; i++) CodeToPriorBitOpCodeCount[i] = -1;
     for (auto it = map4.begin(); it != map4.end(); it++) {
-      short key = InsnToCode[(long) (*it).first];
+      unsigned short key = InsnToCode[(long)(*it).first];
       unordered_set<long> *set = (*it).second;
       containsBitOpCode[key] = true;
-      CodeToPriorBitOpCodes[key] = new short[set->size()];
+      CodeToPriorBitOpCodes[key] = new unsigned short[set->size()];
       CodeToPriorBitOpCodeCount[key] = set->size();
       int i = 0;
       for (auto sit = set->begin(); sit != set->end(); sit++) {
-        short c = InsnToCode[*sit];
+        unsigned short c = InsnToCode[*sit];
         CodeToPriorBitOpCodes[key][i] = c;
         isBitOpCode[c] = true;
         i++;
@@ -549,22 +549,22 @@ public:
     }
 
     cJSON *json_bitOpToStoreInsns = cJSON_GetObjectItem(data, "bit_op_to_store_insns");
-    unordered_map < long, unordered_set < long > * > map5;
+    unordered_map<long, unordered_set<long>*> map5;
     parseJsonMapOfLists(json_bitOpToStoreInsns, map5);
-    LaterBitOpCodeToCodes = new short *[CodeCount];
+    LaterBitOpCodeToCodes = new unsigned short*[CodeCount];
     LaterBitOpCodeToCodeCount = new int[CodeCount];
     for (int i = 0; i < CodeCount; i++) LaterBitOpCodeToCodes[i] = NULL;
     for (int i = 0; i < CodeCount; i++) LaterBitOpCodeToCodeCount[i] = -1;
     for (auto it = map5.begin(); it != map5.end(); it++) {
-      short key = InsnToCode[(long) (*it).first];
+      unsigned short key = InsnToCode[(long)(*it).first];
       unordered_set<long> *set = (*it).second;
       containsBitOpCode[key] = true;
-      LaterBitOpCodeToCodes[key] = new short[set->size()];
+      LaterBitOpCodeToCodes[key] = new unsigned short[set->size()];
       LaterBitOpCodeToCodeCount[key] = set->size();
       isBitOpCode[key] = true;
       int i = 0;
       for (auto sit = set->begin(); sit != set->end(); sit++) {
-        short c = InsnToCode[*sit];
+        unsigned short c = InsnToCode[*sit];
         LaterBitOpCodeToCodes[key][i] = c;
         i++;
       }
@@ -643,11 +643,11 @@ public:
     delete[] SucceToPredeCodeVector;
 #endif
     std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
-    std::cout << "Init data took = " << std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count() << "[s]"
-              << std::endl;
+    std::cout << "Init data took = " << std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count() << "[s]" << std::endl;
   }
 
-  int parse(int pa_id, unsigned long length, char *buffer) {
+  int parse(int pa_id, unsigned long length, char *buffer)
+  {
     cout << pa_id << endl;
     std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
 #if !defined(COUNT_ONLY) && !defined(CF_PASS_RATE)
@@ -710,7 +710,7 @@ public:
     unsigned short *bitOps;
 #if !defined(COUNT_ONLY) && !defined(CF_PASS_RATE)
     // Because the parse is read in reverse by the python logic, make sure to always print a place holder of thread first.
-    os.write((char *) &code, sizeof(unsigned short));
+    os.write((char*)&code, sizeof(unsigned short));
 #endif
 #ifdef CF_PASS_RATE
     short succeSeen;
@@ -726,28 +726,15 @@ public:
     unsigned long i = length;
     for (; i > 0;) {
       regValue = 0;
-      uid++;
+      uid ++;
       i -= sizeof(unsigned short);
-      std::memcpy(&code, buffer + i, sizeof(unsigned short));
+      std::memcpy(&code, buffer+i, sizeof(unsigned short));
       assert(code <= CodeCount);
       assert(code >= 0);
       if (code == 0) {
-        i -= sizeof(u_int8_t);
-        if (prevNodeCount == nodeCount) continue;
-        prevNodeCount = nodeCount;
         u_int8_t prevThreadId = threadId;
+        i -= sizeof(u_int8_t);
         std::memcpy(&threadId, buffer + i, sizeof(u_int8_t));
-
-#ifndef COUNT_ONLY
-        os.write((char *) &code, sizeof(unsigned short));
-        osti.write((char *) &threadId, sizeof(u_int8_t));
-#endif
-
-        // In order to be backward-compatible with single threaded traces,
-        // always make a context by default in the first place,
-        // only save the context to the map when we get to a new thread.
-        if (prevThreadId == 0) continue; // first thread seen
-        ctxtMap[prevThreadId] = ctxt;
         if (ctxtMap.find(threadId) == ctxtMap.end()) {
           ctxt = new Context(CodeCount);
 	        ctxtMap[threadId] = ctxt;
@@ -799,8 +786,15 @@ public:
   #endif
       }
 
+
+  #ifdef PARSE_MULTIPLE
+      bool parsePrede = false;
+  #endif
       if (PendingRemoteDefCodes[code] || ctxt->PendingCodes[code]) {
         parse = true;
+  #ifdef PARSE_MULTIPLE
+        parsePrede = true;
+  #endif
       }
       if (OccurrencesPerCode[code] > LARGE_THRESOLD) parse = false;
   #ifdef PARSE_MULTIPLE
@@ -830,7 +824,7 @@ public:
         // and not confuse it with a load and store
         ctxt->otherRegsParsed = false;
 
-        short *parentOfBitOps = LaterBitOpCodeToCodes[code];
+        unsigned short *parentOfBitOps = LaterBitOpCodeToCodes[code];
         if (parentOfBitOps != NULL) {
           // The associated instruction is supposed to happen before the bit operations
           // in the reversed trace, and it should have been a store instruction
@@ -867,7 +861,7 @@ public:
 
       // A bit hacky, but essentially if an instruction both loads and stores
       // treat the load and store expressions as two separate things so old logic can be reused
-      regCount2 = CodeToRegCount2[code];
+      regCount2 =  CodeToRegCount2[code];
       if (!ctxt->hasPrevValues && regCount2 > 0) {
         if (regCount2 > 1) {
           if (ctxt->pendingRegCount == 0) {
@@ -884,7 +878,7 @@ public:
         ctxt->hasPrevValues = true;
         goto DONT_PARSE;
       } else {
-        int regCount1 = CodeToRegCount[code];
+        int regCount1 =  CodeToRegCount[code];
         if (regCount1 > 1) { // large than zero only if has more than one reg!
           if (ctxt->pendingRegCount == 0) {
             ctxt->pendingRegCount = 1;
@@ -933,7 +927,7 @@ public:
       if (bitOps != NULL) {
         int count = CodeToPriorBitOpCodeCount[code];
         for (int j = 0; j < count; j++) {
-          short bitOpCode = bitOps[j];
+          unsigned short bitOpCode = bitOps[j];
           if (ctxt->codeToBitOperandIsValid[bitOpCode]) {
             if (DEBUG) cout << "[load] " << bitOpCode << " " << count << " " << std::bitset<64>(ctxt->codeToBitOperand[bitOpCode]) << endl;
 #if !defined(COUNT_ONLY) && !defined(CF_PASS_RATE)
@@ -949,30 +943,30 @@ public:
 #if !defined(COUNT_ONLY) && !defined(CF_PASS_RATE)
       if (regCount2 > 1) {
         if (DEBUG) cout << "Persisting1 " << code << endl;
-        os.write((char *) &code, sizeof(unsigned short));
-        os.write((char *) &uid, sizeof(long));
-        os.write((char *) &ctxt->prevOffRegValue, sizeof(long));
+        os.write((char*)&code, sizeof(unsigned short));
+        os.write((char*)&uid, sizeof(long));
+        os.write((char*)&ctxt->prevOffRegValue, sizeof(long));
       }
       if (regCount2 > 0) {
         if (DEBUG) cout << "Persisting2 " << code << endl;
-        os.write((char *) &code, sizeof(unsigned short));
-        os.write((char *) &uid, sizeof(long));
-        os.write((char *) &ctxt->prevRegValue, sizeof(long));
+        os.write((char*)&code, sizeof(unsigned short));
+        os.write((char*)&uid, sizeof(long));
+        os.write((char*)&ctxt->prevRegValue, sizeof(long));
       }
 
       if (CodeToRegCount[code] > 1) {
         if (DEBUG) cout << "Persisting3 " << code << endl;
-        os.write((char *) &code, sizeof(unsigned short));
-        os.write((char *) &uid, sizeof(long));
-        os.write((char *) &ctxt->offRegValue, sizeof(long));
+        os.write((char*)&code, sizeof(unsigned short));
+        os.write((char*)&uid, sizeof(long));
+        os.write((char*)&ctxt->offRegValue, sizeof(long));
       }
 
       if (DEBUG) cout << "Persisting4 " << code << endl;
-      os.write((char *) &code, sizeof(unsigned short));
-      os.write((char *) &uid, sizeof(long));
+      os.write((char*)&code, sizeof(unsigned short));
+      os.write((char*)&uid, sizeof(long));
       if (CodesWithRegs[code]) {
         if (DEBUG) cout << "Persisting5 " << code << endl;
-        os.write((char *) &regValue, sizeof(long));
+        os.write((char*)&regValue, sizeof(long));
       }
 
   #ifdef PARSE_MULTIPLE
@@ -1039,15 +1033,14 @@ public:
 #endif
       if (ctxt->PendingCfPredeCodes[code]) {
         std::vector<unsigned short> toRemove;
-        for (auto it = ctxt->CfPredeCodeToSucceNodes[code].begin();
-             it != ctxt->CfPredeCodeToSucceNodes[code].end(); it++) {
-          StaticNode *succeNode = *it;
+        for(auto it = ctxt->CfPredeCodeToSucceNodes[code].begin(); it != ctxt->CfPredeCodeToSucceNodes[code].end(); it++) {
+          StaticNode * succeNode = *it;
           for (auto iit = succeNode->cf_prede_codes.begin();
-               iit != succeNode->cf_prede_codes.end(); iit++) {
+               iit != succeNode->cf_prede_codes.end(); iit ++) {
             toRemove.push_back(*iit);
           }
         }
-        for (auto it = toRemove.begin(); it != toRemove.end(); it++) {
+        for(auto it = toRemove.begin(); it != toRemove.end(); it++) {
           unsigned short removeCode = *it;
           ctxt->CfPredeCodeToSucceNodes[removeCode].clear();
           ctxt->PendingCfPredeCodes[removeCode] = false;
@@ -1057,16 +1050,15 @@ public:
 
       if (ctxt->PendingLocalDefCodes[code]) {//} && !CodesOfMemStoreNodes[code]) {
         std::vector<unsigned short> toRemove;
-        for (auto it = ctxt->DfPredeCodeToSucceNodes[code].begin();
-             it != ctxt->DfPredeCodeToSucceNodes[code].end(); it++) {
-          StaticNode *succeNode = *it;
-          assert(succeNode->mem_load == NULL);
+        for(auto it = ctxt->DfPredeCodeToSucceNodes[code].begin(); it != ctxt->DfPredeCodeToSucceNodes[code].end(); it++) {
+          StaticNode * succeNode = *it;
+          assert (succeNode->mem_load == NULL);
           for (auto iit = succeNode->df_prede_codes.begin();
                iit != succeNode->df_prede_codes.end(); iit++) {
             toRemove.push_back(*iit);
           }
         }
-        for (auto it = toRemove.begin(); it != toRemove.end(); it++) {
+        for(auto it = toRemove.begin(); it != toRemove.end(); it++) {
           unsigned short removeCode = *it;
           ctxt->DfPredeCodeToSucceNodes[removeCode].clear();
           ctxt->PendingLocalDefCodes[removeCode] = false;
@@ -1139,7 +1131,7 @@ DONT_PARSE:
       if (bitOps != NULL) {
         int count = CodeToPriorBitOpCodeCount[code];
         for (int j = 0; j < count; j++) {
-          short bitOpCode = bitOps[j];
+          unsigned short bitOpCode = bitOps[j];
           ctxt->codeToBitOperandIsValid[bitOpCode] = false;
         }
       }
@@ -1155,8 +1147,8 @@ std::cout << "Parsing took = " << std::chrono::duration_cast<std::chrono::second
 #if !defined(COUNT_ONLY) && !defined(CF_PASS_RATE)
     // print a placeholder thread id in the end
     // the smallest legal thread id is 1 (determined by my PIN logic)
-    threadId = 0;
-    osti.write((char *) &threadId, sizeof(u_int8_t));
+    //threadId = 0;
+    if (threadId != 0) osti.write((char*)&threadId, sizeof(u_int8_t));
     os.close();
     osti.close();
 
