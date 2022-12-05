@@ -418,7 +418,7 @@ void getDynamicCallsites(vector<Function *> *allFuncs) {
         long unsigned int addr = (*iit).first;
         Instruction insn = (*iit).second;
 	      entryID id = insn.getOperation().getID();
-	      if (id != e_call && id != e_callq) continue;
+	if (id != e_call && id != e_callq && id != e_jmpq) continue;
         //cout << hex << addr << dec << " " << insn.format() << " ";
 	//      cout << insn.readsMemory() << endl;
 
