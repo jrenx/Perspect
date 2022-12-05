@@ -379,6 +379,8 @@ class CFG:
             self.postorder_list.append(bb)
 
     def simplify(self, final=False, finalfinal=False):
+        if StaticDepGraph.call_graph_pass_only is True:
+            return
         print("[static_dep] Simplifying for function: "
               + str(self.func) + " is final: " + str(final) + " is finalfinal: " + str(finalfinal)
               + " target BBs are: " + str([t_bb.id for t_bb in self.target_bbs]))
@@ -1295,6 +1297,8 @@ class StaticDepGraph:
 
     file_to_line_to_nodes = {}
     prog = None #FIXME, stop passing prog around, there is only one prog per analysis
+
+    call_graph_pass_only = True
 
     def __init__(self, func, prog):
         self.func = func
@@ -2361,6 +2365,8 @@ class StaticDepGraph:
             graph.merge_nodes([df_node])
             #TODO, also need to do dataflow tracing for this one!!
         """
+        if StaticDepGraph.call_graph_pass_only is True:
+            return new_nodes
 
         all_defs_in_diff_func = set()
         df_nodes = []
@@ -2434,15 +2440,16 @@ class StaticDepGraph:
                 continue
             bb = self.cfg.getBB(node.insn)
             node.bb = bb
-            for prede in bb.predes:
-                if prede in bb.backedge_sources:
-                    continue
-                prede_node_id = self.bb_id_to_node_id[prede.id]
-                prede_node = self.id_to_node[prede_node_id]
-                if prede_node not in node.cf_predes:
-                    node.cf_predes.append(prede_node)
-                if node not in prede_node.cf_succes:
-                    prede_node.cf_succes.append(node)
+            if StaticDepGraph.call_graph_pass_only is not True:
+                for prede in bb.predes:
+                    if prede in bb.backedge_sources:
+                        continue
+                    prede_node_id = self.bb_id_to_node_id[prede.id]
+                    prede_node = self.id_to_node[prede_node_id]
+                    if prede_node not in node.cf_predes:
+                        node.cf_predes.append(prede_node)
+                    if node not in prede_node.cf_succes:
+                        prede_node.cf_succes.append(node)
             #This is specifically for the case of merging none df starting nodes
             # where the node is a starting event, ie first insn of a function
             # it needs to inherit the non local cf predes of the node created for the same BB
@@ -2908,6 +2915,23 @@ class StaticDepGraph:
             self.cfg.jsonified = False
         # print(self.bb_id_to_node_id)
 
+        if StaticDepGraph.call_graph_pass_only is True:
+            for bb in self.cfg.target_bbs:
+                node_id = self.bb_id_to_node_id[bb.id]
+                node = self.id_to_node[node_id]
+                #print(node)
+                for prede in self.cfg.entry_bbs:
+                    prede_node_id = self.bb_id_to_node_id[prede.id]
+                    prede_node = self.id_to_node[prede_node_id]
+                    if prede_node.id == node.id:
+                        continue
+                    #print(prede_node)
+                    if prede_node not in node.cf_predes:
+                        node.cf_predes.append(prede_node)
+                    if node not in prede_node.cf_succes:
+                        prede_node.cf_succes.append(node)
+            return
+            
         self.cfg.slice(final)
 
         if final is True:
@@ -2989,6 +3013,8 @@ class StaticDepGraph:
                         if node in p.df_succes:
                             p.df_succes.remove(node)
                             worklist.append(p)
+                    if node.id in self.id_to_node: del self.id_to_node[node.id]
+                    if node.insn in self.insn_to_node: del self.insn_to_node[node.insn]
 
         print("[static_dep] Total number of nodes in control flow slice after trimming: " + str(len(self.nodes_in_cf_slice)) + " " + \
               str([hex(node.insn) for node in self.nodes_in_cf_slice.keys()]))
