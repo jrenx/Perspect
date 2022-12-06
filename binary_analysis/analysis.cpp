@@ -288,16 +288,20 @@ long unsigned int getAllAddrsInBB(vector<Function *> *allFuncs, char *funcName, 
   if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << std::dec << endl;
   if(DEBUG) cout << endl;
 
-  Function *func = getFunction2(allFuncs, funcName, addr);
-  Block *bb = getBasicBlock2(func, addr);
-
-  Block::Insns insns;
-  bb->getInsns(insns);
   cJSON *json_addrs = cJSON_CreateArray();
-  for (auto it = insns.begin(); it != insns.end(); ++it) {
-    long unsigned int addr = (*it).first;
-    cJSON *json_addr = cJSON_CreateNumber(addr);
-    cJSON_AddItemToArray(json_addrs, json_addr);
+
+  Function *func = getFunction2(allFuncs, funcName, addr);
+  if (func != NULL) {
+    Block *bb = getBasicBlock2(func, addr);
+    Block::Insns insns;
+    bb->getInsns(insns);
+    for (auto it = insns.begin(); it != insns.end(); ++it) {
+      long unsigned int addr = (*it).first;
+      cJSON *json_addr = cJSON_CreateNumber(addr);
+      cJSON_AddItemToArray(json_addrs, json_addr);
+    }
+  } else {
+    cout << "[ERROR] Instruction " << std::hex << addr << std::dec << " not found in function: " << funcName << endl;
   }
   char *rendered = cJSON_Print(json_addrs);
   cJSON_Delete(json_addrs);
