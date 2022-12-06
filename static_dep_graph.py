@@ -379,8 +379,6 @@ class CFG:
             self.postorder_list.append(bb)
 
     def simplify(self, final=False, finalfinal=False):
-        if StaticDepGraph.call_graph_pass_only is True:
-            return
         print("[static_dep] Simplifying for function: "
               + str(self.func) + " is final: " + str(final) + " is finalfinal: " + str(finalfinal)
               + " target BBs are: " + str([t_bb.id for t_bb in self.target_bbs]))
@@ -1844,6 +1842,10 @@ class StaticDepGraph:
                     if graph.changed is False:
                         continue
                     if TRACKS_DIRECT_CALLER: graph.merge_callsite_nodes()
+                    if StaticDepGraph.call_graph_pass_only is True:
+                        for entry in graph.cfg.entry_bbs:
+                            visited = set()
+                            graph.cfg.postorderTraversal(entry, visited)
 
                 for graph in StaticDepGraph.func_to_graph.values():
                     if graph.changed is False:
@@ -1859,7 +1861,8 @@ class StaticDepGraph:
                 StaticDepGraph.find_entry_and_exit_nodes()
                 StaticDepGraph.build_reverse_postorder_list()
                 StaticDepGraph.build_postorder_list()
-                StaticDepGraph.detect_df_backedges()
+                if StaticDepGraph.call_graph_pass_only is False:
+                    StaticDepGraph.detect_df_backedges()
                 #if GENERATE_INSN_MAPPING:
                 #    StaticDepGraph.build_binary_indices(prog)
                 #    StaticDepGraph.output_indices_mapping(indice_file)
