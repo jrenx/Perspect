@@ -1,8 +1,8 @@
 # DYNINST_INCLUDE and DYNINST_LIB should be set to locations
 # where Dyniinst header and library files were installed, respectively
 #CXX=cl
-CXX=g++
-CC=gcc
+CXX=g++-7
+CC=gcc-7
 
 #analysis: analysis.o util.o dataflow_analysis.o static_df_analysis.o stack_analysis.o bitvar_analysis.o cJSON.o
 #	$(CXX) analysis.o util.o dataflow_analysis.o static_df_analysis.o stack_analysis.o bitvar_analysis.o cJSON.o -L$(DYNINST_LIB) -ldyninstAPI -lboost_system -ltbbmalloc_proxy -linstructionAPI -lparseAPI -lsymtabAPI -lcommon -lstdc++ -lm\

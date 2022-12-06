@@ -1,7 +1,7 @@
 # DYNINST_INCLUDE and DYNINST_LIB should be set to locations
 # where Dyniinst header and library files were installed, respectively
 #CXX=cl
-CXX=g++
+CXX=g++-7
 CC=gcc
 all: count_node preprocess preprocess_parallel call_site_parser preprocess_multiple preprocess_cf_pass_rates
 
