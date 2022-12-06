@@ -1680,8 +1680,8 @@ class StaticDepGraph:
                         node.total_count = 1
             else:
                 StaticDepGraph.generate_file_line_for_all_reachable_nodes(prog, our_source_code_dir)
-                StaticDepGraph.generate_rank_for_bbs(prog, our_source_code_dir)
                 StaticDepGraph.binary_ptr = setup(prog)
+                StaticDepGraph.generate_rank_for_bbs(prog, our_source_code_dir)
                 #StaticDepGraph.build_binary_indices(prog)
                 StaticDepGraph.build_binary_indices2(prog)
             StaticDepGraph.output_indices_mapping(indice_file, our_binary)
