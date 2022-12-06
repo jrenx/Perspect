@@ -1297,6 +1297,8 @@ class StaticDepGraph:
     func_first_insn_to_dyn_callsites = None
     func_hot_and_cold_path_map = None
 
+    insn_to_index_cache = {}
+
     starting_nodes = []
     reverse_postorder_list = []
     # successor always after predecessor
@@ -1695,12 +1697,27 @@ class StaticDepGraph:
                         node.index = 0
                         node.total_count = 1
             else:
+                insn_to_index_size = 0
+                insn_to_index_result_file = os.path.join(result_dir, 'insn_to_index_' + prog + '.json')
+                if os.path.exists(insn_to_index_result_file):
+                    with open(insn_to_index_result_file) as cache_file:
+                        StaticDepGraph.insn_to_index_cache = json.load(cache_file)
+                        insn_to_index_size = len(StaticDepGraph.insn_to_index_cache)
+
+
                 StaticDepGraph.generate_file_line_for_all_reachable_nodes(prog, our_source_code_dir)
                 StaticDepGraph.binary_ptr = setup(prog)
                 StaticDepGraph.func_to_callsites, StaticDepGraph.func_hot_and_cold_path_map = get_func_to_callsites(prog)
                 StaticDepGraph.generate_rank_for_bbs(prog, our_source_code_dir)
                 #StaticDepGraph.build_binary_indices(prog)
                 StaticDepGraph.build_binary_indices2(prog)
+
+                if insn_to_index_size != len(StaticDepGraph.insn_to_index_cache):
+                    print("Persisting insn to file line caller files result file")
+                    with open(insn_to_index_result_file, 'w') as f:
+                        json.dump(StaticDepGraph.insn_to_index_cache, f, indent=4)
+ 
+
             StaticDepGraph.output_indices_mapping(indice_file, our_binary)
             StaticDepGraph.writeJSON(result_file)
         else:
@@ -1987,20 +2004,31 @@ class StaticDepGraph:
                 #if len(all_insns) > 100:
                 #    break
 
-        all_insns = list(all_insns)
-        ret = execute_cmd_in_parallel([hex(insn) for insn in all_insns], 'get_file_line.sh', 'insns_', num_processor, prog)
+        all_insns_new = []
+        all_insns_old = []
+        for insn in all_insns:
+            if insn in StaticDepGraph.insn_to_index_cache:
+                all_insns_old.append(insn)
+            else:
+                all_insns_new.append(insn)
+        ret = execute_cmd_in_parallel([hex(insn) for insn in all_insns_new], 'get_file_line.sh', 'insns_', num_processor, prog)
 
-        assert len(ret) == len(all_insns), str(len(ret)) + " " + str(len(all_insns))
+        assert len(ret) == len(all_insns_new), str(len(ret)) + " " + str(len(all_insns_new))
         insn_to_file_line = {}
         i = 0
         print("[indices] total number of file lines to parse: " + str(len(ret)))
         for l in ret:
             file, line, caller_files = parse_get_line_output(l)
-            insn = all_insns[i]
+            insn = all_insns_new[i]
+            StaticDepGraph.insn_to_index_cache[insn] = [file, line, caller_files]
             i += 1
             assert insn not in insn_to_file_line
             insn_to_file_line[insn] = [file, line, caller_files]
             print("[indices] initial parse insn: " + hex(insn) + " file: " + file + " line: " + str(line))
+        for insn in all_insns_old:
+            i += 1
+            assert insn not in insn_to_file_line
+            insn_to_file_line[insn] = StaticDepGraph.insn_to_index_cache[insn]
 
         for graph in StaticDepGraph.func_to_graph.values():
             for node in itertools.chain(graph.none_df_starting_nodes,
@@ -2046,19 +2074,30 @@ class StaticDepGraph:
                     all_insns.add(addr)
                     bb.insn_to_index[addr] = -1
 
-        all_insns = list(all_insns)
-        ret = execute_cmd_in_parallel([hex(insn) for insn in all_insns], 'get_file_line.sh', 'insns_', num_processor, prog)
+        all_insns_new = []
+        all_insns_old = []
+        for insn in all_insns:
+            if insn in StaticDepGraph.insn_to_index_cache:
+                all_insns_old.append(insn)
+            else:
+                all_insns_new.append(insn)
+        ret = execute_cmd_in_parallel([hex(insn) for insn in all_insns_new], 'get_file_line.sh', 'insns_', num_processor, prog)
 
-        assert(len(ret) == len(all_insns))
+        assert(len(ret) == len(all_insns_new))
         i = 0
         print("[indices] total number of file lines to parse: " + str(len(ret)))
         insn_to_index = {}
         for l in ret:
             file, line, callers = parse_get_line_output(l)
-            insn = all_insns[i]
+            insn = all_insns_new[i]
+            StaticDepGraph.insn_to_index_cache[insn] = [file, line, callers]
             insn_to_index[insn] = [strip_file(file, our_source_code_dir), line, strip_callers(callers, our_source_code_dir)]
             i += 1
             print("[indices] initial parse insn: " + hex(insn) + " file: " + file + " line: " + str(line))
+        for insn in all_insns_old:
+            i += 1
+            [file, line, callers] = StaticDepGraph.insn_to_index_cache[insn]
+            insn_to_index[insn] = [strip_file(file, our_source_code_dir), line, strip_callers(callers, our_source_code_dir)]
 
         for bb in all_bbs:
             assert bb.insn_to_index is not None
