@@ -1679,6 +1679,7 @@ class StaticDepGraph:
             else:
                 StaticDepGraph.generate_file_line_for_all_reachable_nodes(prog, our_source_code_dir)
                 StaticDepGraph.binary_ptr = setup(prog)
+                StaticDepGraph.func_to_callsites, StaticDepGraph.func_hot_and_cold_path_map = get_func_to_callsites(prog)
                 StaticDepGraph.generate_rank_for_bbs(prog, our_source_code_dir)
                 #StaticDepGraph.build_binary_indices(prog)
                 StaticDepGraph.build_binary_indices2(prog)
@@ -2016,6 +2017,12 @@ class StaticDepGraph:
                 bb.index_to_rank = {}
                 bb.insn_to_index = {}
                 addrs = getAllAddrsInBB(StaticDepGraph.binary_ptr, bb.start_insn, graph.func)
+                if len(addrs) == 0:
+                    #It could be that this BB actually maps the cold version of this function, try again
+                    if len(StaticDepGraph.func_hot_and_cold_path_map) > 0 and graph.func in StaticDepGraph.func_hot_and_cold_path_map:
+                        new_func = StaticDepGraph.func_hot_and_cold_path_map[graph.func]
+                        print("[warn] retrying with new function: " + str(new_func))
+                        addrs = getAllAddrsInBB(StaticDepGraph.binary_ptr, bb.start_insn, new_func)
                 assert len(addrs) > 0
                 for addr in addrs: 
                     all_insns.add(addr)
