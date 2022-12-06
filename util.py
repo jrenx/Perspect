@@ -59,11 +59,15 @@ def execute_cmd_in_parallel(all_inputs, script_name, prefix, num_processor, prog
         for p in range(num_processor):
             file_name = prefix + str(count)
             count += 1
+
+            num_inputs = partition_size if (i + partition_size) < len(all_inputs) else (len(all_inputs) - i)
+            print("[indices] Number of inputs to write: " + str(num_inputs))
+            if num_inputs == 0:
+                print("[indices] Skipping, no inputs")
+                continue
             print("[indices] Writing to: " + file_name, flush=True)
             file_names.append(file_name)
             f = open(file_name, 'w')
-            num_inputs = partition_size if (i + partition_size) < len(all_inputs) else (len(all_inputs) - i)
-            print("[indices] Number of inputs to write: " + str(num_inputs))
 
             for n in range(num_inputs):
                 f.write(all_inputs[i] + "\n")
@@ -93,7 +97,7 @@ def execute_cmd_in_parallel(all_inputs, script_name, prefix, num_processor, prog
                 else:
                     ret.append(curr)
                     curr = []
-        print("[indices] parsed result: " + str(ret))
+        print("[indices] parsed result:")# + str(ret))
         #ret.append(curr)
         os.remove(file_name + "_DONE")
         os.remove(file_name + ".out")
