@@ -2413,6 +2413,9 @@ class StaticDepGraph:
         for entry_bb in self.cfg.entry_bbs:
             n = self.id_to_node[self.bb_id_to_node_id[entry_bb.id]]
             for callsite in self.pending_callsite_nodes:
+                if StaticDepGraph.call_graph_pass_only is True:
+                    n.explain = True
+
                 if n not in callsite.cf_succes:
                     callsite.cf_succes.append(n)
                     print("Adding " + str(n.id) + " to cf succe of " + str(callsite.id))
@@ -2930,6 +2933,10 @@ class StaticDepGraph:
                         node.cf_predes.append(prede_node)
                     if node not in prede_node.cf_succes:
                         prede_node.cf_succes.append(node)
+                    if prede_node not in self.nodes_in_cf_slice:
+                        self.nodes_in_cf_slice[prede_node] = prede_node
+                if node not in self.nodes_in_cf_slice:
+                    self.nodes_in_cf_slice[node] = node
             return
             
         self.cfg.slice(final)
