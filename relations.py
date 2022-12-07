@@ -363,7 +363,10 @@ class RelationGroup:
             self.lines.append(starting_node.line)
             self.file = starting_node.file
         if self.lines is None or self.file is None:
-            file, line = get_line(prede_node.insn, prog + "_debug")
+            file, line = get_line(starting_node.insn, prog + "_debug")
+            print("HERE")
+            print(file)
+            print(line)
             self.lines = []
             self.lines.append(line)
             self.file = file
@@ -504,6 +507,7 @@ class SimpleRelationGroup:
     def toJSON(relation_group):
         data = {}
         sn = relation_group.starting_node
+        print(sn)
         data["starting_node"] = [(get_callers_str(sn.caller_files) if sn.caller_files is not None else "") + 
                                  sn.file, sn.line,\
                                  sn.index, sn.total_count]

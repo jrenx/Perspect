@@ -936,300 +936,6 @@ def sort_relations_simple(diff, max_weight, max_timestamp):
     sorted_diff = sorted(weighted_diff, key=lambda e: ((e[1] + e[0]) / 2))
     return sorted_diff
 
-def plot_successors(G, labels, short_labels, colours, rank, r1, r2, rel_map1, rel_map2, summ1, summ2, root1, root2):
-
-    weight_map = { 0xfdba12:0.0,
-        0xfdba06:0.0,
-        0x1014b1d:0.0,
-        0xfdba3d:0.773282795955208,
-        0x1014d6c:0.8112742917496887,
-        0x1078b54:2.265944878430002,
-        0x1014d9c:6.280556933882008,
-        0x1078a28:6.325793476708986,
-        0x1014b1d:6.391972345067861,
-        0x1078a3f:7.621973332604594,
-        0x1014d96:8.826102555950767,
-        0x1078a28:15.054295422633391,
-        0x1078a28:15.054295422633391,
-        0x1078a28:15.054295422633391,
-        0x1078b47:16.61137484841798,
-        0x1014ba5:19.532236937177043,
-        0x1014b2a:37.84278067809892,
-        0x1014b2a:40.306403367375026,
-        0x1078b58:70.02165684431142,
-        0x10789f0:70.19942103571765,
-        0x1014dcd:80.6952002563648,
-        0xfdba9e:82.6974661654034,
-        0x10766d2:87.88999678353771 }
-
-    #vertex = hex(insn1) + "_" + hex(insn2)
-    #G.add_node(vertex)
-    if r1 == None:
-        return
-    insn1 = r1.insn
-    assert insn1 in rel_map1
-    print("[compare_relation] Plotting successors of: " + str(insn1))
-    #print("HERE " + str(len(rel_map1)))
-
-    G.add_node(hex(insn1))
-    labels[hex(insn1)] = "Slow Run: <br>" + (r1.str() if r1 is not None else "") + "<br>Fast Run:<br>" + (r2.str() if r2 is not None else "")
-    short_label = hex(insn1) + " <b>" + str(round(rel_map1[insn1][0])) + "%</b> RANK<b>" + str(rank)+"</b>"
-    #short_label = hex(insn1) + " <b>" + str(round(weight_map[insn1])) + "%</b> RANK<b>" + str(rank)+"</b>"
-    short_label += "<br>" + dd.insn_to_static_node[insn1].function
-    f,l = get_line(insn1, program + "_debug")
-    short_label += "@" + f + ":" + str(l)
-    short_labels[hex(insn1)] = short_label
-    colours[hex(insn1)] = rel_map1[insn1][0] / 100
-    #colours[hex(insn1)] = weight_map[insn1] / 100
-
-    G.add_node(hex(root1))
-    labels[hex(root1)] = "SYMPTOM"
-    short_label = hex(root1) + " <b>SYMPTOM</b>"
-    short_label += "<br>" + dd.insn_to_static_node[root1].function
-    f,l = get_line(root1, program + "_debug")
-    short_label += "@" + f + ":" + str(l)
-    short_labels[hex(root1)] = short_label
-    
-    colours[hex(root1)] = 1
-
-    q = deque()
-    q.append(insn1)
-    visited = set()
-    iter = 0
-    while len(q) > 0:
-        iter += 1
-        node = q.popleft()
-        if node in visited:
-            continue
-        visited.add(node)
-        n = hex(node)
-        #print("[compare_relation] Current node: " + n)
-
-        inner_q = deque()
-        inner_q.append(node)
-        inner_visited = set()
-        while(len(inner_q)) > 0:
-            inner_node = inner_q.popleft()
-            #print("[compare_relation] curr is: " + hex(inner_node))
-            if inner_node in inner_visited:
-                continue
-            inner_visited.add(inner_node)
-            if inner_node in rel_map1 and inner_node != node and rel_map1[inner_node][0] > 10:
-                colours[hex(inner_node)] = rel_map1[inner_node][0]/100
-                #colours[hex(inner_node)] = weight_map[inner_node]/100
-
-                if hex(inner_node) not in G:
-                    G.add_node(hex(inner_node))
-    
-                short_label = hex(inner_node) + " <b>" + str(round(rel_map1[inner_node][0])) + "%</b>"
-                #short_label = hex(inner_node) + " <b>" + str(round(weight_map[inner_node])) + "%</b>"
-                short_label += "<br>" + dd.insn_to_static_node[inner_node].function
-                f,l = get_line(inner_node, program + "_debug")
-                short_label += "@" + f + ":" + str(l) 
-                if hex(inner_node) not in short_labels or len(short_label) > len(short_labels[hex(inner_node)]):
-                    short_labels[hex(inner_node)] = short_label
-                if hex(inner_node) not in labels:
-                    if inner_node in rel_map1:
-                        p = rel_map1[inner_node]
-                        r1 = p[4]
-                        r2 = p[5]
-                        labels[hex(inner_node)] = "Slow Run:<br>" + (r1.str() if r1 is not None else "") + "<br>Fast Run<br>" + (r2.str() if r2 is not None else "")
-                    else:
-                        labels[hex(inner_node)] = ""
-                if not G.has_edge(n, hex(inner_node)):
-                    G.add_edge(n, hex(inner_node))
-                    #print("[compare_relation] Connecting to child node: " + hex(inner_node))
-                q.append(inner_node)
-            elif inner_node == root1:
-                if hex(inner_node) not in G:
-                    G.add_node(hex(inner_node))
-                if not G.has_edge(n, hex(inner_node)):
-                    G.add_edge(n, hex(inner_node))
-                    #print("[compare_relation] Connecting to child node: " + hex(inner_node))
-            else:
-                for succe in summ1[inner_node]:
-                    inner_q.append(succe)
-                    #print("[compare_relation] succe is: " + hex(succe))
-        #if iter >= 5:
-        #    break
-
-def plot(included_diff, rel_map1, rel_map2, left_summary, right_summary, left, right):
-    #nx.draw(G, labels=labels, with_labels=True)
-    in_graph = set()
-    in_graph.add(0x10789f0)
-    in_graph.add(0x1012420)
-    in_graph.add(0x1078b54)
-    in_graph.add(0x1078b58)
-    in_graph.add(0x1078a3f)
-    in_graph.add(0x1014b2a)
-    in_graph.add(0x1014ba5)
-    in_graph.add(0x1078b47)
-    in_graph.add(0x10766d2)
-    in_graph.add(0x1078a28)
-    in_graph.add(0xfdba9e)
-    in_graph.add(0x1014dcd)
-    in_graph.add(0x1014d96)
-    in_graph.add(0x1014d9c)
-    in_graph.add(0x1014d6c)
-    in_graph.add(0x1014b1d)
-    in_graph.add(0xfdba06)
-    in_graph.add(0xfdba12)
-    in_graph.add(0xfdba3d)
-
-    rel_map1 = {}
-    rel_map2 = {}
-    rank = len(included_diff) + 1
-
-    for p in reversed(included_diff):
-        rank = rank - 1
-        #print("-----------------------------------------")
-        #print("rank: " + str(rank))
-        #print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
-        #print(str(p[2]) + " " + str(p[3]))
-        #if p[4] is not None: print(insn_to_index[p[4].insn])
-        #print(str(p[4]))
-        #if p[5] is not None: print(insn_to_index[p[5].insn])
-        #print(str(p[5]))
-        if p[4] is not None and p[4].insn in in_graph:
-            print("HERE: " + hex(p[4].insn) + ":" + str(p[0]) + ",")
-        if p[4] is not None:
-            rel_map1[p[4].insn] = p
-        if p[5] is not None:
-            rel_map2[p[5].insn] = p
-
-    G = nx.DiGraph()
-    labels = {}
-    short_labels = {}
-    colours = {}
-    rank = len(included_diff) + 1
-    for p in reversed(included_diff):
-        rank = rank - 1
-        print("-----------------------------------------")
-        print("rank: " + str(rank))
-        print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
-        print(str(p[2]) + " " + str(p[3]))
-        print(str(p[4]))
-        print(str(p[5]))
-        if rank < 22:
-            plot_successors(G, labels, short_labels, colours, rank, p[4], p[5], rel_map1, rel_map2, left_summary, right_summary, left.insn, right.insn)
-        else: break
-    values = [colours.get(node, 0) for node in G.nodes()]
-    #nx.draw(G, cmap=plt.get_cmap('seismic'), node_color=values, labels=labels, with_labels=True, alpha=0.5, font_size=6)
-    #plt.show()
-    #plt.savefig('fig.png')
-    #pos = nx.fruchterman_reingold_layout(G)
-    pos = nx.spring_layout(G, seed=20)
-    print(pos)
-    #pos = nx.planar_layout(G)
-    #pos = nx.spectral_layout(G)
-    #pos = nx.multipartite_layout(G)
-    
-    edge_x = []
-    x0 = []
-    x1 = []
-    edge_y = []
-    y0 = []
-    y1 = []
-    for edge in G.edges():
-        edge_x.append(pos[edge[0]][0])
-        x0.append(pos[edge[0]][0])
-        edge_x.append(pos[edge[1]][0])
-        x1.append(pos[edge[1]][0])
-        edge_x.append(None)
-        edge_y.append(pos[edge[0]][1])
-        y0.append(pos[edge[0]][1])
-        edge_y.append(pos[edge[1]][1])
-        y1.append(pos[edge[1]][1])
-        edge_y.append(None)
-
-    edge_trace = go.Scatter(
-        x=edge_x, y=edge_y,
-        mode='lines',
-        #line=dict(color='gray'),
-        line_color='gray',
-        hoverinfo='none')
-
-    node_x = []
-    node_y = []
-    for node in G.nodes():
-        node_x.append(pos[node][0])
-        node_y.append(pos[node][1])
-
-    node_trace = go.Scatter(
-        x=node_x, y=node_y,
-        mode='markers+text',
-        #mode='text',
-        hoverinfo='text',
-        marker=dict(
-            symbol='circle-dot',
-            showscale=True,
-            # colorscale options
-            # 'Greys' | 'YlGnBu' | 'Greens' | 'YlOrRd' | 'Bluered' | 'RdBu' |
-            # 'Reds' | 'Blues' | 'Picnic' | 'Rainbow' | 'Portland' | 'Jet' |
-            # 'Hot' | 'Blackbody' | 'Earth' | 'Electric' | 'Viridis' |
-            #colorscale='YlGnBu',
-            colorscale='OrRd',
-            #reversescale=True,
-            color=[],
-            size=15,
-            colorbar=dict(
-                thickness=15,
-                title='Weight',
-                xanchor='left',
-                titleside='right'
-            ),
-            line_width=2))
-
-    node_text = []
-    node_short_text = []
-    node_colours = []
-    for node in G.nodes():
-        node_text.append(labels[node])
-        node_short_text.append(short_labels[node])
-        node_colours.append(colours.get(node, 0))
-
-    node_trace.marker.color = node_colours
-    node_trace.hovertext = node_text
-
-    #node_trace1.text = node_short_text
-    #print(node_text)
-    print(len(node_short_text))
-    print(len(x0))
-
-    anno1 = [dict(ax=x0[i], ay=y0[i], axref='x', ayref='y',
-                  x=x1[i], y=y1[i], xref='x', yref='y',
-                showarrow=True, arrowhead=2, arrowwidth=2, arrowcolor='gray') for i in range(0, len(x0))]
-    anno2 = [dict(x=node_x[i], y=node_y[i], #axref='x', ayref='y',
-                  text=node_short_text[i], showarrow=False, yshift=-18, font=dict(family="Arial", size=8, color="black")) for i in range(0, len(node_x))]
-
-    annos = []
-    annos.extend(anno1)
-    annos.extend(anno2)
-
-    fig = go.Figure(data=[edge_trace, node_trace],
-                    layout=go.Layout(
-                        #title='<br>Network graph made with Python',
-                        titlefont_size=16,
-                        showlegend=False,
-                        hovermode='closest',
-                        margin=dict(b=20, l=5, r=5, t=40),
-                        annotations = annos,
-                        #annotations=[dict(
-                        #    text="Python code: <a href='https://plotly.com/ipython-notebooks/network-graphs/'> https://plotly.com/ipython-notebooks/network-graphs/</a>",
-                        #    showarrow=False,
-                        #    xref="paper", yref="paper",
-                        #    x=0.005, y=-0.002)],
-                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
-                    )
-    #fig.update_traces(textposition='bottom center', textfont_size=10, textfont_color='black')
-    fig.update_traces(marker_line_color='white')
-    fig.update_traces(line_color='gray')
-    #fig.show()
-    #fig.write_image('fig1.png')
-    #fig =px.scatter(x=range(10), y=range(10))
-    fig.write_html("file.html")
-
 def compare_relations(parent_d, parent_key, left, right, counts_left, counts_right, d1,
                       mcrs_left=None, mcrs_right=None, mrs_left=None, mrs_right=None,
                       pass_rates_left=None, pass_rates_right=None,
@@ -1417,11 +1123,11 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                 print("[compare_relation] absolute count of event same in both runs, ignore...")
         elif r_left is not None:
             print("[compare_relation] only has r left: " + str(len(left_seen)))
-            for seen in left_seen:
-                if r_left.relaxed_equals(seen):
-                    print("[compare_relation] already seen a similar relation, ignore...")
-                    include = False
-                    break
+            #for seen in left_seen:
+            #    if r_left.relaxed_equals(seen):
+            #        print("[compare_relation] already seen a similar relation, ignore...")
+            #        include = False
+            #        break
             succe_in_other_slice = True
             for succe in left_summary[r_left.insn]:
                 matching_insn = IndiceToInsnMap.translate_insn(succe, indices_left, indices_right)
@@ -1431,15 +1137,15 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
             if not succe_in_other_slice:
                 print("[compare_relation/warn] None of the successors are in the other slice1")
                 include = False
-            if include is True:
-                left_seen.append(r_left)
+            #if include is True:
+            #    left_seen.append(r_left)
         elif r_right is not None:
             print("[compare_relation] only has r right: " + str(len(right_seen)))
-            for seen in right_seen:
-                if r_right.relaxed_equals(seen):
-                    print("[compare_relation] already seen a similar relation, ignore...")
-                    include = False
-                    break
+            #for seen in right_seen:
+            #    if r_right.relaxed_equals(seen):
+            #        print("[compare_relation] already seen a similar relation, ignore...")
+            #        include = False
+            #        break
             succe_in_other_slice = True
             for succe in right_summary[r_right.insn]:
                 matching_insn = IndiceToInsnMap.translate_insn(succe, indices_right, indices_left)
@@ -1450,8 +1156,8 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                 print("[compare_relation/warn] None of the successors are in the other slice2")
                 include = False
 
-            if include is True:
-                right_seen.append(r_right)
+            #if include is True:
+            #    right_seen.append(r_right)
         #if include is True and mcrs_left is not None and mcrs_right is not None:
         #    r_insn = r_left.insn if r_left is not None else r_right.insn
         #    #TODO, this wont work if source codes are different
@@ -1477,11 +1183,11 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         rank = rank - 1
         print("-----------------------------------------")
         print("rank: " + str(rank))
-        print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
-        print(str(p[2]) + " " + str(p[3]))
-        if p[4] is not None: print(insn_to_index[p[4].insn])
+        print("weight: " + str(round(p[0],2)) + "%")# + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
+        #print(str(p[2]) + " " + str(p[3]))
+        #if p[4] is not None: print(insn_to_index[p[4].insn])
         print(str(p[4]))
-        if p[5] is not None: print(insn_to_index[p[5].insn])
+        #if p[5] is not None: print(insn_to_index[p[5].insn])
         print(str(p[5]))
         #if has a node in the graph, add a label...
 
