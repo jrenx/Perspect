@@ -21,7 +21,7 @@
 #include <string.h>
 
 #define SAMPLE
-#define SAMPLE_THRESHOLD 500
+#define SAMPLE_THRESHOLD 5000
 #define LARGE_THRESOLD  100000
 #define CHECK_ALL_COUNTS
 
