@@ -1685,7 +1685,9 @@ class StaticDepGraph:
                 insn_to_index_result_file = os.path.join(result_dir, 'insn_to_index_' + prog + '.json')
                 if os.path.exists(insn_to_index_result_file):
                     with open(insn_to_index_result_file) as cache_file:
-                        StaticDepGraph.insn_to_index_cache = json.load(cache_file)
+                        insn_to_index_cache = json.load(cache_file)
+                        for k in insn_to_index_cache:
+                            StaticDepGraph.insn_to_index_cache[int(k)] = insn_to_index_cache[k]
                         insn_to_index_size = len(StaticDepGraph.insn_to_index_cache)
 
 
@@ -1956,7 +1958,7 @@ class StaticDepGraph:
                         break
                 if is_inner is False:
                     continue
-                inner_indices.append([(node.caller_files if node.caller_files is not None else "") + 
+                inner_indices.append([(get_callers_str(node.caller_files) if node.caller_files is not None else "") + 
                     node.file, node.line, node.index, node.total_count])
         with open(result_file, 'w') as f:
             json.dump(indices, f, indent=4)
