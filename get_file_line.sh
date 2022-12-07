@@ -6,7 +6,8 @@ done < $1
 
 for insn in "${insns[@]}"
 do
-    addr2line -e $2 $insn
+    addr2line -e $2 $insn -i
+    echo "DELIMINATOR"
 done
 echo "FIN" >> $1"_DONE.1"
 mv $1".out" $1".out.1"

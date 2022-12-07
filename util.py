@@ -59,11 +59,15 @@ def execute_cmd_in_parallel(all_inputs, script_name, prefix, num_processor, prog
         for p in range(num_processor):
             file_name = prefix + str(count)
             count += 1
+
+            num_inputs = partition_size if (i + partition_size) < len(all_inputs) else (len(all_inputs) - i)
+            print("[indices] Number of inputs to write: " + str(num_inputs))
+            if num_inputs == 0:
+                print("[indices] Skipping, no inputs")
+                continue
             print("[indices] Writing to: " + file_name, flush=True)
             file_names.append(file_name)
             f = open(file_name, 'w')
-            num_inputs = partition_size if (i + partition_size) < len(all_inputs) else (len(all_inputs) - i)
-            print("[indices] Number of inputs to write: " + str(num_inputs))
 
             for n in range(num_inputs):
                 f.write(all_inputs[i] + "\n")
@@ -86,21 +90,83 @@ def execute_cmd_in_parallel(all_inputs, script_name, prefix, num_processor, prog
             continue
         print("[indices] File: " + file_name + ".out is ready ", flush=True)
         with open(file_name + ".out") as f:
+            curr = []
             for l in f.readlines():
-                ret.append(l)
-        #os.remove(file_name + "_DONE")
-        #os.remove(file_name + ".out")
+                if l.strip() != "DELIMINATOR":
+                    curr.append(l)
+                else:
+                    ret.append(curr)
+                    curr = []
+        print("[indices] parsed result:")# + str(ret))
+        #ret.append(curr)
+        os.remove(file_name + "_DONE")
+        os.remove(file_name + ".out")
     return ret
 
 def get_line(insn, prog):
     if not isinstance(insn, str):
         insn = hex(insn)
-    cmd = ['addr2line', '-e', prog, insn]
+    cmd = ['addr2line', '-e', prog, insn, '-i']
     #print("[main] running command: " + str(cmd))
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
-    return parse_get_line_output(result.stdout.decode('ascii'))
+    return parse_get_line_output(result.stdout.decode('ascii').strip().splitlines())
+
+def convert_file_line(file_to_mapping, file_path_changed, file, line):
+    map = file_to_mapping[file]
+    assert line in map, file + " " + str(line)
+    new_line = map[line]
+    if file in file_path_changed:
+        new_file = file.split("/")[-1]
+    else:
+        new_file = file
+    return new_file, new_line
+
+def callers_file_line_to_index(callers, file, line):
+    index = (get_callers_str(callers)) + "|" + file + "|" + str(line)
+    return index
+
+def strip_callers(callers, our_source_code_dir):
+    stripped_callers = []
+    for caller in callers:
+        file = caller[0] if our_source_code_dir is None else \
+            caller[0][caller[0].startswith(our_source_code_dir) and len(our_source_code_dir):]
+        line = caller[1]
+        stripped_callers.append([file,line])
+    return stripped_callers
+
+def strip_file(file, our_source_code_dir):
+    return file if our_source_code_dir is None else \
+      file[file.startswith(our_source_code_dir) and len(our_source_code_dir):]
+ 
+def get_callers(results):
+    callers = []
+    print(results)
+    for result in results:
+        result = result.strip().split()[0]
+        result_seg = result.strip().split(":")
+        file = result_seg[0]#.split("/")[-1]
+        try:
+            print(result_seg)
+            line = int(result_seg[1].split()[0])
+            #print("[main] command returned: " + str(line))
+        except ValueError:
+            line = None
+        callers.append([file, line])
+
+    print("[index] caller files: " + str(callers))
+    return callers
+
+def get_callers_str(callers):
+    callers_str = ""
+    if callers is not None:
+        for caller in reversed(callers):
+            callers_str += caller[0] + ":" + str(caller[1]) + "|"
+    return callers_str
 
 def parse_get_line_output(result):
+    callers = get_callers(result[1:])
+    result = result[0]
+    result = result.split()[0]
     result_seg = result.strip().split(":")
     file = result_seg[0]#.split("/")[-1]
     try:
@@ -108,7 +174,7 @@ def parse_get_line_output(result):
         #print("[main] command returned: " + str(line))
     except ValueError:
         line = None
-    return file, line
+    return file, line, callers
 
 def get_insn_offsets(line, file, prog):
     cmd = 'gdb ./'+ prog + ' -ex "info line ' + file + ':' + str(line)+'" --batch > infoLine_result'
@@ -130,6 +196,44 @@ def parse_insn_offsets(result):
     end = int(result[1].split()[0], 16)
     #print("start " + hex(start) + " end " + hex(end))
     return (start, end)
+
+def parse_binary_file(binary_file):
+    insn_to_insn_str = {}
+    if binary_file is None or not os.path.exists(binary_file):
+        return insn_to_insn_str
+
+    with open(binary_file, 'r') as f:
+        prev_insn = None
+        prev_segs = None
+        for l in f.readlines():
+            # heuristic for parsing the binary file
+            # will omit the last insn in the file, but probably OK
+            segs = l.split()
+            if len(segs) == 0:
+                continue
+            if not segs[0].endswith(":"):
+                continue
+            try:
+                insn = int(segs[0].strip(":"), 16)
+            except:
+                continue
+    
+            if prev_insn is None:
+                prev_insn = insn
+                prev_segs = segs
+                continue
+    
+            offset = insn - prev_insn
+            #print(segs)
+            #print("offset: " + str(offset+1))
+            prev_insn_str = ' '.join(prev_segs[offset + 1:])
+    
+            assert prev_insn not in insn_to_insn_str
+            insn_to_insn_str[prev_insn] = prev_insn_str
+                
+            prev_insn = insn
+            prev_segs = segs
+    return insn_to_insn_str
 
 def build_key(starting_events):
     key = ""
@@ -289,6 +393,20 @@ def parse_relation_analysis_port():
     print("Port is: " + str(port))
 
     return port
+
+def parse_other_insn_trace():
+    other_key = None
+
+    with open("relation_analysis.config", "r") as f:
+        for l in f.readlines():
+            segs = l.split("=")
+            if segs[0] == "other_key":
+                other_key = segs[1].strip()
+    other_trace = other_key + "_instruction_trace.out"
+    other_trace = other_trace[1:]
+    print("Other trace is: " + str(other_trace))
+
+    return other_trace
 
 
 if __name__ == '__main__':

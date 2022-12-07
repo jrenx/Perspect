@@ -491,6 +491,21 @@ def get_addr_indices(binary_ptr, func, start_addr, end_addr, addrs):
     if DEBUG_CTYPE: print("[main] returned " + str(json_addrs))
     return json_addrs
 
+def get_addr_indices2(binary_ptr, func, addrs):
+    print()
+    print( "[main] getting the indexes for addrs2: ")
+    if DEBUG_CTYPE: print( "[main] func: " + func)
+    if DEBUG_CTYPE: print("[main] addrs: " + str(addrs))
+    if DEBUG_CTYPE: print("[main] : " + "Calling C", flush=True)
+    func_name = c_char_p(str.encode(func))
+    addrs_str = c_char_p(str.encode(json.dumps(addrs)))
+    lib.getAddrIndices2(c_ulong(binary_ptr), func_name, addrs_str)
+    f = open(os.path.join(curr_dir, 'getAddrIndices2_result'))
+    json_addrs = json.load(f)
+    f.close()
+    if DEBUG_CTYPE: print("[main] returned " + str(json_addrs))
+    return json_addrs
+
 def getImmedDom(binary_ptr, insn_addr, func):
     print()
     print( "[main] getting the immediate dominator: ")
@@ -591,6 +606,19 @@ def getLastInstrInBB(binary_ptr, insn_addr, func):
     last_insn_addr = lib.getLastInstrInBB(c_ulong(binary_ptr), func_name, c_ulong(insn_addr))
     if DEBUG_CTYPE: print( "[main] last instr: " + str(last_insn_addr))
     return last_insn_addr
+
+def getAllAddrsInBB(binary_ptr, insn_addr, func):
+    print()
+    print( "[main] getting all insn addrs in basic block: ")
+    if DEBUG_CTYPE: print( "[main] func: " + func)
+    if DEBUG_CTYPE: print( "[main] insn_addr: " + hex(insn_addr), flush=True)
+    func_name = c_char_p(str.encode(func))
+    lib.getAllAddrsInBB(c_ulong(binary_ptr), func_name, c_ulong(insn_addr))
+    f = open(os.path.join(curr_dir, 'getAllAddrsInBB_result'))
+    json_insns = json.load(f)
+    f.close()
+    print(json_insns)
+    return json_insns
 
 def setup(prog):
     print()

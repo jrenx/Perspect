@@ -21,7 +21,7 @@
 #include <string.h>
 
 #define SAMPLE
-#define SAMPLE_THRESHOLD 500
+#define SAMPLE_THRESHOLD 5000
 #define LARGE_THRESOLD  100000
 #define CHECK_ALL_COUNTS
 
@@ -116,6 +116,9 @@ public:
   bool *PendingCfPredeCodes;
   std::vector<StaticNode*> *CfPredeCodeToSucceNodes;
   std::vector<StaticNode*> *DfPredeCodeToSucceNodes;
+#ifdef CF_PASS_RATE
+  short *PredeToSucceSeen = NULL;
+#endif
 
   Context(int CodeCount) {
     PendingCodes = new bool[CodeCount];
@@ -131,6 +134,10 @@ public:
     for (int i = 0; i < CodeCount; i++) PendingCfPredeCodes[i] = false;
     CfPredeCodeToSucceNodes = new std::vector<StaticNode*>[CodeCount];
     DfPredeCodeToSucceNodes = new std::vector<StaticNode*>[CodeCount];
+#ifdef CF_PASS_RATE
+    PredeToSucceSeen = new short[CodeCount];
+    for (int i = 0; i < CodeCount; i++) PredeToSucceSeen[i] = 0;
+#endif
   };
 };
 
@@ -150,10 +157,10 @@ public:
   bool *isBitOpCode;
   bool *containsBitOpCode;
 
-  short **CodeToPriorBitOpCodes;
+  unsigned short **CodeToPriorBitOpCodes;
   int *CodeToPriorBitOpCodeCount;
 
-  short **LaterBitOpCodeToCodes;
+  unsigned short **LaterBitOpCodeToCodes;
   int *LaterBitOpCodeToCodeCount;
 
   unordered_set<long> StartInsns;
@@ -188,7 +195,12 @@ public:
   long *OccurrencesPerStartingCode;
 #ifdef COUNT_ONLY
   unsigned long *AverageTimeStampPerCode;
-#endif 
+#endif
+#ifdef CF_PASS_RATE
+  unsigned long ** PredePerSucceCounts;
+  unsigned short ** PredeToSucceCodes;
+  unsigned short ** SucceToPredeCodes;
+#endif
 
   long GetFileSize(std::string filename)
   {
@@ -276,7 +288,7 @@ public:
     return memAccess;
   }
 
-  void parseStaticNode(char *filename) {
+  void parseStaticGraph(char *filename) {
     unsigned long length;
     char *buffer = Parser::readFile(filename, length);
     cJSON *data = cJSON_Parse(buffer);
@@ -436,7 +448,7 @@ public:
       CodeOfStartInsns = new bool[CodeCount];
       for (int i = 0; i < CodeCount; i++) CodeOfStartInsns[i] = false;
       for (auto it = StartInsns.begin(); it != StartInsns.end(); it++) {
-        short code = InsnToCode[(*it)];
+        unsigned short code = InsnToCode[(*it)];
         if (code > MaxStartCode) MaxStartCode = code;
         CodeOfStartInsns[code] = true;
         cout << InsnToCode[(*it)] << " is start code " << endl;
@@ -517,19 +529,19 @@ public:
     cJSON *json_loadInsnToBitOps = cJSON_GetObjectItem(data, "load_insn_to_bit_ops");
     unordered_map<long, unordered_set<long>*> map4;
     parseJsonMapOfLists(json_loadInsnToBitOps, map4);
-    CodeToPriorBitOpCodes = new short*[CodeCount];
+    CodeToPriorBitOpCodes = new unsigned short*[CodeCount];
     CodeToPriorBitOpCodeCount = new int[CodeCount];
     for (int i = 0; i < CodeCount; i++) CodeToPriorBitOpCodes[i] = NULL;
     for (int i = 0; i < CodeCount; i++) CodeToPriorBitOpCodeCount[i] = -1;
     for (auto it = map4.begin(); it != map4.end(); it++) {
-      short key = InsnToCode[(long)(*it).first];
+      unsigned short key = InsnToCode[(long)(*it).first];
       unordered_set<long> *set = (*it).second;
       containsBitOpCode[key] = true;
-      CodeToPriorBitOpCodes[key] = new short[set->size()];
+      CodeToPriorBitOpCodes[key] = new unsigned short[set->size()];
       CodeToPriorBitOpCodeCount[key] = set->size();
       int i = 0;
       for (auto sit = set->begin(); sit != set->end(); sit++) {
-        short c = InsnToCode[*sit];
+        unsigned short c = InsnToCode[*sit];
         CodeToPriorBitOpCodes[key][i] = c;
         isBitOpCode[c] = true;
         i++;
@@ -539,20 +551,20 @@ public:
     cJSON *json_bitOpToStoreInsns = cJSON_GetObjectItem(data, "bit_op_to_store_insns");
     unordered_map<long, unordered_set<long>*> map5;
     parseJsonMapOfLists(json_bitOpToStoreInsns, map5);
-    LaterBitOpCodeToCodes = new short*[CodeCount];
+    LaterBitOpCodeToCodes = new unsigned short*[CodeCount];
     LaterBitOpCodeToCodeCount = new int[CodeCount];
     for (int i = 0; i < CodeCount; i++) LaterBitOpCodeToCodes[i] = NULL;
     for (int i = 0; i < CodeCount; i++) LaterBitOpCodeToCodeCount[i] = -1;
     for (auto it = map5.begin(); it != map5.end(); it++) {
-      short key = InsnToCode[(long)(*it).first];
+      unsigned short key = InsnToCode[(long)(*it).first];
       unordered_set<long> *set = (*it).second;
       containsBitOpCode[key] = true;
-      LaterBitOpCodeToCodes[key] = new short[set->size()];
+      LaterBitOpCodeToCodes[key] = new unsigned short[set->size()];
       LaterBitOpCodeToCodeCount[key] = set->size();
       isBitOpCode[key] = true;
       int i = 0;
       for (auto sit = set->begin(); sit != set->end(); sit++) {
-        short c = InsnToCode[*sit];
+        unsigned short c = InsnToCode[*sit];
         LaterBitOpCodeToCodes[key][i] = c;
         i++;
       }
@@ -566,8 +578,70 @@ public:
     traceFile = json_traceFile->valuestring;
 
     cJSON *json_staticGraphFile = cJSON_GetObjectItem(data, "static_graph_file");
-    parseStaticNode(json_staticGraphFile->valuestring);
+    parseStaticGraph(json_staticGraphFile->valuestring);
     // TODO free json data lol
+
+#ifdef CF_PASS_RATE
+    string preprocessPassRateDataFile((char *)"preprocess_cf_pass_rate_data");
+    //if (pa_id >= 0) {
+    //  preprocessDataFile += "_";
+    //  preprocessDataFile += std::to_string(pa_id);
+    //}
+    buffer = Parser::readFile((char *)preprocessPassRateDataFile.c_str(), length);//TODO delete
+
+    data = cJSON_Parse(buffer);
+    delete[] buffer;
+
+    vector<short>* PredeToSucceCodeVector = new vector<short>[CodeCount];
+    vector<short>* SucceToPredeCodeVector = new vector<short>[CodeCount];
+
+    cJSON *json_PredeToSuccePairs = cJSON_GetObjectItem(data, "prede_to_succe_pairs");
+    int size = cJSON_GetArraySize(json_PredeToSuccePairs);
+    for (int i = 0; i < size; i++) {
+      cJSON *ele = cJSON_GetArrayItem(json_PredeToSuccePairs, i);
+      long prede = (long)cJSON_GetArrayItem(ele, 0)->valueint;
+      short predeCode = InsnToCode[prede];
+      long succe = (long)cJSON_GetArrayItem(ele, 1)->valueint;
+      short succeCode = InsnToCode[succe];
+      PredeToSucceCodeVector[predeCode].push_back(succeCode);
+      SucceToPredeCodeVector[succeCode].push_back(predeCode);
+    }
+
+    PredeToSucceCodes = new unsigned short*[CodeCount];
+    PredePerSucceCounts = new unsigned long*[CodeCount];
+    for (int i = 0; i < CodeCount; i++) {
+      int size = PredeToSucceCodeVector[i].size();
+      if (size == 0) {
+        PredePerSucceCounts[i] = NULL;
+        PredeToSucceCodes[i] = NULL;
+      } else {
+        PredePerSucceCounts[i] = new unsigned long[size];
+        PredeToSucceCodes[i] = new unsigned short[size + 1];
+        for (int ii = 0; ii < size; ii++) {
+          PredeToSucceCodes[i][ii] = PredeToSucceCodeVector[i][ii];
+          PredePerSucceCounts[i][ii] = 0;
+        }
+        PredeToSucceCodes[i][size] = 0;
+      }
+    }
+
+    SucceToPredeCodes = new unsigned short*[CodeCount];
+    for (int i = 0; i < CodeCount; i++) {
+      int size = SucceToPredeCodeVector[i].size();
+      if (size == 0) {
+        SucceToPredeCodes[i] = NULL;
+      } else {
+        SucceToPredeCodes[i] = new unsigned short[size + 1];
+        for (int ii = 0; ii < size; ii++) {
+          SucceToPredeCodes[i][ii] = SucceToPredeCodeVector[i][ii];
+        }
+        SucceToPredeCodes[i][size] = 0;
+      }
+    }
+
+    delete[] PredeToSucceCodeVector;
+    delete[] SucceToPredeCodeVector;
+#endif
     std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
     std::cout << "Init data took = " << std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count() << "[s]" << std::endl;
   }
@@ -576,7 +650,7 @@ public:
   {
     cout << pa_id << endl;
     std::chrono::steady_clock::time_point t3 = std::chrono::steady_clock::now();
-#ifndef COUNT_ONLY    
+#if !defined(COUNT_ONLY) && !defined(CF_PASS_RATE)
     string outTraceFile(traceFile);
     outTraceFile += ".parsed";
     if (pa_id >= 0) {
@@ -594,7 +668,7 @@ public:
     }
     ofstream osti;
     osti.open(outTraceThreadIdFile.c_str(), ios::out);
-#ifdef PARSE_MULTIPLE
+  #ifdef PARSE_MULTIPLE
     string outTraceStartCodesFile(traceFile);
     outTraceStartCodesFile += ".starting_uids";
     if (pa_id >= 0) {
@@ -603,7 +677,23 @@ public:
     }
     ofstream ossc;
     ossc.open(outTraceStartCodesFile.c_str(), ios::out);
-#endif
+
+    // TODO, changed to unsigned long in other places.
+    unsigned long *CodeToFullCount = new unsigned long[CodeCount];
+    for (int i = 0; i < CodeCount; i++) CodeToFullCount[i] = ULONG_MAX;
+
+    string inCountFile(traceFile);
+    inCountFile += ".count";
+    ifstream isc(inCountFile);
+    if (isc.good()) {
+      unsigned long insn, count;
+      while (isc >> std::hex >> insn >> std::dec >> count) {
+        cout << std::hex << insn << std::dec << " " << count << endl;
+        short code = InsnToCode[insn];
+        CodeToFullCount[code] = count;
+      }
+    }
+  #endif
 #endif
     long nodeCount = 0;
     long prevNodeCount = 0;
@@ -617,13 +707,22 @@ public:
     bool loadsMemory;
     int regCount2;
 
-    short *bitOps;
-    boost::unordered_map<u_int8_t, Context *> ctxtMap;
-#ifndef COUNT_ONLY
+    unsigned short *bitOps;
+#if !defined(COUNT_ONLY) && !defined(CF_PASS_RATE)
     // Because the parse is read in reverse by the python logic, make sure to always print a place holder of thread first.
     os.write((char*)&code, sizeof(unsigned short));
 #endif
-    Context *ctxt = new Context(CodeCount); // In order to be backward-compatible with single threaded traces.
+#ifdef CF_PASS_RATE
+    short succeSeen;
+    unsigned short *predeCodes;
+#endif
+
+    boost::unordered_map<u_int8_t, Context *> ctxtMap;
+    // In order to be backward-compatible with single threaded traces.
+    // In single threaded case, this context will be used throughout,
+    // In multi-threaded case, this context will not be used,
+    //  and contexts are allocated based on the current thread.
+    Context *ctxt = new Context(CodeCount); 
     unsigned long i = length;
     for (; i > 0;) {
       regValue = 0;
@@ -633,27 +732,24 @@ public:
       assert(code <= CodeCount);
       assert(code >= 0);
       if (code == 0) {
-        i -= sizeof(u_int8_t);
-        if (prevNodeCount == nodeCount) continue;
-        prevNodeCount = nodeCount;
         u_int8_t prevThreadId = threadId;
+        i -= sizeof(u_int8_t);
         std::memcpy(&threadId, buffer + i, sizeof(u_int8_t));
-
-#ifndef COUNT_ONLY    
-        os.write((char*)&code, sizeof(unsigned short));
-        osti.write((char*)&threadId, sizeof(u_int8_t));
-#endif
-
-        // In order to be backward-compatible with single threaded traces,
-        // always make a context by default in the first place,
-        // only save the context to the map when we get to a new thread.
-        if (prevThreadId == 0) continue; // first thread seen
-        ctxtMap[prevThreadId] = ctxt;
         if (ctxtMap.find(threadId) == ctxtMap.end()) {
           ctxt = new Context(CodeCount);
+	        ctxtMap[threadId] = ctxt;
         } else {
           ctxt = ctxtMap[threadId];
         }
+
+        if (prevNodeCount == nodeCount) continue;
+        prevNodeCount = nodeCount;
+
+#if !defined(COUNT_ONLY) && !defined(CF_PASS_RATE)
+	assert(prevThreadId != 0);
+        osti.write((char*)&prevThreadId, sizeof(u_int8_t));
+        os.write((char*)&code, sizeof(unsigned short));
+#endif
         continue;
       }
 
@@ -662,40 +758,51 @@ public:
       //}
       bool parseStartCode = false;
       long startingCodeOcurrences = -1;
-#ifdef COUNT_ONLY
+#if defined(COUNT_ONLY) || defined(CF_PASS_RATE)
       bool parse = true;
 #else
       bool parse = false;
 
       if (CodeOfStartInsns[code]) {
         parse = true;
-<<<<<<< HEAD
-#ifdef SAMPLE
-        if(CodeOfStartInsns[code]) {
-          long startingCodeOcurrences = OccurrencesPerStartingCode[code];
-          if (startingCodeOcurrences % SAMPLE_THRESHOLD != 0) {
-            parse = false;
-	        }
-	        OccurrencesPerStartingCode[code] = startingCodeOcurrences + 1;
-	      }
-#endif	
-=======
   #ifdef SAMPLE
+        bool sample = true;
+    #ifdef PARSE_MULTIPLE
+        unsigned long full_count = CodeToFullCount[code];
+        if (full_count < 100)  {
+          cout << "[preparse] Avoid sampling because full count is smaller than 100...\n";
+          sample = false;
+        }
+    #endif
         startingCodeOcurrences = OccurrencesPerStartingCode[code];
-        if (startingCodeOcurrences % SAMPLE_THRESHOLD != 0) {
+        if (sample && startingCodeOcurrences % SAMPLE_THRESHOLD != 0) {
           parse = false;
         } else {
           parseStartCode = true;
         }
         OccurrencesPerStartingCode[code] = startingCodeOcurrences + 1;
+  #else
+	      parseStartCode = true;
   #endif
->>>>>>> 101ae6f... [prede_rels] Fixes for e728031695655d60d66b8b1ae4b2a13d822bde69.
       }
 
+
+  #ifdef PARSE_MULTIPLE
+      bool parsePrede = false;
+  #endif
       if (PendingRemoteDefCodes[code] || ctxt->PendingCodes[code]) {
         parse = true;
+  #ifdef PARSE_MULTIPLE
+        parsePrede = true;
+  #endif
       }
       if (OccurrencesPerCode[code] > LARGE_THRESOLD) parse = false;
+  #ifdef PARSE_MULTIPLE
+      if (parse == false && parsePrede == true) {
+        parse = true;
+	      parseStartCode = false;
+      }
+  #endif
 #endif
 
       bool isBitOp = isBitOpCode[code];
@@ -717,7 +824,7 @@ public:
         // and not confuse it with a load and store
         ctxt->otherRegsParsed = false;
 
-        short *parentOfBitOps = LaterBitOpCodeToCodes[code];
+        unsigned short *parentOfBitOps = LaterBitOpCodeToCodes[code];
         if (parentOfBitOps != NULL) {
           // The associated instruction is supposed to happen before the bit operations
           // in the reversed trace, and it should have been a store instruction
@@ -727,7 +834,7 @@ public:
           for (int j = 0; j < count; j++) {
             if (ctxt->CodeWithLaterBitOpsExecuted[parentOfBitOps[j]]) {
               if (DEBUG) cout << "[store]  " << code << " " << parentOfBitOps[j] << " " << std::bitset<64>(regValue) << endl;
-#ifndef COUNT_ONLY 
+#if !defined(COUNT_ONLY) && !defined(CF_PASS_RATE)
               os.write((char *) &code, sizeof(unsigned short));
               os.write((char *) &uid, sizeof(long));
               os.write((char *) &regValue, sizeof(long));
@@ -820,10 +927,10 @@ public:
       if (bitOps != NULL) {
         int count = CodeToPriorBitOpCodeCount[code];
         for (int j = 0; j < count; j++) {
-          short bitOpCode = bitOps[j];
+          unsigned short bitOpCode = bitOps[j];
           if (ctxt->codeToBitOperandIsValid[bitOpCode]) {
             if (DEBUG) cout << "[load] " << bitOpCode << " " << count << " " << std::bitset<64>(ctxt->codeToBitOperand[bitOpCode]) << endl;
-#ifndef COUNT_ONLY
+#if !defined(COUNT_ONLY) && !defined(CF_PASS_RATE)
             os.write((char *) &bitOpCode, sizeof(unsigned short));
             os.write((char *) &uid, sizeof(long));
             os.write((char *) &ctxt->codeToBitOperand[bitOpCode], sizeof(long));
@@ -833,7 +940,7 @@ public:
         }
       }
 
-#ifndef COUNT_ONLY
+#if !defined(COUNT_ONLY) && !defined(CF_PASS_RATE)
       if (regCount2 > 1) {
         if (DEBUG) cout << "Persisting1 " << code << endl;
         os.write((char*)&code, sizeof(unsigned short));
@@ -882,9 +989,46 @@ public:
         AverageTimeStampPerCode[code] = avg;
       }
 #endif
+#ifdef CF_PASS_RATE
+      succeSeen = ctxt->PredeToSucceSeen[code];
+      predeCodes = NULL;
+      if (succeSeen) {
+        unsigned short *succeCodes = PredeToSucceCodes[code];
+        assert(succeCodes);
+        bool succeFound = false;
+        for (int ii = 0; ; ii++) {
+          short succeCode = succeCodes[ii];
+          if (succeCode == 0) break;
+          if (succeCode == succeSeen) {
+            PredePerSucceCounts[code][ii] += 1;
+            succeFound = true;
+          }
+        }
+        assert(succeFound);
+
+        predeCodes = SucceToPredeCodes[succeSeen];
+        assert (predeCodes);
+        for (int ii = 0; ; ii++) {
+          short predeCode = predeCodes[ii];
+          if (predeCode == 0) break;
+          if (ctxt->PredeToSucceSeen[predeCode] == succeSeen) {
+            ctxt->PredeToSucceSeen[predeCode] = 0;
+          }
+        }
+      }
+
+      predeCodes = SucceToPredeCodes[code];
+      if (predeCodes) {
+        for (int ii = 0; ; ii++) {
+          short predeCode = predeCodes[ii];
+          if (predeCode == 0) break;
+          ctxt->PredeToSucceSeen[predeCode] = code;
+        }
+      }
+#endif
 
       nodeCount++;
-#ifdef COUNT_ONLY
+#if defined(COUNT_ONLY) || defined(CF_PASS_RATE)
       goto HANDLE_BIT_VAR;
 #endif
       if (ctxt->PendingCfPredeCodes[code]) {
@@ -970,12 +1114,14 @@ HANDLE_BIT_VAR:
       continue;
 
 DONT_PARSE:
-  #ifdef PARSE_MULTIPLE
+#ifdef PARSE_MULTIPLE
+  #ifdef SAMPLE
       if (parseStartCode) {
         assert(startingCodeOcurrences != -1);
         OccurrencesPerStartingCode[code] = startingCodeOcurrences;
       }
   #endif
+#endif
 
       if (LaterBitOpCodeToCodes[code] != NULL) {
         ctxt->CodeWithLaterBitOpsExecuted[code] = false;
@@ -985,7 +1131,7 @@ DONT_PARSE:
       if (bitOps != NULL) {
         int count = CodeToPriorBitOpCodeCount[code];
         for (int j = 0; j < count; j++) {
-          short bitOpCode = bitOps[j];
+          unsigned short bitOpCode = bitOps[j];
           ctxt->codeToBitOperandIsValid[bitOpCode] = false;
         }
       }
@@ -995,18 +1141,17 @@ std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
 std::cout << "Parsing took = " << std::chrono::duration_cast<std::chrono::seconds>(t4 - t3).count() << "[s]"
           << std::endl;
 
-#ifndef COUNT_ONLY
-    // print a placeholder thread id in the end
-    // the smallest legal thread id is 1 (determined by my PIN logic)
-    threadId = 0;
-    osti.write((char*)&threadId, sizeof(u_int8_t));
-    os.close();
-    osti.close();
-#endif
 #ifdef PARSE_MULTIPLE
     ossc.close();
 #endif
-#ifndef COUNT_ONLY
+#if !defined(COUNT_ONLY) && !defined(CF_PASS_RATE)
+    // print a placeholder thread id in the end
+    // the smallest legal thread id is 1 (determined by my PIN logic)
+    //threadId = 0;
+    if (threadId != 0) osti.write((char*)&threadId, sizeof(u_int8_t));
+    os.close();
+    osti.close();
+
     string outLargeFile(traceFile);
     outLargeFile += ".large";
     if (pa_id >= 0) {
@@ -1023,7 +1168,7 @@ std::cout << "Parsing took = " << std::chrono::duration_cast<std::chrono::second
       nodeCount -= count;
     }
     osl.close();
-#ifdef CHECK_ALL_COUNTS
+  #ifdef CHECK_ALL_COUNTS
     string outDebugFile(traceFile);
     outDebugFile += ".debug";
     if (pa_id >= 0) {
@@ -1037,25 +1182,22 @@ std::cout << "Parsing took = " << std::chrono::duration_cast<std::chrono::second
       osd << std::hex << CodeToInsn[i] << std::dec << " " << i << " occurrences: " << count << "\n";
     }
     osd.close();
-#endif
-#else
+  #endif
+#elif defined(COUNT_ONLY)
     string outCountFile(traceFile);
     outCountFile += ".count";
     ofstream osc;
     osc.open(outCountFile.c_str());
     for (int i = 1; i < CodeCount; i++) {
       unsigned long count = OccurrencesPerCode[i];
-#ifdef SAMPLE
-      count = (count / SAMPLE_THRESHOLD) + 1;
-#endif
+  #ifdef SAMPLE
+      if (count == 0) count = 0;
+      else count = (count / SAMPLE_THRESHOLD) + 1;
+  #endif
       osc << std::hex << CodeToInsn[i] << std::dec << " " << count << "\n";
     }
     osc.close();
-#endif
 
-    cout << "total nodes: " << nodeCount << endl;
- 
-#ifdef COUNT_ONLY
     string outAvgTimeStampFile(traceFile);
     outAvgTimeStampFile += ".avg_timestamp";
     ofstream osa;
@@ -1065,6 +1207,26 @@ std::cout << "Parsing took = " << std::chrono::duration_cast<std::chrono::second
       osa << std::hex << CodeToInsn[i] << std::dec << " " << avg << "\n";
     }
     osa.close();
+#elif defined(CF_PASS_RATE)
+    string outCFPassRateFile("pin/cf_pass_rates");
+    ofstream oprc;
+    oprc.open(outCFPassRateFile.c_str());
+    for (int i = 1; i < CodeCount; i++) {
+      unsigned long* counts = PredePerSucceCounts[i];
+      unsigned short* succeCodes = PredeToSucceCodes[i];
+      if (counts == NULL) {
+        assert(succeCodes==NULL);
+        continue;
+      }
+      for (int ii = 0; ; ii++) {
+        short succeCode = succeCodes[ii];
+        if (succeCode == 0) break;
+        oprc << std::hex << CodeToInsn[i] << " " << CodeToInsn[succeCode] << std::dec << " " << counts[ii] << "\n";
+      }
+    }
+    oprc.close();
 #endif
+
+    cout << "total nodes: " << nodeCount << endl;
   }
 };

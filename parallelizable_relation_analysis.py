@@ -276,7 +276,7 @@ class ParallelizableRelationAnalysis:
 
     @staticmethod
     def build_relation_with_predecessor(dgraph, starting_node, prede_node, rgroup, wavefront,
-                                                 use_weight, base_weight, prog, indices_not_found, timestamp, other_predes):
+                                                 use_weight, base_weight, prog, indices_not_found, timestamp, other_predes, ignore_low_weight=True):
         #insn = prede_node.insn
         #hex_insn = prede_node.hex_insn
         if DEBUG: print("-------")
@@ -369,11 +369,18 @@ class ParallelizableRelationAnalysis:
                         + " " + str(input_set_count_list))
 
         key = other_predes.get_indices(prede_node) if other_predes is not None else None
-        if key is None and weight.perc_contrib < 1:
-            if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " only has a "
-                            + str(weight.perc_contrib) + "% contribution to the output event, ignore ...")
-            return False
-
+        if ignore_low_weight is True:
+            if key is None and weight.perc_contrib < 1:
+                if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " only has a "
+                                + str(weight.perc_contrib) + "% contribution to the output event, ignore ...")
+                return False
+        else:
+            #FIXME: Not sure how this is possible...
+            if key is None and round(weight.perc_contrib, 1) == 0.0:
+                if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " only has a "
+                                + str(weight.perc_contrib) + "% contribution to the output event, ignore ...")
+                return False
+ 
         if Invariance.is_irrelevant(output_set_counts) and Invariance.is_irrelevant(input_set_counts):
             if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " is irrelevant  the output event, ignore ...")
             return False
@@ -438,7 +445,7 @@ class ParallelizableRelationAnalysis:
 
     @staticmethod
     def one_pass(dgraph, starting_node, starting_weight, max_contrib, prog, \
-                 indices_map=None, indices_map_inner=None, other_simple_relation_groups=None, node_avg_timestamps=None):
+                 indices_map=None, indices_map_inner=None, other_simple_relation_groups=None, node_avg_timestamps=None, ignore_low_weight=True):
         a = time.time()
         print("Starting forward and backward pass for starting insn: " + hex(starting_node.insn))
         wavefront = []
@@ -528,7 +535,7 @@ class ParallelizableRelationAnalysis:
                                                                            rgroup, wavefront,
                                                                             use_weight, base_weight, prog, indices_not_found,
                                                                            node_avg_timestamps[static_node.insn] if node_avg_timestamps is not None else 0,
-                                                                                      other_predes)
+                                                                                      other_predes, ignore_low_weight)
 
             if indices_not_found is True or analyzed is False:
                 continue
@@ -580,7 +587,7 @@ if __name__ == "__main__":
     dd.prepare_to_build_dynamic_dependencies(limit)
 
     func = "__wt_row_leaf_key_work"
-    insn = 0xee2bb0
+    insn = 0x1012420
     dgraph = dd.build_dynamic_dependencies(insn=insn, pa_id=0)
     graph = StaticDepGraph.get_graph(func, insn)
     node = graph.insn_to_node[insn]
