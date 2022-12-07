@@ -1298,7 +1298,9 @@ class StaticDepGraph:
     file_to_line_to_nodes = {}
     prog = None #FIXME, stop passing prog around, there is only one prog per analysis
 
-    call_graph_pass_only = True
+    call_graph_pass_only = False
+    control_flow_pass_only = False
+    data_flow_pass_only = False
 
     def __init__(self, func, prog):
         self.func = func
@@ -1862,7 +1864,9 @@ class StaticDepGraph:
                     if graph.changed is False:
                         continue
                     if TRACKS_DIRECT_CALLER: graph.merge_callsite_nodes()
-                    if StaticDepGraph.call_graph_pass_only is True:
+                    if StaticDepGraph.call_graph_pass_only is True or\
+                       StaticDepGraph.data_flow_pass_only is True or\
+                       StaticDepGraph.control_flow_pass_only is True:
                         for entry in graph.cfg.entry_bbs:
                             visited = set()
                             graph.cfg.postorderTraversal(entry, visited)
@@ -1871,17 +1875,27 @@ class StaticDepGraph:
                     if graph.changed is False:
                         continue
                     graph.merge_nodes(graph.none_df_starting_nodes, final=True, interprocedural_set=([e[1] for e in starting_events]))
-                    for n in graph.nodes_in_cf_slice.keys():
-                        print(str(n))
-                    for n in graph.nodes_in_df_slice.keys():
-                        print(str(n))
+                    #for n in graph.nodes_in_cf_slice.keys():
+                    #    print(str(n))
+                    #for n in graph.nodes_in_df_slice.keys():
+                    #    print(str(n))
                     graph.remove_extra_nodes(set([e[1] for e in starting_events]))
+                    if StaticDepGraph.call_graph_pass_only is True or\
+                       StaticDepGraph.data_flow_pass_only is True or\
+                       StaticDepGraph.control_flow_pass_only is True:
+                        for n in graph.nodes_in_cf_slice.keys():
+                            n.explained = True
+                        for n in graph.nodes_in_df_slice.keys():
+                            n.explained = True
+ 
 
                 StaticDepGraph.sanity_check()
                 StaticDepGraph.find_entry_and_exit_nodes()
                 StaticDepGraph.build_reverse_postorder_list()
                 StaticDepGraph.build_postorder_list()
-                if StaticDepGraph.call_graph_pass_only is False:
+                if StaticDepGraph.call_graph_pass_only is False and \
+                   StaticDepGraph.control_flow_pass_only is False and \
+                   StaticDepGraph.data_flow_pass_only is False:
                     StaticDepGraph.detect_df_backedges()
                 #if GENERATE_INSN_MAPPING:
                 #    StaticDepGraph.build_binary_indices(prog)
@@ -2387,27 +2401,29 @@ class StaticDepGraph:
             target_bbs.add(graph.cfg.ordered_bbs[0])
             graph.build_control_flow_dependencies(target_bbs)
 
-            if TRACKS_DIRECT_CALLER:
-                callsites = []
-                if func in StaticDepGraph.func_to_callsites:
-                    callsites = StaticDepGraph.func_to_callsites[func]
-                dyn_callsites = []
-                if TRACKS_INDIRECT_CALLER is True:
-                    for entry_bb in orig_entry_bbs:
-                        print("[static_dep] first instruction of function " + func + " is " + hex(entry_bb.start_insn))
-                        if entry_bb.start_insn in StaticDepGraph.func_first_insn_to_dyn_callsites:
-                            dyn_callsites = StaticDepGraph.func_first_insn_to_dyn_callsites[entry_bb.start_insn]
-                            print("[static_dep] found dynamic callsites for function " + func + ": " + str(dyn_callsites))
-                            break
-                print("[static_dep] Instantiating callsites for: " + func)
-                for c in itertools.chain(callsites, dyn_callsites):
-                    print("[static_dep] Callsite is: " + str(c))
-                    if c[0] in StaticDepGraph.insns_that_never_executed:
-                        continue
-                    print("[static_dep] Callsite is: " + str(c))
-                    new_node = StaticDepGraph.make_or_get_cf_node(c[0], None, c[1])
-                    new_nodes.add(new_node)
-                    graph.pending_callsite_nodes.append(new_node)
+            if StaticDepGraph.call_graph_pass_only is True:
+                assert StaticDepGraph.control_flow_pass_only is False
+                if TRACKS_DIRECT_CALLER:
+                    callsites = []
+                    if func in StaticDepGraph.func_to_callsites:
+                        callsites = StaticDepGraph.func_to_callsites[func]
+                    dyn_callsites = []
+                    if TRACKS_INDIRECT_CALLER is True:
+                        for entry_bb in orig_entry_bbs:
+                            print("[static_dep] first instruction of function " + func + " is " + hex(entry_bb.start_insn))
+                            if entry_bb.start_insn in StaticDepGraph.func_first_insn_to_dyn_callsites:
+                                dyn_callsites = StaticDepGraph.func_first_insn_to_dyn_callsites[entry_bb.start_insn]
+                                print("[static_dep] found dynamic callsites for function " + func + ": " + str(dyn_callsites))
+                                break
+                    print("[static_dep] Instantiating callsites for: " + func)
+                    for c in itertools.chain(callsites, dyn_callsites):
+                        print("[static_dep] Callsite is: " + str(c))
+                        if c[0] in StaticDepGraph.insns_that_never_executed:
+                            continue
+                        print("[static_dep] Callsite is: " + str(c))
+                        new_node = StaticDepGraph.make_or_get_cf_node(c[0], None, c[1])
+                        new_nodes.add(new_node)
+                        graph.pending_callsite_nodes.append(new_node)
         if initial_node.is_df is False:
             graph.none_df_starting_nodes.add(initial_node)
         """
@@ -2418,6 +2434,8 @@ class StaticDepGraph:
         """
         if StaticDepGraph.call_graph_pass_only is True:
             return new_nodes
+        if StaticDepGraph.control_flow_pass_only is True:
+            return set()
 
         all_defs_in_diff_func = set()
         df_nodes = []
@@ -2440,7 +2458,8 @@ class StaticDepGraph:
                 target_bbs = target_bbs.union(new_bbs)
                 #new_bbs = [graph.cfg.getBB(defn.insn) for defn in intermediate_defs_in_same_func]
                 #target_bbs = target_bbs.union(new_bbs)
-                graph.build_control_flow_dependencies(target_bbs)
+                if StaticDepGraph.data_flow_pass_only is False:
+                    graph.build_control_flow_dependencies(target_bbs)
                 new_local_defs_found = True
             for df_node in df_nodes:
                 if df_node.explained is False: #TODO, an explained df node always used to have a BB
@@ -2696,7 +2715,7 @@ class StaticDepGraph:
                 if succe.id in self.cfg.id_to_bb_in_slice:
                     succe_count += 1
             print("succe_count: " + str(succe_count) + " of bb " + str(bb.lines))
-            if succe_count == 0:
+            if succe_count == 0 and StaticDepGraph.data_flow_pass_only is False:
                 continue
 
             insn = bb.last_insn
@@ -2968,6 +2987,14 @@ class StaticDepGraph:
             print("BB id mappings: " + str(id_map))
             self.cfg.jsonified = False
         # print(self.bb_id_to_node_id)
+
+        if StaticDepGraph.data_flow_pass_only is True:
+            for bb in self.cfg.target_bbs:
+                node_id = self.bb_id_to_node_id[bb.id]
+                node = self.id_to_node[node_id]
+                if node not in self.nodes_in_cf_slice:
+                    self.nodes_in_cf_slice[node] = node
+            return
 
         if StaticDepGraph.call_graph_pass_only is True:
             for bb in self.cfg.target_bbs:
@@ -3361,6 +3388,12 @@ def main():
     parser.set_defaults(source_codes_same=False)
     parser.add_argument('-b_ours', '--our_binary', dest='our_binary')
     parser.set_defaults(our_binary=None)
+    parser.add_argument('-cg', '--call_graph_pass_only', dest='call_graph_pass_only', action='store_true')
+    parser.set_defaults(call_graph_pass_only=False)
+    parser.add_argument('-cf', '--control_flow_pass_only', dest='control_flow_pass_only', action='store_true')
+    parser.set_defaults(control_flow_pass_only=False)
+    parser.add_argument('-df', '--data_flow_pass_only', dest='data_flow_pass_only', action='store_true')
+    parser.set_defaults(data_flow_pass_only=False)
     args = parser.parse_args()
 
     limit, program, _, _, starting_events, _ = parse_inputs()
@@ -3376,6 +3409,13 @@ def main():
         assert args.generate_indices is True
         assert args.our_source_code_dir is not None
         assert args.other_source_code_dir is not None
+    if args.call_graph_pass_only is True:
+        StaticDepGraph.call_graph_pass_only = True
+    if args.control_flow_pass_only is True:
+        StaticDepGraph.control_flow_pass_only = True
+    if args.data_flow_pass_only is True:
+        StaticDepGraph.data_flow_pass_only = True
+
 
     if args.generate_indices is False:
         StaticDepGraph.build_dependencies(starting_events, program, limit,
