@@ -82,7 +82,7 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
                 graph = StaticDepGraph.get_graph(func, insn)
                 starting_node = graph.insn_to_node[insn]
                 curr_wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, starting_node, 100, 100, self.prog, \
-                                                                                 None, None, None, None)
+                                                                                 None, None, None, None, ra=self)
                 print("[ra] Got results for: " + hex(starting_node.insn))
                 assert rgroup is not None
                 rgroup.sort_relations()
