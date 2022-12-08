@@ -52,6 +52,16 @@ class RelationAnalysis:
         self.node_counts = load_node_info(self.dd.trace_path + ".count")
         print("[ra] Finished getting the counts of each unique node in the dynamic trace")
 
+        if not os.path.exists(self.dd.trace_path + ".full_count"):
+            preprocessor_file = os.path.join(curr_dir, 'preprocessor', 'count_node')
+            pp_process = subprocess.Popen([preprocessor_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = pp_process.communicate()
+            print(stdout)
+            print(stderr)
+        self.node_counts_full = load_node_info(self.dd.trace_path + ".full_count")
+        print("[ra] Finished getting the counts of each unique node in the dynamic trace")
+
+
         print("[ra] Getting the average timestamp of each unique node in the dynamic trace")
         if not os.path.exists(self.dd.trace_path + ".avg_timestamp"):
             preprocessor_file = os.path.join(curr_dir, 'preprocessor', 'count_node')
