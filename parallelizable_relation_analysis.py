@@ -276,7 +276,7 @@ class ParallelizableRelationAnalysis:
 
     @staticmethod
     def build_relation_with_predecessor(dgraph, starting_node, prede_node, rgroup, wavefront,
-                                                 use_weight, base_weight, prog, indices_not_found, timestamp, other_predes, ignore_low_weight=True, ra=None):
+                                                 use_weight, base_weight, prog, indices_not_found, timestamp, other_predes, ignore_low_weight=False, ra=None):
         #insn = prede_node.insn
         #hex_insn = prede_node.hex_insn
         if DEBUG: print("-------")
@@ -461,7 +461,7 @@ class ParallelizableRelationAnalysis:
 
     @staticmethod
     def one_pass(dgraph, starting_node, starting_weight, max_contrib, prog, \
-                 indices_map=None, indices_map_inner=None, other_simple_relation_groups=None, node_avg_timestamps=None, ignore_low_weight=True, ra=None):
+                 indices_map=None, indices_map_inner=None, other_simple_relation_groups=None, node_avg_timestamps=None, ignore_low_weight=False, ra=None):
         a = time.time()
         print("Starting forward and backward pass for starting insn: " + hex(starting_node.insn))
         wavefront = []
