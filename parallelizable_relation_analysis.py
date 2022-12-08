@@ -276,7 +276,7 @@ class ParallelizableRelationAnalysis:
 
     @staticmethod
     def build_relation_with_predecessor(dgraph, starting_node, prede_node, rgroup, wavefront,
-                                                 use_weight, base_weight, prog, indices_not_found, timestamp, other_predes, ignore_low_weight=False):
+                                                 use_weight, base_weight, prog, indices_not_found, timestamp, other_predes, ignore_low_weight=False, ra=None):
         #insn = prede_node.insn
         #hex_insn = prede_node.hex_insn
         if DEBUG: print("-------")
@@ -303,6 +303,22 @@ class ParallelizableRelationAnalysis:
                 #        continue
                 #    output_weight += output.weight
                 weighted_output_set_count_list.append(node.output_weight)
+
+        if ra is not None:
+            prede_node_count = ra.node_counts[prede_node.insn]
+            prede_node_count_full = ra.node_counts_full[prede_node.insn]
+            SAMPLE = 5000
+            print("HERE: prede_node_count" + str(prede_node_count))
+            print("HERE: prede_node_count_full" + str(prede_node_count_full))
+            print("HERE: double check sample rate!! " + str(SAMPLE))
+            gap = 0
+            if prede_node_count < 100:
+                grap = prede_node_count_full - len(output_set_counts)
+            else:
+                gap = int(prede_node_count/SAMPLE) - len(output_set_counts)
+            print("HERE: gap " + str(gap))
+            for i in range(gap):
+                output_set_counts.add(0)
 
         ########## Calculate input sets ###########
         input_set_counts = set()
@@ -445,7 +461,7 @@ class ParallelizableRelationAnalysis:
 
     @staticmethod
     def one_pass(dgraph, starting_node, starting_weight, max_contrib, prog, \
-                 indices_map=None, indices_map_inner=None, other_simple_relation_groups=None, node_avg_timestamps=None, ignore_low_weight=False):
+                 indices_map=None, indices_map_inner=None, other_simple_relation_groups=None, node_avg_timestamps=None, ignore_low_weight=False, ra=None):
         a = time.time()
         print("Starting forward and backward pass for starting insn: " + hex(starting_node.insn))
         wavefront = []
@@ -518,25 +534,25 @@ class ParallelizableRelationAnalysis:
                 continue
             # assert insn in dgraph.insn_to_dyn_nodes, hex(insn)
             indices_not_found = False
-            if indices_map is not None:
-                if indices_map.indices_not_found(static_node):
-                    indices_not_found = True
-                    print("\n" + hex(static_node.insn) + "@" + static_node.function + " is not found in the other repro's static slice...")
-                    succe_explained = False
-                    if indices_map_inner is not None:
-                        for p in itertools.chain(static_node.df_succes, static_node.cf_succes):
-                            if indices_map_inner.get_indices(p) is not None:
-                                succe_explained = True
-                                break
-                    if succe_explained is False:
-                        print("\n" + hex(static_node.insn) + "@" + static_node.function + "'s succes are also not found in the other repro's inner static slice...")
-                        continue
+            #if indices_map is not None:
+            #    if indices_map.indices_not_found(static_node):
+            #        indices_not_found = True
+            #        print("\n" + hex(static_node.insn) + "@" + static_node.function + " is not found in the other repro's static slice...")
+            #        succe_explained = False
+            #        if indices_map_inner is not None:
+            #            for p in itertools.chain(static_node.df_succes, static_node.cf_succes):
+            #                if indices_map_inner.get_indices(p) is not None:
+            #                    succe_explained = True
+            #                    break
+            #        if succe_explained is False:
+            #            print("\n" + hex(static_node.insn) + "@" + static_node.function + "'s succes are also not found in the other repro's inner static slice...")
+            #            continue
 
             analyzed = ParallelizableRelationAnalysis.build_relation_with_predecessor(dgraph, starting_node, static_node,
                                                                            rgroup, wavefront,
                                                                             use_weight, base_weight, prog, indices_not_found,
                                                                            node_avg_timestamps[static_node.insn] if node_avg_timestamps is not None else 0,
-                                                                                      other_predes, ignore_low_weight)
+                                                                                      other_predes, ignore_low_weight, ra)
 
             if indices_not_found is True or analyzed is False:
                 continue

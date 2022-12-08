@@ -192,6 +192,7 @@ public:
   unordered_map<int, long> StaticNodeIdToInsn;
 
   long *OccurrencesPerCode;
+  long *OccurrencesPerCodeFull;
   long *OccurrencesPerStartingCode;
 #ifdef COUNT_ONLY
   unsigned long *AverageTimeStampPerCode;
@@ -436,6 +437,9 @@ public:
     }
     OccurrencesPerCode = new long[CodeCount];
     for (int i = 0; i < CodeCount; i++) OccurrencesPerCode[i] = 0;
+
+    OccurrencesPerCodeFull = new long[CodeCount];
+    for (int i = 0; i < CodeCount; i++) OccurrencesPerCodeFull[i] = 0;
  
 #ifdef COUNT_ONLY
     AverageTimeStampPerCode = new unsigned long[CodeCount];
@@ -756,6 +760,8 @@ public:
       //if (code == 2 || code == 3) {
       //  cout << "HERE " <<uid << endl;
       //}
+      OccurrencesPerCodeFull[code] += 1;
+  
       bool parseStartCode = false;
       long startingCodeOcurrences = -1;
 #if defined(COUNT_ONLY) || defined(CF_PASS_RATE)
@@ -1226,6 +1232,16 @@ std::cout << "Parsing took = " << std::chrono::duration_cast<std::chrono::second
     }
     oprc.close();
 #endif
+
+    string outOccurrencesPerCodeFullFile(traceFile);
+    outOccurrencesPerCodeFullFile += ".full_count";
+    ofstream ofc;
+    ofc.open(outOccurrencesPerCodeFullFile.c_str());
+    for (int i = 1; i < CodeCount; i++) {
+      long count = OccurrencesPerCodeFull[i];
+      ofc << std::hex << CodeToInsn[i] << std::dec << " " << count << "\n";
+    }
+    ofc.close();
 
     cout << "total nodes: " << nodeCount << endl;
   }
