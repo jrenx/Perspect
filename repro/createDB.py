@@ -30,7 +30,7 @@ def createIndex():
 # Insert entries
 def insert(idd):
     size = 20
-    count = 1000 * 1000
+    count = 1000 * 100
     every = 1000
     x = 'x' * size
 
