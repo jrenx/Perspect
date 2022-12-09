@@ -125,24 +125,24 @@ class SerialRelationAnalysis(RelationAnalysis):
             if rgroup.weight > max_contrib: max_contrib = rgroup.weight
 
             curr_weighted_wavefront = self.get_weighted_wavefront(curr_wavefront)
-            print("=======================================================================")
-            for weight, wavelet in curr_weighted_wavefront:
-                if wavelet in visited:
-                    print("\nwavelet " + hex(wavelet.insn) + "@" + wavelet.function + " already visited...")
-                    continue
-                visited.add(wavelet)
-                if self.explained_by_invariant_relation(wavelet):
-                    print("\nwavelet " + hex(wavelet.insn) + "@" + wavelet.function + " has a node forward and backward invariant already explained...")
-                    continue
+            #print("=======================================================================")
+            #for weight, wavelet in curr_weighted_wavefront:
+            #    if wavelet in visited:
+            #        print("\nwavelet " + hex(wavelet.insn) + "@" + wavelet.function + " already visited...")
+            #        continue
+            #    visited.add(wavelet)
+            #    if self.explained_by_invariant_relation(wavelet):
+            #        print("\nwavelet " + hex(wavelet.insn) + "@" + wavelet.function + " has a node forward and backward invariant already explained...")
+            #        continue
 
-                wavefront.append((weight, wavelet, max_contrib))
-                starting_weight = 0 if weight is None else weight.total_weight
-                self.print_wavelet(weight, wavelet, "NEW")
+            #    wavefront.append((weight, wavelet, max_contrib))
+            #    starting_weight = 0 if weight is None else weight.total_weight
+            #    self.print_wavelet(weight, wavelet, "NEW")
 
-            print("=======================================================================")
-            #wavefront = sorted(wavefront, key=lambda weight_and_node: weight_and_node[0])
-            for weight, starting_node, _ in wavefront:
-                self.print_wavelet(weight, starting_node, "ALL")
+            #print("=======================================================================")
+            ##wavefront = sorted(wavefront, key=lambda weight_and_node: weight_and_node[0])
+            #for weight, starting_node, _ in wavefront:
+            #    self.print_wavelet(weight, starting_node, "ALL")
 
         self.sort_and_output_results()
 
