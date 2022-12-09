@@ -317,9 +317,12 @@ class ParallelizableRelationAnalysis:
             else:
                 gap = int(prede_node_count/SAMPLE) - len(output_set_counts)
             print("HERE: gap " + str(gap))
+            if gap/len(output_set_counts) > 0.001:
+                gap = 0
+                print("HERE: gap1 " + str(gap))
             for i in range(gap):
                 output_set_counts.add(0)
-
+                output_set_count_list.append(0)
         ########## Calculate input sets ###########
         input_set_counts = set()
         input_set_count_list = []
@@ -339,6 +342,24 @@ class ParallelizableRelationAnalysis:
                     if node.is_valid_weight is True:
                         output_weight = prede_count * node.weight
                     weighted_input_set_count_list.append(output_weight)
+
+        if ra is not None:
+            if 0 not in output_set_counts and 0 not in input_set_counts:
+                ratio = ra.node_counts_full[starting_node.insn]/ra.node_counts_full[prede_node.insn]
+                print("HERE: ratio is: " + str(ratio))
+                if ratio != output_set_count_list[0]:
+                    output_set_counts1 = set()
+                    output_set_count_list1 = []
+                    for o in output_set_count_list:
+                        output_set_count_list1.append(ratio)
+                        output_set_counts1.add(ratio)
+                    output_set_counts = output_set_counts1
+                    output_set_count_list = output_set_count_list1
+                    print("HERE: updated output set")
+                    print(str(output_set_counts))
+                    print(str(output_set_count_list))
+
+
 
         ############ Calculate weights ############
         weight = ParallelizableRelationAnalysis.calculate_individual_weight(dgraph, reachable_output_events, starting_node, prede_node,
