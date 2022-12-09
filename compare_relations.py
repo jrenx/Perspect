@@ -496,6 +496,7 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                                                pass_rates_dataflow1=pass_rates_dataflow_left,
                                                pass_rates_dataflow2=pass_rates_dataflow_right,
                                                counts_left=counts_left, counts_right=counts_right)
+            equals = False
             print("[compare_relation] Children relations are equal? " + str(equals))
             assert weight == r_right.weight.perc_contrib
             corr = r_right.forward.corr()
@@ -521,6 +522,7 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                                                pass_rates_dataflow1=pass_rates_dataflow_left,
                                                pass_rates_dataflow2=pass_rates_dataflow_right,
                                                counts_left=counts_left, counts_right=counts_right)
+            equals = False
             print("[compare_relation] Children relations are equal? " + str(equals))
             assert weight == r_left.weight.perc_contrib
             corr = r_left.forward.corr()
@@ -1181,20 +1183,20 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                 print("[compare_relation] absolute count of event same in both runs, ignore...")
         elif r_left is not None:
             print("[compare_relation] only has r left: " + str(len(left_seen)))
-            for seen in left_seen:
-                if r_left.relaxed_equals(seen):
-                    print("[compare_relation] already seen a similar relation, ignore...")
-                    include = False
-                    break
+            #for seen in left_seen:
+            #    if r_left.relaxed_equals(seen):
+            #        print("[compare_relation] already seen a similar relation, ignore...")
+            #        include = False
+            #        break
             if include is True:
                 left_seen.append(r_left)
         elif r_right is not None:
             print("[compare_relation] only has r right: " + str(len(right_seen)))
-            for seen in right_seen:
-                if r_right.relaxed_equals(seen):
-                    print("[compare_relation] already seen a similar relation, ignore...")
-                    include = False
-                    break
+            #for seen in right_seen:
+            #    if r_right.relaxed_equals(seen):
+            #        print("[compare_relation] already seen a similar relation, ignore...")
+            #        include = False
+            #        break
             if include is True:
                 right_seen.append(r_right)
         if include is True and mcrs_left is not None and mcrs_right is not None:
