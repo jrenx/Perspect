@@ -1,0 +1,575 @@
+[
+    {
+        "starting_node": [
+            "__wt_txn_read",
+            19284896,
+            0,
+            1
+        ],
+        "use_weight": true,
+        "weight": 3.4891121909000002,
+        "predes": [
+            [
+                "__wt_txn_read",
+                19284896,
+                0,
+                1
+            ],
+            [
+                "__wt_btcur_next",
+                19294395,
+                0,
+                1
+            ],
+            [
+                "__wt_btcur_next",
+                19289639,
+                0,
+                1
+            ],
+            [
+                "__curfile_next",
+                18612776,
+                0,
+                1
+            ],
+            [
+                "__wt_btcur_search_near",
+                19350189,
+                0,
+                1
+            ],
+            [
+                "__curfile_next",
+                18612445,
+                0,
+                1
+            ],
+            [
+                "__wt_btcur_search_near",
+                19349044,
+                0,
+                1
+            ],
+            [
+                "__curfile_search_near",
+                18618506,
+                0,
+                1
+            ],
+            [
+                "__curfile_search_near",
+                18618128,
+                0,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0x12643a0",
+            "0x12668bb",
+            "0x1265627",
+            "0x11c0228",
+            "0x12742ad",
+            "0x11c00dd",
+            "0x1273e34",
+            "0x11c188a",
+            "0x11c1710"
+        ],
+        "insn": 19284896,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": 3.4891121909000002,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 45463,
+                "insn": 19284896,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 3.4891121909000002,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 45464,
+                "insn": 19294395,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 3.4891121909000002,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 23536,
+                "insn": 19289639,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 1.39564487636,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 40.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.4
+                },
+                "timestamp": 48442,
+                "insn": 18612776,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 2.09346731454,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 59.999999999999986,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.6
+                },
+                "timestamp": 19080,
+                "insn": 19350189,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 1.39564487636,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 40.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.4
+                },
+                "timestamp": 48443,
+                "insn": 18612445,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 2.09346731454,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 59.999999999999986,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.6
+                },
+                "timestamp": 19124,
+                "insn": 19349044,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 2.09346731454,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 59.999999999999986,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.6
+                },
+                "timestamp": 19125,
+                "insn": 18618506,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 2.09346731454,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 59.999999999999986,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.6
+                },
+                "timestamp": 19126,
+                "insn": 18618128,
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "__wt_txn_read",
+            19309264,
+            0,
+            1
+        ],
+        "use_weight": true,
+        "weight": 3.4891121909000002,
+        "predes": [
+            [
+                "__wt_txn_read",
+                19309264,
+                0,
+                1
+            ],
+            [
+                "__wt_btcur_prev",
+                19318141,
+                0,
+                1
+            ],
+            [
+                "__wt_btcur_prev",
+                19313685,
+                0,
+                1
+            ],
+            [
+                "__curfile_prev",
+                18611192,
+                0,
+                1
+            ],
+            [
+                "__wt_btcur_search_near",
+                19351125,
+                0,
+                1
+            ],
+            [
+                "__curfile_prev",
+                18610861,
+                0,
+                1
+            ],
+            [
+                "__wt_btcur_search_near",
+                19349044,
+                0,
+                1
+            ],
+            [
+                "__curfile_search_near",
+                18618506,
+                0,
+                1
+            ],
+            [
+                "__curfile_search_near",
+                18618128,
+                0,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0x126a2d0",
+            "0x126c57d",
+            "0x126b415",
+            "0x11bfbf8",
+            "0x1274655",
+            "0x11bfaad",
+            "0x1273e34",
+            "0x11c188a",
+            "0x11c1710"
+        ],
+        "insn": 19309264,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": 3.4891121909000002,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 37031,
+                "insn": 19309264,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 3.4891121909000002,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 37032,
+                "insn": 19318141,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 3.4891121909000002,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 100.0,
+                    "corr": 0.6,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": false,
+                    "distribution": [
+                        2,
+                        1,
+                        2
+                    ],
+                    "weighted_distribution": [
+                        1.39564487636,
+                        0.69782243818,
+                        1.39564487636
+                    ]
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 15092,
+                "insn": 19313685,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 0.69782243818,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 20.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.2
+                },
+                "timestamp": 48597,
+                "insn": 18611192,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 2.79128975272,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 80.0,
+                    "corr": 0.5,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.8
+                },
+                "timestamp": 15080,
+                "insn": 19351125,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 0.69782243818,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 20.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.2
+                },
+                "timestamp": 48598,
+                "insn": 18610861,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 2.79128975272,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 80.0,
+                    "corr": 0.5,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.8
+                },
+                "timestamp": 19124,
+                "insn": 19349044,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 2.79128975272,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 80.0,
+                    "corr": 0.5,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.8
+                },
+                "timestamp": 19125,
+                "insn": 18618506,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 2.79128975272,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 80.0,
+                    "corr": 0.5,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.8
+                },
+                "timestamp": 19126,
+                "insn": 18618128,
+                "duplicate": false
+            }
+        ],
+        "wavefront": [
+            [
+                "__wt_btcur_prev",
+                19313685,
+                0,
+                1
+            ]
+        ]
+    }
+]
