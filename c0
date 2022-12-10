@@ -1,0 +1,1219 @@
+Inner port is: 9999
+Inner port is: 9999
+Parallelization factor is: 16
+Limit is: 10000
+Program is: mongod
+Program args are: --dbpath db --logpath db.log
+Program path is: /home/renxian2/eval_mongodb_56724/
+Starting event file is: starting_events_bad_run
+Demangled name is: __wt_txn_read
+Demangled name is: __wt_txn_read
+Starting events are: [['', 19309264, '__wt_txn_read'], ['', 19284896, '__wt_txn_read']]
+Starting events weights are: {19309264: 2.02898617639, 19284896: 2.02898617639}
+Other ip is: 10.1.0.17
+Other dir is: /home/renxian2/eval_mongodb_56724
+Other prog is: mongod
+Other relations file is: rgroups_simple__0x126a2d0__0x12643a0_1.json
+Other simple indices is: indices__0x126a2d0__0x12643a0_1
+Other key is: __0x126a2d0__0x12643a0_1
+Other trace is: _0x126a2d0__0x12643a0_1_instruction_trace.out
+/home/renxian2/eval_mongodb_56724/cache/mongod/rgroups_simple__0x126a2d0__0x12643a0.json
+/home/renxian2/eval_mongodb_56724/cache/mongod/rgroups_simple__0x126a2d0__0x12643a0_1.json
+/home/renxian2/eval_mongodb_56724/pin/_0x126a2d0__0x12643a0_instruction_trace.out.count
+/home/renxian2/eval_mongodb_56724/pin/_0x126a2d0__0x12643a0_1_instruction_trace.out.count
+/home/renxian2/eval_mongodb_56724/cache/mongod/multiple_context_rgroups_simple__0x126a2d0__0x12643a0.json
+/home/renxian2/eval_mongodb_56724/cache/mongod/multiple_context_rgroups_simple__0x126a2d0__0x12643a0_1.json
+/home/renxian2/eval_mongodb_56724/cache/mongod/multiple_rgroups_simple__0x126a2d0__0x12643a0.json
+/home/renxian2/eval_mongodb_56724/cache/mongod/multiple_rgroups_simple__0x126a2d0__0x12643a0_1.json
+[ra] Loading node info from file: /home/renxian2/eval_mongodb_56724/pin/_0x126a2d0__0x12643a0_instruction_trace.out.count
+node_count_1: {19309264: 1067, 19284896: 1065, 19294395: 1065, 19293726: 0, 19297191: 0, 19289639: 15, 19321530: 0, 19318141: 1067, 19316503: 0, 19313685: 13, 18612776: 3, 18612445: 3, 19348808: 0, 19348683: 0, 19372968: 0, 19373195: 0, 19373163: 0, 19371953: 0, 19351125: 13, 19350189: 13, 19349044: 13, 19443216: 0, 19443145: 0, 19443122: 0, 19443190: 0, 19442844: 0, 19448472: 0, 19448499: 0, 19447390: 0, 18611192: 1, 18610861: 1, 20173424: 0, 20173009: 0, 18618506: 13, 18618128: 13, 18609606: 0, 18609277: 0, 19012569: 0, 19011934: 0, 19131952: 0, 19131581: 0, 19993437: 0, 19994055: 0, 19992973: 0, 19013641: 0, 19015438: 0, 19014897: 0, 19014966: 0, 19015194: 0, 19014430: 0, 19012900: 0, 20172272: 0, 20171913: 0, 20172397: 0, 20172119: 0, 20171679: 0}
+[ra] Loading node info from file: /home/renxian2/eval_mongodb_56724/pin/_0x126a2d0__0x12643a0_1_instruction_trace.out.count
+node_count_2: {19309264: 5, 19284896: 5, 19294395: 5, 19293726: 0, 19297191: 0, 19289639: 15, 19321530: 0, 19318141: 5, 19316503: 0, 19313685: 11, 18612776: 3, 18612445: 3, 19348808: 0, 19348683: 0, 19372968: 0, 19373195: 0, 19373163: 0, 19371953: 0, 19351125: 11, 19350189: 13, 19349044: 13, 19443216: 0, 19443145: 0, 19443122: 0, 19443190: 0, 19442844: 0, 19448472: 0, 19448499: 0, 19447390: 0, 18611192: 1, 18610861: 1, 20173424: 0, 20173009: 0, 18618506: 13, 18618128: 13, 18609606: 0, 18609277: 0, 19012569: 0, 19011934: 0, 19131952: 0, 19131581: 0, 19993437: 0, 19994055: 0, 19992973: 0, 19013641: 0, 19015438: 0, 19014897: 0, 19014966: 0, 19015194: 0, 19014430: 0, 19012900: 0, 20172272: 0, 20171913: 0, 20172397: 0, 20172119: 0, 20171679: 0}
+/home/renxian2/eval_mongodb_56724/cache/mongod/pass_rates__0x126a2d0__0x12643a0.json
+/home/renxian2/eval_mongodb_56724/cache/mongod/pass_rates__0x126a2d0__0x12643a0_1.json
+/home/renxian2/eval_mongodb_56724/cache/mongod/pass_rates_def_to_use_site__0x126a2d0__0x12643a0.json
+/home/renxian2/eval_mongodb_56724/cache/mongod/pass_rates_def_to_use_site__0x126a2d0__0x12643a0_1.json
+========================================
+
+2161 __wt_txn_read_19309264_1_0 0x126a2d0 0x126a2d0
+
+/home/renxian2/eval_mongodb_56724/cache/mongod/0x126a2d0_summary
+left_summary: {19309264: set(), 19318141: {19309264}, 19313685: {19318141}, 19351125: {19313685}, 19349044: {19351125}, 18618506: {19349044}, 18618128: {18618506}}
+/home/renxian2/eval_mongodb_56724/cache/mongod/_0x126a2d0_summary
+right_summary: {19309264: set(), 19318141: {19309264}, 19313685: {19318141}, 19351125: {19313685}, 19349044: {19351125}, 18618506: {19349044}, 18618128: {18618506}, 18611192: {19313685}, 18610861: {18611192}}
+insn_to_insn: {19309264: 19309264, 19318141: 19318141, 19313685: 19313685, 19351125: 19351125, 19349044: 19349044, 18618506: 18618506, 18618128: 18618128}
+[compare_relation] Adding node to weight map on the left: 0x126a2d0
+[compare_relation] Adding node to weight map on the right: 0x126a2d0
+[compare_relation] Adding node to weight map on the left: 0x126c57d
+[compare_relation] Adding node to weight map on the right: 0x126c57d
+[compare_relation] Adding node to weight map on the left: 0x126b415
+[compare_relation] Adding node to weight map on the right: 0x126b415
+[compare_relation] Adding node to weight map on the left: 0x1274655
+[compare_relation] Adding node to weight map on the right: 0x1274655
+[compare_relation] Adding node to weight map on the left: 0x1273e34
+[compare_relation] Adding node to weight map on the right: 0x1273e34
+[compare_relation] Adding node to weight map on the left: 0x11c188a
+[compare_relation] Adding node to weight map on the right: 0x11c188a
+[compare_relation] Adding node to weight map on the left: 0x11c1710
+[compare_relation] Adding node to weight map on the right: 0x11c1710
+======================================================================
+[compare_relation] Examining node1: 0x11bfbf8
+[compare_relation] comparing children relations for 0x11bfbf8 and 0x11bfbf8
+[compare_relation] only keeping these instructions on the left  
+[compare_relation] only keeping these instructions on the right ['0x126b415']
+[compare_relation] Looking for relation pairs, insn1: 0x11bfbf8 insn2: 0x11bfbf8
+[compare_relation] Children relations are equal? False
+[compare_relation] Adding node to weight map on the right: 0x11bfbf8
+[compare_relation] One of the relations is None.
+======================================================================
+[compare_relation] Examining node1: 0x11bfaad
+[compare_relation] comparing children relations for 0x11bfaad and 0x11bfaad
+[compare_relation] only keeping these instructions on the left  
+[compare_relation] only keeping these instructions on the right ['0x11bfbf8']
+[compare_relation] Looking for relation pairs, insn1: 0x11bfaad insn2: 0x11bfaad
+[compare_relation] Children relations are equal? False
+[compare_relation] Adding node to weight map on the right: 0x11bfaad
+[compare_relation] One of the relations is None.
+======================================================================
+[compare_relation] Examining node: 0x126a2d0 number seen: 0
+  >>> __wt_txn_read:19309264 0x126a2d0 timestamp: 1099914<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+  >>> __wt_txn_read:19309264 0x126a2d0 timestamp: 37031<<<
+  Total weight:                3.49 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+[compare_relation] succes on the right []
+[compare_relation] succes on the left []
+[compare_relation] Looking for relation pairs, insn1: 0x126a2d0 insn2: 0x126a2d0
+[compare_relation] original weights full: 100.0
+[compare_relation] original weights: 0
+[compare_relation]   succes weights: []
+[compare_relation] no succes, use original weight. 
+[compare_relation] new weights: 0
+======================================================================
+[compare_relation] Examining node: 0x126c57d number seen: 1
+  >>> __wt_btcur_prev:19318141 0x126c57d timestamp: 1099915<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+  >>> __wt_btcur_prev:19318141 0x126c57d timestamp: 37032<<<
+  Total weight:                3.49 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+[compare_relation] succes on the right ['0x126a2d0']
+[compare_relation] succes on the left ['0x126a2d0']
+[compare_relation] Looking for relation pairs, insn1: 0x126c57d insn2: 0x126c57d
+[compare_relation] 0x126a2d0 succe weights is: 100.0
+---------------------------------
+['__wt_txn_read', 19309264, 0, 1] 0x126a2d0
+  >>> __wt_btcur_prev:19318141 0x126c57d timestamp: 0<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+['__wt_txn_read', 19309264, 0, 1] 0x126a2d0
+  >>> __wt_btcur_prev:19318141 0x126c57d timestamp: 0<<<
+  Total weight:                3.49 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+---------------------------------
+[compare_relation] Equals? True
+[compare_relation] impact: 0
+[compare_relation] impact is: 0
+---------------------------------
+[compare_relation] original weights full: 100.0
+[compare_relation] original weights: 0
+[compare_relation]   succes weights: [[0, 100.0]]
+[compare_relation] new weights: 0.0
+======================================================================
+[compare_relation] Examining node: 0x126b415 number seen: 2
+  >>> __wt_btcur_prev:19313685 0x126b415 timestamp: 267671<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr: 74.51% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.34, std: 0.47) and weighted distrib (mean: 2.72, std: 0.96)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+  >>> __wt_btcur_prev:19313685 0x126b415 timestamp: 15092<<<
+  Total weight:                3.49 %Contrib:100.00% Corr: 60.00% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.67, std: 0.47) and weighted distrib (mean: 1.16, std: 0.33)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+[compare_relation] succes on the right ['0x126c57d']
+[compare_relation] succes on the left ['0x126c57d']
+[compare_relation] Looking for relation pairs, insn1: 0x126b415 insn2: 0x126b415
+[compare_relation] 0x126c57d succe weights is: 100.0
+---------------------------------
+['__wt_btcur_prev', 19318141, 0, 1] 0x126c57d
+  >>> __wt_btcur_prev:19313685 0x126b415 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr: 74.51% order:     0 
+  => forward:  INVARIANT with ratio: 87.98086755731487
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+['__wt_btcur_prev', 19318141, 0, 1] 0x126c57d
+  >>> __wt_btcur_prev:19313685 0x126b415 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr: 60.00% order:     0 
+  => forward:  INVARIANT with ratio: 0.3992023928215354
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+---------------------------------
+[compare_relation] Equals? False
+[compare_relation] impact: 99.54626226825796
+[compare_relation] impact is: 99.54626226825796
+---------------------------------
+[compare_relation] original weights full: 100.0
+[compare_relation] original weights: 0
+[compare_relation]   succes weights: [[99.54626226825796, 100.0]]
+[compare_relation] new weights: 99.54626226825796
+======================================================================
+[compare_relation] Examining node: 0x1274655 number seen: 3
+  >>> __wt_btcur_search_near:19351125 0x1274655 timestamp: 267042<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr: 74.51% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.34, std: 0.47) and weighted distrib (mean: 2.72, std: 0.96)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+  >>> __wt_btcur_search_near:19351125 0x1274655 timestamp: 15080<<<
+  Total weight:                2.79 %Contrib: 80.00% Corr: 50.00% order:     0 
+  => forward:  INVARIANT with ratio: 2
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 80.00%
+-----------------
+
+[compare_relation] succes on the right ['0x126b415']
+[compare_relation] succes on the left ['0x126b415']
+[compare_relation] Looking for relation pairs, insn1: 0x1274655 insn2: 0x1274655
+[compare_relation] 0x126b415 succe weights is: 100.0
+---------------------------------
+['__wt_btcur_prev', 19313685, 0, 1] 0x126b415
+  >>> __wt_btcur_search_near:19351125 0x1274655 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1.0003299785513942
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+['__wt_btcur_prev', 19313685, 0, 1] 0x126b415
+  >>> __wt_btcur_search_near:19351125 0x1274655 timestamp: 0<<<
+  Total weight:               66.67 %Contrib: 66.67% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 66.67%
+-----------------
+
+---------------------------------
+[compare_relation] Equals? False
+[compare_relation] impact: 0.03298697014679219
+[compare_relation] impact is: 0.03298697014679219
+---------------------------------
+[compare_relation] original weights full: 100.0
+[compare_relation] original weights: 0
+[compare_relation]   succes weights: [[0.03298697014679219, 100.0]]
+[compare_relation] new weights: 0.03298697014679219
+======================================================================
+[compare_relation] Examining node: 0x1273e34 number seen: 4
+  >>> __wt_btcur_search_near:19349044 0x1273e34 timestamp: 270669<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr: 74.51% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.34, std: 0.47) and weighted distrib (mean: 2.72, std: 0.96)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+  >>> __wt_btcur_search_near:19349044 0x1273e34 timestamp: 19124<<<
+  Total weight:                2.79 %Contrib: 80.00% Corr: 50.00% order:     0 
+  => forward:  INVARIANT with ratio: 2
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 80.00%
+-----------------
+
+[compare_relation] succes on the right ['0x1274655']
+[compare_relation] succes on the left ['0x1274655']
+[compare_relation] Looking for relation pairs, insn1: 0x1273e34 insn2: 0x1273e34
+[compare_relation] 0x1274655 succe weights is: 100.0
+---------------------------------
+['__wt_btcur_search_near', 19351125, 0, 1] 0x1274655
+  >>> __wt_btcur_search_near:19349044 0x1273e34 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 0.9981884057971014
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+['__wt_btcur_search_near', 19351125, 0, 1] 0x1274655
+  >>> __wt_btcur_search_near:19349044 0x1273e34 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 0.8318951211417193
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+---------------------------------
+[compare_relation] Equals? False
+[compare_relation] impact: 16.659508734985657
+[compare_relation] impact is: 16.659508734985657
+---------------------------------
+[compare_relation] original weights full: 100.0
+[compare_relation] original weights: 0
+[compare_relation]   succes weights: [[16.659508734985657, 100.0]]
+[compare_relation] new weights: 16.659508734985657
+======================================================================
+[compare_relation] Examining node: 0x11c188a number seen: 5
+  >>> __curfile_search_near:18618506 0x11c188a timestamp: 270670<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr: 74.51% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.34, std: 0.47) and weighted distrib (mean: 2.72, std: 0.96)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+  >>> __curfile_search_near:18618506 0x11c188a timestamp: 19125<<<
+  Total weight:                2.79 %Contrib: 80.00% Corr: 50.00% order:     0 
+  => forward:  INVARIANT with ratio: 2
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 80.00%
+-----------------
+
+[compare_relation] succes on the right ['0x1273e34']
+[compare_relation] succes on the left ['0x1273e34']
+[compare_relation] Looking for relation pairs, insn1: 0x11c188a insn2: 0x11c188a
+[compare_relation] 0x1273e34 succe weights is: 100.0
+---------------------------------
+['__wt_btcur_search_near', 19349044, 0, 1] 0x1273e34
+  >>> __curfile_search_near:18618506 0x11c188a timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+['__wt_btcur_search_near', 19349044, 0, 1] 0x1273e34
+  >>> __curfile_search_near:18618506 0x11c188a timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+---------------------------------
+[compare_relation] Equals? True
+[compare_relation] impact: 0
+[compare_relation] impact is: 0
+---------------------------------
+[compare_relation] original weights full: 100.0
+[compare_relation] original weights: 0
+[compare_relation]   succes weights: [[0, 100.0]]
+[compare_relation] new weights: 0.0
+======================================================================
+[compare_relation] Examining node: 0x11c1710 number seen: 6
+  >>> __curfile_search_near:18618128 0x11c1710 timestamp: 270671<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr: 74.51% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.34, std: 0.47) and weighted distrib (mean: 2.72, std: 0.96)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+  >>> __curfile_search_near:18618128 0x11c1710 timestamp: 19126<<<
+  Total weight:                2.79 %Contrib: 80.00% Corr: 50.00% order:     0 
+  => forward:  INVARIANT with ratio: 2
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 80.00%
+-----------------
+
+[compare_relation] succes on the right ['0x11c188a']
+[compare_relation] succes on the left ['0x11c188a']
+[compare_relation] Looking for relation pairs, insn1: 0x11c1710 insn2: 0x11c1710
+[compare_relation] 0x11c188a succe weights is: 100.0
+---------------------------------
+['__curfile_search_near', 18618506, 0, 1] 0x11c188a
+  >>> __curfile_search_near:18618128 0x11c1710 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+['__curfile_search_near', 18618506, 0, 1] 0x11c188a
+  >>> __curfile_search_near:18618128 0x11c1710 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+---------------------------------
+[compare_relation] Equals? True
+[compare_relation] impact: 0
+[compare_relation] impact is: 0
+---------------------------------
+[compare_relation] original weights full: 100.0
+[compare_relation] original weights: 0
+[compare_relation]   succes weights: [[0, 100.0]]
+[compare_relation] new weights: 0.0
+-----------------------------------------
+weight: 99.54626226825796 timestamp: 24.87037654349763 correlation:74.50796626054358
+0.0 141381.5
+  >>> __wt_btcur_prev:19313685 0x126b415 timestamp: 267671<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr: 74.51% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.34, std: 0.47) and weighted distrib (mean: 2.72, std: 0.96)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+  >>> __wt_btcur_prev:19313685 0x126b415 timestamp: 15092<<<
+  Total weight:                3.49 %Contrib:100.00% Corr: 60.00% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.67, std: 0.47) and weighted distrib (mean: 1.16, std: 0.33)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+[compare_relation] comparing children relations for 0x126b415 and 0x126b415
+[compare_relation] only keeping these instructions on the left  
+[compare_relation] only keeping these instructions on the right 
+[compare_relation] Looking for relation pairs, insn1: 0x126b415 insn2: 0x126b415
+---------------------------------
+['__wt_btcur_prev', 19313685, 0, 1] 0x126b415
+  >>> __wt_btcur_prev:19313685 0x126b415 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_btcur_prev', 19313685, 0, 1] 0x126b415
+  >>> __wt_btcur_prev:19313685 0x126b415 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x126b415
+[compare_relation] Instruction on the right: 0x126b415
+[compare_relation] Actually comparing...
+[compare_relation] Relations considered equal.
+---------------------------------
+['__wt_btcur_prev', 19313685, 0, 1] 0x126b415
+  >>> __wt_btcur_prev:19313685 0x126b415 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_btcur_prev', 19313685, 0, 1] 0x126b415
+  >>> __wt_btcur_prev:19313685 0x126b415 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x126b415
+[compare_relation] Instruction on the right: 0x126b415
+[compare_relation] Actually comparing...
+[compare_relation] Relations considered equal.
+---------------------------------
+['__wt_btcur_prev', 19318141, 0, 1] 0x126c57d
+  >>> __wt_btcur_prev:19313685 0x126b415 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr: 74.51% order:     0 
+  => forward:  INVARIANT with ratio: 87.98086755731487
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_btcur_prev', 19318141, 0, 1] 0x126c57d
+  >>> __wt_btcur_prev:19313685 0x126b415 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr: 60.00% order:     0 
+  => forward:  INVARIANT with ratio: 0.3992023928215354
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x126c57d
+[compare_relation] Instruction on the right: 0x126c57d
+[compare_relation] Actually comparing...
+---------------------------------
+['__wt_btcur_prev', 19318141, 0, 1] 0x126c57d
+  >>> __wt_btcur_prev:19313685 0x126b415 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr: 74.51% order:     0 
+  => forward:  INVARIANT with ratio: 87.98086755731487
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_btcur_prev', 19318141, 0, 1] 0x126c57d
+  >>> __wt_btcur_prev:19313685 0x126b415 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr: 60.00% order:     0 
+  => forward:  INVARIANT with ratio: 0.3992023928215354
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x126c57d
+[compare_relation] Instruction on the right: 0x126c57d
+[compare_relation] Actually comparing...
+[compare_relation] compare immediate successor rel result: True
+HAS RANK
+-----------------------------------------
+weight: 20.0 timestamp: 8.548859357560202 correlation:100
+20.0 48598
+None
+  >>> __curfile_prev:18610861 0x11bfaad timestamp: 48598<<<
+  Total weight:                0.70 %Contrib: 20.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 20.00%
+-----------------
+
+[compare_relation] only has r right: 0
+[compare_relation] comparing children relations for 0x11bfaad and 0x11bfaad
+[compare_relation] only keeping these instructions on the left  
+[compare_relation] only keeping these instructions on the right 
+[compare_relation] Looking for relation pairs, insn1: 0x11bfaad insn2: 0x11bfaad
+[compare_relation] compare immediate successor rel result: True
+HAS RANK
+-----------------------------------------
+weight: 20.0 timestamp: 8.548683447865203 correlation:100
+20.0 48597
+None
+  >>> __curfile_prev:18611192 0x11bfbf8 timestamp: 48597<<<
+  Total weight:                0.70 %Contrib: 20.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 20.00%
+-----------------
+
+[compare_relation] only has r right: 1
+[compare_relation] comparing children relations for 0x11bfbf8 and 0x11bfbf8
+[compare_relation] only keeping these instructions on the left  
+[compare_relation] only keeping these instructions on the right 
+[compare_relation] Looking for relation pairs, insn1: 0x11bfbf8 insn2: 0x11bfbf8
+---------------------------------
+None None
+None
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_btcur_prev', 19313685, 0, 1] 0x126b415
+  >>> __curfile_prev:18611192 0x11bfbf8 timestamp: 0<<<
+  Total weight:               33.33 %Contrib: 33.33% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 33.33%
+-----------------
+
+---------------------------------
+None
+[compare_relation] Instruction on the right: 0x126b415
+[compare_relation] missing r_right
+[compare_relation] Actually comparing...
+---------------------------------
+None None
+None
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_btcur_prev', 19313685, 0, 1] 0x126b415
+  >>> __curfile_prev:18611192 0x11bfbf8 timestamp: 0<<<
+  Total weight:               33.33 %Contrib: 33.33% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 33.33%
+-----------------
+
+---------------------------------
+None
+[compare_relation] Instruction on the right: 0x126b415
+[compare_relation] missing r_right
+[compare_relation] Actually comparing...
+[compare_relation] compare immediate successor rel result: True
+HAS RANK
+-----------------------------------------
+weight: 16.659508734985657 timestamp: 25.488699121419028 correlation:74.50796626054358
+20.0 144896.5
+  >>> __wt_btcur_search_near:19349044 0x1273e34 timestamp: 270669<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr: 74.51% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.34, std: 0.47) and weighted distrib (mean: 2.72, std: 0.96)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+  >>> __wt_btcur_search_near:19349044 0x1273e34 timestamp: 19124<<<
+  Total weight:                2.79 %Contrib: 80.00% Corr: 50.00% order:     0 
+  => forward:  INVARIANT with ratio: 2
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 80.00%
+-----------------
+
+[compare_relation] comparing children relations for 0x1273e34 and 0x1273e34
+[compare_relation] only keeping these instructions on the left  
+[compare_relation] only keeping these instructions on the right 
+[compare_relation] Looking for relation pairs, insn1: 0x1273e34 insn2: 0x1273e34
+---------------------------------
+['__wt_btcur_search_near', 19349044, 0, 1] 0x1273e34
+  >>> __wt_btcur_search_near:19349044 0x1273e34 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_btcur_search_near', 19349044, 0, 1] 0x1273e34
+  >>> __wt_btcur_search_near:19349044 0x1273e34 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x1273e34
+[compare_relation] Instruction on the right: 0x1273e34
+[compare_relation] Actually comparing...
+[compare_relation] Relations considered equal.
+---------------------------------
+['__wt_btcur_search_near', 19349044, 0, 1] 0x1273e34
+  >>> __wt_btcur_search_near:19349044 0x1273e34 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_btcur_search_near', 19349044, 0, 1] 0x1273e34
+  >>> __wt_btcur_search_near:19349044 0x1273e34 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x1273e34
+[compare_relation] Instruction on the right: 0x1273e34
+[compare_relation] Actually comparing...
+[compare_relation] Relations considered equal.
+---------------------------------
+['__wt_btcur_search_near', 19351125, 0, 1] 0x1274655
+  >>> __wt_btcur_search_near:19349044 0x1273e34 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 0.9981884057971014
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_btcur_search_near', 19351125, 0, 1] 0x1274655
+  >>> __wt_btcur_search_near:19349044 0x1273e34 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 0.8318951211417193
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x1274655
+[compare_relation] Instruction on the right: 0x1274655
+[compare_relation] Actually comparing...
+---------------------------------
+['__wt_btcur_search_near', 19351125, 0, 1] 0x1274655
+  >>> __wt_btcur_search_near:19349044 0x1273e34 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 0.9981884057971014
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_btcur_search_near', 19351125, 0, 1] 0x1274655
+  >>> __wt_btcur_search_near:19349044 0x1273e34 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 0.8318951211417193
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x1274655
+[compare_relation] Instruction on the right: 0x1274655
+[compare_relation] Actually comparing...
+[compare_relation] compare immediate successor rel result: True
+HAS RANK
+-----------------------------------------
+weight: 0.03298697014679219 timestamp: 24.813997486250457 correlation:74.50796626054358
+20.0 141061.0
+  >>> __wt_btcur_search_near:19351125 0x1274655 timestamp: 267042<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr: 74.51% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.34, std: 0.47) and weighted distrib (mean: 2.72, std: 0.96)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+  >>> __wt_btcur_search_near:19351125 0x1274655 timestamp: 15080<<<
+  Total weight:                2.79 %Contrib: 80.00% Corr: 50.00% order:     0 
+  => forward:  INVARIANT with ratio: 2
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 80.00%
+-----------------
+
+[compare_relation] comparing children relations for 0x1274655 and 0x1274655
+[compare_relation] only keeping these instructions on the left  
+[compare_relation] only keeping these instructions on the right 
+[compare_relation] Looking for relation pairs, insn1: 0x1274655 insn2: 0x1274655
+---------------------------------
+['__wt_btcur_prev', 19313685, 0, 1] 0x126b415
+  >>> __wt_btcur_search_near:19351125 0x1274655 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1.0003299785513942
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_btcur_prev', 19313685, 0, 1] 0x126b415
+  >>> __wt_btcur_search_near:19351125 0x1274655 timestamp: 0<<<
+  Total weight:               66.67 %Contrib: 66.67% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 66.67%
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x126b415
+[compare_relation] Instruction on the right: 0x126b415
+[compare_relation] Actually comparing...
+---------------------------------
+['__wt_btcur_prev', 19313685, 0, 1] 0x126b415
+  >>> __wt_btcur_search_near:19351125 0x1274655 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1.0003299785513942
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_btcur_prev', 19313685, 0, 1] 0x126b415
+  >>> __wt_btcur_search_near:19351125 0x1274655 timestamp: 0<<<
+  Total weight:               66.67 %Contrib: 66.67% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 66.67%
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x126b415
+[compare_relation] Instruction on the right: 0x126b415
+[compare_relation] Actually comparing...
+---------------------------------
+['__wt_btcur_search_near', 19351125, 0, 1] 0x1274655
+  >>> __wt_btcur_search_near:19351125 0x1274655 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_btcur_search_near', 19351125, 0, 1] 0x1274655
+  >>> __wt_btcur_search_near:19351125 0x1274655 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x1274655
+[compare_relation] Instruction on the right: 0x1274655
+[compare_relation] Actually comparing...
+[compare_relation] Relations considered equal.
+---------------------------------
+['__wt_btcur_search_near', 19351125, 0, 1] 0x1274655
+  >>> __wt_btcur_search_near:19351125 0x1274655 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_btcur_search_near', 19351125, 0, 1] 0x1274655
+  >>> __wt_btcur_search_near:19351125 0x1274655 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x1274655
+[compare_relation] Instruction on the right: 0x1274655
+[compare_relation] Actually comparing...
+[compare_relation] Relations considered equal.
+[compare_relation] compare immediate successor rel result: True
+HAS RANK
+-----------------------------------------
+weight: 0.0 timestamp: 25.489050940809026 correlation:74.50796626054358
+20.0 144898.5
+  >>> __curfile_search_near:18618128 0x11c1710 timestamp: 270671<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr: 74.51% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.34, std: 0.47) and weighted distrib (mean: 2.72, std: 0.96)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+  >>> __curfile_search_near:18618128 0x11c1710 timestamp: 19126<<<
+  Total weight:                2.79 %Contrib: 80.00% Corr: 50.00% order:     0 
+  => forward:  INVARIANT with ratio: 2
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 80.00%
+-----------------
+
+[compare_relation] comparing children relations for 0x11c1710 and 0x11c1710
+[compare_relation] only keeping these instructions on the left  
+[compare_relation] only keeping these instructions on the right 
+[compare_relation] Looking for relation pairs, insn1: 0x11c1710 insn2: 0x11c1710
+---------------------------------
+['__curfile_search_near', 18618506, 0, 1] 0x11c188a
+  >>> __curfile_search_near:18618128 0x11c1710 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__curfile_search_near', 18618506, 0, 1] 0x11c188a
+  >>> __curfile_search_near:18618128 0x11c1710 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x11c188a
+[compare_relation] Instruction on the right: 0x11c188a
+[compare_relation] Actually comparing...
+[compare_relation] Relations considered equal.
+---------------------------------
+['__curfile_search_near', 18618506, 0, 1] 0x11c188a
+  >>> __curfile_search_near:18618128 0x11c1710 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__curfile_search_near', 18618506, 0, 1] 0x11c188a
+  >>> __curfile_search_near:18618128 0x11c1710 timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x11c188a
+[compare_relation] Instruction on the right: 0x11c188a
+[compare_relation] Actually comparing...
+[compare_relation] Relations considered equal.
+[compare_relation] compare immediate successor rel result: False
+NO RANK, ignore the relations: 0x11c1710 0x11c1710
+-----------------------------------------
+weight: 0.0 timestamp: 25.488875031114027 correlation:74.50796626054358
+20.0 144897.5
+  >>> __curfile_search_near:18618506 0x11c188a timestamp: 270670<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr: 74.51% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.34, std: 0.47) and weighted distrib (mean: 2.72, std: 0.96)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+  >>> __curfile_search_near:18618506 0x11c188a timestamp: 19125<<<
+  Total weight:                2.79 %Contrib: 80.00% Corr: 50.00% order:     0 
+  => forward:  INVARIANT with ratio: 2
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 80.00%
+-----------------
+
+[compare_relation] comparing children relations for 0x11c188a and 0x11c188a
+[compare_relation] only keeping these instructions on the left  
+[compare_relation] only keeping these instructions on the right 
+[compare_relation] Looking for relation pairs, insn1: 0x11c188a insn2: 0x11c188a
+---------------------------------
+['__curfile_search_near', 18618506, 0, 1] 0x11c188a
+  >>> __curfile_search_near:18618506 0x11c188a timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__curfile_search_near', 18618506, 0, 1] 0x11c188a
+  >>> __curfile_search_near:18618506 0x11c188a timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x11c188a
+[compare_relation] Instruction on the right: 0x11c188a
+[compare_relation] Actually comparing...
+[compare_relation] Relations considered equal.
+---------------------------------
+['__curfile_search_near', 18618506, 0, 1] 0x11c188a
+  >>> __curfile_search_near:18618506 0x11c188a timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__curfile_search_near', 18618506, 0, 1] 0x11c188a
+  >>> __curfile_search_near:18618506 0x11c188a timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x11c188a
+[compare_relation] Instruction on the right: 0x11c188a
+[compare_relation] Actually comparing...
+[compare_relation] Relations considered equal.
+---------------------------------
+['__wt_btcur_search_near', 19349044, 0, 1] 0x1273e34
+  >>> __curfile_search_near:18618506 0x11c188a timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_btcur_search_near', 19349044, 0, 1] 0x1273e34
+  >>> __curfile_search_near:18618506 0x11c188a timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x1273e34
+[compare_relation] Instruction on the right: 0x1273e34
+[compare_relation] Actually comparing...
+[compare_relation] Relations considered equal.
+---------------------------------
+['__wt_btcur_search_near', 19349044, 0, 1] 0x1273e34
+  >>> __curfile_search_near:18618506 0x11c188a timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_btcur_search_near', 19349044, 0, 1] 0x1273e34
+  >>> __curfile_search_near:18618506 0x11c188a timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x1273e34
+[compare_relation] Instruction on the right: 0x1273e34
+[compare_relation] Actually comparing...
+[compare_relation] Relations considered equal.
+[compare_relation] compare immediate successor rel result: False
+NO RANK, ignore the relations: 0x11c188a 0x11c188a
+-----------------------------------------
+weight: 0.0 timestamp: 100.0 correlation:100
+0.0 568473.5
+  >>> __wt_btcur_prev:19318141 0x126c57d timestamp: 1099915<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+  >>> __wt_btcur_prev:19318141 0x126c57d timestamp: 37032<<<
+  Total weight:                3.49 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+[compare_relation] comparing children relations for 0x126c57d and 0x126c57d
+[compare_relation] only keeping these instructions on the left  
+[compare_relation] only keeping these instructions on the right 
+[compare_relation] Looking for relation pairs, insn1: 0x126c57d insn2: 0x126c57d
+---------------------------------
+['__wt_txn_read', 19309264, 0, 1] 0x126a2d0
+  >>> __wt_btcur_prev:19318141 0x126c57d timestamp: 0<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_txn_read', 19309264, 0, 1] 0x126a2d0
+  >>> __wt_btcur_prev:19318141 0x126c57d timestamp: 0<<<
+  Total weight:                3.49 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x126a2d0
+[compare_relation] Instruction on the right: 0x126a2d0
+[compare_relation] Actually comparing...
+[compare_relation] Relations considered equal.
+---------------------------------
+['__wt_txn_read', 19309264, 0, 1] 0x126a2d0
+  >>> __wt_btcur_prev:19318141 0x126c57d timestamp: 0<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_txn_read', 19309264, 0, 1] 0x126a2d0
+  >>> __wt_btcur_prev:19318141 0x126c57d timestamp: 0<<<
+  Total weight:                3.49 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x126a2d0
+[compare_relation] Instruction on the right: 0x126a2d0
+[compare_relation] Actually comparing...
+[compare_relation] Relations considered equal.
+---------------------------------
+['__wt_btcur_prev', 19318141, 0, 1] 0x126c57d
+  >>> __wt_btcur_prev:19318141 0x126c57d timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_btcur_prev', 19318141, 0, 1] 0x126c57d
+  >>> __wt_btcur_prev:19318141 0x126c57d timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x126c57d
+[compare_relation] Instruction on the right: 0x126c57d
+[compare_relation] Actually comparing...
+[compare_relation] Relations considered equal.
+---------------------------------
+['__wt_btcur_prev', 19318141, 0, 1] 0x126c57d
+  >>> __wt_btcur_prev:19318141 0x126c57d timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_btcur_prev', 19318141, 0, 1] 0x126c57d
+  >>> __wt_btcur_prev:19318141 0x126c57d timestamp: 0<<<
+  Total weight:              100.00 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x126c57d
+[compare_relation] Instruction on the right: 0x126c57d
+[compare_relation] Actually comparing...
+[compare_relation] Relations considered equal.
+[compare_relation] compare immediate successor rel result: False
+NO RANK, ignore the relations: 0x126c57d 0x126c57d
+-----------------------------------------
+weight: 0 timestamp: 99.999824090305 correlation:100
+0.0 568472.5
+  >>> __wt_txn_read:19309264 0x126a2d0 timestamp: 1099914<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+  >>> __wt_txn_read:19309264 0x126a2d0 timestamp: 37031<<<
+  Total weight:                3.49 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 2
+-----------------
+
+[compare_relation] comparing children relations for 0x126a2d0 and 0x126a2d0
+[compare_relation] only keeping these instructions on the left  
+[compare_relation] only keeping these instructions on the right 
+[compare_relation] Looking for relation pairs, insn1: 0x126a2d0 insn2: 0x126a2d0
+---------------------------------
+['__wt_txn_read', 19309264, 0, 1] 0x126a2d0
+  >>> __wt_txn_read:19309264 0x126a2d0 timestamp: 0<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 4
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_txn_read', 19309264, 0, 1] 0x126a2d0
+  >>> __wt_txn_read:19309264 0x126a2d0 timestamp: 0<<<
+  Total weight:                3.49 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 4
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x126a2d0
+[compare_relation] Instruction on the right: 0x126a2d0
+[compare_relation] Actually comparing...
+[compare_relation] Relations considered equal.
+---------------------------------
+['__wt_txn_read', 19309264, 0, 1] 0x126a2d0
+  >>> __wt_txn_read:19309264 0x126a2d0 timestamp: 0<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 4
+-----------------
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+['__wt_txn_read', 19309264, 0, 1] 0x126a2d0
+  >>> __wt_txn_read:19309264 0x126a2d0 timestamp: 0<<<
+  Total weight:                3.49 %Contrib:100.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 4
+-----------------
+
+---------------------------------
+[compare_relation] Instruction on the left: 0x126a2d0
+[compare_relation] Instruction on the right: 0x126a2d0
+[compare_relation] Actually comparing...
+[compare_relation] Relations considered equal.
+[compare_relation] compare immediate successor rel result: False
+NO RANK, ignore the relations: 0x126a2d0 0x126a2d0
+===============================================
+===============================================
+-----------------------------------------
+rank: 5
+weight: 0.03298697014679219 timestamp: 24.813997486250457 correlation:74.50796626054358
+20.0 141061.0
+  >>> __wt_btcur_search_near:19351125 0x1274655 timestamp: 267042<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr: 74.51% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.34, std: 0.47) and weighted distrib (mean: 2.72, std: 0.96)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+  >>> __wt_btcur_search_near:19351125 0x1274655 timestamp: 15080<<<
+  Total weight:                2.79 %Contrib: 80.00% Corr: 50.00% order:     0 
+  => forward:  INVARIANT with ratio: 2
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 80.00%
+-----------------
+
+-----------------------------------------
+rank: 4
+weight: 16.659508734985657 timestamp: 25.488699121419028 correlation:74.50796626054358
+20.0 144896.5
+  >>> __wt_btcur_search_near:19349044 0x1273e34 timestamp: 270669<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr: 74.51% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.34, std: 0.47) and weighted distrib (mean: 2.72, std: 0.96)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+  >>> __wt_btcur_search_near:19349044 0x1273e34 timestamp: 19124<<<
+  Total weight:                2.79 %Contrib: 80.00% Corr: 50.00% order:     0 
+  => forward:  INVARIANT with ratio: 2
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 80.00%
+-----------------
+
+-----------------------------------------
+rank: 3
+weight: 20.0 timestamp: 8.548683447865203 correlation:100
+20.0 48597
+None
+  >>> __curfile_prev:18611192 0x11bfbf8 timestamp: 48597<<<
+  Total weight:                0.70 %Contrib: 20.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 20.00%
+-----------------
+
+-----------------------------------------
+rank: 2
+weight: 20.0 timestamp: 8.548859357560202 correlation:100
+20.0 48598
+None
+  >>> __curfile_prev:18610861 0x11bfaad timestamp: 48598<<<
+  Total weight:                0.70 %Contrib: 20.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 20.00%
+-----------------
+
+-----------------------------------------
+rank: 1
+weight: 99.54626226825796 timestamp: 24.87037654349763 correlation:74.50796626054358
+0.0 141381.5
+  >>> __wt_btcur_prev:19313685 0x126b415 timestamp: 267671<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr: 74.51% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.34, std: 0.47) and weighted distrib (mean: 2.72, std: 0.96)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+  >>> __wt_btcur_prev:19313685 0x126b415 timestamp: 15092<<<
+  Total weight:                3.49 %Contrib:100.00% Corr: 60.00% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.67, std: 0.47) and weighted distrib (mean: 1.16, std: 0.33)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+-----------------------------------------
+rank: 5
+weight: 0.03298697014679219 timestamp: 24.813997486250457 correlation:74.50796626054358
+20.0 141061.0
+  >>> __wt_btcur_search_near:19351125 0x1274655 timestamp: 267042<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr: 74.51% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.34, std: 0.47) and weighted distrib (mean: 2.72, std: 0.96)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+  >>> __wt_btcur_search_near:19351125 0x1274655 timestamp: 15080<<<
+  Total weight:                2.79 %Contrib: 80.00% Corr: 50.00% order:     0 
+  => forward:  INVARIANT with ratio: 2
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 80.00%
+-----------------
+
+HERE 3
+[compare_relation] Current node: 0x1274655
+[compare_relation] Connecting to child node: 0x126b415
+[compare_relation] Current node: 0x126b415
+[compare_relation] Connecting to child node: 0x126a2d0
+-----------------------------------------
+rank: 4
+weight: 16.659508734985657 timestamp: 25.488699121419028 correlation:74.50796626054358
+20.0 144896.5
+  >>> __wt_btcur_search_near:19349044 0x1273e34 timestamp: 270669<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr: 74.51% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.34, std: 0.47) and weighted distrib (mean: 2.72, std: 0.96)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+  >>> __wt_btcur_search_near:19349044 0x1273e34 timestamp: 19124<<<
+  Total weight:                2.79 %Contrib: 80.00% Corr: 50.00% order:     0 
+  => forward:  INVARIANT with ratio: 2
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 80.00%
+-----------------
+
+HERE 3
+[compare_relation] Current node: 0x1273e34
+[compare_relation] Connecting to child node: 0x126b415
+[compare_relation] Current node: 0x126b415
+-----------------------------------------
+rank: 3
+weight: 20.0 timestamp: 8.548683447865203 correlation:100
+20.0 48597
+None
+  >>> __curfile_prev:18611192 0x11bfbf8 timestamp: 48597<<<
+  Total weight:                0.70 %Contrib: 20.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 20.00%
+-----------------
+
+-----------------------------------------
+rank: 2
+weight: 20.0 timestamp: 8.548859357560202 correlation:100
+20.0 48598
+None
+  >>> __curfile_prev:18610861 0x11bfaad timestamp: 48598<<<
+  Total weight:                0.70 %Contrib: 20.00% Corr:100.00% order:     0 
+  => forward:  INVARIANT with ratio: 1
+  => backward: INVARIANT with ratio: 1 conditional with proportion: 20.00%
+-----------------
+
+-----------------------------------------
+rank: 1
+weight: 99.54626226825796 timestamp: 24.87037654349763 correlation:74.50796626054358
+0.0 141381.5
+  >>> __wt_btcur_prev:19313685 0x126b415 timestamp: 267671<<<
+  Total weight:             2164.93 %Contrib:100.00% Corr: 74.51% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.34, std: 0.47) and weighted distrib (mean: 2.72, std: 0.96)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+  >>> __wt_btcur_prev:19313685 0x126b415 timestamp: 15092<<<
+  Total weight:                3.49 %Contrib:100.00% Corr: 60.00% order:     0 
+  => forward:  VARIABLE with distrib (mean: 1.67, std: 0.47) and weighted distrib (mean: 1.16, std: 0.33)
+  => backward: INVARIANT with ratio: 1
+-----------------
+
+HERE 3
+[compare_relation] Current node: 0x126b415
+
+2161 __wt_txn_read_19309264_1_0 0x126a2d0 0x126a2d0
+
+========================================
+double free or corruption (out)
