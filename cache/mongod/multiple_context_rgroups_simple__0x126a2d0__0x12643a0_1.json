@@ -1,0 +1,487 @@
+[
+    {
+        "starting_node": [
+            "__curfile_search_near",
+            18618506,
+            0,
+            1
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "__curfile_search_near",
+                18618506,
+                0,
+                1
+            ],
+            [
+                "__curfile_search_near",
+                18618128,
+                0,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0x11c188a",
+            "0x11c1710"
+        ],
+        "insn": 18618506,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 18618506,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 18618128,
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "__wt_txn_read",
+            19309264,
+            0,
+            1
+        ],
+        "use_weight": true,
+        "weight": 3.4891121909000002,
+        "predes": [
+            [
+                "__wt_txn_read",
+                19309264,
+                0,
+                1
+            ],
+            [
+                "__wt_btcur_prev",
+                19318141,
+                0,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0x126a2d0",
+            "0x126c57d"
+        ],
+        "insn": 19309264,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": 3.4891121909000002,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 4,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 19309264,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 3.4891121909000002,
+                    "base_weight": 3.4891121909000002,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 19318141,
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "__wt_btcur_search_near",
+            19349044,
+            0,
+            1
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "__wt_btcur_search_near",
+                19349044,
+                0,
+                1
+            ],
+            [
+                "__curfile_search_near",
+                18618506,
+                0,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0x1273e34",
+            "0x11c188a"
+        ],
+        "insn": 19349044,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 19349044,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 18618506,
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "__wt_btcur_prev",
+            19313685,
+            0,
+            1
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "__wt_btcur_prev",
+                19313685,
+                0,
+                1
+            ],
+            [
+                "__curfile_prev",
+                18611192,
+                0,
+                1
+            ],
+            [
+                "__wt_btcur_search_near",
+                19351125,
+                0,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0x126b415",
+            "0x11bfbf8",
+            "0x1274655"
+        ],
+        "insn": 19313685,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 19313685,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 33.33333333333333,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.3333333333333333
+                },
+                "timestamp": 0,
+                "insn": 18611192,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 66.66666666666666,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.6666666666666666
+                },
+                "timestamp": 0,
+                "insn": 19351125,
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "__wt_btcur_search_near",
+            19351125,
+            0,
+            1
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "__wt_btcur_search_near",
+                19351125,
+                0,
+                1
+            ],
+            [
+                "__wt_btcur_search_near",
+                19349044,
+                0,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0x1274655",
+            "0x1273e34"
+        ],
+        "insn": 19351125,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 19351125,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.8318951211417193,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 19349044,
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "__wt_btcur_prev",
+            19318141,
+            0,
+            1
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "__wt_btcur_prev",
+                19318141,
+                0,
+                1
+            ],
+            [
+                "__wt_btcur_prev",
+                19313685,
+                0,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0x126c57d",
+            "0x126b415"
+        ],
+        "insn": 19318141,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 19318141,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 0.6,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.3992023928215354,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 19313685,
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    }
+]

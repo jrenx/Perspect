@@ -1,0 +1,410 @@
+[
+    {
+        "starting_node": "18618506@__curfile_search_near",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18618506
+        ],
+        "file": "__curfile_search_near",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18618506@__curfile_search_near",
+                "prede_node": "18618506@__curfile_search_near",
+                "prede_count": 795,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18618506
+                ],
+                "file": "__curfile_search_near",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18618506@__curfile_search_near",
+                "prede_node": "18618128@__curfile_search_near",
+                "prede_count": 795,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18618128
+                ],
+                "file": "__curfile_search_near",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19309264@__wt_txn_read",
+        "weight": 2164.9282502081046,
+        "finished": true,
+        "lines": [
+            19309264
+        ],
+        "file": "__wt_txn_read",
+        "use_weight": true,
+        "relations": [
+            {
+                "target_node": "19309264@__wt_txn_read",
+                "prede_node": "19309264@__wt_txn_read",
+                "prede_count": 1067,
+                "weight": {
+                    "actual_weight": 2164.9282502081046,
+                    "base_weight": 2164.9282502081046,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 4,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19309264
+                ],
+                "file": "__wt_txn_read",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19309264@__wt_txn_read",
+                "prede_node": "19318141@__wt_btcur_prev",
+                "prede_count": 1067,
+                "weight": {
+                    "actual_weight": 2164.9282502081046,
+                    "base_weight": 2164.9282502081046,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19318141
+                ],
+                "file": "__wt_btcur_prev",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19349044@__wt_btcur_search_near",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19349044
+        ],
+        "file": "__wt_btcur_search_near",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19349044@__wt_btcur_search_near",
+                "prede_node": "19349044@__wt_btcur_search_near",
+                "prede_count": 795,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19349044
+                ],
+                "file": "__wt_btcur_search_near",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19349044@__wt_btcur_search_near",
+                "prede_node": "18618506@__curfile_search_near",
+                "prede_count": 795,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18618506
+                ],
+                "file": "__curfile_search_near",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19313685@__wt_btcur_prev",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19313685
+        ],
+        "file": "__wt_btcur_prev",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19313685@__wt_btcur_prev",
+                "prede_node": "19313685@__wt_btcur_prev",
+                "prede_count": 795,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19313685
+                ],
+                "file": "__wt_btcur_prev",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19313685@__wt_btcur_prev",
+                "prede_node": "19351125@__wt_btcur_search_near",
+                "prede_count": 795,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1.0003299785513942,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19351125
+                ],
+                "file": "__wt_btcur_search_near",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19351125@__wt_btcur_search_near",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19351125
+        ],
+        "file": "__wt_btcur_search_near",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19351125@__wt_btcur_search_near",
+                "prede_node": "19351125@__wt_btcur_search_near",
+                "prede_count": 795,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19351125
+                ],
+                "file": "__wt_btcur_search_near",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19351125@__wt_btcur_search_near",
+                "prede_node": "19349044@__wt_btcur_search_near",
+                "prede_count": 795,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.9981884057971014,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19349044
+                ],
+                "file": "__wt_btcur_search_near",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19318141@__wt_btcur_prev",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19318141
+        ],
+        "file": "__wt_btcur_prev",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19318141@__wt_btcur_prev",
+                "prede_node": "19318141@__wt_btcur_prev",
+                "prede_count": 1067,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19318141
+                ],
+                "file": "__wt_btcur_prev",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19318141@__wt_btcur_prev",
+                "prede_node": "19313685@__wt_btcur_prev",
+                "prede_count": 795,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 0.7450796626054358,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 87.98086755731487,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19313685
+                ],
+                "file": "__wt_btcur_prev",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    }
+]
