@@ -496,6 +496,8 @@ class CFG:
             if bb in ignore_set:
                 if DEBUG_SIMPLIFY: print("[Simplify]   BB is already removed or cannot be removed")
                 continue
+
+            all_children = set()
             all_succes_before_immed_pdom = set()
             worklist = deque()
             worklist.append(bb)
@@ -507,6 +509,7 @@ class CFG:
                     if DEBUG_SIMPLIFY: print('[Simplify]   child BB already visited, ignore: ' + str(child_bb.id))
                     continue
                 visited.add(child_bb)
+                all_children.add(child_bb)
                 if DEBUG_SIMPLIFY: print("[Simplify]   child BB: " + str(child_bb.id) + \
                       " " + str(child_bb.lines) + \
                       " pdoms are " + str([pdom.lines for pdom in child_bb.pdoms] \
@@ -542,6 +545,18 @@ class CFG:
                 if DEBUG_SIMPLIFY:
                     print("[Simplify]   a child BB was a successor of the immed_pdom, possible have been aggressively simplified")
                 continue
+
+            cannot_simplify = False
+            for child_bb in all_children:
+                if DEBUG_SIMPLIFY: print("[Simplify] checking child_bb " + str(child_bb.id))
+                for child_prede_bb in child_bb.predes:
+                    if DEBUG_SIMPLIFY: print("[Simplify]    prede of child_bb " + str(child_prede_bb.id))
+                    if child_prede_bb not in all_children:
+                        cannot_simplify = True
+            if cannot_simplify is True:
+                if DEBUG_SIMPLIFY: print("[Simplify] Cannot remove the node, likely because it doesn't dominate the post dominator ...")
+                continue
+
             if len(self.target_bbs.intersection(all_succes_before_immed_pdom)) > 0:
                 #or len(self.entry_bbs.intersection(all_succes_before_immed_pdom)) > 0:
                 #ignore_set.union(all_succes_before_immed_pdom) #FIXME, do not assign after union why???
@@ -641,7 +656,10 @@ class CFG:
             if final is True:
                 if DEBUG_SIMPLIFY:
                     print("[simplify] Updating the predecessors and successors for bb: " + str(bb.id))
+                    print("[simplify] BB is: " + str(bb.id))
+                    print("[simplify] immed_pdom is: " + str(bb.immed_pdom.id))
                 for prede in bb.predes:
+                    if DEBUG_SIMPLIFY: print("[simplify] prede is: " + str(prede.id))
                     if bb in prede.succes:
                         prede.succes.remove(bb)
                     if prede.succes in bb.predes: #newly added
