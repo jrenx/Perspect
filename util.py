@@ -74,8 +74,8 @@ def execute_cmd_in_parallel(all_inputs, script_name, prefix, num_processor, prog
             cmd = 'scp {} {}:{}/'.format(file_name, server, curr_dir)
             print("Running command: " + cmd, flush=True)
             os.system(cmd)
-            if server != my_ip:
-                os.remove(file_name)
+            #if server != my_ip:
+            #    os.remove(file_name)
             cmd = 'ssh ' + server + ' "cd ' + curr_dir + '/; nohup ./' + script_name + ' ' \
                   + file_name + ' ' + prog + '_debug ' + my_ip + ':' + curr_dir +'/ > ' + file_name + '.out 2>&1 &"'
             print("Running command: " + cmd, flush=True)

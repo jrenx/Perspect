@@ -2070,6 +2070,8 @@ class StaticDepGraph:
                     print("[indices] Skipping file that could not be found: " + str(node.file))
                     continue
                 map = file_to_mapping[node.file]
+                if node.line not in map:
+                    continue
                 assert node.line in map, node.file + " " + str(node.line) + " " + hex(node.insn)
                 old_line = node.line
                 node.line = map[node.line]

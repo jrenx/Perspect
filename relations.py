@@ -5,7 +5,7 @@ import sys, traceback
 
 DEBUG = True
 Weight_Threshold = 0
-PRINT_IGNORE_RATIO = 10
+PRINT_IGNORE_RATIO = 0
 IGNORE_VARIABLE_CHAIN = False
 
 def get_line(insn, prog):
