@@ -1412,8 +1412,8 @@ class DynamicGraph:
             if insn in starting_insns:
                 ok = True
             elif insn in ctxt.cf_prede_insn_to_succe_node \
-                    or insn in ctxt.local_df_prede_insn_to_succe_node \
-                    or insn in remote_df_prede_insn_to_succe_node: #TODO, could optiimze
+                    or insn in ctxt.local_df_prede_insn_to_succe_node:# \
+                    #or insn in remote_df_prede_insn_to_succe_node: #TODO, could optiimze
                 ok = True
             if code in codes_to_ignore:
                 ok = False

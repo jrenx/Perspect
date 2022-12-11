@@ -130,10 +130,10 @@ class TestSA(unittest.TestCase):
         get_addr_indices(ptr1, "__wt_row_leaf_keys", 0xee2bb0, 0xee44ed, [15615212])
 
     def test_general(self):
-        prog = "mongod_4.2.1"
+        prog = "go-bug-12228-medium-1.4.2"
         ptr1 = setup(prog)
         ptr2 = setup2(prog)
-        getAllBBs2(ptr2, ptr1, 0x101ce1b, "__wt_las_sweep", prog)
+        getAllBBs2(ptr2, ptr1, 0x4237ae, "scanblock", prog)
 
     def test_get_all_bb(self):
         results = getAllBBs(0x416a91, 'bytes.*Buffer·Read', '909_ziptest_exe9')
