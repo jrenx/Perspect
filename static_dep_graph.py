@@ -1319,6 +1319,7 @@ class StaticDepGraph:
     call_graph_pass_only = False
     control_flow_pass_only = False
     data_flow_pass_only = False
+    branch_to_target_map = {}
 
     def __init__(self, func, prog):
         self.func = func
@@ -1614,12 +1615,15 @@ class StaticDepGraph:
             if succe.bb is not None and succe.bb.ends_in_branch:
                 succes.add(succe.bb)
                 #print(succe)
+
         last_bb = None
         for bb in self.cfg.postorder_list:
             if bb in succes:
                 last_bb = bb
                 #break
         if last_bb is None:
+            for succe in node.df_succes:
+                return succe
             return None
         return last_bb if last_bb is None else self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
@@ -1649,6 +1653,9 @@ class StaticDepGraph:
                 last_bb = bb
                 break
         if last_bb is None:
+            for succe in node.cf_succes:
+                return succe
+ 
             return None
         return self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
@@ -1805,16 +1812,35 @@ class StaticDepGraph:
             #print(StaticDepGraph.func_to_callsites)
             iteration = 0
             worklist = deque()
+            starting_nodes = []
             for event in starting_events:
                 reg = event[0]
                 insn = event[1]
                 func = event[2]
                 node = StaticDepGraph.make_or_get_cf_node(insn, None, func)
+                starting_nodes.append(node)
                 if node not in StaticDepGraph.starting_nodes:
                     StaticDepGraph.starting_nodes.append(node)
                 if reg is not None:
                     node.reg_load = reg
-                worklist.append([insn, func, prog, node])
+                if StaticDepGraph.data_flow_pass_only is False:
+                    worklist.append([insn, func, prog, node])
+
+            if StaticDepGraph.data_flow_pass_only is True:
+                starting_events_extra, _ = parse_inputs2()
+                for i in range(len(starting_events_extra)):
+                    ev = starting_events[i]
+                    print(starting_events_extra)
+                    event = starting_events_extra[i]
+                    print(event)
+                    reg = event[0]
+                    insn = event[1]
+                    func = event[2]
+                    node = StaticDepGraph.make_or_get_cf_node(insn, None, func)
+                    StaticDepGraph.branch_to_target_map[insn] = starting_nodes[i]
+                    worklist.append([insn, func, prog, node])
+ 
+
             while len(worklist) > 0:
                 if iteration >= limit:
                     break
@@ -1897,6 +1923,10 @@ class StaticDepGraph:
                     #    print(str(n))
                     #for n in graph.nodes_in_df_slice.keys():
                     #    print(str(n))
+                    #s = set()
+                    #for e in starting_events: s.add(e[1])
+                    #for e in starting_events_extra: s.add(e[1])
+                    #graph.remove_extra_nodes(s)
                     graph.remove_extra_nodes(set([e[1] for e in starting_events]))
                     if StaticDepGraph.call_graph_pass_only is True or\
                        StaticDepGraph.data_flow_pass_only is True or\
@@ -2392,7 +2422,20 @@ class StaticDepGraph:
             if initial_node.is_df is False:
                 bb = graph.cfg.getBB(insn)
                 target_bbs.add(bb)
+                if StaticDepGraph.data_flow_pass_only is True:
+                    br = StaticDepGraph.branch_to_target_map[insn]
+                    br_bb = graph.cfg.getBB(br.insn)
+                    target_bbs.add(br_bb)
                 graph.build_control_flow_dependencies(target_bbs)
+                if StaticDepGraph.data_flow_pass_only is True:
+                    initial_node.cf_succes.append(br)
+                    br.cf_predes.append(initial_node)
+                if br not in graph.nodes_in_cf_slice:
+                    graph.nodes_in_cf_slice[br] = br
+                if initial_node not in graph.nodes_in_cf_slice:
+                    graph.nodes_in_cf_slice[initial_node] = initial_node
+                #print(br)
+                #print(initial_node)
         else:
             graph = StaticDepGraph.make_graph(func, prog)
 
@@ -2417,8 +2460,21 @@ class StaticDepGraph:
                     #FIXME: remoe after?
 
             target_bbs.add(graph.cfg.ordered_bbs[0])
+            if StaticDepGraph.data_flow_pass_only is True:
+                br = StaticDepGraph.branch_to_target_map[insn]
+                br_bb = graph.cfg.getBB(br.insn)
+                target_bbs.add(br_bb)
             graph.build_control_flow_dependencies(target_bbs)
-
+            if StaticDepGraph.data_flow_pass_only is True:
+                br = StaticDepGraph.branch_to_target_map[insn]
+                initial_node.cf_succes.append(br)
+                br.cf_predes.append(initial_node)
+                if br not in graph.nodes_in_cf_slice:
+                    graph.nodes_in_cf_slice[br] = br
+                if initial_node not in graph.nodes_in_cf_slice:
+                    graph.nodes_in_cf_slice[initial_node] = initial_node
+                print(br)
+                print(initial_node)
             if StaticDepGraph.call_graph_pass_only is True:
                 assert StaticDepGraph.control_flow_pass_only is False
                 if TRACKS_DIRECT_CALLER:
