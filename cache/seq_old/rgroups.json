@@ -1,0 +1,98 @@
+[
+    {
+        "starting_node": "4199904@__printf_chk",
+        "weight": 20001.0,
+        "finished": true,
+        "lines": [
+            4199904
+        ],
+        "file": "__printf_chk",
+        "use_weight": true,
+        "relations": [
+            {
+                "target_node": "4199904@__printf_chk",
+                "prede_node": "4199904@__printf_chk",
+                "prede_count": 20001,
+                "weight": {
+                    "actual_weight": 20001.0,
+                    "base_weight": 20001.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    4199904
+                ],
+                "file": "__printf_chk",
+                "timestamp": 40000010,
+                "duplicate": false
+            },
+            {
+                "target_node": "4199904@__printf_chk",
+                "prede_node": "4201403@main",
+                "prede_count": 20001,
+                "weight": {
+                    "actual_weight": 20001.0,
+                    "base_weight": 20001.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    4201403
+                ],
+                "file": "main",
+                "timestamp": 40000011,
+                "duplicate": false
+            },
+            {
+                "target_node": "4199904@__printf_chk",
+                "prede_node": "4201012@main",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": 20001.0,
+                    "base_weight": 20001.0,
+                    "perc_contrib": 100.0,
+                    "corr": 4.999750012499375e-05,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 20001,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    4201012
+                ],
+                "file": "main",
+                "timestamp": 90000013,
+                "duplicate": false
+            }
+        ]
+    }
+]

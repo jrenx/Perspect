@@ -550,6 +550,9 @@ class DynamicDependence:
             return
 
         # invoke PIN. get output of a sequence of insn
+        print(path)
+        print(prog)
+        print(arg)
         trace = InsRegTrace(path + prog + ' ' + arg,
                             pin='~/pin-3.11/pin', out=trace_name)
         print("[dyn_dep] Total number of instructions watched: " + str(len(instructions)))
