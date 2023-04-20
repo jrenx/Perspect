@@ -1534,6 +1534,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         included_diff.append(p)
 
 
+    sys.stdout = sys.__stdout__
     print("===============================================")
     print("===============================================")
     #insns_left = []
@@ -1544,16 +1545,19 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         rank = rank - 1
         print("-----------------------------------------")
         print("rank: " + str(rank))
-        print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
+        print("weight: " + str(p[0])) # + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
+        print()
+        print("GOOD RUN:")
         print(str(p[2]) + " " + str(p[3]))
-        if p[4] is not None: print(insn_to_index[p[4].insn])
+        #if p[4] is not None: print(insn_to_index[p[4].insn])
         print(str(p[4]))
-        if p[5] is not None: print(insn_to_index[p[5].insn])
+        print("BAD RUN:")
+        #if p[5] is not None: print(insn_to_index[p[5].insn])
         print(str(p[5]))
         if p[5].insn in rel_pairs:
             r = rel_map[rel_pairs[p[5].insn]]
             print("............... PLUS ....................")
-            if r is not None: print(insn_to_index[r.insn])
+            #if r is not None: print(insn_to_index[r.insn])
             print(str(r))
         #if has a node in the graph, add a label...
 
@@ -1579,6 +1583,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
     #plot(included_diff, rel_map1, rel_map2, left_summary, right_summary, left, right)
 
 if __name__ == "__main__":
+    sys.stdout = None
     #f1 = sys.argv[1]
     #f2 = sys.argv[2]
     limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
