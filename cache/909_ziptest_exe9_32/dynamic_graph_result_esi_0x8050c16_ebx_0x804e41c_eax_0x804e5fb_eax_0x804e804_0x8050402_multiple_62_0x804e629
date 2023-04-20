@@ -1,0 +1,136 @@
+{
+    "starting_events": [
+        [
+            "esi",
+            134548502,
+            "sweep"
+        ],
+        [
+            "ebx",
+            134538268,
+            "runtime.mallocgc"
+        ],
+        [
+            "eax",
+            134538747,
+            "runtime.mallocgc"
+        ],
+        [
+            "eax",
+            134539268,
+            "runtime.free"
+        ]
+    ],
+    "dynamic_nodes": [
+        {
+            "id": 4157039064,
+            "insn_id": 281,
+            "hex_insn": "0x804e629",
+            "func": "runtime.mallocgc",
+            "static_node": 559,
+            "weight": 524288,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4157039534
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4157039065
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": 3974786884,
+            "mem_store_addr_hex": "0xecea6f44",
+            "input_sets": {
+                "559": 2,
+                "2974": 1,
+                "62": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 524288
+        },
+        {
+            "id": 4157039534,
+            "insn_id": 115,
+            "hex_insn": "0x804e3b3",
+            "func": "runtime.mallocgc",
+            "static_node": 62,
+            "weight": 524288,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4157039064,
+                4157039065
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 524288
+        },
+        {
+            "id": 4157039065,
+            "insn_id": 282,
+            "hex_insn": "0x804e61f",
+            "func": "runtime.mallocgc",
+            "static_node": 2974,
+            "weight": 524288,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4157039534
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                4157039064
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 524288
+        }
+    ],
+    "node_frequencies": {},
+    "postorder_list": [
+        4157039064,
+        4157039065,
+        4157039534
+    ],
+    "reverse_postorder_list": [
+        4157039534,
+        4157039065,
+        4157039064
+    ],
+    "entry_nodes": [
+        4157039534
+    ],
+    "exit_nodes": [
+        4157039064
+    ],
+    "target_nodes": [
+        4157039064
+    ],
+    "reachable_output_events_per_static_node": {
+        "559": [
+            4157039064
+        ],
+        "2974": [
+            4157039064
+        ],
+        "62": [
+            4157039064
+        ]
+    }
+}

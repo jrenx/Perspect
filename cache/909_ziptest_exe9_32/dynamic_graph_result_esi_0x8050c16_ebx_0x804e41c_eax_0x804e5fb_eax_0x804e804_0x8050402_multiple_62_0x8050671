@@ -1,0 +1,4431 @@
+{
+    "starting_events": [
+        [
+            "esi",
+            134548502,
+            "sweep"
+        ],
+        [
+            "ebx",
+            134538268,
+            "runtime.mallocgc"
+        ],
+        [
+            "eax",
+            134538747,
+            "runtime.mallocgc"
+        ],
+        [
+            "eax",
+            134539268,
+            "runtime.free"
+        ]
+    ],
+    "dynamic_nodes": [
+        {
+            "id": 914389334,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 131072,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                914389335
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                2078776018
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3397665788,
+            "mem_load_addr_hex": "0xca8443fc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "176": 1,
+                "44": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 131072
+        },
+        {
+            "id": 914389335,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                914389334
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 131072
+        },
+        {
+            "id": 2078776018,
+            "insn_id": 97,
+            "hex_insn": "0x8051656",
+            "func": "runtime.markallocated",
+            "static_node": 44,
+            "weight": 131072,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                914389334
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": 3397665788,
+            "mem_store_addr_hex": "0xca8443fc",
+            "bit_ops": {
+                "134551115": 256,
+                "134551095": 1,
+                "134551078": 4278124286
+            },
+            "bit_ops_binary": {
+                "0x805164b": "                                                       100000000",
+                "0x8051637": "                                                               1",
+                "0x8051626": "                                11111110111111101111111011111110"
+            },
+            "store_bit_mask": 18446744069431427329,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000001000000010000000100000001",
+            "output_set_count": 1,
+            "output_weight": 131072
+        },
+        {
+            "id": 914421545,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 2097152,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                914421546
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                2014522699
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3397616636,
+            "mem_load_addr_hex": "0xca8383fc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "176": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 2097152
+        },
+        {
+            "id": 914421546,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                914421545
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 2097152
+        },
+        {
+            "id": 2014522699,
+            "insn_id": 97,
+            "hex_insn": "0x8051656",
+            "func": "runtime.markallocated",
+            "static_node": 44,
+            "weight": 2097152,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                914421545
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": 3397616636,
+            "mem_store_addr_hex": "0xca8383fc",
+            "bit_ops": {
+                "134551115": 256,
+                "134551095": 1,
+                "134551078": 4278124286
+            },
+            "bit_ops_binary": {
+                "0x805164b": "                                                       100000000",
+                "0x8051637": "                                                               1",
+                "0x8051626": "                                11111110111111101111111011111110"
+            },
+            "store_bit_mask": 18446744069431427329,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000001000000010000000100000001",
+            "output_set_count": 1,
+            "output_weight": 2097152
+        },
+        {
+            "id": 914438476,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 8388608,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                914438477
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                2997643701,
+                3876184344
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3405029372,
+            "mem_load_addr_hex": "0xcaf49ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "48": 1,
+                "176": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 8388608
+        },
+        {
+            "id": 914438477,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                914438476
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 8388608
+        },
+        {
+            "id": 2997643701,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 8388608,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                914438476
+            ],
+            "mem_load_addr": 3405029372,
+            "mem_load_addr_hex": "0xcaf49ffc",
+            "mem_store_addr": 3405029372,
+            "mem_store_addr_hex": "0xcaf49ffc",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 8388608
+        },
+        {
+            "id": 3876184344,
+            "insn_id": 97,
+            "hex_insn": "0x8051656",
+            "func": "runtime.markallocated",
+            "static_node": 44,
+            "weight": 8388608,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                914438476,
+                2997732020,
+                3578052573
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": 3405029372,
+            "mem_store_addr_hex": "0xcaf49ffc",
+            "bit_ops": {
+                "134551115": 256,
+                "134551095": 1,
+                "134551078": 4278124286
+            },
+            "bit_ops_binary": {
+                "0x805164b": "                                                       100000000",
+                "0x8051637": "                                                               1",
+                "0x8051626": "                                11111110111111101111111011111110"
+            },
+            "store_bit_mask": 18446744069431427329,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000001000000010000000100000001",
+            "output_set_count": 3,
+            "output_weight": 25165824
+        },
+        {
+            "id": 915913085,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 4194304,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                915913086
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                1941730629
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3397349884,
+            "mem_load_addr_hex": "0xca7f71fc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "176": 1,
+                "44": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 4194304
+        },
+        {
+            "id": 915913086,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                915913085
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 4194304
+        },
+        {
+            "id": 1941730629,
+            "insn_id": 97,
+            "hex_insn": "0x8051656",
+            "func": "runtime.markallocated",
+            "static_node": 44,
+            "weight": 4194304,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                915913085
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": 3397349884,
+            "mem_store_addr_hex": "0xca7f71fc",
+            "bit_ops": {
+                "134551115": 256,
+                "134551095": 1,
+                "134551078": 4278124286
+            },
+            "bit_ops_binary": {
+                "0x805164b": "                                                       100000000",
+                "0x8051637": "                                                               1",
+                "0x8051626": "                                11111110111111101111111011111110"
+            },
+            "store_bit_mask": 18446744069431427329,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000001000000010000000100000001",
+            "output_set_count": 1,
+            "output_weight": 4194304
+        },
+        {
+            "id": 915913190,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 2097152,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                915913191
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                2997642863,
+                4100368415
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3405815804,
+            "mem_load_addr_hex": "0xcb009ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "176": 1,
+                "48": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 2097152
+        },
+        {
+            "id": 915913191,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                915913190
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 2097152
+        },
+        {
+            "id": 2997642863,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 2097152,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                915913190
+            ],
+            "mem_load_addr": 3405815804,
+            "mem_load_addr_hex": "0xcb009ffc",
+            "mem_store_addr": 3405815804,
+            "mem_store_addr_hex": "0xcb009ffc",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 2097152
+        },
+        {
+            "id": 4100368415,
+            "insn_id": 97,
+            "hex_insn": "0x8051656",
+            "func": "runtime.markallocated",
+            "static_node": 44,
+            "weight": 2097152,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                915913190,
+                2998762002,
+                3579002252,
+                3876129207,
+                4100313349
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": 3405815804,
+            "mem_store_addr_hex": "0xcb009ffc",
+            "bit_ops": {
+                "134551115": 256,
+                "134551095": 1,
+                "134551078": 4278124286
+            },
+            "bit_ops_binary": {
+                "0x805164b": "                                                       100000000",
+                "0x8051637": "                                                               1",
+                "0x8051626": "                                11111110111111101111111011111110"
+            },
+            "store_bit_mask": 18446744069431427329,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000001000000010000000100000001",
+            "output_set_count": 5,
+            "output_weight": 10485760
+        },
+        {
+            "id": 915916342,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 8388608,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                915916343
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                1791226167
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3396825596,
+            "mem_load_addr_hex": "0xca7771fc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "176": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 8388608
+        },
+        {
+            "id": 915916343,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                915916342
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 8388608
+        },
+        {
+            "id": 1791226167,
+            "insn_id": 97,
+            "hex_insn": "0x8051656",
+            "func": "runtime.markallocated",
+            "static_node": 44,
+            "weight": 8388608,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                915916342
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": 3396825596,
+            "mem_store_addr_hex": "0xca7771fc",
+            "bit_ops": {
+                "134551115": 256,
+                "134551095": 1,
+                "134551078": 4278124286
+            },
+            "bit_ops_binary": {
+                "0x805164b": "                                                       100000000",
+                "0x8051637": "                                                               1",
+                "0x8051626": "                                11111110111111101111111011111110"
+            },
+            "store_bit_mask": 18446744069431427329,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000001000000010000000100000001",
+            "output_set_count": 1,
+            "output_weight": 8388608
+        },
+        {
+            "id": 915916536,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 16777216,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                915916537
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                2997643733,
+                3579057414
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3403980796,
+            "mem_load_addr_hex": "0xcae49ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "48": 1,
+                "44": 1,
+                "176": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 16777216
+        },
+        {
+            "id": 915916537,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                915916536
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 16777216
+        },
+        {
+            "id": 2997643733,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 16777216,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                915916536
+            ],
+            "mem_load_addr": 3403980796,
+            "mem_load_addr_hex": "0xcae49ffc",
+            "mem_store_addr": 3403980796,
+            "mem_store_addr_hex": "0xcae49ffc",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 16777216
+        },
+        {
+            "id": 3579057414,
+            "insn_id": 97,
+            "hex_insn": "0x8051656",
+            "func": "runtime.markallocated",
+            "static_node": 44,
+            "weight": 16777216,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                915916536,
+                2998765179,
+                3579005369
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": 3403980796,
+            "mem_store_addr_hex": "0xcae49ffc",
+            "bit_ops": {
+                "134551115": 256,
+                "134551095": 1,
+                "134551078": 4278124286
+            },
+            "bit_ops_binary": {
+                "0x805164b": "                                                       100000000",
+                "0x8051637": "                                                               1",
+                "0x8051626": "                                11111110111111101111111011111110"
+            },
+            "store_bit_mask": 18446744069431427329,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000001000000010000000100000001",
+            "output_set_count": 3,
+            "output_weight": 50331648
+        },
+        {
+            "id": 915916877,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 4194304,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                915916878
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                2997643669,
+                4026688786
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3405553660,
+            "mem_load_addr_hex": "0xcafc9ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "48": 1,
+                "176": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 4194304
+        },
+        {
+            "id": 915916878,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                915916877
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 4194304
+        },
+        {
+            "id": 2997643669,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 4194304,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                915916877
+            ],
+            "mem_load_addr": 3405553660,
+            "mem_load_addr_hex": "0xcafc9ffc",
+            "mem_store_addr": 3405553660,
+            "mem_store_addr_hex": "0xcafc9ffc",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 4194304
+        },
+        {
+            "id": 4026688786,
+            "insn_id": 97,
+            "hex_insn": "0x8051656",
+            "func": "runtime.markallocated",
+            "static_node": 44,
+            "weight": 4194304,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                915916877,
+                2998765520,
+                3579005674,
+                3876132571
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": 3405553660,
+            "mem_store_addr_hex": "0xcafc9ffc",
+            "bit_ops": {
+                "134551115": 256,
+                "134551095": 1,
+                "134551078": 4278124286
+            },
+            "bit_ops_binary": {
+                "0x805164b": "                                                       100000000",
+                "0x8051637": "                                                               1",
+                "0x8051626": "                                11111110111111101111111011111110"
+            },
+            "store_bit_mask": 18446744069431427329,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000001000000010000000100000001",
+            "output_set_count": 4,
+            "output_weight": 16777216
+        },
+        {
+            "id": 915917691,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 33554432,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                915917692
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                915968730
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3393679868,
+            "mem_load_addr_hex": "0xca4771fc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "176": 1,
+                "44": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 33554432
+        },
+        {
+            "id": 915917692,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                915917691
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 33554432
+        },
+        {
+            "id": 915968730,
+            "insn_id": 97,
+            "hex_insn": "0x8051656",
+            "func": "runtime.markallocated",
+            "static_node": 44,
+            "weight": 33554432,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                915917691
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": 3393679868,
+            "mem_store_addr_hex": "0xca4771fc",
+            "bit_ops": {
+                "134551115": 256,
+                "134551095": 1,
+                "134551078": 4278124286
+            },
+            "bit_ops_binary": {
+                "0x805164b": "                                                       100000000",
+                "0x8051637": "                                                               1",
+                "0x8051626": "                                11111110111111101111111011111110"
+            },
+            "store_bit_mask": 18446744069431427329,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000001000000010000000100000001",
+            "output_set_count": 1,
+            "output_weight": 33554432
+        },
+        {
+            "id": 915918065,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 16777216,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                915918066
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                1495116933
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3395777020,
+            "mem_load_addr_hex": "0xca6771fc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "176": 1,
+                "44": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 16777216
+        },
+        {
+            "id": 915918066,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                915918065
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 16777216
+        },
+        {
+            "id": 1495116933,
+            "insn_id": 97,
+            "hex_insn": "0x8051656",
+            "func": "runtime.markallocated",
+            "static_node": 44,
+            "weight": 16777216,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                915918065
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": 3395777020,
+            "mem_store_addr_hex": "0xca6771fc",
+            "bit_ops": {
+                "134551115": 256,
+                "134551095": 1,
+                "134551078": 4278124286
+            },
+            "bit_ops_binary": {
+                "0x805164b": "                                                       100000000",
+                "0x8051637": "                                                               1",
+                "0x8051626": "                                11111110111111101111111011111110"
+            },
+            "store_bit_mask": 18446744069431427329,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000001000000010000000100000001",
+            "output_set_count": 1,
+            "output_weight": 16777216
+        },
+        {
+            "id": 915918390,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 33554432,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                915918391
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                2997643649,
+                2998817288
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3401883644,
+            "mem_load_addr_hex": "0xcac49ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "176": 1,
+                "48": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 33554432
+        },
+        {
+            "id": 915918391,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                915918390
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 33554432
+        },
+        {
+            "id": 2997643649,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 33554432,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                915918390
+            ],
+            "mem_load_addr": 3401883644,
+            "mem_load_addr_hex": "0xcac49ffc",
+            "mem_store_addr": 3401883644,
+            "mem_store_addr_hex": "0xcac49ffc",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 33554432
+        },
+        {
+            "id": 2998817288,
+            "insn_id": 97,
+            "hex_insn": "0x8051656",
+            "func": "runtime.markallocated",
+            "static_node": 44,
+            "weight": 33554432,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                915918390,
+                2998766968
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": 3401883644,
+            "mem_store_addr_hex": "0xcac49ffc",
+            "bit_ops": {
+                "134551115": 256,
+                "134551095": 1,
+                "134551078": 4278124286
+            },
+            "bit_ops_binary": {
+                "0x805164b": "                                                       100000000",
+                "0x8051637": "                                                               1",
+                "0x8051626": "                                11111110111111101111111011111110"
+            },
+            "store_bit_mask": 18446744069431427329,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000001000000010000000100000001",
+            "output_set_count": 2,
+            "output_weight": 67108864
+        },
+        {
+            "id": 915930128,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 768,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                915930129
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                2997639049,
+                4165354669
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3406119036,
+            "mem_load_addr_hex": "0xcb05407c",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "179": 1,
+                "48": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 768
+        },
+        {
+            "id": 915930129,
+            "insn_id": 89,
+            "hex_insn": "0x8050683",
+            "func": "scanblock",
+            "static_node": 179,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                915930128
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 768
+        },
+        {
+            "id": 2997639049,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 768,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                915930128
+            ],
+            "mem_load_addr": 3406119036,
+            "mem_load_addr_hex": "0xcb05407c",
+            "mem_store_addr": 3406119036,
+            "mem_store_addr_hex": "0xcb05407c",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 768
+        },
+        {
+            "id": 4165354669,
+            "insn_id": 97,
+            "hex_insn": "0x8051656",
+            "func": "runtime.markallocated",
+            "static_node": 44,
+            "weight": 768,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                915930128,
+                2998778706,
+                3579018814,
+                3876145711,
+                4100329819
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": 3406119036,
+            "mem_store_addr_hex": "0xcb05407c",
+            "bit_ops": {
+                "134551095": 1,
+                "134551078": 4278124286
+            },
+            "bit_ops_binary": {
+                "0x8051637": "                                                               1",
+                "0x8051626": "                                11111110111111101111111011111110"
+            },
+            "store_bit_mask": 18446744069431427329,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000001000000010000000100000001",
+            "output_set_count": 5,
+            "output_weight": 3840
+        },
+        {
+            "id": 2997732020,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 8388608,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2997732021
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                3577960072,
+                3876184344
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3405029372,
+            "mem_load_addr_hex": "0xcaf49ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "48": 1,
+                "176": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 8388608
+        },
+        {
+            "id": 2997732021,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2997732020
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 8388608
+        },
+        {
+            "id": 3577960072,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 8388608,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                2997732020
+            ],
+            "mem_load_addr": 3405029372,
+            "mem_load_addr_hex": "0xcaf49ffc",
+            "mem_store_addr": 3405029372,
+            "mem_store_addr_hex": "0xcaf49ffc",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 8388608
+        },
+        {
+            "id": 2998762002,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 2097152,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2998762003
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                3577959220,
+                4100368415
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3405815804,
+            "mem_load_addr_hex": "0xcb009ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "48": 1,
+                "44": 1,
+                "176": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 2097152
+        },
+        {
+            "id": 2998762003,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2998762002
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 2097152
+        },
+        {
+            "id": 3577959220,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 2097152,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                2998762002
+            ],
+            "mem_load_addr": 3405815804,
+            "mem_load_addr_hex": "0xcb009ffc",
+            "mem_store_addr": 3405815804,
+            "mem_store_addr_hex": "0xcb009ffc",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 2097152
+        },
+        {
+            "id": 2998765179,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 16777216,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2998765180
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                3577960104,
+                3579057414
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3403980796,
+            "mem_load_addr_hex": "0xcae49ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "176": 1,
+                "44": 1,
+                "48": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 16777216
+        },
+        {
+            "id": 2998765180,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2998765179
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 16777216
+        },
+        {
+            "id": 3577960104,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 16777216,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                2998765179
+            ],
+            "mem_load_addr": 3403980796,
+            "mem_load_addr_hex": "0xcae49ffc",
+            "mem_store_addr": 3403980796,
+            "mem_store_addr_hex": "0xcae49ffc",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 16777216
+        },
+        {
+            "id": 2998765520,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 4194304,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2998765521
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                3577960040,
+                4026688786
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3405553660,
+            "mem_load_addr_hex": "0xcafc9ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "176": 1,
+                "48": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 4194304
+        },
+        {
+            "id": 2998765521,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2998765520
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 4194304
+        },
+        {
+            "id": 3577960040,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 4194304,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                2998765520
+            ],
+            "mem_load_addr": 3405553660,
+            "mem_load_addr_hex": "0xcafc9ffc",
+            "mem_store_addr": 3405553660,
+            "mem_store_addr_hex": "0xcafc9ffc",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 4194304
+        },
+        {
+            "id": 2998766968,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 33554432,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2998766969
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                2998817288
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3401883644,
+            "mem_load_addr_hex": "0xcac49ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "176": 1,
+                "44": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 33554432
+        },
+        {
+            "id": 2998766969,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2998766968
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 33554432
+        },
+        {
+            "id": 2998778706,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 768,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2998778707
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                3577955406,
+                4165354669
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3406119036,
+            "mem_load_addr_hex": "0xcb05407c",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "48": 1,
+                "179": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 768
+        },
+        {
+            "id": 2998778707,
+            "insn_id": 89,
+            "hex_insn": "0x8050683",
+            "func": "scanblock",
+            "static_node": 179,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2998778706
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 768
+        },
+        {
+            "id": 3577955406,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 768,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                2998778706
+            ],
+            "mem_load_addr": 3406119036,
+            "mem_load_addr_hex": "0xcb05407c",
+            "mem_store_addr": 3406119036,
+            "mem_store_addr_hex": "0xcb05407c",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 768
+        },
+        {
+            "id": 3578008595,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 1048576,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3578008596
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                3875160407,
+                4137369541
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3405946876,
+            "mem_load_addr_hex": "0xcb029ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "48": 1,
+                "176": 1,
+                "44": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 1048576
+        },
+        {
+            "id": 3578008596,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": 1048576,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3578008595
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 1048576
+        },
+        {
+            "id": 3875160407,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 1048576,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                3578008595
+            ],
+            "mem_load_addr": 3405946876,
+            "mem_load_addr_hex": "0xcb029ffc",
+            "mem_store_addr": 3405946876,
+            "mem_store_addr_hex": "0xcb029ffc",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 1048576
+        },
+        {
+            "id": 4137369541,
+            "insn_id": 97,
+            "hex_insn": "0x8051656",
+            "func": "runtime.markallocated",
+            "static_node": 44,
+            "weight": 1048576,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                3578008595,
+                3875219018,
+                4099585236
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": 3405946876,
+            "mem_store_addr_hex": "0xcb029ffc",
+            "bit_ops": {
+                "134551115": 256,
+                "134551095": 1,
+                "134551078": 4278124286
+            },
+            "bit_ops_binary": {
+                "0x805164b": "                                                       100000000",
+                "0x8051637": "                                                               1",
+                "0x8051626": "                                11111110111111101111111011111110"
+            },
+            "store_bit_mask": 18446744069431427329,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000001000000010000000100000001",
+            "output_set_count": 3,
+            "output_weight": 3145728
+        },
+        {
+            "id": 3578052573,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 8388608,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3578052574
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                3875161161,
+                3876184344
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3405029372,
+            "mem_load_addr_hex": "0xcaf49ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "48": 1,
+                "44": 1,
+                "176": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 8388608
+        },
+        {
+            "id": 3578052574,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3578052573
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 8388608
+        },
+        {
+            "id": 3875161161,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 8388608,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                3578052573
+            ],
+            "mem_load_addr": 3405029372,
+            "mem_load_addr_hex": "0xcaf49ffc",
+            "mem_store_addr": 3405029372,
+            "mem_store_addr_hex": "0xcaf49ffc",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 8388608
+        },
+        {
+            "id": 3579002252,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 2097152,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3579002253
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                3875160375,
+                4100368415
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3405815804,
+            "mem_load_addr_hex": "0xcb009ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "48": 1,
+                "176": 1,
+                "44": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 2097152
+        },
+        {
+            "id": 3579002253,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3579002252
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 2097152
+        },
+        {
+            "id": 3875160375,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 2097152,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                3579002252
+            ],
+            "mem_load_addr": 3405815804,
+            "mem_load_addr_hex": "0xcb009ffc",
+            "mem_store_addr": 3405815804,
+            "mem_store_addr_hex": "0xcb009ffc",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 2097152
+        },
+        {
+            "id": 3579005369,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 16777216,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3579005370
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                3579057414
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3403980796,
+            "mem_load_addr_hex": "0xcae49ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "176": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 16777216
+        },
+        {
+            "id": 3579005370,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3579005369
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 16777216
+        },
+        {
+            "id": 3579005674,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 4194304,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3579005675
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                3875161129,
+                4026688786
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3405553660,
+            "mem_load_addr_hex": "0xcafc9ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "176": 1,
+                "48": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 4194304
+        },
+        {
+            "id": 3579005675,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3579005674
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 4194304
+        },
+        {
+            "id": 3875161129,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 4194304,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                3579005674
+            ],
+            "mem_load_addr": 3405553660,
+            "mem_load_addr_hex": "0xcafc9ffc",
+            "mem_store_addr": 3405553660,
+            "mem_store_addr_hex": "0xcafc9ffc",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 4194304
+        },
+        {
+            "id": 3579018814,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 768,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3579018815
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                3875156561,
+                4165354669
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3406119036,
+            "mem_load_addr_hex": "0xcb05407c",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "48": 1,
+                "179": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 768
+        },
+        {
+            "id": 3579018815,
+            "insn_id": 89,
+            "hex_insn": "0x8050683",
+            "func": "scanblock",
+            "static_node": 179,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3579018814
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 768
+        },
+        {
+            "id": 3875156561,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 768,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                3579018814
+            ],
+            "mem_load_addr": 3406119036,
+            "mem_load_addr_hex": "0xcb05407c",
+            "mem_store_addr": 3406119036,
+            "mem_store_addr_hex": "0xcb05407c",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 768
+        },
+        {
+            "id": 3875219018,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 1048576,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3875219019
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4099493123,
+                4137369541
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3405946876,
+            "mem_load_addr_hex": "0xcb029ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "176": 1,
+                "48": 1,
+                "44": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 1048576
+        },
+        {
+            "id": 3875219019,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": 1048576,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3875219018
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 1048576
+        },
+        {
+            "id": 4099493123,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 1048576,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                3875219018
+            ],
+            "mem_load_addr": 3405946876,
+            "mem_load_addr_hex": "0xcb029ffc",
+            "mem_store_addr": 3405946876,
+            "mem_store_addr_hex": "0xcb029ffc",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 1048576
+        },
+        {
+            "id": 3875228374,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 524288,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3875228375
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4099493907,
+                4157039036
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3406017020,
+            "mem_load_addr_hex": "0xcb03b1fc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "48": 1,
+                "44": 1,
+                "176": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 524288
+        },
+        {
+            "id": 3875228375,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": 524288,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3875228374
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 524288
+        },
+        {
+            "id": 4099493907,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 524288,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                3875228374
+            ],
+            "mem_load_addr": 3406017020,
+            "mem_load_addr_hex": "0xcb03b1fc",
+            "mem_store_addr": 3406017020,
+            "mem_store_addr_hex": "0xcb03b1fc",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 524288
+        },
+        {
+            "id": 4157039036,
+            "insn_id": 97,
+            "hex_insn": "0x8051656",
+            "func": "runtime.markallocated",
+            "static_node": 44,
+            "weight": 524288,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                3875228374,
+                4099560561
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": 3406017020,
+            "mem_store_addr_hex": "0xcb03b1fc",
+            "bit_ops": {
+                "134551115": 256,
+                "134551095": 1,
+                "134551078": 4278124286
+            },
+            "bit_ops_binary": {
+                "0x805164b": "                                                       100000000",
+                "0x8051637": "                                                               1",
+                "0x8051626": "                                11111110111111101111111011111110"
+            },
+            "store_bit_mask": 18446744069431427329,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000001000000010000000100000001",
+            "output_set_count": 2,
+            "output_weight": 1048576
+        },
+        {
+            "id": 3876129207,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 2097152,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3876129208
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4099493091,
+                4100368415
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3405815804,
+            "mem_load_addr_hex": "0xcb009ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "48": 1,
+                "176": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 2097152
+        },
+        {
+            "id": 3876129208,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3876129207
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 2097152
+        },
+        {
+            "id": 4099493091,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 2097152,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                3876129207
+            ],
+            "mem_load_addr": 3405815804,
+            "mem_load_addr_hex": "0xcb009ffc",
+            "mem_store_addr": 3405815804,
+            "mem_store_addr_hex": "0xcb009ffc",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 2097152
+        },
+        {
+            "id": 3876132571,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 4194304,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3876132572
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4026688786
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3405553660,
+            "mem_load_addr_hex": "0xcafc9ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "176": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 4194304
+        },
+        {
+            "id": 3876132572,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3876132571
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 4194304
+        },
+        {
+            "id": 3876145711,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 768,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3876145712
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4099489277,
+                4165354669
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3406119036,
+            "mem_load_addr_hex": "0xcb05407c",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "48": 1,
+                "179": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 768
+        },
+        {
+            "id": 3876145712,
+            "insn_id": 89,
+            "hex_insn": "0x8050683",
+            "func": "scanblock",
+            "static_node": 179,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3876145711
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 768
+        },
+        {
+            "id": 4099489277,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 768,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                3876145711
+            ],
+            "mem_load_addr": 3406119036,
+            "mem_load_addr_hex": "0xcb05407c",
+            "mem_store_addr": 3406119036,
+            "mem_store_addr_hex": "0xcb05407c",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 768
+        },
+        {
+            "id": 4099540920,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 262144,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4099540921
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4156256886,
+                4160455169
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3406049788,
+            "mem_load_addr_hex": "0xcb0431fc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "176": 1,
+                "44": 1,
+                "48": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 262144
+        },
+        {
+            "id": 4099540921,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": 262144,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4099540920
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 262144
+        },
+        {
+            "id": 4156256886,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 262144,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                4099540920
+            ],
+            "mem_load_addr": 3406049788,
+            "mem_load_addr_hex": "0xcb0431fc",
+            "mem_store_addr": 3406049788,
+            "mem_store_addr_hex": "0xcb0431fc",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 262144
+        },
+        {
+            "id": 4160455169,
+            "insn_id": 97,
+            "hex_insn": "0x8051656",
+            "func": "runtime.markallocated",
+            "static_node": 44,
+            "weight": 262144,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                4099540920,
+                4156347902
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": 3406049788,
+            "mem_store_addr_hex": "0xcb0431fc",
+            "bit_ops": {
+                "134551115": 256,
+                "134551095": 1,
+                "134551078": 4278124286
+            },
+            "bit_ops_binary": {
+                "0x805164b": "                                                       100000000",
+                "0x8051637": "                                                               1",
+                "0x8051626": "                                11111110111111101111111011111110"
+            },
+            "store_bit_mask": 18446744069431427329,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000001000000010000000100000001",
+            "output_set_count": 2,
+            "output_weight": 524288
+        },
+        {
+            "id": 4099560561,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 524288,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4099560562
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4156256902,
+                4157039036
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3406017020,
+            "mem_load_addr_hex": "0xcb03b1fc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "48": 1,
+                "176": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 524288
+        },
+        {
+            "id": 4099560562,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": 524288,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4099560561
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 524288
+        },
+        {
+            "id": 4156256902,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 524288,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                4099560561
+            ],
+            "mem_load_addr": 3406017020,
+            "mem_load_addr_hex": "0xcb03b1fc",
+            "mem_store_addr": 3406017020,
+            "mem_store_addr_hex": "0xcb03b1fc",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 524288
+        },
+        {
+            "id": 4099585236,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 1048576,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4099585237
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4137369541
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3405946876,
+            "mem_load_addr_hex": "0xcb029ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "176": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 1048576
+        },
+        {
+            "id": 4099585237,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": 1048576,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4099585236
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 1048576
+        },
+        {
+            "id": 4100313349,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 2097152,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4100313350
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4100368415
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3405815804,
+            "mem_load_addr_hex": "0xcb009ffc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "176": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 2097152
+        },
+        {
+            "id": 4100313350,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4100313349
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 2097152
+        },
+        {
+            "id": 4100329819,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 768,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4100329820
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4156252353,
+                4165354669
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3406119036,
+            "mem_load_addr_hex": "0xcb05407c",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "48": 1,
+                "179": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 768
+        },
+        {
+            "id": 4100329820,
+            "insn_id": 89,
+            "hex_insn": "0x8050683",
+            "func": "scanblock",
+            "static_node": 179,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4100329819
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 768
+        },
+        {
+            "id": 4156252353,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 768,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                4100329819
+            ],
+            "mem_load_addr": 3406119036,
+            "mem_load_addr_hex": "0xcb05407c",
+            "mem_store_addr": 3406119036,
+            "mem_store_addr_hex": "0xcb05407c",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 768
+        },
+        {
+            "id": 4156347902,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 262144,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4156347903
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4160455169
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3406049788,
+            "mem_load_addr_hex": "0xcb0431fc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "44": 1,
+                "176": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 262144
+        },
+        {
+            "id": 4156347903,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": 262144,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4156347902
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 262144
+        },
+        {
+            "id": 4164738210,
+            "insn_id": 67,
+            "hex_insn": "0x8050671",
+            "func": "scanblock",
+            "static_node": 181,
+            "weight": 65536,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4164738211
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4170287920,
+                4170707870
+            ],
+            "df_succes": [],
+            "mem_load_addr": 3406089212,
+            "mem_load_addr_hex": "0xcb04cbfc",
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "bit_ops": {
+                "134547061": 0,
+                "134546415": 65536,
+                "134546405": 1
+            },
+            "bit_ops_binary": {
+                "0x8050675": "                                                               0",
+                "0x80503ef": "                                               10000000000000000",
+                "0x80503e5": "                                                               1"
+            },
+            "load_bit_mask": 65537,
+            "load_bit_mask_binary": "                                               10000000000000001",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "input_sets": {
+                "181": 2,
+                "48": 1,
+                "176": 1,
+                "44": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 65536
+        },
+        {
+            "id": 4164738211,
+            "insn_id": 68,
+            "hex_insn": "0x805064c",
+            "func": "scanblock",
+            "static_node": 176,
+            "weight": 65536,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4164738210
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 65536
+        },
+        {
+            "id": 4170287920,
+            "insn_id": 242,
+            "hex_insn": "0x8050b22",
+            "func": "sweep",
+            "static_node": 48,
+            "weight": 65536,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                4164738210
+            ],
+            "mem_load_addr": 3406089212,
+            "mem_load_addr_hex": "0xcb04cbfc",
+            "mem_store_addr": 3406089212,
+            "mem_store_addr_hex": "0xcb04cbfc",
+            "bit_ops": {
+                "134548258": 4294901759
+            },
+            "bit_ops_binary": {
+                "0x8050b22": "                                11111111111111101111111111111111"
+            },
+            "load_bit_mask": 0,
+            "load_bit_mask_binary": "                                                               0",
+            "remaining_load_bit_mask": 0,
+            "remaining_load_bit_mask_binary": "                                                               0",
+            "store_bit_mask": 18446744069414649856,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000000000000010000000000000000",
+            "output_set_count": 1,
+            "output_weight": 65536
+        },
+        {
+            "id": 4170707870,
+            "insn_id": 97,
+            "hex_insn": "0x8051656",
+            "func": "runtime.markallocated",
+            "static_node": 44,
+            "weight": 65536,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                4164738210
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": 3406089212,
+            "mem_store_addr_hex": "0xcb04cbfc",
+            "bit_ops": {
+                "134551115": 256,
+                "134551095": 1,
+                "134551078": 4278124286
+            },
+            "bit_ops_binary": {
+                "0x805164b": "                                                       100000000",
+                "0x8051637": "                                                               1",
+                "0x8051626": "                                11111110111111101111111011111110"
+            },
+            "store_bit_mask": 18446744069431427329,
+            "store_bit_mask_binary": "1111111111111111111111111111111100000001000000010000000100000001",
+            "output_set_count": 1,
+            "output_weight": 65536
+        }
+    ],
+    "node_frequencies": {},
+    "postorder_list": [
+        4099540920,
+        4099540921,
+        915930128,
+        2998778706,
+        3579018814,
+        3876145711,
+        4100329819,
+        4165354669,
+        3875228374,
+        4099493907,
+        915916877,
+        2998765520,
+        3579005674,
+        3876132571,
+        4026688786,
+        3579002252,
+        3875160375,
+        3875219018,
+        3875219019,
+        915917691,
+        915917692,
+        2998762002,
+        3577959220,
+        2998765179,
+        2998765180,
+        3578052573,
+        3875161161,
+        915968730,
+        915930129,
+        4099560561,
+        4157039036,
+        3579002253,
+        4156256902,
+        914438476,
+        2997732020,
+        3876184344,
+        4156347902,
+        4160455169,
+        4099560562,
+        4156252353,
+        914421545,
+        2014522699,
+        2997639049,
+        3577960072,
+        3577955406,
+        2997643701,
+        915913190,
+        3876129207,
+        4100313349,
+        4100368415,
+        3578008595,
+        3875160407,
+        3578052574,
+        2998766968,
+        2998766969,
+        3875156561,
+        4099493123,
+        4100329820,
+        914421546,
+        915918065,
+        915918066,
+        4156347903,
+        4164738210,
+        4170287920,
+        915916342,
+        1791226167,
+        914438477,
+        915913191,
+        915916536,
+        2997643733,
+        2997642863,
+        3579005369,
+        3579057414,
+        2998778707,
+        3578008596,
+        4099585236,
+        4137369541,
+        3875228375,
+        4099493091,
+        4099489277,
+        914389334,
+        914389335,
+        915916537,
+        3577960104,
+        3579005675,
+        2078776018,
+        915916343,
+        2998765521,
+        3875161129,
+        3876145712,
+        4099585237,
+        4100313350,
+        915918390,
+        2998817288,
+        3579005370,
+        3876132572,
+        4156256886,
+        3876129208,
+        3577960040,
+        1495116933,
+        915918391,
+        4164738211,
+        2997643669,
+        2997643649,
+        2998762003,
+        915916878,
+        2997732021,
+        3579018815,
+        4170707870,
+        915913085,
+        915913086,
+        1941730629
+    ],
+    "reverse_postorder_list": [
+        2998766969,
+        2998817288,
+        2998766968,
+        3578008596,
+        3875160407,
+        4137369541,
+        3578008595,
+        3875219019,
+        4099493123,
+        3875219018,
+        3876132572,
+        4026688786,
+        3876132571,
+        3579018815,
+        3875156561,
+        4165354669,
+        3579018814,
+        915916537,
+        2997643733,
+        3579057414,
+        915916536,
+        915917692,
+        915968730,
+        915917691,
+        4100329820,
+        4156252353,
+        4100329819,
+        3579002253,
+        3875160375,
+        4100368415,
+        3579002252,
+        915918391,
+        2997643649,
+        915918390,
+        2998765180,
+        3577960104,
+        2998765179,
+        3876145712,
+        4099489277,
+        3876145711,
+        2998765521,
+        3577960040,
+        2998765520,
+        915916878,
+        2997643669,
+        915916877,
+        2998778707,
+        3577955406,
+        2998778706,
+        3578052574,
+        3875161161,
+        3876184344,
+        3578052573,
+        4099585237,
+        4099585236,
+        4156347903,
+        4160455169,
+        4156347902,
+        914389335,
+        2078776018,
+        914389334,
+        915918066,
+        1495116933,
+        915918065,
+        3876129208,
+        4099493091,
+        3876129207,
+        3875228375,
+        4099493907,
+        4157039036,
+        3875228374,
+        4099560562,
+        4156256902,
+        4099560561,
+        915916343,
+        1791226167,
+        915916342,
+        2998762003,
+        3577959220,
+        2998762002,
+        4100313350,
+        4100313349,
+        2997732021,
+        3577960072,
+        2997732020,
+        914438477,
+        2997643701,
+        914438476,
+        4164738211,
+        4170287920,
+        4170707870,
+        4164738210,
+        3579005370,
+        3579005369,
+        914421546,
+        2014522699,
+        914421545,
+        915913191,
+        2997642863,
+        915913190,
+        915913086,
+        1941730629,
+        915913085,
+        915930129,
+        2997639049,
+        915930128,
+        4099540921,
+        4156256886,
+        4099540920,
+        3579005675,
+        3875161129,
+        3579005674
+    ],
+    "entry_nodes": [
+        915917692,
+        4137369541,
+        4099493091,
+        2997643701,
+        3876132572,
+        3875161161,
+        3577960072,
+        1791226167,
+        3876145712,
+        2998765180,
+        4099489277,
+        4099540921,
+        2997643733,
+        2998765521,
+        2997639049,
+        3578008596,
+        4156256886,
+        4160455169,
+        3578052574,
+        915916537,
+        2997732021,
+        4165354669,
+        2078776018,
+        4099560562,
+        915916343,
+        915968730,
+        4156256902,
+        3579005370,
+        2997643649,
+        915930129,
+        3579002253,
+        4099585237,
+        2998817288,
+        915916878,
+        3875160375,
+        2014522699,
+        3579005675,
+        4100313350,
+        3876184344,
+        3875161129,
+        4026688786,
+        4100329820,
+        915918066,
+        3579057414,
+        4156252353,
+        915918391,
+        1495116933,
+        915913086,
+        4156347903,
+        915913191,
+        3579018815,
+        3875156561,
+        2997643669,
+        3577955406,
+        4100368415,
+        4164738211,
+        3875219019,
+        914421546,
+        4170287920,
+        3577959220,
+        4099493123,
+        2997642863,
+        4170707870,
+        914389335,
+        3577960040,
+        914438477,
+        3875228375,
+        2998762003,
+        4099493907,
+        3577960104,
+        1941730629,
+        4157039036,
+        2998778707,
+        2998766969,
+        3876129208,
+        3875160407
+    ],
+    "exit_nodes": [
+        2998778706,
+        2998762002,
+        3876145711,
+        3876132571,
+        915930128,
+        3578008595,
+        4099540920,
+        914389334,
+        3578052573,
+        4099560561,
+        915913085,
+        3579002252,
+        2997732020,
+        4099585236,
+        3579005369,
+        915916877,
+        4100313349,
+        914438476,
+        4100329819,
+        2998765179,
+        915916342,
+        3579005674,
+        3579018814,
+        4156347902,
+        915916536,
+        915918390,
+        4164738210,
+        3875219018,
+        915918065,
+        2998766968,
+        3875228374,
+        915913190,
+        914421545,
+        915917691,
+        3876129207,
+        2998765520
+    ],
+    "target_nodes": [
+        2998762002,
+        2998778706,
+        3876145711,
+        915930128,
+        3876132571,
+        3578008595,
+        4099540920,
+        914389334,
+        915913085,
+        3578052573,
+        4099560561,
+        2997732020,
+        3579002252,
+        3579005369,
+        4099585236,
+        915916877,
+        914438476,
+        4100313349,
+        4100329819,
+        2998765179,
+        915916342,
+        3579005674,
+        3579018814,
+        4156347902,
+        915916536,
+        915918390,
+        4164738210,
+        915918065,
+        3875219018,
+        2998766968,
+        3875228374,
+        915913190,
+        914421545,
+        915917691,
+        3876129207,
+        2998765520
+    ],
+    "reachable_output_events_per_static_node": {
+        "181": [
+            2998778706,
+            2998762002,
+            3876145711,
+            915930128,
+            3876132571,
+            3578008595,
+            4099540920,
+            914389334,
+            4099560561,
+            3578052573,
+            915913085,
+            3579002252,
+            2997732020,
+            4099585236,
+            3579005369,
+            915916877,
+            4100313349,
+            914438476,
+            4100329819,
+            2998765179,
+            915916342,
+            3579005674,
+            4156347902,
+            3579018814,
+            915916536,
+            915918390,
+            4164738210,
+            3875219018,
+            915918065,
+            2998766968,
+            3875228374,
+            915913190,
+            914421545,
+            915917691,
+            3876129207,
+            2998765520
+        ],
+        "176": [
+            2998765179,
+            2998762002,
+            3579005674,
+            915916342,
+            4156347902,
+            3876132571,
+            915916536,
+            915918390,
+            4099540920,
+            3578008595,
+            4164738210,
+            915918065,
+            3875219018,
+            2998766968,
+            914389334,
+            4099560561,
+            3578052573,
+            3875228374,
+            915913085,
+            3579002252,
+            915913190,
+            2998765520,
+            2997732020,
+            914421545,
+            915917691,
+            4099585236,
+            3579005369,
+            3876129207,
+            915916877,
+            4100313349,
+            914438476
+        ],
+        "44": [
+            2998778706,
+            2998762002,
+            3876145711,
+            915930128,
+            3876132571,
+            4099540920,
+            3578008595,
+            914389334,
+            4099560561,
+            3578052573,
+            915913085,
+            2997732020,
+            3579002252,
+            3579005369,
+            4099585236,
+            915916877,
+            4100313349,
+            914438476,
+            4100329819,
+            2998765179,
+            3579005674,
+            915916342,
+            3579018814,
+            4156347902,
+            915916536,
+            915918390,
+            4164738210,
+            3875219018,
+            915918065,
+            2998766968,
+            3875228374,
+            915913190,
+            914421545,
+            915917691,
+            3876129207,
+            2998765520
+        ],
+        "48": [
+            4100329819,
+            2998762002,
+            2998778706,
+            2998765179,
+            3876145711,
+            3579005674,
+            915930128,
+            3579018814,
+            915916536,
+            915918390,
+            3578008595,
+            4164738210,
+            4099540920,
+            3875219018,
+            3875228374,
+            3578052573,
+            4099560561,
+            2997732020,
+            3579002252,
+            915913190,
+            2998765520,
+            3876129207,
+            915916877,
+            914438476
+        ],
+        "179": [
+            3579018814,
+            4100329819,
+            2998778706,
+            3876145711,
+            915930128
+        ]
+    }
+}

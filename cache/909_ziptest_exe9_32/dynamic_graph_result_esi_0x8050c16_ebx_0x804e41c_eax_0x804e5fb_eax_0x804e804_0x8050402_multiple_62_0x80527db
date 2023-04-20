@@ -1,0 +1,134 @@
+{
+    "starting_events": [
+        [
+            "esi",
+            134548502,
+            "sweep"
+        ],
+        [
+            "ebx",
+            134538268,
+            "runtime.mallocgc"
+        ],
+        [
+            "eax",
+            134538747,
+            "runtime.mallocgc"
+        ],
+        [
+            "eax",
+            134539268,
+            "runtime.free"
+        ]
+    ],
+    "dynamic_nodes": [
+        {
+            "id": 4165355181,
+            "insn_id": 298,
+            "hex_insn": "0x80527db",
+            "func": "stkbucket",
+            "static_node": 1648,
+            "weight": 80,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4165355229
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [
+                4165355183
+            ],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "1648": 2,
+                "1662": 1,
+                "1629": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 80
+        },
+        {
+            "id": 4165355229,
+            "insn_id": 300,
+            "hex_insn": "0x8052792",
+            "func": "stkbucket",
+            "static_node": 1629,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4165355181
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 80
+        },
+        {
+            "id": 4165355183,
+            "insn_id": 96,
+            "hex_insn": "0x804e4da",
+            "func": "runtime.mallocgc",
+            "static_node": 1662,
+            "weight": 80,
+            "is_valid_weight": true,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [
+                4165355181
+            ],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 80
+        }
+    ],
+    "node_frequencies": {},
+    "postorder_list": [
+        4165355181,
+        4165355183,
+        4165355229
+    ],
+    "reverse_postorder_list": [
+        4165355229,
+        4165355183,
+        4165355181
+    ],
+    "entry_nodes": [
+        4165355229,
+        4165355183
+    ],
+    "exit_nodes": [
+        4165355181
+    ],
+    "target_nodes": [
+        4165355181
+    ],
+    "reachable_output_events_per_static_node": {
+        "1648": [
+            4165355181
+        ],
+        "1662": [
+            4165355181
+        ],
+        "1629": [
+            4165355181
+        ]
+    }
+}
