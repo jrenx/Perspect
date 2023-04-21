@@ -1548,7 +1548,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         print("weight: " + str(p[0])) # + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
         print()
         print("GOOD RUN:")
-        print(str(p[2]) + " " + str(p[3]))
+        #print(str(p[2]) + " " + str(p[3]))
         #if p[4] is not None: print(insn_to_index[p[4].insn])
         print(str(p[4]))
         print("BAD RUN:")
