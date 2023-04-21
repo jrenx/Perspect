@@ -877,9 +877,9 @@ class Weight:
         s = ""
         s += "Total weight:{:20.2f} ".format(self.total_weight)
         s += "%Contrib:{:6.2f}% ".format(self.perc_contrib)
-        s += "Corr:{:6.2f}% ".format(self.corr * 100)
+        #s += "Corr:{:6.2f}% ".format(self.corr * 100)
         #s += "Round:{:.2f} ".format(self.round_contrib)
-        s += "order:{:6d} ".format(self.order)
+        #s += "order:{:6d} ".format(self.order)
         return s
 
     def toJSON(self):
