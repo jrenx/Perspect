@@ -276,7 +276,7 @@ class ParallelizableRelationAnalysis:
 
     @staticmethod
     def build_relation_with_predecessor(dgraph, starting_node, prede_node, rgroup, wavefront,
-                                                 use_weight, base_weight, prog, indices_not_found, timestamp, other_predes):
+                                                 use_weight, base_weight, prog, indices_not_found, timestamp, other_predes, ignore_low_weight=False, ra=None):
         #insn = prede_node.insn
         #hex_insn = prede_node.hex_insn
         if DEBUG: print("-------")
@@ -304,6 +304,25 @@ class ParallelizableRelationAnalysis:
                 #    output_weight += output.weight
                 weighted_output_set_count_list.append(node.output_weight)
 
+        if ra is not None:
+            prede_node_count = ra.node_counts[prede_node.insn]
+            prede_node_count_full = ra.node_counts_full[prede_node.insn]
+            SAMPLE = 5000
+            print("HERE: prede_node_count" + str(prede_node_count))
+            print("HERE: prede_node_count_full" + str(prede_node_count_full))
+            print("HERE: double check sample rate!! " + str(SAMPLE))
+            gap = 0
+            if prede_node_count < 100:
+                grap = prede_node_count_full - len(output_set_counts)
+            else:
+                gap = int(prede_node_count/SAMPLE) - len(output_set_counts)
+            print("HERE: gap " + str(gap))
+            if gap/len(output_set_counts) > 0.001:
+                gap = 0
+                print("HERE: gap1 " + str(gap))
+            for i in range(gap):
+                output_set_counts.add(0)
+                output_set_count_list.append(0)
         ########## Calculate input sets ###########
         input_set_counts = set()
         input_set_count_list = []
@@ -323,6 +342,24 @@ class ParallelizableRelationAnalysis:
                     if node.is_valid_weight is True:
                         output_weight = prede_count * node.weight
                     weighted_input_set_count_list.append(output_weight)
+
+        if ra is not None:
+            if 0 not in output_set_counts and 0 not in input_set_counts:
+                ratio = ra.node_counts_full[starting_node.insn]/ra.node_counts_full[prede_node.insn]
+                print("HERE: ratio is: " + str(ratio))
+                if ratio != output_set_count_list[0]:
+                    output_set_counts1 = set()
+                    output_set_count_list1 = []
+                    for o in output_set_count_list:
+                        output_set_count_list1.append(ratio)
+                        output_set_counts1.add(ratio)
+                    output_set_counts = output_set_counts1
+                    output_set_count_list = output_set_count_list1
+                    print("HERE: updated output set")
+                    print(str(output_set_counts))
+                    print(str(output_set_count_list))
+
+
 
         ############ Calculate weights ############
         weight = ParallelizableRelationAnalysis.calculate_individual_weight(dgraph, reachable_output_events, starting_node, prede_node,
@@ -369,11 +406,18 @@ class ParallelizableRelationAnalysis:
                         + " " + str(input_set_count_list))
 
         key = other_predes.get_indices(prede_node) if other_predes is not None else None
-        if key is None and weight.perc_contrib < 1:
-            if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " only has a "
-                            + str(weight.perc_contrib) + "% contribution to the output event, ignore ...")
-            return False
-
+        if ignore_low_weight is True:
+            if key is None and weight.perc_contrib < 1:
+                if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " only has a "
+                                + str(weight.perc_contrib) + "% contribution to the output event, ignore ...")
+                return False
+        #else:
+        #    #FIXME: Not sure how this is possible...
+        #    if key is None and round(weight.perc_contrib, 1) == 0.0:
+        #        if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " only has a "
+        #                        + str(weight.perc_contrib) + "% contribution to the output event, ignore ...")
+        #        return False
+ 
         if Invariance.is_irrelevant(output_set_counts) and Invariance.is_irrelevant(input_set_counts):
             if DEBUG: print("[ra] insn: " + prede_node.hex_insn + " is irrelevant  the output event, ignore ...")
             return False
@@ -438,7 +482,7 @@ class ParallelizableRelationAnalysis:
 
     @staticmethod
     def one_pass(dgraph, starting_node, starting_weight, max_contrib, prog, \
-                 indices_map=None, indices_map_inner=None, other_simple_relation_groups=None, node_avg_timestamps=None):
+                 indices_map=None, indices_map_inner=None, other_simple_relation_groups=None, node_avg_timestamps=None, ignore_low_weight=False, ra=None):
         a = time.time()
         print("Starting forward and backward pass for starting insn: " + hex(starting_node.insn))
         wavefront = []
@@ -471,10 +515,11 @@ class ParallelizableRelationAnalysis:
             base_weight = starting_weight
         else:
             assert use_weight is True
-        if (base_weight if other_used_weight is True else starting_weight) < (max_contrib*0.01):
-            print("[ra] Base weight is less than 1% of the max weight, ignore the node "
-                  + starting_node.hex_insn + "@" + starting_node.function)
-            return wavefront, None
+        if ignore_low_weight is True:
+            if (base_weight if other_used_weight is True else starting_weight) < (max_contrib*0.01):
+                print("[ra] Base weight is less than 1% of the max weight, ignore the node "
+                      + starting_node.hex_insn + "@" + starting_node.function)
+                return wavefront, None
 
         if dgraph.reachable_output_events_per_static_node is None:
             dgraph.reachable_output_events_per_static_node = {}
@@ -510,25 +555,25 @@ class ParallelizableRelationAnalysis:
                 continue
             # assert insn in dgraph.insn_to_dyn_nodes, hex(insn)
             indices_not_found = False
-            if indices_map is not None:
-                if indices_map.indices_not_found(static_node):
-                    indices_not_found = True
-                    print("\n" + hex(static_node.insn) + "@" + static_node.function + " is not found in the other repro's static slice...")
-                    succe_explained = False
-                    if indices_map_inner is not None:
-                        for p in itertools.chain(static_node.df_succes, static_node.cf_succes):
-                            if indices_map_inner.get_indices(p) is not None:
-                                succe_explained = True
-                                break
-                    if succe_explained is False:
-                        print("\n" + hex(static_node.insn) + "@" + static_node.function + "'s succes are also not found in the other repro's inner static slice...")
-                        continue
+            #if indices_map is not None:
+            #    if indices_map.indices_not_found(static_node):
+            #        indices_not_found = True
+            #        print("\n" + hex(static_node.insn) + "@" + static_node.function + " is not found in the other repro's static slice...")
+            #        succe_explained = False
+            #        if indices_map_inner is not None:
+            #            for p in itertools.chain(static_node.df_succes, static_node.cf_succes):
+            #                if indices_map_inner.get_indices(p) is not None:
+            #                    succe_explained = True
+            #                    break
+            #        if succe_explained is False:
+            #            print("\n" + hex(static_node.insn) + "@" + static_node.function + "'s succes are also not found in the other repro's inner static slice...")
+            #            continue
 
             analyzed = ParallelizableRelationAnalysis.build_relation_with_predecessor(dgraph, starting_node, static_node,
                                                                            rgroup, wavefront,
                                                                             use_weight, base_weight, prog, indices_not_found,
                                                                            node_avg_timestamps[static_node.insn] if node_avg_timestamps is not None else 0,
-                                                                                      other_predes)
+                                                                                      other_predes, ignore_low_weight, ra)
 
             if indices_not_found is True or analyzed is False:
                 continue
