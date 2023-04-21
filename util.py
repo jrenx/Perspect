@@ -60,11 +60,15 @@ def execute_cmd_in_parallel(all_inputs, script_name, prefix, num_processor, prog
         for p in range(num_processor):
             file_name = prefix + str(count)
             count += 1
+
+            num_inputs = partition_size if (i + partition_size) < len(all_inputs) else (len(all_inputs) - i)
+            print("[indices] Number of inputs to write: " + str(num_inputs))
+            if num_inputs == 0:
+                print("[indices] Skipping, no inputs")
+                continue
             print("[indices] Writing to: " + file_name, flush=True)
             file_names.append(file_name)
             f = open(file_name, 'w')
-            num_inputs = partition_size if (i + partition_size) < len(all_inputs) else (len(all_inputs) - i)
-            print("[indices] Number of inputs to write: " + str(num_inputs))
 
             for n in range(num_inputs):
                 f.write(all_inputs[i] + "\n")
@@ -94,10 +98,10 @@ def execute_cmd_in_parallel(all_inputs, script_name, prefix, num_processor, prog
                 else:
                     ret.append(curr)
                     curr = []
-        print("[indices] parsed result: " + str(ret))
+        print("[indices] parsed result:")# + str(ret))
         #ret.append(curr)
-        #os.remove(file_name + "_DONE")
-        #os.remove(file_name + ".out")
+        os.remove(file_name + "_DONE")
+        os.remove(file_name + ".out")
     return ret
 
 def get_line(insn, prog):
@@ -108,13 +112,57 @@ def get_line(insn, prog):
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
     return parse_get_line_output(result.stdout.decode('ascii').strip().splitlines())
 
-def get_caller_files(result):
-    caller_files = ""
-    for line in result:
-        file = line.split()[0].strip().split(":")[0].split("/")[-1]
-        caller_files += file + "_"
-    print("[index] caller files: " + caller_files)
-    return caller_files
+def convert_file_line(file_to_mapping, file_path_changed, file, line):
+    map = file_to_mapping[file]
+    assert line in map, file + " " + str(line)
+    new_line = map[line]
+    if file in file_path_changed:
+        new_file = file.split("/")[-1]
+    else:
+        new_file = file
+    return new_file, new_line
+
+def callers_file_line_to_index(callers, file, line):
+    index = (get_callers_str(callers)) + "|" + file + "|" + str(line)
+    return index
+
+def strip_callers(callers, our_source_code_dir):
+    stripped_callers = []
+    for caller in callers:
+        file = caller[0] if our_source_code_dir is None else \
+            caller[0][caller[0].startswith(our_source_code_dir) and len(our_source_code_dir):]
+        line = caller[1]
+        stripped_callers.append([file,line])
+    return stripped_callers
+
+def strip_file(file, our_source_code_dir):
+    return file if our_source_code_dir is None else \
+      file[file.startswith(our_source_code_dir) and len(our_source_code_dir):]
+ 
+def get_callers(results):
+    callers = []
+    print(results)
+    for result in results:
+        result = result.strip().split()[0]
+        result_seg = result.strip().split(":")
+        file = result_seg[0]#.split("/")[-1]
+        try:
+            print(result_seg)
+            line = int(result_seg[1].split()[0])
+            #print("[main] command returned: " + str(line))
+        except ValueError:
+            line = None
+        callers.append([file, line])
+
+    print("[index] caller files: " + str(callers))
+    return callers
+
+def get_callers_str(callers):
+    callers_str = ""
+    if callers is not None:
+        for caller in reversed(callers):
+            callers_str += caller[0] + ":" + str(caller[1]) + "|"
+    return callers_str
 
 def parse_get_line_output(result):
     caller_files = get_caller_files(result[1:])
@@ -142,6 +190,10 @@ def parse_insn_offsets(result):
     if "contains no code" in result:
         return (float('inf'), float('-inf'))
     if "out of range" in result:
+        return (float('inf'), float('-inf'))
+    if "at address" not in result:
+        return (float('inf'), float('-inf'))
+    if "and ends at" not in result:
         return (float('inf'), float('-inf'))
     result = result.split("at address")[1]
     result = result.split("and ends at")
@@ -240,7 +292,7 @@ def parse_inputs():
         with open(starting_event_file, "r") as f:
             for l in f.readlines():
                 segs = l.split()
-                reg = "" if segs[0] == "_" else regs[0]
+                reg = "" if segs[0] == "_" else segs[0]
                 insn = int(segs[1], 16)
                 func = segs[2]
                 func = demangle(func)

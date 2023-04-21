@@ -21,9 +21,8 @@
 #include <string.h>
 
 #define SAMPLE
-#define SAMPLE_THRESHOLD 50
-#define LARGE_THRESOLD  150000
-#define LARGE_THRESOLD1  50000
+#define SAMPLE_THRESHOLD 500
+#define LARGE_THRESOLD  100000
 #define CHECK_ALL_COUNTS
 
 using namespace std;
@@ -186,8 +185,6 @@ public:
   long StartInsn;
 
   bool *PendingRemoteDefCodes;
-  unordered_set<long> *RemoteDfPredeCodeToPendingAddrs;
-  unordered_set<StaticNode*> *RemoteDfPredeCodeToSucceNodes;
 
   unordered_set<long> PendingAddrs;
 
@@ -195,10 +192,10 @@ public:
   unordered_map<int, long> StaticNodeIdToInsn;
 
   long *OccurrencesPerCode;
+  long *OccurrencesPerCodeFull;
   long *OccurrencesPerStartingCode;
 #ifdef COUNT_ONLY
   unsigned long *AverageTimeStampPerCode;
-  unsigned long *CodeToFullCountOut;
 #endif
 #ifdef CF_PASS_RATE
   unsigned long ** PredePerSucceCounts;
@@ -440,12 +437,13 @@ public:
     }
     OccurrencesPerCode = new long[CodeCount];
     for (int i = 0; i < CodeCount; i++) OccurrencesPerCode[i] = 0;
+
+    OccurrencesPerCodeFull = new long[CodeCount];
+    for (int i = 0; i < CodeCount; i++) OccurrencesPerCodeFull[i] = 0;
  
 #ifdef COUNT_ONLY
     AverageTimeStampPerCode = new unsigned long[CodeCount];
     for (int i = 0; i < CodeCount; i++) AverageTimeStampPerCode[i] = 0;
-    CodeToFullCountOut = new unsigned long[CodeCount];
-    for (int i = 0; i < CodeCount; i++) CodeToFullCountOut[i] = 0;
 #endif
 
     cJSON *json_startInsns = cJSON_GetObjectItem(data, "starting_insns");
@@ -579,8 +577,6 @@ public:
     PendingRemoteDefCodes = new bool[CodeCount];
     for (int i = 0; i < CodeCount; i++) PendingRemoteDefCodes[i] = false;
 
-    RemoteDfPredeCodeToPendingAddrs = new unordered_set<long>[CodeCount];
-    RemoteDfPredeCodeToSucceNodes = new unordered_set<StaticNode*>[CodeCount];
 
     cJSON *json_traceFile = cJSON_GetObjectItem(data, "trace_file");
     traceFile = json_traceFile->valuestring;
@@ -691,7 +687,7 @@ public:
     for (int i = 0; i < CodeCount; i++) CodeToFullCount[i] = ULONG_MAX;
 
     string inCountFile(traceFile);
-    inCountFile += ".full_count";
+    inCountFile += ".count";
     ifstream isc(inCountFile);
     if (isc.good()) {
       unsigned long insn, count;
@@ -702,23 +698,6 @@ public:
       }
     }
   #endif
-
-    bool *LargeCodes = new bool[CodeCount];
-    for (int i = 0; i < CodeCount; i++) LargeCodes[i] = false;
-
-    string inLargeFile(traceFile);
-    inLargeFile += ".large.bk.both";
-
-    ifstream ilc(inLargeFile);
-    if (ilc.good()) {
-      unsigned long insn, count;
-      unsigned short c;
-      string s;
-      while (ilc >> std::hex >> insn >> std::dec >> c >> s >> count) {
-        cout << "Large code: " << c << endl;
-        LargeCodes[c] = true;
-      }
-    }
 #endif
     long nodeCount = 0;
     long prevNodeCount = 0;
@@ -781,11 +760,8 @@ public:
       //if (code == 2 || code == 3) {
       //  cout << "HERE " <<uid << endl;
       //}
-
-#ifdef COUNT_ONLY
-      CodeToFullCountOut[code] += 1;
-#endif
-
+      OccurrencesPerCodeFull[code] += 1;
+  
       bool parseStartCode = false;
       long startingCodeOcurrences = -1;
 #if defined(COUNT_ONLY) || defined(CF_PASS_RATE)
@@ -793,31 +769,26 @@ public:
 #else
       bool parse = false;
 
-      //if(CodeOfStartInsns[code] || code == 7 || code == 6 || code == 32 || code == 25 || code == 33 || code == 34 || code == 37) {
-      if(CodeOfStartInsns[code]){
+      if (CodeOfStartInsns[code]) {
         parse = true;
   #ifdef SAMPLE
         bool sample = true;
-	int threshold = SAMPLE_THRESHOLD;
     #ifdef PARSE_MULTIPLE
         unsigned long full_count = CodeToFullCount[code];
         if (full_count < 100)  {
           cout << "[preparse] Avoid sampling because full count is smaller than 100...\n";
           sample = false;
-        } else {
-	  threshold = full_count << 11;
-	  if (threshold < SAMPLE_THRESHOLD) threshold = SAMPLE_THRESHOLD;
-	}
+        }
     #endif
         startingCodeOcurrences = OccurrencesPerStartingCode[code];
-        if (sample && startingCodeOcurrences % threshold != 0) {
+        if (sample && startingCodeOcurrences % SAMPLE_THRESHOLD != 0) {
           parse = false;
         } else {
           parseStartCode = true;
         }
         OccurrencesPerStartingCode[code] = startingCodeOcurrences + 1;
   #else
-	parseStartCode = true;
+	      parseStartCode = true;
   #endif
       }
 
@@ -832,11 +803,10 @@ public:
   #endif
       }
       if (OccurrencesPerCode[code] > LARGE_THRESOLD) parse = false;
-      if (!CodesOfCFNodes[code] && OccurrencesPerCode[code] > LARGE_THRESOLD1) parse = false;
   #ifdef PARSE_MULTIPLE
       if (parse == false && parsePrede == true) {
         parse = true;
-	parseStartCode = false;
+	      parseStartCode = false;
       }
   #endif
 #endif
@@ -929,17 +899,6 @@ public:
       if (isBitOp) ctxt->otherRegsParsed = true;
       sn = CodeToStaticNode[code];
       if (PendingRemoteDefCodes[code]) {
-#if !defined(COUNT_ONLY) && !defined(CF_PASS_RATE) && !defined(PARSE_MULTIPLE)
-  #ifdef SAMPLE
-	if (LargeCodes[code]) {
-	  startingCodeOcurrences = OccurrencesPerStartingCode[code];
-          OccurrencesPerStartingCode[code] = startingCodeOcurrences + 1;
-          if (startingCodeOcurrences % (SAMPLE_THRESHOLD) != 0) {
-            if (!ctxt->PendingLocalDefCodes[code]) goto DONT_PARSE; // FIXME: unfortuanately, could be a local def dep too, need to make logic less messy if have more time ...
-          }
-	}
-  #endif
-#endif
         long addr = 0;
         if (sn->mem_store == NULL) {
           //cout << "[warn] " << sn->id << " does not store to memory? " << endl;
@@ -954,9 +913,6 @@ public:
           }
         }
         assert(ctxt->hasPrevValues == false);
-#ifdef PARSE_MULTIPLE
-	if (!parseStartCode) {
-#endif
         //long addr = sn->mem_store->calc_addr(regValue, ctxt->offRegValue);
         //if (PendingAddrs.find(addr) == PendingAddrs.end() && (code > 0 && code > MaxStartCode)) {
         if (PendingAddrs.find(addr) == PendingAddrs.end() && !CodeOfStartInsns[code]) {
@@ -965,50 +921,9 @@ public:
           //cout << "  mem addr matched " << endl;
           // Approximation
 
-          //if (sn->src_reg_size == 8 && !containsBitOpCode[code])
-          //  PendingAddrs.erase(addr);
-	  if (RemoteDfPredeCodeToPendingAddrs[code].find(addr) == 
-			  RemoteDfPredeCodeToPendingAddrs[code].end()) {
-	    cout << "WARN not expecting this addr for this code: " << code << endl;
-	    goto DONT_PARSE;
-	  }
-          PendingAddrs.erase(addr);
-	  RemoteDfPredeCodeToPendingAddrs[code].erase(addr);
-	  if (RemoteDfPredeCodeToPendingAddrs[code].size() == 0) {
-            PendingRemoteDefCodes[code] = false;
-	  } 
-          std::vector<unsigned short> toRemove;
-          for(auto it = RemoteDfPredeCodeToSucceNodes[code].begin(); it != RemoteDfPredeCodeToSucceNodes[code].end(); it++) {
-            StaticNode * succeNode = *it;
-	    //if (succeNode == NULL) continue;
-            assert (succeNode->mem_load != NULL);
-            for (auto iit = succeNode->df_prede_codes.begin();
-                 iit != succeNode->df_prede_codes.end(); iit++) {
-              toRemove.push_back(*iit);
-            }
-	  }
-	  cout << "------------------------" << endl;
-	  cout << "curr code: " << code << endl;
-          for(auto it = toRemove.begin(); it != toRemove.end(); it++) {
-            unsigned short removeCode = *it;
-	    //cout << "Remove code: " << removeCode << endl;
-	    //cout << "Remove addr: " << std::hex << addr << std::dec << endl;
-	    RemoteDfPredeCodeToPendingAddrs[removeCode].erase(addr);
-	    if (RemoteDfPredeCodeToPendingAddrs[removeCode].size() == 0) {
-	      //cout << "clear" << endl;
-              PendingRemoteDefCodes[removeCode] = false;
-	      RemoteDfPredeCodeToSucceNodes[removeCode].clear();
-	    } else {
-	      //for (auto iit = RemoteDfPredeCodeToPendingAddrs[removeCode].begin(); 
-	      //  	      iit != RemoteDfPredeCodeToPendingAddrs[removeCode].end(); iit++) {
-	      //  cout << "Pending addr: " << std::hex << *iit << std::dec << endl;
-	      //}
-	    }
-          }
+          if (sn->src_reg_size == 8 && !containsBitOpCode[code])
+            PendingAddrs.erase(addr);
         }
-#ifdef PARSE_MULTIPLE
-        }	
-#endif
       } else {
         ctxt->hasPrevValues = false;
         assert(ctxt->hasPrevValues == false);
@@ -1163,11 +1078,6 @@ public:
 
       loadsMemory = sn->mem_load != NULL;
       if (sn->df_prede_codes.size() > 0) {
-	long addr = -1;
-        if (loadsMemory) {
-          addr = sn->mem_load->calc_addr(regValue, ctxt->offRegValue);
-          PendingAddrs.insert(addr);
-        }
         for (auto it = sn->df_prede_codes.begin(); it != sn->df_prede_codes.end(); it++) {
           unsigned short currCode = *it;
           if (!CodesOfCFNodes[currCode] && !CodesOfDFNodes[currCode]) {
@@ -1181,10 +1091,11 @@ public:
             ctxt->DfPredeCodeToSucceNodes[currCode].push_back(sn);
           } else {
             PendingRemoteDefCodes[currCode] = true;
-	    assert(addr != -1);
-	    RemoteDfPredeCodeToPendingAddrs[currCode].insert(addr);
-            RemoteDfPredeCodeToSucceNodes[currCode].insert(sn);
           }
+        }
+        if (loadsMemory) {
+          long addr = sn->mem_load->calc_addr(regValue, ctxt->offRegValue);
+          PendingAddrs.insert(addr);
         }
       } else {
         if (loadsMemory && sn->mem_load->read_same_as_write) { // TODO, shouldnt insert itself?
@@ -1257,11 +1168,7 @@ std::cout << "Parsing took = " << std::chrono::duration_cast<std::chrono::second
     osl.open(outLargeFile.c_str());
     for (int i = 1; i < CodeCount; i++) {
       long count = OccurrencesPerCode[i];
-      if (!CodesOfCFNodes[i]) {
-        if (count <= LARGE_THRESOLD1) continue;
-      } else { 
-        if (count <= LARGE_THRESOLD) continue;
-      }
+      if (count <= LARGE_THRESOLD) continue;
       //cout << "LARGE_THRESOLD " << i << "\n";
       osl << std::hex << CodeToInsn[i] << std::dec << " " << i << " occurrences: " << count << "\n";
       nodeCount -= count;
@@ -1306,17 +1213,6 @@ std::cout << "Parsing took = " << std::chrono::duration_cast<std::chrono::second
       osa << std::hex << CodeToInsn[i] << std::dec << " " << avg << "\n";
     }
     osa.close();
-
-    string outFullCountFile(traceFile);
-    outFullCountFile += ".full_count";
-    ofstream ofca;
-    ofca.open(outFullCountFile.c_str());
-    for (int i = 1; i < CodeCount; i++) {
-      unsigned long fullCount = CodeToFullCountOut[i];
-      ofca << std::hex << CodeToInsn[i] << std::dec << " " << fullCount << "\n";
-    }
-    ofca.close();
-
 #elif defined(CF_PASS_RATE)
     string outCFPassRateFile("pin/cf_pass_rates");
     ofstream oprc;
@@ -1336,6 +1232,16 @@ std::cout << "Parsing took = " << std::chrono::duration_cast<std::chrono::second
     }
     oprc.close();
 #endif
+
+    string outOccurrencesPerCodeFullFile(traceFile);
+    outOccurrencesPerCodeFullFile += ".full_count";
+    ofstream ofc;
+    ofc.open(outOccurrencesPerCodeFullFile.c_str());
+    for (int i = 1; i < CodeCount; i++) {
+      long count = OccurrencesPerCodeFull[i];
+      ofc << std::hex << CodeToInsn[i] << std::dec << " " << count << "\n";
+    }
+    ofc.close();
 
     cout << "total nodes: " << nodeCount << endl;
   }

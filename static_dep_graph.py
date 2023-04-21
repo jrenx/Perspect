@@ -19,10 +19,11 @@ DEBUG_SLICE = False
 VERBOSE = False
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 TRACKS_DIRECT_CALLER = True
+TRACKS_INDIRECT_CALLER = True
 # = False
 USE_BPATCH = False
-FILTER_UNEXECUTED_INSNS = True
-REDO_REMOTE_DEFS = True
+FILTER_UNEXECUTED_INSNS = False
+REDO_REMOTE_DEFS = False
 HOST = "localhost"
 PORT = parse_inner_port()
 
@@ -35,8 +36,16 @@ class BasicBlock:
         self.start_insn = None
         self.last_insn = None
         self.lines = lines
-        self.line = None
-        self.rank_in_same_line = None
+        
+        #TODO json
+        #for building indices
+        self.line = None #ignore for now
+        self.rank_in_same_line = None #ignore for now
+        self.start_index = None
+        self.last_index = None
+        self.insn_to_index = None
+        self.index_to_rank = None
+
         self.ends_in_branch = ends_in_branch
         self.is_entry = is_entry
         self.is_new_entry = False
@@ -70,8 +79,17 @@ class BasicBlock:
         data["start_insn"] = self.start_insn
         data["last_insn"] = self.last_insn
         data["lines"] = self.lines
-        #data["line"] = self.line
-        #data["rank_in_same_line"] = self.rank_in_same_line
+        data["line"] = self.line
+        data["rank_in_same_line"] = self.rank_in_same_line
+        if self.index_to_rank is not None:
+            data["index_to_rank"] = self.index_to_rank
+        if self.insn_to_index is not None:
+            data["insn_to_index"] = self.insn_to_index
+        if self.start_index is not None:
+            data["start_index"] = self.start_index
+        if self.last_index is not None:
+            data["last_index"] = self.last_index
+ 
         data["ends_in_branch"] = self.ends_in_branch
         data["is_entry"] = self.is_entry
         data["is_new_entry"] = self.is_new_entry
@@ -125,6 +143,17 @@ class BasicBlock:
             bb.line = data["line"]
         if "rank_in_same_line" in data:
             bb.rank_in_same_line = data["rank_in_same_line"]
+        if "insn_to_index" in data:
+            insn_to_index = data["insn_to_index"]
+            bb.insn_to_index = {}
+            for key in insn_to_index:
+                bb.insn_to_index[int(key)] = insn_to_index[key]
+        if "index_to_rank" in data:
+            bb.index_to_rank = data["index_to_rank"]
+        if "start_index" in data:
+            bb.start_index = data["start_index"]
+        if "last_index" in data:
+            bb.last_index = data["last_index"]
 
         if 'immed_dom' in data:
             bb.immed_dom = data['immed_dom']
@@ -467,6 +496,8 @@ class CFG:
             if bb in ignore_set:
                 if DEBUG_SIMPLIFY: print("[Simplify]   BB is already removed or cannot be removed")
                 continue
+
+            all_children = set()
             all_succes_before_immed_pdom = set()
             worklist = deque()
             worklist.append(bb)
@@ -478,6 +509,7 @@ class CFG:
                     if DEBUG_SIMPLIFY: print('[Simplify]   child BB already visited, ignore: ' + str(child_bb.id))
                     continue
                 visited.add(child_bb)
+                all_children.add(child_bb)
                 if DEBUG_SIMPLIFY: print("[Simplify]   child BB: " + str(child_bb.id) + \
                       " " + str(child_bb.lines) + \
                       " pdoms are " + str([pdom.lines for pdom in child_bb.pdoms] \
@@ -513,6 +545,18 @@ class CFG:
                 if DEBUG_SIMPLIFY:
                     print("[Simplify]   a child BB was a successor of the immed_pdom, possible have been aggressively simplified")
                 continue
+
+            cannot_simplify = False
+            for child_bb in all_children:
+                if DEBUG_SIMPLIFY: print("[Simplify] checking child_bb " + str(child_bb.id))
+                for child_prede_bb in child_bb.predes:
+                    if DEBUG_SIMPLIFY: print("[Simplify]    prede of child_bb " + str(child_prede_bb.id))
+                    if child_prede_bb not in all_children:
+                        cannot_simplify = True
+            if cannot_simplify is True:
+                if DEBUG_SIMPLIFY: print("[Simplify] Cannot remove the node, likely because it doesn't dominate the post dominator ...")
+                continue
+
             if len(self.target_bbs.intersection(all_succes_before_immed_pdom)) > 0:
                 #or len(self.entry_bbs.intersection(all_succes_before_immed_pdom)) > 0:
                 #ignore_set.union(all_succes_before_immed_pdom) #FIXME, do not assign after union why???
@@ -612,7 +656,10 @@ class CFG:
             if final is True:
                 if DEBUG_SIMPLIFY:
                     print("[simplify] Updating the predecessors and successors for bb: " + str(bb.id))
+                    print("[simplify] BB is: " + str(bb.id))
+                    print("[simplify] immed_pdom is: " + str(bb.immed_pdom.id))
                 for prede in bb.predes:
+                    if DEBUG_SIMPLIFY: print("[simplify] prede is: " + str(prede.id))
                     if bb in prede.succes:
                         prede.succes.remove(bb)
                     if prede.succes in bb.predes: #newly added
@@ -1096,20 +1143,8 @@ class StaticNode:
         if "bb" in data:
             sn.bb = data["bb"]
 
-        cf_predes = set()
-        sn.cf_predes = []
-        for cf_prede in data['cf_predes']:
-            if cf_prede not in cf_predes:
-                sn.cf_predes.append(cf_prede)
-                cf_predes.add(cf_prede)
-
-        cf_succes = set()
-        sn.cf_succes = []
-        for cf_succe in data['cf_succes']:
-            if cf_succe not in cf_succes:
-                sn.cf_succes.append(cf_succe)
-                cf_succes.add(cf_succe)
-
+        sn.cf_predes = data['cf_predes']
+        sn.cf_succes = data['cf_succes']
         sn.is_df = data["is_df"]
 
         sn.mem_load = data["mem_load"]
@@ -1126,19 +1161,8 @@ class StaticNode:
         if sn.reg_store is not None and '::' in sn.reg_store:
             sn.reg_store = sn.reg_store.split("::")[1]
 
-        df_predes = set()
-        sn.df_predes = []
-        for df_prede in data['df_predes']:
-            if df_prede not in df_predes:
-                sn.df_predes.append(df_prede)
-                df_predes.add(df_prede)
-
-        df_succes = set()
-        sn.df_succes = []
-        for df_succe in data['df_succes']:
-            if df_succe not in df_succes:
-                sn.df_succes.append(df_succe)
-                df_succes.add(df_succe)
+        sn.df_predes = data['df_predes']
+        sn.df_succes = data['df_succes']
 
         sn.backedge_targets = set(data['node_backedge_targets'])
         sn.backedge_sources = set(data['node_backedge_sources'])
@@ -1273,6 +1297,8 @@ class StaticDepGraph:
     func_first_insn_to_dyn_callsites = None
     func_hot_and_cold_path_map = None
 
+    insn_to_index_cache = {}
+
     starting_nodes = []
     reverse_postorder_list = []
     # successor always after predecessor
@@ -1289,6 +1315,11 @@ class StaticDepGraph:
 
     file_to_line_to_nodes = {}
     prog = None #FIXME, stop passing prog around, there is only one prog per analysis
+
+    call_graph_pass_only = False
+    control_flow_pass_only = False
+    data_flow_pass_only = False
+    branch_to_target_map = {}
 
     def __init__(self, func, prog):
         self.func = func
@@ -1584,12 +1615,15 @@ class StaticDepGraph:
             if succe.bb is not None and succe.bb.ends_in_branch:
                 succes.add(succe.bb)
                 #print(succe)
+
         last_bb = None
         for bb in self.cfg.postorder_list:
             if bb in succes:
                 last_bb = bb
                 #break
         if last_bb is None:
+            for succe in node.df_succes:
+                return succe
             return None
         return last_bb if last_bb is None else self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
@@ -1619,6 +1653,9 @@ class StaticDepGraph:
                 last_bb = bb
                 break
         if last_bb is None:
+            for succe in node.cf_succes:
+                return succe
+ 
             return None
         return self.id_to_node[self.bb_id_to_node_id[last_bb.id]]
 
@@ -1671,11 +1708,29 @@ class StaticDepGraph:
                         node.index = 0
                         node.total_count = 1
             else:
+                insn_to_index_size = 0
+                insn_to_index_result_file = os.path.join(result_dir, 'insn_to_index_' + prog + '.json')
+                if os.path.exists(insn_to_index_result_file):
+                    with open(insn_to_index_result_file) as cache_file:
+                        insn_to_index_cache = json.load(cache_file)
+                        for k in insn_to_index_cache:
+                            StaticDepGraph.insn_to_index_cache[int(k)] = insn_to_index_cache[k]
+                        insn_to_index_size = len(StaticDepGraph.insn_to_index_cache)
+
+
                 StaticDepGraph.generate_file_line_for_all_reachable_nodes(prog, our_source_code_dir)
-                StaticDepGraph.generate_rank_for_bbs(prog)
                 StaticDepGraph.binary_ptr = setup(prog)
+                StaticDepGraph.func_to_callsites, StaticDepGraph.func_hot_and_cold_path_map = get_func_to_callsites(prog)
+                StaticDepGraph.generate_rank_for_bbs(prog, our_source_code_dir)
                 #StaticDepGraph.build_binary_indices(prog)
                 StaticDepGraph.build_binary_indices2(prog)
+
+                if insn_to_index_size != len(StaticDepGraph.insn_to_index_cache):
+                    print("Persisting insn to file line caller files result file")
+                    with open(insn_to_index_result_file, 'w') as f:
+                        json.dump(StaticDepGraph.insn_to_index_cache, f, indent=4)
+ 
+
             StaticDepGraph.output_indices_mapping(indice_file, our_binary)
             StaticDepGraph.writeJSON(result_file)
         else:
@@ -1749,25 +1804,45 @@ class StaticDepGraph:
             total_node_count = 0
             full_slice = set()
             StaticDepGraph.func_to_callsites, StaticDepGraph.func_hot_and_cold_path_map = get_func_to_callsites(prog)
-            StaticDepGraph.func_first_insn_to_dyn_callsites = get_func_first_insn_to_dyn_callsites(prog)
+            if TRACKS_INDIRECT_CALLER is True:
+                StaticDepGraph.func_first_insn_to_dyn_callsites = get_func_first_insn_to_dyn_callsites(prog)
             StaticDepGraph.binary_ptr = setup(prog)
             if USE_BPATCH is False:
                 StaticDepGraph.binary_ptr2 = setup2(prog)
             #print(StaticDepGraph.func_to_callsites)
             iteration = 0
             worklist = deque()
+            starting_nodes = []
             for event in starting_events:
                 reg = event[0]
                 insn = event[1]
                 func = event[2]
                 node = StaticDepGraph.make_or_get_cf_node(insn, None, func)
+                starting_nodes.append(node)
                 if node not in StaticDepGraph.starting_nodes:
                     StaticDepGraph.starting_nodes.append(node)
                 if reg is not None:
                     node.reg_load = reg
-                worklist.append([insn, func, prog, node])
+                if StaticDepGraph.data_flow_pass_only is False:
+                    worklist.append([insn, func, prog, node])
+
+            if StaticDepGraph.data_flow_pass_only is True:
+                starting_events_extra, _ = parse_inputs2()
+                for i in range(len(starting_events_extra)):
+                    ev = starting_events[i]
+                    print(starting_events_extra)
+                    event = starting_events_extra[i]
+                    print(event)
+                    reg = event[0]
+                    insn = event[1]
+                    func = event[2]
+                    node = StaticDepGraph.make_or_get_cf_node(insn, None, func)
+                    StaticDepGraph.branch_to_target_map[insn] = starting_nodes[i]
+                    worklist.append([insn, func, prog, node])
+ 
+
             while len(worklist) > 0:
-                if iteration >= 11272:
+                if iteration >= limit:
                     break
                 if iteration % 10 == 0 and iteration > 0:
                     if rr_result_size != len(StaticDepGraph.rr_result_cache):
@@ -1833,22 +1908,43 @@ class StaticDepGraph:
                     if graph.changed is False:
                         continue
                     if TRACKS_DIRECT_CALLER: graph.merge_callsite_nodes()
+                    if StaticDepGraph.call_graph_pass_only is True or\
+                       StaticDepGraph.data_flow_pass_only is True or\
+                       StaticDepGraph.control_flow_pass_only is True:
+                        for entry in graph.cfg.entry_bbs:
+                            visited = set()
+                            graph.cfg.postorderTraversal(entry, visited)
 
                 for graph in StaticDepGraph.func_to_graph.values():
                     if graph.changed is False:
                         continue
                     graph.merge_nodes(graph.none_df_starting_nodes, final=True, interprocedural_set=([e[1] for e in starting_events]))
-                    for n in graph.nodes_in_cf_slice.keys():
-                        print(str(n))
-                    for n in graph.nodes_in_df_slice.keys():
-                        print(str(n))
+                    #for n in graph.nodes_in_cf_slice.keys():
+                    #    print(str(n))
+                    #for n in graph.nodes_in_df_slice.keys():
+                    #    print(str(n))
+                    #s = set()
+                    #for e in starting_events: s.add(e[1])
+                    #for e in starting_events_extra: s.add(e[1])
+                    #graph.remove_extra_nodes(s)
                     graph.remove_extra_nodes(set([e[1] for e in starting_events]))
+                    if StaticDepGraph.call_graph_pass_only is True or\
+                       StaticDepGraph.data_flow_pass_only is True or\
+                       StaticDepGraph.control_flow_pass_only is True:
+                        for n in graph.nodes_in_cf_slice.keys():
+                            n.explained = True
+                        for n in graph.nodes_in_df_slice.keys():
+                            n.explained = True
+ 
 
                 StaticDepGraph.sanity_check()
                 StaticDepGraph.find_entry_and_exit_nodes()
                 StaticDepGraph.build_reverse_postorder_list()
                 StaticDepGraph.build_postorder_list()
-                StaticDepGraph.detect_df_backedges()
+                if StaticDepGraph.call_graph_pass_only is False and \
+                   StaticDepGraph.control_flow_pass_only is False and \
+                   StaticDepGraph.data_flow_pass_only is False:
+                    StaticDepGraph.detect_df_backedges()
                 #if GENERATE_INSN_MAPPING:
                 #    StaticDepGraph.build_binary_indices(prog)
                 #    StaticDepGraph.output_indices_mapping(indice_file)
@@ -1895,7 +1991,7 @@ class StaticDepGraph:
 
     @staticmethod
     def output_indices_mapping(result_file, binary_file=None):
-        insn_to_insn_str = parse_binary_file(binary_file)
+        if binary_file is not None: insn_to_insn_str = parse_binary_file(binary_file)
         indices = []
         inner_indices = []
         insns = []
@@ -1907,8 +2003,14 @@ class StaticDepGraph:
                 if node.explained is False:
                     continue
                 insns.append(node.insn)
-                insn_strs.append(insn_to_insn_str[node.insn])
-                indices.append([(node.caller_files if node.caller_files is not None else "") +
+                if binary_file is not None: 
+                    insn_str = insn_to_insn_str[node.insn]
+                    insn_str_segs = insn_str.split()
+                    args = ' '.join(insn_str_segs[1:])
+                    op = insn_str_segs[0]
+                    insn_str = op + ' ' + ''.join([i for i in args if (not i.isalpha() and not i.isdigit())])
+                    insn_strs.append(insn_str)
+                indices.append([(get_callers_str(node.caller_files) if node.caller_files is not None else "") +
                      node.file, node.line, node.index, node.total_count])
 
                 is_inner = True
@@ -1918,7 +2020,7 @@ class StaticDepGraph:
                         break
                 if is_inner is False:
                     continue
-                inner_indices.append([(node.caller_files if node.caller_files is not None else "") + 
+                inner_indices.append([(get_callers_str(node.caller_files) if node.caller_files is not None else "") + 
                     node.file, node.line, node.index, node.total_count])
         with open(result_file, 'w') as f:
             json.dump(indices, f, indent=4)
@@ -1926,8 +2028,9 @@ class StaticDepGraph:
             json.dump(inner_indices, f, indent=4)
         with open(result_file + "_insns", 'w') as f:
             json.dump(insns, f, indent=4)
-        with open(result_file + "_insn_strs", 'w') as f:
-            json.dump(insn_strs, f, indent=4)
+        if binary_file is not None:
+            with open(result_file + "_insn_strs", 'w') as f:
+                json.dump(insn_strs, f, indent=4)
 
     @staticmethod
     def insert_file_line_to_map(node, file, line, graph=None):
@@ -1954,20 +2057,31 @@ class StaticDepGraph:
                 #if len(all_insns) > 100:
                 #    break
 
-        all_insns = list(all_insns)
-        ret = execute_cmd_in_parallel([hex(insn) for insn in all_insns], 'get_file_line.sh', 'insns_', num_processor, prog)
+        all_insns_new = []
+        all_insns_old = []
+        for insn in all_insns:
+            if insn in StaticDepGraph.insn_to_index_cache:
+                all_insns_old.append(insn)
+            else:
+                all_insns_new.append(insn)
+        ret = execute_cmd_in_parallel([hex(insn) for insn in all_insns_new], 'get_file_line.sh', 'insns_', num_processor, prog)
 
-        assert len(ret) == len(all_insns), str(len(ret)) + " " + str(len(all_insns))
+        assert len(ret) == len(all_insns_new), str(len(ret)) + " " + str(len(all_insns_new))
         insn_to_file_line = {}
         i = 0
         print("[indices] total number of file lines to parse: " + str(len(ret)))
         for l in ret:
             file, line, caller_files = parse_get_line_output(l)
-            insn = all_insns[i]
+            insn = all_insns_new[i]
+            StaticDepGraph.insn_to_index_cache[insn] = [file, line, caller_files]
             i += 1
             assert insn not in insn_to_file_line
             insn_to_file_line[insn] = [file, line, caller_files]
             print("[indices] initial parse insn: " + hex(insn) + " file: " + file + " line: " + str(line))
+        for insn in all_insns_old:
+            i += 1
+            assert insn not in insn_to_file_line
+            insn_to_file_line[insn] = StaticDepGraph.insn_to_index_cache[insn]
 
         for graph in StaticDepGraph.func_to_graph.values():
             for node in itertools.chain(graph.none_df_starting_nodes,
@@ -1978,10 +2092,11 @@ class StaticDepGraph:
                 #if node.insn not in insn_to_file_line:
                 #    continue
                 file_line = insn_to_file_line[node.insn]
-                node.file = file_line[0] if our_source_code_dir is None else \
-                    file_line[0][file_line[0].startswith(our_source_code_dir) and len(our_source_code_dir):]
+                node.file = strip_file(file_line[0], our_source_code_dir)
                 node.line = file_line[1]
-                node.caller_files = file_line[2] if file_line[2] != "" else None
+                node.caller_files = strip_callers(file_line[2], our_source_code_dir)
+                if len(node.caller_files) == 0:
+                    node.caller_files = None
                 print("[indices] assignment insn: " + hex(node.insn) + " file " + node.file
                         + " line " + str(node.line) + " caller_files " + str(node.caller_files), flush=True)
                 StaticDepGraph.insert_file_line_to_map(node, node.file, node.line, graph)
@@ -1989,45 +2104,77 @@ class StaticDepGraph:
         print("[indices] generate file line for all reachable_nodes took: " + str(b-a), flush=True)
 
     @staticmethod
-    def generate_rank_for_bbs(prog):
+    def generate_rank_for_bbs(prog, our_source_code_dir):
         a = time.time()
+
         all_insns = set()
-        insn_to_bbs = {}
+        all_bbs = []
         for graph in StaticDepGraph.func_to_graph.values():
             assert len(graph.cfg.postorder_list) == len(graph.cfg.ordered_bbs)
             for bb in graph.cfg.postorder_list:
-                all_insns.add(bb.start_insn)
-                if bb.start_insn not in insn_to_bbs:
-                    insn_to_bbs[bb.start_insn] = set()
-                insn_to_bbs[bb.start_insn].add(bb)
-                #if len(all_insns) > 100:
-                #    break
+                all_bbs.append(bb)
+                bb.index_to_rank = {}
+                bb.insn_to_index = {}
+                addrs = getAllAddrsInBB(StaticDepGraph.binary_ptr, bb.start_insn, graph.func)
+                if len(addrs) == 0:
+                    #It could be that this BB actually maps the cold version of this function, try again
+                    if len(StaticDepGraph.func_hot_and_cold_path_map) > 0 and graph.func in StaticDepGraph.func_hot_and_cold_path_map:
+                        new_func = StaticDepGraph.func_hot_and_cold_path_map[graph.func]
+                        print("[warn] retrying with new function: " + str(new_func))
+                        addrs = getAllAddrsInBB(StaticDepGraph.binary_ptr, bb.start_insn, new_func)
+                assert len(addrs) > 0
+                for addr in addrs: 
+                    all_insns.add(addr)
+                    bb.insn_to_index[addr] = -1
 
-        all_insns = list(all_insns)
-        ret = execute_cmd_in_parallel([hex(insn) for insn in all_insns], 'get_file_line.sh', 'insns_', num_processor, prog)
+        all_insns_new = []
+        all_insns_old = []
+        for insn in all_insns:
+            if insn in StaticDepGraph.insn_to_index_cache:
+                all_insns_old.append(insn)
+            else:
+                all_insns_new.append(insn)
+        ret = execute_cmd_in_parallel([hex(insn) for insn in all_insns_new], 'get_file_line.sh', 'insns_', num_processor, prog)
 
-        assert(len(ret) == len(all_insns))
+        assert(len(ret) == len(all_insns_new))
         i = 0
         print("[indices] total number of file lines to parse: " + str(len(ret)))
+        insn_to_index = {}
         for l in ret:
-            file, line, caller_files = parse_get_line_output(l)
-            insn = all_insns[i]
-            for bb in insn_to_bbs[insn]:
-                bb.line = line
+            file, line, callers = parse_get_line_output(l)
+            insn = all_insns_new[i]
+            StaticDepGraph.insn_to_index_cache[insn] = [file, line, callers]
+            insn_to_index[insn] = [strip_file(file, our_source_code_dir), line, strip_callers(callers, our_source_code_dir)]
             i += 1
             print("[indices] initial parse insn: " + hex(insn) + " file: " + file + " line: " + str(line))
+        for insn in all_insns_old:
+            i += 1
+            [file, line, callers] = StaticDepGraph.insn_to_index_cache[insn]
+            insn_to_index[insn] = [strip_file(file, our_source_code_dir), line, strip_callers(callers, our_source_code_dir)]
+
+        for bb in all_bbs:
+            assert bb.insn_to_index is not None
+            for addr in bb.insn_to_index:
+                index = insn_to_index[addr]
+                file = index[0]
+                line = index[1]
+                callers = index[2]
+                index_str = callers_file_line_to_index(callers, file, line)
+                bb.insn_to_index[addr] = index_str
+                if index_str not in bb.index_to_rank:
+                    bb.index_to_rank[index_str] = -1
 
         for graph in StaticDepGraph.func_to_graph.values():
-            line_to_rank = {}
+            index_to_rank = {}
             bbs = list(graph.cfg.postorder_list)
             sorted_bbs = sorted(bbs, key=lambda e: e.start_insn)
             for bb in sorted_bbs:
-                assert bb.line is not None
-                if bb.line not in line_to_rank:
-                    line_to_rank[bb.line] = 1
-                rank = line_to_rank[bb.line]
-                bb.rank_in_same_line = rank
-                line_to_rank[bb.line] = rank + 1
+                for index in bb.index_to_rank.keys():
+                    if index not in index_to_rank:
+                        index_to_rank[index] = 1
+                    rank = index_to_rank[index]
+                    bb.index_to_rank[index] = rank
+                    index_to_rank[index] = rank + 1
 
         b = time.time()
         print("[indices] generate file line for all reachable_nodes took: " + str(b-a), flush=True)
@@ -2145,9 +2292,23 @@ class StaticDepGraph:
                     print(indices)
                     print(len(indices))
                     for i in range(len(nodes)):
-                        nodes[i].index = indices[i]
-                        assert nodes[i].index > 0
-                        nodes[i].total_count = nodes[i].bb.rank_in_same_line
+                        node = nodes[i]
+                        node.index = indices[i]
+                        assert node.index > 0
+                        index = callers_file_line_to_index(node.caller_files, node.file, node.line)
+                        if node.bb.insn_to_index is not None:
+                            found = False
+                            for insn in node.bb.insn_to_index:
+                                if insn == node.insn:
+                                    found = True
+                                    assert node.bb.insn_to_index[insn] == index
+                                    break
+
+                                if node.bb.insn_to_index[insn] != index:
+                                    node.index -= 1
+                            assert node.index > 0
+                            assert found == True
+                        node.total_count = node.bb.index_to_rank[index]
         b = time.time()
         print("[indices] build binary indices took: " + str(b-a))
 
@@ -2261,7 +2422,20 @@ class StaticDepGraph:
             if initial_node.is_df is False:
                 bb = graph.cfg.getBB(insn)
                 target_bbs.add(bb)
+                if StaticDepGraph.data_flow_pass_only is True:
+                    br = StaticDepGraph.branch_to_target_map[insn]
+                    br_bb = graph.cfg.getBB(br.insn)
+                    target_bbs.add(br_bb)
                 graph.build_control_flow_dependencies(target_bbs)
+                if StaticDepGraph.data_flow_pass_only is True:
+                    initial_node.cf_succes.append(br)
+                    br.cf_predes.append(initial_node)
+                if br not in graph.nodes_in_cf_slice:
+                    graph.nodes_in_cf_slice[br] = br
+                if initial_node not in graph.nodes_in_cf_slice:
+                    graph.nodes_in_cf_slice[initial_node] = initial_node
+                #print(br)
+                #print(initial_node)
         else:
             graph = StaticDepGraph.make_graph(func, prog)
 
@@ -2286,27 +2460,44 @@ class StaticDepGraph:
                     #FIXME: remoe after?
 
             target_bbs.add(graph.cfg.ordered_bbs[0])
+            if StaticDepGraph.data_flow_pass_only is True:
+                br = StaticDepGraph.branch_to_target_map[insn]
+                br_bb = graph.cfg.getBB(br.insn)
+                target_bbs.add(br_bb)
             graph.build_control_flow_dependencies(target_bbs)
-
-            if TRACKS_DIRECT_CALLER:
-                callsites = []
-                if func in StaticDepGraph.func_to_callsites:
-                    callsites = StaticDepGraph.func_to_callsites[func]
-                dyn_callsites = []
-                for entry_bb in orig_entry_bbs:
-                    print("[static_dep] first instruction of function " + func + " is " + hex(entry_bb.start_insn))
-                    if entry_bb.start_insn in StaticDepGraph.func_first_insn_to_dyn_callsites:
-                        dyn_callsites = StaticDepGraph.func_first_insn_to_dyn_callsites[entry_bb.start_insn]
-                        print("[static_dep] found dynamic callsites for function " + func + ": " + str(dyn_callsites))
-                        break
-                print("[static_dep] Instantiating callsites for: " + func)
-                for c in itertools.chain(callsites, dyn_callsites):
-                    if c[0] in StaticDepGraph.insns_that_never_executed:
-                        continue
-                    print("[static_dep] Callsite is: " + str(c))
-                    new_node = StaticDepGraph.make_or_get_cf_node(c[0], None, c[1])
-                    new_nodes.add(new_node)
-                    graph.pending_callsite_nodes.append(new_node)
+            if StaticDepGraph.data_flow_pass_only is True:
+                br = StaticDepGraph.branch_to_target_map[insn]
+                initial_node.cf_succes.append(br)
+                br.cf_predes.append(initial_node)
+                if br not in graph.nodes_in_cf_slice:
+                    graph.nodes_in_cf_slice[br] = br
+                if initial_node not in graph.nodes_in_cf_slice:
+                    graph.nodes_in_cf_slice[initial_node] = initial_node
+                print(br)
+                print(initial_node)
+            if StaticDepGraph.call_graph_pass_only is True:
+                assert StaticDepGraph.control_flow_pass_only is False
+                if TRACKS_DIRECT_CALLER:
+                    callsites = []
+                    if func in StaticDepGraph.func_to_callsites:
+                        callsites = StaticDepGraph.func_to_callsites[func]
+                    dyn_callsites = []
+                    if TRACKS_INDIRECT_CALLER is True:
+                        for entry_bb in orig_entry_bbs:
+                            print("[static_dep] first instruction of function " + func + " is " + hex(entry_bb.start_insn))
+                            if entry_bb.start_insn in StaticDepGraph.func_first_insn_to_dyn_callsites:
+                                dyn_callsites = StaticDepGraph.func_first_insn_to_dyn_callsites[entry_bb.start_insn]
+                                print("[static_dep] found dynamic callsites for function " + func + ": " + str(dyn_callsites))
+                                break
+                    print("[static_dep] Instantiating callsites for: " + func)
+                    for c in itertools.chain(callsites, dyn_callsites):
+                        print("[static_dep] Callsite is: " + str(c))
+                        if c[0] in StaticDepGraph.insns_that_never_executed:
+                            continue
+                        print("[static_dep] Callsite is: " + str(c))
+                        new_node = StaticDepGraph.make_or_get_cf_node(c[0], None, c[1])
+                        new_nodes.add(new_node)
+                        graph.pending_callsite_nodes.append(new_node)
         if initial_node.is_df is False:
             graph.none_df_starting_nodes.add(initial_node)
         """
@@ -2315,6 +2506,10 @@ class StaticDepGraph:
             graph.merge_nodes([df_node])
             #TODO, also need to do dataflow tracing for this one!!
         """
+        if StaticDepGraph.call_graph_pass_only is True:
+            return new_nodes
+        if StaticDepGraph.control_flow_pass_only is True:
+            return set()
 
         all_defs_in_diff_func = set()
         df_nodes = []
@@ -2337,7 +2532,8 @@ class StaticDepGraph:
                 target_bbs = target_bbs.union(new_bbs)
                 #new_bbs = [graph.cfg.getBB(defn.insn) for defn in intermediate_defs_in_same_func]
                 #target_bbs = target_bbs.union(new_bbs)
-                graph.build_control_flow_dependencies(target_bbs)
+                if StaticDepGraph.data_flow_pass_only is False:
+                    graph.build_control_flow_dependencies(target_bbs)
                 new_local_defs_found = True
             for df_node in df_nodes:
                 if df_node.explained is False: #TODO, an explained df node always used to have a BB
@@ -2361,6 +2557,9 @@ class StaticDepGraph:
         for entry_bb in self.cfg.entry_bbs:
             n = self.id_to_node[self.bb_id_to_node_id[entry_bb.id]]
             for callsite in self.pending_callsite_nodes:
+                if StaticDepGraph.call_graph_pass_only is True:
+                    n.explain = True
+
                 if n not in callsite.cf_succes:
                     callsite.cf_succes.append(n)
                     print("Adding " + str(n.id) + " to cf succe of " + str(callsite.id))
@@ -2388,15 +2587,16 @@ class StaticDepGraph:
                 continue
             bb = self.cfg.getBB(node.insn)
             node.bb = bb
-            for prede in bb.predes:
-                if prede in bb.backedge_sources:
-                    continue
-                prede_node_id = self.bb_id_to_node_id[prede.id]
-                prede_node = self.id_to_node[prede_node_id]
-                if prede_node not in node.cf_predes:
-                    node.cf_predes.append(prede_node)
-                if node not in prede_node.cf_succes:
-                    prede_node.cf_succes.append(node)
+            if StaticDepGraph.call_graph_pass_only is not True:
+                for prede in bb.predes:
+                    if prede in bb.backedge_sources:
+                        continue
+                    prede_node_id = self.bb_id_to_node_id[prede.id]
+                    prede_node = self.id_to_node[prede_node_id]
+                    if prede_node not in node.cf_predes:
+                        node.cf_predes.append(prede_node)
+                    if node not in prede_node.cf_succes:
+                        prede_node.cf_succes.append(node)
             #This is specifically for the case of merging none df starting nodes
             # where the node is a starting event, ie first insn of a function
             # it needs to inherit the non local cf predes of the node created for the same BB
@@ -2589,7 +2789,7 @@ class StaticDepGraph:
                 if succe.id in self.cfg.id_to_bb_in_slice:
                     succe_count += 1
             print("succe_count: " + str(succe_count) + " of bb " + str(bb.lines))
-            if succe_count == 0:
+            if succe_count == 0 and StaticDepGraph.data_flow_pass_only is False:
                 continue
 
             insn = bb.last_insn
@@ -2862,6 +3062,35 @@ class StaticDepGraph:
             self.cfg.jsonified = False
         # print(self.bb_id_to_node_id)
 
+        if StaticDepGraph.data_flow_pass_only is True:
+            for bb in self.cfg.target_bbs:
+                node_id = self.bb_id_to_node_id[bb.id]
+                node = self.id_to_node[node_id]
+                if node not in self.nodes_in_cf_slice:
+                    self.nodes_in_cf_slice[node] = node
+            return
+
+        if StaticDepGraph.call_graph_pass_only is True:
+            for bb in self.cfg.target_bbs:
+                node_id = self.bb_id_to_node_id[bb.id]
+                node = self.id_to_node[node_id]
+                #print(node)
+                for prede in self.cfg.entry_bbs:
+                    prede_node_id = self.bb_id_to_node_id[prede.id]
+                    prede_node = self.id_to_node[prede_node_id]
+                    if prede_node.id == node.id:
+                        continue
+                    #print(prede_node)
+                    if prede_node not in node.cf_predes:
+                        node.cf_predes.append(prede_node)
+                    if node not in prede_node.cf_succes:
+                        prede_node.cf_succes.append(node)
+                    if prede_node not in self.nodes_in_cf_slice:
+                        self.nodes_in_cf_slice[prede_node] = prede_node
+                if node not in self.nodes_in_cf_slice:
+                    self.nodes_in_cf_slice[node] = node
+            return
+            
         self.cfg.slice(final)
 
         if final is True:
@@ -2943,6 +3172,8 @@ class StaticDepGraph:
                         if node in p.df_succes:
                             p.df_succes.remove(node)
                             worklist.append(p)
+                    if node.id in self.id_to_node: del self.id_to_node[node.id]
+                    if node.insn in self.insn_to_node: del self.insn_to_node[node.insn]
 
         print("[static_dep] Total number of nodes in control flow slice after trimming: " + str(len(self.nodes_in_cf_slice)) + " " + \
               str([hex(node.insn) for node in self.nodes_in_cf_slice.keys()]))
@@ -3231,6 +3462,12 @@ def main():
     parser.set_defaults(source_codes_same=False)
     parser.add_argument('-b_ours', '--our_binary', dest='our_binary')
     parser.set_defaults(our_binary=None)
+    parser.add_argument('-cg', '--call_graph_pass_only', dest='call_graph_pass_only', action='store_true')
+    parser.set_defaults(call_graph_pass_only=False)
+    parser.add_argument('-cf', '--control_flow_pass_only', dest='control_flow_pass_only', action='store_true')
+    parser.set_defaults(control_flow_pass_only=False)
+    parser.add_argument('-df', '--data_flow_pass_only', dest='data_flow_pass_only', action='store_true')
+    parser.set_defaults(data_flow_pass_only=False)
     args = parser.parse_args()
 
     limit, program, _, _, starting_events, _ = parse_inputs()
@@ -3246,6 +3483,13 @@ def main():
         assert args.generate_indices is True
         assert args.our_source_code_dir is not None
         assert args.other_source_code_dir is not None
+    if args.call_graph_pass_only is True:
+        StaticDepGraph.call_graph_pass_only = True
+    if args.control_flow_pass_only is True:
+        StaticDepGraph.control_flow_pass_only = True
+    if args.data_flow_pass_only is True:
+        StaticDepGraph.data_flow_pass_only = True
+
 
     if args.generate_indices is False:
         StaticDepGraph.build_dependencies(starting_events, program, limit,

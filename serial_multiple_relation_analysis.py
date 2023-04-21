@@ -50,7 +50,7 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
                 graph = StaticDepGraph.get_graph(func, insn)
                 starting_node = graph.insn_to_node[insn]
                 curr_wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, starting_node, 100, 100, self.prog, \
-                                                                                 None, None, None, None)
+                                                                                 None, None, None, None, ra=self)
                 print("[ra] Got results for: " + hex(starting_node.insn))
                 assert rgroup is not None
                 rgroup.sort_relations()
@@ -82,7 +82,7 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
                 graph = StaticDepGraph.get_graph(func, insn)
                 starting_node = graph.insn_to_node[insn]
                 curr_wavefront, rgroup = ParallelizableRelationAnalysis.one_pass(dgraph, starting_node, 100, 100, self.prog, \
-                                                                                 None, None, None, None)
+                                                                                 None, None, None, None, ra=self)
                 print("[ra] Got results for: " + hex(starting_node.insn))
                 assert rgroup is not None
                 rgroup.sort_relations()
@@ -138,7 +138,6 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
         #    assert rgroup is not None
         #    rgroup.sort_relations()
         #    self.relation_groups.append(rgroup)
-
 
         if parent_insn is None:
             self.rgroup_file = os.path.join(curr_dir, 'cache', self.prog, "multiple_rgroups.json")

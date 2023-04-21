@@ -3,13 +3,15 @@ import os
 from relations import *
 from util import *
 from ra_util import *
+import networkx as nx
+import numpy as py
+import matplotlib.pyplot as plt
 from collections import deque
-import itertools
-curr_dir = os.path.dirname(os.path.realpath(__file__))
-ignored = set()
+#import chart_studio.plotly as go
+#from plotly.graph_objs import *
+import plotly.graph_objects as go
 
-dd = None
-rel_map_left = {}
+curr_dir = os.path.dirname(os.path.realpath(__file__))
 
 def parse(f):
     with open(f, 'r') as ff:
@@ -62,22 +64,40 @@ def calculate_dataflow_pass_rates_impact(pass_rates_dataflow1, pass_rates_datafl
         if insn_right is None: insn_right = insn_left
     pass_rate_dataflow1 = pass_rates_dataflow1.get(insn1, {}).get(insn_left, None)
     pass_rate_dataflow2 = pass_rates_dataflow2.get(insn2, {}).get(insn_right, None)
-    # print(pass_rates_dataflow1.get(insn1, {}))
-    # print(pass_rates_dataflow2.get(insn2, {}))
     print("[compare_relation] Dataflow pass rates are: " + str(pass_rate_dataflow1) + " " + str(pass_rate_dataflow2))
-    if pass_rate_dataflow1 is None or pass_rate_dataflow2 is None:
-        print("[compare_relation] Returning because not both sets of dataflow pass rates are found.")
+    if pass_rate_dataflow1 is None and pass_rate_dataflow2 is None:
+        print("[compare_relation] Returning because both sets of dataflow pass rates are notfound.")
         return None
     succe_weights = []
+    if pass_rate_dataflow1 is None or pass_rate_dataflow2 is None:
+        print("[compare_relation] Returning because not both sets of dataflow pass rates are found.")
+        succe_weights.append([0,100])
+        return succe_weights
     for key1 in pass_rate_dataflow1:
         segs = key1.split('_')
         succe = int(segs[1], 16)
         #print("[compare_relation] Succe is: " + hex(succe))
         if succe not in weight_map1:# and succe not in weight_map2:
+            print("[compare_relation] Ignore because left succe not in weight map")
             continue
         rate1 = pass_rate_dataflow1[key1]
         if indices1 is None and indices2 is None:
             key2 = key1
+        else:
+            if IndiceToInsnMap.translate_insn(succe, indices1, indices2) not in weight_map2:
+                print("[compare_relation] Ignore because right succe not in weight map")
+                continue
+
+            key2 = ""
+            for seg in segs:
+                s_insn = int(seg, 16)
+                matching_s_insn = IndiceToInsnMap.translate_insn(s_insn, indices1, indices2)
+                if matching_s_insn is None:
+                    print("[compare_relation] fail to matching dataflow key")
+                    continue
+                key2 += hex(matching_s_insn) + "_"
+            key2 = key2[:-1]
+            print("[compare_relation] translated key is: " + key2)
         if key2 not in pass_rate_dataflow2:
             rate2 = 0
         else:
@@ -124,7 +144,8 @@ def dataflow_pass_rates_equal(pass_rates_dataflow1, pass_rates_dataflow2, insn1,
 def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
                           pass_rates1=None, pass_rates2=None,
                            pass_rates_dataflow1=None, pass_rates_dataflow2=None,
-                          counts_left=None, counts_right=None):
+                          counts_left=None, counts_right=None,
+                          indices1=None, indices2=None):
     if insn1 is None or insn2 is None:
         return True
     print("[compare_relation] comparing children relations for " + hex(insn1) + " and " + hex(insn2))
@@ -132,11 +153,10 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
           + (str([hex(i) for i in filter1]) if filter1 is not None else ""))
     print("[compare_relation] only keeping these instructions on the right "
           + (str([hex(i) for i in filter2]) if filter2 is not None else ""))
-    relation_pairs, succes, insns = get_relation_pairs(insn1, insn2, mrs1, mrs2)
+    relation_pairs, succes, insns = get_relation_pairs(insn1, insn2, mrs1, mrs2, indices1, indices2)
     if relation_pairs is None: #no multiple relations provided for either runs, assume not equal.
-        return False #TODO remove eventually... this is to reduce noise for now
+        return True
 
-    ignore = False
     ret = False
     for i in range(len(relation_pairs)):
         p = relation_pairs[i]
@@ -169,11 +189,8 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
 
         if r_left is None:
             assert r_right is not None
-            if r_right.weight.perc_contrib < 20:
+            if r_right.weight.perc_contrib < 5:
                 print("[compare_relation] ignore relation with less than 5% impact")
-                continue
-            if r_right.insn in ignored:
-                print("[compare_relation/WARN] succe ignored anyways")
                 continue
             else:
                 print("[compare_relation] missing r_right")
@@ -181,11 +198,8 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
 
         if r_right is None:
             assert r_left is not None
-            if r_left.weight.perc_contrib < 20:
+            if r_left.weight.perc_contrib < 5:
                 print("[compare_relation] ignore relation with less than 5% impact")
-                continue
-            if r_left.insn in ignored:
-                print("[compare_relation/WARN] succe ignored anyways")
                 continue
             else:
                 print("[compare_relation] missing r_left")
@@ -196,26 +210,9 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
         #TODO: Right now the pass rate is the combined result of both ratio and probability of passing.
         #TODO: so we use pass rate to override relation comparison.
         if r_left is not None and r_right is not None:
-            if insn1 in rel_map_left and r_left.insn in rel_map_left:
-                m2 = rel_map_left[insn1].forward.magnitude()
-                m1 = rel_map_left[r_left.insn].forward.magnitude()
-                print("[compare_relation] parent magnitude2: " + str(m2) + " child magnitude: " + str(m1))
-                mdiff = abs((m2 - m1) / m2) * 100
-                print("[compare_relation] magnitude2 diff: " + str(mdiff))
-                if mdiff < 20:
-                    ignore = True
-                    print("[compare_relation] Ignore relation1.2")
-                elif m1 > m2:
-                    ignore = True
-                    print("[compare_relation] Ignore relation2.2")
-
             if r_left.relaxed_equals(r_right, counts_left.get(r_left.insn, None) if counts_left is not None else None, \
                                       counts_right.get(r_right.insn, None) if counts_right is not None else None):
                 print("[compare_relation] Relations considered equal.")
-                continue
-            forward_impact = calculate_forward_impact(r_left, r_right)
-            if forward_impact < 20:
-                print("[compare_relation] Relations considered equal2.")
                 continue
 
         #if pass_rates1 is not None and pass_rates2 is not None:
@@ -254,7 +251,7 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
                     continue
 
         ret = True
-    return (ret and (not ignore))
+    return ret
 
 #TODO, merge this logic and the logic being used in the main comparison loop!!
 def get_relation_pairs(insn1, insn2, mrs1, mrs2, indices1=None, indices2=None):
@@ -410,7 +407,8 @@ def build_indices(idf, inf):
     indices = None
     if os.path.exists(idf) and os.path.exists(inf):
         indices = IndiceToInsnMap()
-        indices.build(idf, inf, inf[0:-1] + "_strs")
+        ins = inf[0:-1] + "_strs"
+        indices.build(idf, inf, ins if os.path.exists(ins) else None)
     return indices
 
 def compare_relation_groups(f1, f2, tf1, tf2, d1, mcf1, mcf12, mf1, mf12, pf1, pf12, pduf1, pduf12,
@@ -492,7 +490,6 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1, mcf1, mcf12, mf1, mf12, pf1, p
 # otherwise it's more likely that there simple exists another source of the performance impact in the bad run.
 #TODO: Should use the weight of each starting event too, for now, just use the count
 def test_if_likely_true_negative_event(r_left, r_right, left_full_weight, right_full_weight):
-    return False
     left_weight = r_left.weight.perc_contrib * left_full_weight / 100
     right_weight = r_right.weight.perc_contrib * right_full_weight / 100
     print("[compare_relation] Checking if is likely a true negative event, "
@@ -557,7 +554,8 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                                                pass_rates1=pass_rates_left, pass_rates2=pass_rates_right,
                                                pass_rates_dataflow1=pass_rates_dataflow_left,
                                                pass_rates_dataflow2=pass_rates_dataflow_right,
-                                               counts_left=counts_left, counts_right=counts_right)
+                                               counts_left=counts_left, counts_right=counts_right,
+                                               indices1=indices_left, indices2=indices_right)
             print("[compare_relation] Children relations are equal? " + str(equals))
             assert weight == r_right.weight.perc_contrib
             corr = r_right.forward.corr()
@@ -591,7 +589,8 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                                                pass_rates1=pass_rates_left, pass_rates2=pass_rates_right,
                                                pass_rates_dataflow1=pass_rates_dataflow_left,
                                                pass_rates_dataflow2=pass_rates_dataflow_right,
-                                               counts_left=counts_left, counts_right=counts_right)
+                                               counts_left=counts_left, counts_right=counts_right,
+                                               indices1=indices_left, indices2=indices_right)
             print("[compare_relation] Children relations are equal? " + str(equals))
             assert weight == r_left.weight.perc_contrib
             corr = r_left.forward.corr()
@@ -674,7 +673,6 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
         # Getting any existing in context multiple rels
         left_succe_to_rels = {}
         rigt_succe_to_rels = {} #TODO, what to do in this case?
-        max_matched_magnitude = 0
         pairs, succes, insns = get_relation_pairs(r_left.insn, r_right.insn, mcrs_left, mcrs_right, indices1=indices_left, indices2=indices_right)
         if pairs is not None:
             for i in range(len(pairs)):
@@ -686,8 +684,6 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                     if ip[0] == r_left.insn:
                         continue
                     left_succe_to_rels[ip[0]] = [p, s, ip]
-                    if ip[1] is not None:
-                        max_matched_magnitude = max(max_matched_magnitude, rel_map_left[p[0].insn].forward.magnitude())
                 else:
                     rigt_succe_to_rels[ip[1]] = [p, s, ip]
 
@@ -698,18 +694,18 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                 #print(str(s[1]) + " " + (hex(ip[1]) if ip[1] is not None else "None"))
                 #print(p[1])
                 #print("---------------------------------")
-        print("[compare_relation] max matched child magnitude: " + str(max_matched_magnitude))
-        ignore = False
+
         succe_weights = []
         for succe_insn in succe_insns_left:
             if succe_insn not in weight_map_left:
                 print("[compare_relation] Succe: " + hex(succe_insn) + " does not have a relation")
-                #TODO, a node can be ignored if its relation roughly equals another nodes relation too ...
                 if succe_insn in left_succe_to_rels:
                     print("[compare_relation/warn] " + hex(succe_insn) + " has a one level relation but not full relation: " +  hex(succe_insn)
                             + " likely because relation was ignored due to low weight...")
-                    succe_weight = 0
-                #continue
+                    succe_weight = weight_map_left[r_left.insn]
+                    print("[compare_relations] Approximate using the weight of the prede instruction: " + str(succe_weight))
+                else:
+                    continue
             else:
                 succe_weight = weight_map_left[succe_insn]
             print("[compare_relation] " + hex(succe_insn) + " succe weights is: " + str(succe_weight))
@@ -735,26 +731,8 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
 
             if p[0] is not None and p[1] is not None:
                 impact = calculate_forward_impact(p[0], p[1])
-                if ip[0] in rel_map_left:
-                    m1 = rel_map_left[ip[0]].forward.magnitude()
-                    m2 = r_left.forward.magnitude()
-                    print("[compare_relation] parent magnitude: " + str(m2) + " child magnitude: " + str(m1))
-                    mdiff = abs((m2 - m1) / m2) * 100
-                    print("[compare_relation] magnitude diff: " + str(mdiff))
-                    if mdiff < 20:
-                        ignore = True
-                        print("[compare_relation] Ignore relation1")
-                    elif m1 > m2:
-                        ignore = True
-                        print("[compare_relation] Ignore relation2")
             else:
                 impact = 100#p[0].weight.perc_contrib
-                if p[0] is not None:
-                    if ip[0] in rel_map_left:
-                        m1 = rel_map_left[ip[0]].forward.magnitude()
-                        if m1 <= max_matched_magnitude:
-                            impact = 0
- 
             #impact, corr = calculate_weight_corr(p[0].weight.perc_contrib, p[0], p[1])
             if equals is True and impact != 0:
                 print("[compare_relation/warn] relations equal why impact not 0? impact is: " + str(impact))
@@ -767,7 +745,6 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                       + " new weight is: " + str(succe_weight))
 
             print("[compare_relation] impact is: " + str(impact))
-            print("[compare_relation] weight is: " + str(succe_weight))
             #if pass_rates_left is not None and pass_rates_right is not None:
             #    pass_rate1 = pass_rates_left.get(r_left.insn, {}).get(ip[0], None)
             #    pass_rate2 = pass_rates_right.get(r_right.insn, {}).get(ip[1], None)
@@ -784,7 +761,7 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
             if impact != 0 and pass_rates_dataflow_left is not None and pass_rates_dataflow_right is not None:
                 dataflow_impacts = calculate_dataflow_pass_rates_impact(pass_rates_dataflow_left, pass_rates_dataflow_right,
                                                             r_left.insn, r_right.insn, ip[0], ip[1],
-                                                            weight_map_left, weight_map_right, None, None)
+                                                            weight_map_left, weight_map_right, indices_left, indices_right)
                 if dataflow_impacts is not None:
                     #print("[compare_relation] setting impact from " + str(impact) + " to 0 because pass rates w.r.t. control flow targets are equal.")
                     succe_weights.extend(dataflow_impacts)
@@ -792,9 +769,6 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
 
             succe_weights.append([impact, succe_weight])
             print("---------------------------------")
-        if ignore is True:
-            print("[compare_relation] Ignore relation even though it leads to different children.")
-            continue
         succe_weights = sorted(succe_weights, key=lambda e: e[0])
 
         old_weight = weight_map_left[r_left.insn]
@@ -806,20 +780,6 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
 
         new_weight = 0
         total_succe_weights_encountered = 0
-        succe_weights_map = {}
-        for weight_pair in reversed(succe_weights):
-            impact = weight_pair[0]
-            succe_weight = weight_pair[1]
-            existing_impact = succe_weights_map.get(succe_weight, -1)
-            if impact > existing_impact:
-                succe_weights_map[succe_weight] = impact
-
-        succe_weights = []
-        for w in succe_weights_map:
-            i = succe_weights_map[w]
-            succe_weights.append([i,w])
-        succe_weights = sorted(succe_weights, key=lambda e: e[0])
-
         for weight_pair in reversed(succe_weights):
             impact = weight_pair[0]
             succe_weight = weight_pair[1]
@@ -828,23 +788,16 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
             if new_weight > r_left.weight.perc_contrib: #FIXME
                 new_weight = r_left.weight.perc_contrib
                 break
-        print("[compare_relation] Total succe weights encountered: " + str(total_succe_weights_encountered))
         if len(succe_weights) == 0:
             print("[compare_relation] no succes, use original weight. ")
             new_weight = old_weight
-        #elif total_succe_weights_encountered < old_weight :
-        #    # If original weights of successors do not add up to the original weight of the node,
-        #    # this could be because the predecessor has many successors with small weights,
-        #    # which have been ignored ...
-        #    new_weight += (old_weight - total_succe_weights_encountered)
-        #    #assert new_weight <= old_weight, str(new_weight) + " " + str(old_weight)
-        #    if new_weight > old_weight:
-        #        print("[compare_relation/WARN] New weight " + str(new_weight) 
-        #                + " larger than old weight, keeping old weight " + str(old_weight))
-        #        new_weight = old_weight
-        #    print("[compare_relation/warn] Updating the weight to "+ str(new_weight))
-        if new_weight > old_weight:
-            new_weight = old_weight
+        elif total_succe_weights_encountered < old_weight :
+            # If original weights of successors do not add up to the original weight of the node,
+            # this could be because the predecessor has many successors with small weights,
+            # which have been ignored ...
+            new_weight += (old_weight - total_succe_weights_encountered)
+            assert new_weight <= old_weight, str(new_weight) + " " + str(old_weight)
+            print("[compare_relation/warn] Updating the weight to "+ str(new_weight))
 
         #assert new_weight <= old_weight #TODO, remove
         print("[compare_relation] new weights: " + str(new_weight))
@@ -1275,56 +1228,12 @@ def plot(included_diff, rel_map1, rel_map2, left_summary, right_summary, left, r
     #fig =px.scatter(x=range(10), y=range(10))
     fig.write_html("file.html")
 
-def find_roots(curr, visited, roots, included_diff_map3, q, depth):
-    if curr.insn in visited:
-        return
-    if curr.insn in included_diff_map3:
-        roots.add(curr.insn)
-        visited.add(curr.insn)
-        return
-
-    if depth >= 100:
-        q.append(curr)
-        return
-    visited.add(curr.insn)
-    depth += 1
-    for succe in itertools.chain(curr.cf_succes, curr.df_succes):
-        find_roots(succe, visited, roots, included_diff_map3, q, depth)
-
-
-
-def traverse(curr, visited, prev_mean, rel_group_map, included_diff_map2, q, depth):
-    if curr.insn in visited:
-        return
-
-    if curr.insn in included_diff_map2:
-        curr_mean = included_diff_map2[curr.insn][4].forward.magnitude()
-        if prev_mean is None:
-            prev_mean = curr_mean
-        if abs((curr_mean - prev_mean)/prev_mean*100) < 20:
-            group = rel_group_map.get(prev_mean, None)
-            if group is None:
-                group = []
-                rel_group_map[prev_mean] = group
-            group.append(included_diff_map2[curr.insn])
-        else:
-            prev_mean = curr_mean
-            q.append([curr, prev_mean])
-            return
-    if depth >= 100:
-        q.append([curr, prev_mean])
-        return
-    visited.add(curr.insn)
-    depth += 1
-    for succe in itertools.chain(curr.cf_succes, curr.df_succes):
-        traverse(succe, visited, prev_mean, rel_group_map, included_diff_map2, q, depth)
-
-
 def compare_relations(parent_d, parent_key, left, right, counts_left, counts_right, d1,
                       mcrs_left=None, mcrs_right=None, mrs_left=None, mrs_right=None,
                       pass_rates_left=None, pass_rates_right=None,
                       pass_rates_dataflow_left=None, pass_rates_dataflow_right=None,
-                      indices_left=None, indices_right=None):
+                      indices_left=None, indices_right=None,
+                      inner_indices_left=None, inner_indices_right=None):
     if left is None or right is None:
         print("[warn] One relation group is None")
         return
@@ -1355,20 +1264,16 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
     left_over_right = {}
     right_insns_seen = set()
     insn_to_index = {}
-
-    new_rels = {}
     for pair in left.relations:
         r = pair[0]
         prede = pair[1]
         insn_to_index[r.insn] = prede
-        rel_map_left[r.insn] = r
         print("[compare_relation] Looking for match relation on the left:")
         print(prede)
         print(r)
         ''' Find the matching relation from the right hand side relation group '''
         pair = Indices.get_item_from_external_indice_map2(right.predes, right.relations_map, prede, indices_left, indices_right)
         if pair is None:
-            new_rels[r.insn] = r
             if r.weight.perc_contrib < 5:
                 print("[ra] Contribution is too low, ignore the relations: " + hex(r.insn))
                 continue
@@ -1377,17 +1282,13 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                 continue
             #left_over_left[prede[0] + "_" + str(prede[1])] = (r.weight.perc_contrib, r.timestamp, r, None)
             diff.append((r.weight.perc_contrib, r.timestamp, r, None))
-            print("[ra] match not found inserting to diff")
             continue
 
         r2 = pair[0]
         insn_to_insn[r.insn] = r2.insn
-        print(r2)
 
         ''' If the two relations are roughly equal, ignore '''
-        forward_impact = calculate_forward_impact(r, r2)
-        if r.relaxed_equals(r2) or forward_impact < 20:
-            ignored.add(r.insn)
+        if r.relaxed_equals(r2):
             print("[ra] Relations roughly equal, ignore the relations: " + hex(r.insn) + " " + hex(r2.insn))
             continue
 
@@ -1431,18 +1332,13 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                 continue
             #left_over_right[prede[0] + "_" + str(prede[1])] = (r.weight.perc_contrib, r.timestamp, None, r)
             diff.append((r.weight.perc_contrib, r.timestamp, None, r))
-            print("[ra] match not found inserting to diff")
             continue
 
         #TODO: I don't know why an instruction would fail to match in the first check and match here...
         r1 = pair[0]
         insn_to_insn[r1.insn] = r.insn
-        print(r1)
 
-        ''' If the two relations are roughly equal, ignore '''
-        forward_impact = calculate_forward_impact(r1, r)
-        if r1.relaxed_equals(r) or forward_impact < 20:
-            ignored.add(r1.insn)
+        if r1.relaxed_equals(r):
             print("[ra] Relations roughly equal, ignore the relations: " + hex(r1.insn) + " " + hex(r.insn))
             continue
 
@@ -1479,21 +1375,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
     #    diff.append((r.weight.perc_contrib, r.timestamp, None, r))
     #    max_timestamp = max(max_timestamp, r.timestamp)
     #    max_weight = max(max_weight, r.weight.perc_contrib)
-    print("HERE ignored: " + str(len(ignored)))
-    changed = True
-    while changed is True:
-        changed = False
-        for insn in left_summary:
-            skip = False
-            for succe in left_summary[insn]:
-                if succe not in ignored:
-                    skip = True
-                    break
-            if skip is False and insn not in ignored:
-                ignored.add(insn)
-                changed = True
-                
-    print("HERE ignored: " + str(len(ignored)))
+
     max_timestamp = max(max_timestamp, 1)
     max_weight = max(max_weight, 1)
 
@@ -1509,113 +1391,10 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
 
     included_diff = []
     #rank = len(sorted_diff) + 1
-    left_seen = {}
-    right_seen = {}
-    matched_insns_left = insn_to_insn.keys()
-    matched_insns_right = insn_to_insn.values()
-    for p in sorted_diff:
-        #rank = rank - 1
-        print("-----------------------------------------")
-        print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
-        print(str(p[2]) + " " + str(p[3]))
-        if p[4] is not None: print(insn_to_index[p[4].insn])
-        print(str(p[4]))
-        if p[5] is not None: print(insn_to_index[p[5].insn])
-        print(str(p[5]))
-    
-        r_left = p[4]
-        r_right = p[5]
-        if r_left is not None and r_right is not None:
-            continue
-        if r_left is not None:
-            replace = None
-            found = False
-            for seen_insn in left_seen.keys():
-                seen = left_seen[seen_insn]
-                if r_left.relaxed_equals(seen):
-                    found = True
-                    succes = left_summary[r_left.insn] 
-                    for succe in succes:
-                        if succe in matched_insns_left:
-                            replace = seen_insn
-                            break
-                    break
-            if found is False:
-                left_seen[r_left.insn] = r_left
-            if replace is not None:
-                del left_seen[replace]
-                left_seen[r_left.insn] = r_left
-
-        if r_right is not None:
-            replace = None
-            found = False
-            for seen_insn in right_seen.keys():
-                seen = right_seen[seen_insn]
-                if r_right.relaxed_equals(seen):
-                    found = True
-                    succes = right_summary[r_right.insn] 
-                    for succe in succes:
-                        if succe in matched_insns_right:
-                            replace = seen_insn
-                            break
-                    break
-            if found is False:
-                right_seen[r_right.insn] = r_right
-            if replace is not None:
-                del right_seen[replace]
-                right_seen[r_right.insn] = r_right
-
-    diverged_rels = {}
-    for p in reversed(sorted_diff):
-        #rank = rank - 1
-        print("-----------------------------------------")
-        print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
-        print(str(p[2]) + " " + str(p[3]))
-        if p[4] is not None: print(insn_to_index[p[4].insn])
-        print(str(p[4]))
-        if p[5] is not None: print(insn_to_index[p[5].insn])
-        print(str(p[5]))
-    
-        r_left = p[4]
-        r_right = p[5]
-        if r_left is not None and r_right is not None:
-            if r_left.insn in ignored: continue
-            included_diff.append(p)
-            continue
-        if r_left is not None:
-            if r_left.insn in ignored: continue
-            if r_left.insn not in left_seen:
-                print("[compare_relation] already seen a similar relation, ignore...")
-                continue
-
-        if r_right is not None:
-            if r_right.insn not in right_seen:
-                print("[compare_relation] already seen a similar relation, ignore...")
-                continue
-
-        if p[4] is not None:
-            ignore = False
-            index = insn_to_index[p[4].insn]
-            func = index[0]
-            insn = index[1]
-            graph = StaticDepGraph.get_graph(func, insn)
-            node = graph.insn_to_node[insn] if graph is not None else None
-            if node is not None:
-                print("FOUNDDD")
-                for cf_prede in node.cf_predes:
-                    if cf_prede.insn in new_rels:
-                        print("RELATION SHOULD BE IGNORED!")
-                        ignore = True
-                        break
-            if ignore is True:
-                diverged_rels[insn] = p[4]
-                continue
-
-        included_diff.append(p)
-
+    left_seen = []
+    right_seen = []
     # Reverse the list so if there are multiple equal relations,
     # we will always see the highest ranked ones first, keep them, and exclude the lowest ranked ones.
-    '''
     for p in reversed(sorted_diff):
         #rank = rank - 1
         print("-----------------------------------------")
@@ -1641,6 +1420,16 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                     print("[compare_relation] already seen a similar relation, ignore...")
                     include = False
                     break
+            succe_in_other_slice = True
+            if indices_left is not None and indices_right is not None:
+                for succe in left_summary[r_left.insn]:
+                    matching_insn = IndiceToInsnMap.translate_insn(succe, indices_left, indices_right)
+                    if matching_insn is None:
+                        succe_in_other_slice = False
+                        break
+            if not succe_in_other_slice:
+                print("[compare_relation/warn] None of the successors are in the other slice1")
+                include = False
             if include is True:
                 left_seen.append(r_left)
         elif r_right is not None:
@@ -1650,13 +1439,24 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                     print("[compare_relation] already seen a similar relation, ignore...")
                     include = False
                     break
+            succe_in_other_slice = True
+            if indices_left is not None and indices_right is not None:
+                for succe in right_summary[r_right.insn]:
+                    matching_insn = IndiceToInsnMap.translate_insn(succe, indices_right, indices_left)
+                    if matching_insn is None:
+                        succe_in_other_slice = False
+                        break
+            if not succe_in_other_slice:
+                print("[compare_relation/warn] None of the successors are in the other slice2")
+                include = False
+
             if include is True:
                 right_seen.append(r_right)
-        if include is True and mcrs_left is not None and mcrs_right is not None:
-            r_insn = r_left.insn if r_left is not None else r_right.insn
-            #TODO, this wont work if source codes are different
-            include = compare_children_rels(r_insn, r_insn, mcrs_left, mcrs_right)
-            print("[compare_relation] compare immediate successor rel result: " + str(include))
+        #if include is True and mcrs_left is not None and mcrs_right is not None:
+        #    r_insn = r_left.insn if r_left is not None else r_right.insn
+        #    #TODO, this wont work if source codes are different
+        #    include = compare_children_rels(r_insn, r_insn, mcrs_left, mcrs_right, indices_right, indices_left)
+        #    print("[compare_relation] compare immediate successor rel result: " + str(include))
 
         if not include:
             print("NO RANK, ignore the relations: " + (hex(r_left.insn) if r_left is not None else "")
@@ -1665,38 +1465,16 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         print("HAS RANK")
         #print("rank: " + str(rank))
         included_diff.append(p)
-    '''
+
 
     print("===============================================")
     print("===============================================")
     #insns_left = []
     #insns_right = []
-    #rank = len(included_diff)
-    included_diff2 = []
-    included_diff_map2 = {}
-    rank = 0
-    for p in reversed(included_diff):
-        if p[0] < 30: continue
-        rank += 1
+    rank = len(included_diff) + 1
 
     for p in reversed(included_diff):
-        if p[0] < 30: continue
-        ignore = False
-        if p[4] is not None:
-            index = insn_to_index[p[4].insn]
-            func = index[0]
-            insn = index[1]
-            graph = StaticDepGraph.get_graph(func, insn)
-            node = graph.insn_to_node[insn] if graph is not None else None
-            if node is not None:
-                print("FOUNDDD")
-            for df_succe in node.df_succes:
-                if df_succe.insn in diverged_rels:
-                    print("SHOULD IGNORE!")
-                    ignore = True
-        if ignore is False: 
-            included_diff2.append(p)
-            if p[4] is not None: included_diff_map2[p[4].insn] = p
+        rank = rank - 1
         print("-----------------------------------------")
         print("rank: " + str(rank))
         print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
@@ -1705,7 +1483,6 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         print(str(p[4]))
         if p[5] is not None: print(insn_to_index[p[5].insn])
         print(str(p[5]))
-        rank = rank - 1
         #if has a node in the graph, add a label...
 
         #r_left = p[4]
@@ -1718,162 +1495,6 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         #if r_right is None:
         #    insns_left.append(r_left.insn)
         #    insns_right.append(r_left.insn)
-
-
-    StaticDepGraph.find_entry_and_exit_nodes()
-    assert(len(StaticDepGraph.entry_nodes) > 0)
-    print("[compare_relation] Number of entry nodes for the graph is: " + str(len(StaticDepGraph.entry_nodes)))
-
-    visited = set()
-    rel_group_map = {}
-    q = deque()
-    for entry in StaticDepGraph.entry_nodes:
-        q.append([entry, None])
-
-    while len(q) > 0:
-        depth = 0
-        [n, mean] = q.popleft()
-        traverse(n, visited, mean, rel_group_map, included_diff_map2, q, depth)
-   
-    ignore_map = set()
-    for mean in rel_group_map:
-        group = rel_group_map[mean]
-        print("================================================")
-        print("[compare_relation] mean: " + str(mean) + " num rels: " + str(len(group)))
-        inner_diff = []
-        for rel in group:
-            inner_diff.append([rel[1], rel])
-            p = rel
-            print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
-            print(str(p[2]) + " " + str(p[3]))
-            if p[4] is not None: print(insn_to_index[p[4].insn])
-            print(str(p[4]))
-            if p[5] is not None: print(insn_to_index[p[5].insn])
-            print(str(p[5]))
-            print("---------------------------------------------")
-
-        sorted_inner_diff = sorted(inner_diff, key=lambda e: (e[0]))
-        [ts, p] = sorted_inner_diff[-1]
-        print("[compare_relation] kept relation is: ")
-        print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
-        print(str(p[2]) + " " + str(p[3]))
-        if p[4] is not None: print(insn_to_index[p[4].insn])
-        print(str(p[4]))
-        if p[5] is not None: print(insn_to_index[p[5].insn])
-        print(str(p[5]))
-        print("---------------------------------------------")
-
-
-        for rel in sorted_inner_diff[0:-1]:
-            ignore_map.add(rel[1][4].insn)
-
-
-
-
-    rank = 0
-    ignore_set = set()
-    for p in included_diff2:
-        if p[4] is not None:
-            if p[4].insn in ignore_map:
-                continue
-            #if p[4].insn not in roots:
-            #    continue
-            #print("-----------------------------------------")
-            #print("rank: " + str(rank))
-            #print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
-            #print(str(p[2]) + " " + str(p[3]))
-            #if p[4] is not None: print(insn_to_index[p[4].insn])
-            #print(str(p[4]))
-            #if p[5] is not None: print(insn_to_index[p[5].insn])
-            #print(str(p[5]))
- 
-            index = insn_to_index[p[4].insn]
-            func = index[0]
-            insn = index[1]
-            graph = StaticDepGraph.get_graph(func, insn)
-            node = graph.insn_to_node[insn] if graph is not None else None
-            if node is not None:
-                print("FOUNDDD")
-                ignore = False
-                for prede in itertools.chain(node.cf_predes, node.df_predes):
-                    if prede.insn not in rel_map_left:
-                        continue
-                    print("Prede found: " + hex(prede.insn))
-                    p_rel = rel_map_left[prede.insn]
-                    if p_rel.relaxed_equals(p[4]):
-                        print("Prede equal to curr rel")
-                        continue
-                    for succe in itertools.chain(node.cf_succes, node.df_succes):
-                        if succe.insn not in rel_map_left:
-                            continue
-                        print("Succe found: " + hex(succe.insn))
-                        s_rel = rel_map_left[succe.insn]
-                        if p_rel.relaxed_equals(s_rel):
-                            print("Succe and Prede rel equal")
-                            ignore = True
-                            break
-                    if ignore is True:
-                        ignore_set.add(insn)
-                        break
-                if ignore is True:
-                    continue
-
-        rank += 1
-
-    included_diff3 = []
-    included_diff_map3 = {}
-    for p in included_diff2:
-        if p[4] is not None:
-            if p[4].insn in ignore_map:
-                continue
-            #if p[4].insn not in roots:
-            #    continue
-            if p[4].insn in ignore_set:
-                continue
- 
-        #print("-----------------------------------------")
-        #print("rank: " + str(rank))
-        #print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
-        #print(str(p[2]) + " " + str(p[3]))
-        #if p[4] is not None: print(insn_to_index[p[4].insn])
-        #print(str(p[4]))
-        #if p[5] is not None: print(insn_to_index[p[5].insn])
-        #print(str(p[5]))
-        #rank = rank - 1
-        included_diff3.append(p)
-        if p[4] is not None: included_diff_map3[p[4].insn] = p
- 
-    visited = set()
-    roots = set()
-    q = deque()
-    for entry in StaticDepGraph.entry_nodes:
-        q.append(entry)
-
-    while len(q) > 0:
-        depth = 0
-        n = q.popleft()
-        find_roots(n, visited, roots, included_diff_map3, q, depth)
-
-    rank = 0
-    for p in included_diff3:
-        if p[4] is not None:
-            if p[4].insn not in roots:
-                continue
-        rank += 1
- 
-    for p in included_diff3:
-        if p[4] is not None:
-            if p[4].insn not in roots:
-                continue
-        print("-----------------------------------------")
-        print("rank: " + str(rank))
-        print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
-        print(str(p[2]) + " " + str(p[3]))
-        if p[4] is not None: print(insn_to_index[p[4].insn])
-        print(str(p[4]))
-        if p[5] is not None: print(insn_to_index[p[5].insn])
-        print(str(p[5]))
-        rank = rank - 1
     
     #with open('insns_left', 'w') as out:
     #    for i in insns_left:
@@ -1885,15 +1506,11 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
 
     #plot(included_diff, rel_map1, rel_map2, left_summary, right_summary, left, right)
 
-
 if __name__ == "__main__":
     #f1 = sys.argv[1]
     #f2 = sys.argv[2]
     limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
     _, other_dir, other_program, other_relations_file, _ = parse_relation_analysis_inputs()
-
-    dd = DynamicDependence(starting_events, program, program_args, program_path, starting_insn_to_weight)
-    dd.prepare_to_build_dynamic_dependencies(limit)
 
     dir1 = curr_dir
     dir2 = other_dir

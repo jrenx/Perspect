@@ -281,6 +281,35 @@ long unsigned int getInstrAfter(vector<Function *> *allFuncs, char *funcName, lo
   return nextInsn;
 }
 
+long unsigned int getAllAddrsInBB(vector<Function *> *allFuncs, char *funcName, long unsigned int addr){
+  if(DEBUG) cout << "[sa] ================================" << endl;
+  if(DEBUG) cout << "[sa] Getting all the instructions of the basic block: " << endl;
+  if(DEBUG) cout << "[sa] func: " << funcName << endl;
+  if(DEBUG) cout << "[sa] addr:  0x" << std::hex << addr << std::dec << endl;
+  if(DEBUG) cout << endl;
+
+  cJSON *json_addrs = cJSON_CreateArray();
+
+  Function *func = getFunction2(allFuncs, funcName, addr);
+  if (func != NULL) {
+    Block *bb = getBasicBlock2(func, addr);
+    Block::Insns insns;
+    bb->getInsns(insns);
+    for (auto it = insns.begin(); it != insns.end(); ++it) {
+      long unsigned int addr = (*it).first;
+      cJSON *json_addr = cJSON_CreateNumber(addr);
+      cJSON_AddItemToArray(json_addrs, json_addr);
+    }
+  } else {
+    cout << "[ERROR] Instruction " << std::hex << addr << std::dec << " not found in function: " << funcName << endl;
+  }
+  char *rendered = cJSON_Print(json_addrs);
+  cJSON_Delete(json_addrs);
+  std::ofstream out("getAllAddrsInBB_result");
+  out << rendered;
+  out.close();
+}
+
 void getImmedPred(vector<Function *> *allFuncs, char *funcName, long unsigned int addr){
   if(DEBUG) cout << "[sa] ================================" << endl;
   if(DEBUG) cout << "[sa] Getting the immediate control flow predecessor: " << endl;
@@ -393,7 +422,7 @@ void getDynamicCallsites(vector<Function *> *allFuncs) {
         long unsigned int addr = (*iit).first;
         Instruction insn = (*iit).second;
 	      entryID id = insn.getOperation().getID();
-	      if (id != e_call && id != e_callq) continue;
+	if (id != e_call && id != e_callq && id != e_jmpq) continue;
         //cout << hex << addr << dec << " " << insn.format() << " ";
 	//      cout << insn.readsMemory() << endl;
 
@@ -1088,6 +1117,27 @@ SymtabAPI::Symtab *setup2(char *progName) {
 }
 
 int main() {
+  const char *progName = "mongod";
+  SymtabAPI::Symtab *symTab = setup2((char *)progName);
+  vector<Function *>* fs = setup((char *)progName);
+  cout << "SIZE: " << fs->size() << endl;
+  string s("__json_pack_size.cold.16");
+  for (auto it = fs->begin(); it != fs->end(); it++) {
+    cout <<"--------------------" << endl;
+    Function *f = *it;
+    cout << f->name() << endl;
+    if (f->name() == s) continue;
+    Block *b = NULL;
+    int c = 0;
+    for (auto bit = f->blocks().begin(); bit != f->blocks().end(); ++bit) {
+	    b = *bit;
+	    c += 1;
+    }
+    cout << c << endl;
+    getAllBBs2(symTab, fs, (char *)progName, (char *)f->name().c_str(), (long unsigned int)b->last());
+  } 
+  SymtabAPI::Symtab::closeSymtab(symTab);
+
   //const char *progName = "909_ziptest_exe9";
   //getMemWritesToStaticAddresses((char *)progName);
 }
