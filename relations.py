@@ -50,8 +50,8 @@ class Invariance:
             return False
         if self.is_conditional != other.is_conditional:
             # If one is conditional and another is not but the conditional proportional is almost 100, return True.
-            if self.conditional_proportion is not None and self.conditional_proportion >= 0.99 or \
-                other.conditional_proportion is not None and other.conditional_proportion >= 0.99:
+            if self.conditional_proportion is not None and self.conditional_proportion >= 0.80 or \
+                other.conditional_proportion is not None and other.conditional_proportion >= 0.80: #TODO make threshold
                     return True
             return False
         if self.conditional_proportion == other.conditional_proportion:
@@ -704,35 +704,28 @@ class Indices:
             ret = extern_map.get(key)
             #TODO possibly change back
             #if ret is not None:
-            #    return ret
+            return ret
 
-            #TODO remove
             assert my_insn_indices is not None
             assert other_insn_indices is not None
-            if my_insn_indices is None or other_insn_indices is None:
-                return ret
+            #if my_insn_indices is None or other_insn_indices is None:
+            #    return None
             
             my_insn_str = my_insn_indices.get_insn_str(index_quad)
-            #print("my_str: " + str(my_insn_str))
-            if my_insn_str is None:
-                return ret
-
-            other_insn_str = other_insn_indices.get_insn_str(index_quad)
-            if my_insn_str == other_insn_str and ret is not None:
-                return ret
-            for i in [1, -1, 2, -2]:
+            assert my_insn_str is not None
+            for i in range(-3,4):
+                if i == 0:
+                    continue
                 curr_index_quad = list(index_quad)
-                curr_index_quad[2] = curr_index_quad[2] + i
+                curr_index_quad[2] = curr_index_quad[2] - i
                 if curr_index_quad[2] < 1:
                     continue
-                #print(curr_index_quad)
+
                 other_insn_str = other_insn_indices.get_insn_str(curr_index_quad)
-                #print("other_str: " + str(other_insn_str))
                 if other_insn_str == my_insn_str:
                     print("[ra] Using inexact index match because insn strs are equal: " + str(other_insn_str) + " " + str(my_insn_str))
                     key = Indices.build_key_from_index_quad(curr_index_quad)
                     return extern_map.get(key)
-            return ret
 
         else:
             return Indices.get_item_from_external_indice_map(indices, extern_map, index_quad)
@@ -821,14 +814,13 @@ class IndiceToInsnMap():
             insns = json.load(f)
        
         insn_strs = None
-        if insn_strs_file_path is not None:
-            assert os.path.exists(insn_strs_file_path)
-            with open(insn_strs_file_path, 'r') as f:
-                insn_strs = json.load(f)
+        #if insn_strs_file_path is not None:
+        #    assert os.path.exists(insn_strs_file_path)
+        #    with open(insn_strs_file_path, 'r') as f:
+        #        insn_strs = json.load(f)
 
         assert(len(index_quads) == len(insns))
-        if insn_strs is not None:
-            assert(len(index_quads) == len(insn_strs))
+        #assert(len(index_quads) == len(insn_strs))
         self.indices = Indices.build_indices(index_quads)
         for i in range(len(index_quads)):
             index_quad = index_quads[i]
@@ -836,13 +828,11 @@ class IndiceToInsnMap():
             insn_str = insn_strs[i] if insn_strs is not None else None
             #assert insn_str is not None
             Indices.insert_to_external_indice_to_item_map(self.index_to_insn, index_quad, insn)
-            if insn_str is not None:
-                Indices.insert_to_external_indice_to_item_map(self.index_to_insn_str, index_quad, insn_str)
+            Indices.insert_to_external_indice_to_item_map(self.index_to_insn_str, index_quad, insn_str)
             self.insn_to_quad[insn] = index_quad
 
-    def get_insn(self, index_quad, my_insn_indices, other_insn_indices):
-        pair = Indices.get_item_from_external_indice_map2(\
-                self.indices, self.index_to_insn, index_quad, my_insn_indices, other_insn_indices)
+    def get_insn(self, index_quad):
+        pair = Indices.get_item_from_external_indice_map(self.indices, self.index_to_insn, index_quad)
         return pair[0] if pair is not None else None
 
     def get_insn_str(self, index_quad):
@@ -855,9 +845,7 @@ class IndiceToInsnMap():
     @staticmethod
     def translate_insn(insn, my_indices, other_indices):
         index_quad = my_indices.get_index_quad(insn)
-        if index_quad is None:
-            return None
-        return other_indices.get_insn(index_quad, my_indices, other_indices)
+        return other_indices.get_insn(index_quad)
 
 class Weight:
     def __init__(self, actual_weight, base_weight, perc_contrib, corr, order):

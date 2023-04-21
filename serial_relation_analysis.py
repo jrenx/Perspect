@@ -43,6 +43,8 @@ class SerialRelationAnalysis(RelationAnalysis):
 
         for starting_event in self.starting_events:
             insn = starting_event[1]
+            #if insn != 0x12be1d0:
+            #    continue
             func = starting_event[2]
             graph = StaticDepGraph.get_graph(func, insn)
             wavefront.append((None, graph.insn_to_node[insn], 0))

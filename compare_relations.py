@@ -1415,11 +1415,11 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                 print("[compare_relation] absolute count of event same in both runs, ignore...")
         elif r_left is not None:
             print("[compare_relation] only has r left: " + str(len(left_seen)))
-            for seen in left_seen:
-                if r_left.relaxed_equals(seen):
-                    print("[compare_relation] already seen a similar relation, ignore...")
-                    include = False
-                    break
+            #for seen in left_seen:
+            #    if r_left.relaxed_equals(seen):
+            #        print("[compare_relation] already seen a similar relation, ignore...")
+            #        include = False
+            #        break
             succe_in_other_slice = True
             if indices_left is not None and indices_right is not None:
                 for succe in left_summary[r_left.insn]:
@@ -1434,11 +1434,11 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                 left_seen.append(r_left)
         elif r_right is not None:
             print("[compare_relation] only has r right: " + str(len(right_seen)))
-            for seen in right_seen:
-                if r_right.relaxed_equals(seen):
-                    print("[compare_relation] already seen a similar relation, ignore...")
-                    include = False
-                    break
+            #for seen in right_seen:
+            #    if r_right.relaxed_equals(seen):
+            #        print("[compare_relation] already seen a similar relation, ignore...")
+            #        include = False
+            #        break
             succe_in_other_slice = True
             if indices_left is not None and indices_right is not None:
                 for succe in right_summary[r_right.insn]:
