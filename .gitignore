@@ -15,6 +15,8 @@ preprocessor/preprocess
 preprocessor/preprocess_parallel
 preprocessor/count_node
 preprocessor/call_site_parser
+preprocessor/preprocess_cf_pass_rates
+preprocessor/preprocess_multiple
 rr/*.json
 rr/*.log
 rr/__pycache__/*
