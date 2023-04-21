@@ -1,0 +1,155 @@
+{
+    "starting_events": [
+        [
+            "",
+            19309264,
+            "__wt_txn_read"
+        ],
+        [
+            "",
+            19284896,
+            "__wt_txn_read"
+        ]
+    ],
+    "dynamic_nodes": [
+        {
+            "id": 37022,
+            "insn_id": 0,
+            "hex_insn": "0x1274655",
+            "func": "__wt_btcur_search_near",
+            "static_node": 2149,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                37025
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "2149": 2,
+                "2401": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 1.39564487636,
+            "thread_id": 6
+        },
+        {
+            "id": 37025,
+            "insn_id": 0,
+            "hex_insn": "0x1273e34",
+            "func": "__wt_btcur_search_near",
+            "static_node": 2401,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                37022
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 1.39564487636,
+            "thread_id": 6
+        },
+        {
+            "id": 39029,
+            "insn_id": 0,
+            "hex_insn": "0x1274655",
+            "func": "__wt_btcur_search_near",
+            "static_node": 2149,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                39032
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "2149": 2,
+                "2401": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 1.39564487636,
+            "thread_id": 6
+        },
+        {
+            "id": 39032,
+            "insn_id": 0,
+            "hex_insn": "0x1273e34",
+            "func": "__wt_btcur_search_near",
+            "static_node": 2401,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                39029
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 1.39564487636,
+            "thread_id": 6
+        }
+    ],
+    "node_frequencies": {},
+    "postorder_list": [
+        37022,
+        37025,
+        39029,
+        39032
+    ],
+    "reverse_postorder_list": [
+        39032,
+        39029,
+        37025,
+        37022
+    ],
+    "entry_nodes": [
+        39032,
+        37025
+    ],
+    "exit_nodes": [
+        37022,
+        39029
+    ],
+    "target_nodes": [
+        37022,
+        39029
+    ],
+    "reachable_output_events_per_static_node": {
+        "2149": [
+            37022,
+            39029
+        ],
+        "2401": [
+            37022,
+            39029
+        ]
+    }
+}

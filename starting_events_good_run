@@ -1,5 +1,2 @@
 _ 0x126a2d0 __wt_txn_read 0.69782243818
 _ 0x12643a0 __wt_txn_read 0.69782243818
-_ 0x1269010 __wt_txn_upd_value_visible_all 0.36717090622
-_ 0x12630e0 __wt_txn_upd_value_visible_all 0.36717090622
-_ 0x128e590 __wt_page_in_func 82.2600934464
