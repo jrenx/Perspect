@@ -1252,7 +1252,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
     #with open('insns_right', 'w') as out:
     #    for i in insns_right:
     #        out.write(str(i) + "\n")
-    plot(included_diff, rel_map1, rel_map2, left_summary, right_summary, left, right)
+    #plot(included_diff, rel_map1, rel_map2, left_summary, right_summary, left, right)
 
 if __name__ == "__main__":
     #f1 = sys.argv[1]
