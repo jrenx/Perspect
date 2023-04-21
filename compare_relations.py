@@ -497,11 +497,10 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                                                pass_rates_dataflow1=pass_rates_dataflow_left,
                                                pass_rates_dataflow2=pass_rates_dataflow_right,
                                                counts_left=counts_left, counts_right=counts_right)
-            equals = False
             print("[compare_relation] Children relations are equal? " + str(equals))
             assert weight == r_right.weight.perc_contrib
             corr = r_right.forward.corr()
-            if equals is False: #TODO, for debugging for now
+            if equals is True: #TODO, for debugging for now
                 corr = "EQUAL!"
                 continue
         else:
@@ -523,11 +522,10 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
                                                pass_rates_dataflow1=pass_rates_dataflow_left,
                                                pass_rates_dataflow2=pass_rates_dataflow_right,
                                                counts_left=counts_left, counts_right=counts_right)
-            equals = False
             print("[compare_relation] Children relations are equal? " + str(equals))
             assert weight == r_left.weight.perc_contrib
             corr = r_left.forward.corr()
-            if equals is False: #TODO, for debugging for now
+            if equals is True: #TODO, for debugging for now
                 corr = "EQUAL!"
                 continue
         else:
