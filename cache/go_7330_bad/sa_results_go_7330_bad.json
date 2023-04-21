@@ -1,0 +1,49 @@
+{
+    "_4197477_main.main_0_go_7330_bad": [
+        "",
+        4197477,
+        [
+            [
+                4452176,
+                "RAX",
+                0,
+                0,
+                null,
+                false,
+                false,
+                "regread",
+                "time.Now",
+                "",
+                null,
+                false,
+                null
+            ]
+        ]
+    ],
+    "_4197461_main.main_0_go_7330_bad": [
+        "",
+        4197461,
+        [
+            [
+                4452176,
+                "RAX",
+                0,
+                0,
+                null,
+                false,
+                false,
+                "regread",
+                "time.Now",
+                "",
+                null,
+                false,
+                null
+            ]
+        ]
+    ],
+    "rax_4452176_time.Now_0_go_7330_bad": [
+        "rax",
+        4452176,
+        []
+    ]
+}

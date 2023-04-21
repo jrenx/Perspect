@@ -1,0 +1,136 @@
+[
+    {
+        "starting_node": [
+            null,
+            null,
+            null,
+            null
+        ],
+        "use_weight": true,
+        "weight": 200000.0,
+        "predes": [
+            [
+                null,
+                null,
+                null,
+                null
+            ],
+            [
+                null,
+                null,
+                null,
+                null
+            ],
+            [
+                null,
+                null,
+                null,
+                null
+            ],
+            [
+                null,
+                null,
+                null,
+                null
+            ]
+        ],
+        "predes_insns": [
+            "0x400c27",
+            "0x400c25",
+            "0x400c0c",
+            "0x400c09"
+        ],
+        "insn": 4197415,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": 200000.0,
+                    "base_weight": 200000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 1,
+                "insn": 4197415,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 200000.0,
+                    "base_weight": 200000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 1000000001,
+                "insn": 4197413,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 200000.0,
+                    "base_weight": 200000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 1000000002,
+                "insn": 4197388,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 200000.0,
+                    "base_weight": 200000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 1000000003,
+                "insn": 4197385,
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    }
+]

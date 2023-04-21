@@ -1,0 +1,65 @@
+{
+    "_4197427_main.main_0_go_7330_good": [
+        "",
+        4197427,
+        [
+            [
+                4197404,
+                "",
+                0,
+                0,
+                null,
+                false,
+                false,
+                "empty",
+                "main.main",
+                "",
+                null,
+                false,
+                null
+            ]
+        ]
+    ],
+    "_4197413_main.main_0_go_7330_good": [
+        "",
+        4197413,
+        [
+            [
+                4197404,
+                "",
+                0,
+                0,
+                null,
+                false,
+                false,
+                "empty",
+                "main.main",
+                "",
+                null,
+                false,
+                null
+            ]
+        ]
+    ],
+    "_4197388_main.main_0_go_7330_good": [
+        "",
+        4197388,
+        [
+            [
+                4197385,
+                "RCX",
+                0,
+                0,
+                null,
+                false,
+                false,
+                "memread",
+                "main.main",
+                "",
+                null,
+                false,
+                null
+            ]
+        ]
+    ]
+}

@@ -1,0 +1,126 @@
+[
+    {
+        "starting_node": "4197415@main.main",
+        "weight": 200000.0,
+        "finished": true,
+        "lines": [
+            6
+        ],
+        "file": "go_7330_good.go",
+        "use_weight": true,
+        "relations": [
+            {
+                "target_node": "4197415@main.main",
+                "prede_node": "4197415@main.main",
+                "prede_count": 200000,
+                "weight": {
+                    "actual_weight": 200000.0,
+                    "base_weight": 200000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    6
+                ],
+                "file": "go_7330_good.go",
+                "timestamp": 1,
+                "duplicate": false
+            },
+            {
+                "target_node": "4197415@main.main",
+                "prede_node": "4197413@main.main",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": 200000.0,
+                    "base_weight": 200000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    5
+                ],
+                "file": "go_7330_good.go",
+                "timestamp": 1000000001,
+                "duplicate": false
+            },
+            {
+                "target_node": "4197415@main.main",
+                "prede_node": "4197388@main.main",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": 200000.0,
+                    "base_weight": 200000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    3
+                ],
+                "file": "go_7330_good.go",
+                "timestamp": 1000000002,
+                "duplicate": false
+            },
+            {
+                "target_node": "4197415@main.main",
+                "prede_node": "4197385@main.main",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": 200000.0,
+                    "base_weight": 200000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    3
+                ],
+                "file": "go_7330_good.go",
+                "timestamp": 1000000003,
+                "duplicate": false
+            }
+        ]
+    }
+]

@@ -1,0 +1,223 @@
+# ========
+# captured on: Sat Dec  4 00:40:59 2021
+# hostname : baker2
+# os release : 4.15.0-29-generic
+# perf version : 3.13.11.g2d20120
+# arch : x86_64
+# nrcpus online : 32
+# nrcpus avail : 32
+# cpudesc : Intel(R) Xeon(R) CPU E5-2630 v3 @ 2.40GHz
+# cpuid : GenuineIntel,6,63,2
+# total memory : 264015440 kB
+# cmdline : /home/renxian2/7330/perf.3.13 record -g ./go_7330_good 
+# event : name = cycles, type = 0, config = 0x0, config1 = 0x0, config2 = 0x0, excl_usr = 0, excl_kern = 0, excl_host = 0, excl_guest = 1, precise_ip = 0, attr_mmap2 = 0, attr_mmap  = 1, attr_mmap_data = 0
+# HEADER_CPU_TOPOLOGY info available, use -I to display
+# HEADER_NUMA_TOPOLOGY info available, use -I to display
+# pmu mappings: uncore_sbox_1 = 26, uncore_cbox_5 = 22, uncore_ha_0 = 10, uncore_cbox_3 = 20, cstate_pkg = 30, breakpoint = 5, uncore_ubox = 16, uncore_pcu = 27, uncore_cbox_1 = 18, uncore_r3qpi_0 = 7, software = 1, uncore_cbox_6 = 23, uncore_r2pcie = 9, uncore_sbox_0 = 25, uncore_cbox_4 = 21, uncore_cbox_2 = 19, uncore_r3qpi_1 = 8, uncore_cbox_0 = 17, cstate_core = 29, tracepoint = 2, msr = 6, uncore_cbox_7 = 24
+# ========
+#
+# Samples: 1K of event 'cycles'
+# Event count (approx.): 1073600355
+#
+# Overhead       Command      Shared Object                                          Symbol
+# ........  ............  .................  ..............................................
+#
+    99.62%  go_7330_good  go_7330_good       [.] main.main                                 
+            |
+            --- main.main
+
+     0.07%  go_7330_good  [kernel.kallsyms]  [k] __handle_mm_fault                         
+            |
+            --- __handle_mm_fault
+                handle_mm_fault
+                __do_page_fault
+                do_page_fault
+                page_fault
+                itab
+                (nil)
+                0x5
+                (nil)
+
+     0.07%  go_7330_good  [kernel.kallsyms]  [k] swapgs_restore_regs_and_return_to_usermode
+            |
+            --- swapgs_restore_regs_and_return_to_usermode
+                main.main
+
+     0.07%  go_7330_good  [kernel.kallsyms]  [k] native_queued_spin_lock_slowpath          
+            |
+            --- native_queued_spin_lock_slowpath
+                _raw_spin_lock
+                __schedule
+                schedule
+                exit_to_usermode_loop
+                prepare_exit_to_usermode
+                swapgs_restore_regs_and_return_to_usermode
+                main.main
+
+     0.07%  go_7330_good  [kernel.kallsyms]  [k] apic_timer_interrupt                      
+            |
+            --- apic_timer_interrupt
+                main.main
+
+     0.02%  go_7330_good  [kernel.kallsyms]  [k] native_write_msr                          
+            |
+            --- native_write_msr
+               |          
+               |--80.05%-- __intel_pmu_enable_all.constprop.19
+               |          intel_pmu_enable_all
+               |          x86_pmu_enable
+               |          |          
+               |          |--100.00%-- __perf_event_task_sched_in
+               |          |          finish_task_switch
+               |          |          |          
+               |          |          |--100.00%-- __schedule
+               |          |          |          schedule
+               |          |          |          |          
+               |          |          |          |--100.00%-- schedule_hrtimeout_range_clock
+               |          |          |          |          schedule_hrtimeout_range
+               |          |          |          |          poll_schedule_timeout
+               |          |          |          |          do_select
+               |          |          |          |          core_sys_select
+               |          |          |          |          sys_select
+               |          |          |          |          do_syscall_64
+               |          |          |          |          entry_SYSCALL_64_after_hwframe
+               |          |          |          |          runtime.usleep
+               |          |          |           --0.00%-- [...]
+               |          |           --0.00%-- [...]
+               |           --0.00%-- [...]
+               |          
+               |--19.93%-- lapic_next_deadline
+               |          clockevents_program_event
+               |          tick_program_event
+               |          hrtimer_start_range_ns
+               |          schedule_hrtimeout_range_clock
+               |          schedule_hrtimeout_range
+               |          poll_schedule_timeout
+               |          do_select
+               |          core_sys_select
+               |          sys_select
+               |          do_syscall_64
+               |          entry_SYSCALL_64_after_hwframe
+               |          runtime.usleep
+                --0.02%-- [...]
+
+     0.02%  go_7330_good  go_7330_good       [.] runtime.usleep                            
+            |
+            --- runtime.usleep
+
+     0.02%  go_7330_good  [kernel.kallsyms]  [k] do_select                                 
+            |
+            --- do_select
+                core_sys_select
+                sys_select
+                do_syscall_64
+                entry_SYSCALL_64_after_hwframe
+                runtime.usleep
+
+     0.02%  go_7330_good  [unknown]          [k] 0xfffffe000021601e                        
+            |
+            --- 0xfffffe000021601e
+                runtime.usleep
+
+     0.02%  go_7330_good  [kernel.kallsyms]  [k] _raw_spin_lock_irq                        
+            |
+            --- _raw_spin_lock_irq
+                do_exit
+                do_group_exit
+                get_signal
+                do_signal
+                exit_to_usermode_loop
+                do_syscall_64
+                entry_SYSCALL_64_after_hwframe
+                runtime.usleep
+
+     0.00%  go_7330_good  [kernel.kallsyms]  [k] poll_schedule_timeout                     
+            |
+            --- poll_schedule_timeout
+                do_select
+                core_sys_select
+                sys_select
+                do_syscall_64
+                entry_SYSCALL_64_after_hwframe
+                runtime.usleep
+
+     0.00%  go_7330_good  [kernel.kallsyms]  [k] hrtimer_active                            
+            |
+            --- hrtimer_active
+                hrtimer_try_to_cancel
+                schedule_hrtimeout_range_clock
+                schedule_hrtimeout_range
+                poll_schedule_timeout
+                do_select
+                core_sys_select
+                sys_select
+                do_syscall_64
+                entry_SYSCALL_64_after_hwframe
+                runtime.usleep
+
+     0.00%  go_7330_good  [kernel.kallsyms]  [k] __perf_event_task_sched_in                
+            |
+            --- __perf_event_task_sched_in
+                finish_task_switch
+                __schedule
+                schedule
+                schedule_hrtimeout_range_clock
+                schedule_hrtimeout_range
+                poll_schedule_timeout
+                do_select
+                core_sys_select
+                sys_select
+                do_syscall_64
+                entry_SYSCALL_64_after_hwframe
+                runtime.usleep
+
+     0.00%  go_7330_good  [kernel.kallsyms]  [k] schedule                                  
+            |
+            --- schedule
+                schedule_hrtimeout_range_clock
+                schedule_hrtimeout_range
+                poll_schedule_timeout
+                do_select
+                core_sys_select
+                sys_select
+                do_syscall_64
+                entry_SYSCALL_64_after_hwframe
+                runtime.usleep
+
+     0.00%  go_7330_good  [kernel.kallsyms]  [k] finish_task_switch                        
+            |
+            --- finish_task_switch
+                __schedule
+                schedule
+                schedule_hrtimeout_range_clock
+                schedule_hrtimeout_range
+                poll_schedule_timeout
+                do_select
+                core_sys_select
+                sys_select
+                do_syscall_64
+                entry_SYSCALL_64_after_hwframe
+                runtime.usleep
+
+     0.00%  go_7330_good  [kernel.kallsyms]  [k] x86_pmu_enable                            
+            |
+            --- x86_pmu_enable
+                __perf_event_task_sched_in
+                finish_task_switch
+                __schedule
+                schedule
+                schedule_hrtimeout_range_clock
+                schedule_hrtimeout_range
+                poll_schedule_timeout
+                do_select
+                core_sys_select
+                sys_select
+                do_syscall_64
+                entry_SYSCALL_64_after_hwframe
+                runtime.usleep
+
+
+
+#
+# (For a higher level overview, try: perf report --sort comm,dso)
+#

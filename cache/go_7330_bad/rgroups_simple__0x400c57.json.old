@@ -1,0 +1,252 @@
+[
+    {
+        "starting_node": [
+            null,
+            null,
+            null,
+            null
+        ],
+        "use_weight": true,
+        "weight": 400000.0,
+        "predes": [
+            [
+                null,
+                null,
+                null,
+                null
+            ],
+            [
+                null,
+                null,
+                null,
+                null
+            ],
+            [
+                null,
+                null,
+                null,
+                null
+            ],
+            [
+                null,
+                null,
+                null,
+                null
+            ],
+            [
+                null,
+                null,
+                null,
+                null
+            ],
+            [
+                null,
+                null,
+                null,
+                null
+            ],
+            [
+                null,
+                null,
+                null,
+                null
+            ],
+            [
+                null,
+                null,
+                null,
+                null
+            ]
+        ],
+        "predes_insns": [
+            "0x400c57",
+            "0x400c55",
+            "0x400c11",
+            "0x43ef50",
+            "0x412c3a",
+            "0x43eefc",
+            "0x412b2c",
+            "0x400c2a"
+        ],
+        "insn": 4197463,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": 400000.0,
+                    "base_weight": 400000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 1000000006,
+                "insn": 4197463,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 400000.0,
+                    "base_weight": 400000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2000000006,
+                "insn": 4197461,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 400000.0,
+                    "base_weight": 400000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2000000010,
+                "insn": 4197393,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 400000.0,
+                    "base_weight": 400000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 1000000004,
+                "insn": 4452176,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 400000.0,
+                    "base_weight": 400000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2000000011,
+                "insn": 4271162,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 400000.0,
+                    "base_weight": 400000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 666666671,
+                "insn": 4452092,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 400000.0,
+                    "base_weight": 400000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2000000012,
+                "insn": 4270892,
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 400000.0,
+                    "base_weight": 400000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2000000009,
+                "insn": 4197418,
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    }
+]

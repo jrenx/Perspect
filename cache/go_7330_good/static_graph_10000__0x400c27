@@ -1,0 +1,813 @@
+{
+    "starting_nodes": [
+        0
+    ],
+    "out_result": [
+        {
+            "func": "main.main",
+            "prog": "go_7330_good",
+            "cfg": {
+                "func": "main.main",
+                "prog": "go_7330_good",
+                "ordered_bbs": [
+                    {
+                        "id": 1,
+                        "start_insn": 4197415,
+                        "last_insn": 4197427,
+                        "lines": [
+                            5,
+                            6
+                        ],
+                        "line": null,
+                        "rank_in_same_line": null,
+                        "index_to_rank": {
+                            "|go_7330_good.go|6": 1,
+                            "|go_7330_good.go|5": 2
+                        },
+                        "insn_to_index": {
+                            "4197415": "|go_7330_good.go|6",
+                            "4197418": "|go_7330_good.go|5",
+                            "4197421": "|go_7330_good.go|5",
+                            "4197427": "|go_7330_good.go|5"
+                        },
+                        "ends_in_branch": true,
+                        "is_entry": false,
+                        "is_new_entry": false,
+                        "backedge_targets": [
+                            1
+                        ],
+                        "backedge_sources": [
+                            1
+                        ],
+                        "predes": [
+                            1,
+                            5
+                        ],
+                        "succes": [
+                            1,
+                            6
+                        ]
+                    },
+                    {
+                        "id": 2,
+                        "start_insn": 4197376,
+                        "last_insn": 4197388,
+                        "lines": [
+                            3
+                        ],
+                        "line": null,
+                        "rank_in_same_line": null,
+                        "index_to_rank": {
+                            "|go_7330_good.go|3": 1
+                        },
+                        "insn_to_index": {
+                            "4197376": "|go_7330_good.go|3",
+                            "4197385": "|go_7330_good.go|3",
+                            "4197388": "|go_7330_good.go|3"
+                        },
+                        "ends_in_branch": true,
+                        "is_entry": true,
+                        "is_new_entry": false,
+                        "pdoms": [],
+                        "backedge_targets": [],
+                        "backedge_sources": [
+                            3,
+                            3,
+                            4
+                        ],
+                        "predes": [
+                            3
+                        ],
+                        "succes": [
+                            3,
+                            5
+                        ]
+                    },
+                    {
+                        "id": 3,
+                        "start_insn": 4197390,
+                        "last_insn": 4197390,
+                        "lines": [
+                            3
+                        ],
+                        "line": null,
+                        "rank_in_same_line": null,
+                        "index_to_rank": {
+                            "|go_7330_good.go|3": 2
+                        },
+                        "insn_to_index": {
+                            "4197390": "|go_7330_good.go|3"
+                        },
+                        "ends_in_branch": false,
+                        "is_entry": false,
+                        "is_new_entry": false,
+                        "immed_pdom": 4,
+                        "pdoms": [
+                            2,
+                            4
+                        ],
+                        "backedge_targets": [
+                            2,
+                            2
+                        ],
+                        "backedge_sources": [],
+                        "predes": [
+                            2
+                        ],
+                        "succes": [
+                            2
+                        ]
+                    },
+                    {
+                        "id": 4,
+                        "start_insn": 4197395,
+                        "last_insn": 4197395,
+                        "lines": [
+                            3
+                        ],
+                        "line": null,
+                        "rank_in_same_line": null,
+                        "index_to_rank": {
+                            "|go_7330_good.go|3": 3
+                        },
+                        "insn_to_index": {
+                            "4197395": "|go_7330_good.go|3"
+                        },
+                        "ends_in_branch": true,
+                        "is_entry": false,
+                        "is_new_entry": false,
+                        "immed_pdom": 2,
+                        "pdoms": [
+                            2
+                        ],
+                        "backedge_targets": [
+                            2
+                        ],
+                        "backedge_sources": [],
+                        "predes": [
+                            3
+                        ],
+                        "succes": []
+                    },
+                    {
+                        "id": 5,
+                        "start_insn": 4197397,
+                        "last_insn": 4197413,
+                        "lines": [
+                            3,
+                            4,
+                            5
+                        ],
+                        "line": null,
+                        "rank_in_same_line": null,
+                        "index_to_rank": {
+                            "|go_7330_good.go|3": 4,
+                            "|go_7330_good.go|4": 1,
+                            "|go_7330_good.go|5": 1
+                        },
+                        "insn_to_index": {
+                            "4197397": "|go_7330_good.go|3",
+                            "4197401": "|go_7330_good.go|4",
+                            "4197404": "|go_7330_good.go|5",
+                            "4197407": "|go_7330_good.go|5",
+                            "4197413": "|go_7330_good.go|5"
+                        },
+                        "ends_in_branch": true,
+                        "is_entry": false,
+                        "is_new_entry": false,
+                        "pdoms": [],
+                        "backedge_targets": [],
+                        "backedge_sources": [],
+                        "predes": [
+                            2
+                        ],
+                        "succes": [
+                            1,
+                            6
+                        ]
+                    },
+                    {
+                        "id": 6,
+                        "start_insn": 4197429,
+                        "last_insn": 4197481,
+                        "lines": [
+                            8
+                        ],
+                        "line": null,
+                        "rank_in_same_line": null,
+                        "index_to_rank": {
+                            "|go_7330_good.go|8": 1
+                        },
+                        "insn_to_index": {
+                            "4197429": "|go_7330_good.go|8",
+                            "4197434": "|go_7330_good.go|8",
+                            "4197437": "|go_7330_good.go|8",
+                            "4197439": "|go_7330_good.go|8",
+                            "4197441": "|go_7330_good.go|8",
+                            "4197446": "|go_7330_good.go|8",
+                            "4197451": "|go_7330_good.go|8",
+                            "4197456": "|go_7330_good.go|8",
+                            "4197463": "|go_7330_good.go|8",
+                            "4197470": "|go_7330_good.go|8",
+                            "4197475": "|go_7330_good.go|8",
+                            "4197481": "|go_7330_good.go|8"
+                        },
+                        "ends_in_branch": true,
+                        "is_entry": false,
+                        "is_new_entry": false,
+                        "immed_pdom": 7,
+                        "pdoms": [
+                            8,
+                            7
+                        ],
+                        "backedge_targets": [],
+                        "backedge_sources": [],
+                        "predes": [
+                            1,
+                            5
+                        ],
+                        "succes": [
+                            7,
+                            9
+                        ]
+                    },
+                    {
+                        "id": 7,
+                        "start_insn": 4197483,
+                        "last_insn": 4197539,
+                        "lines": [
+                            8
+                        ],
+                        "line": null,
+                        "rank_in_same_line": null,
+                        "index_to_rank": {
+                            "|go_7330_good.go|8": 2
+                        },
+                        "insn_to_index": {
+                            "4197483": "|go_7330_good.go|8",
+                            "4197488": "|go_7330_good.go|8",
+                            "4197493": "|go_7330_good.go|8",
+                            "4197496": "|go_7330_good.go|8",
+                            "4197500": "|go_7330_good.go|8",
+                            "4197508": "|go_7330_good.go|8",
+                            "4197512": "|go_7330_good.go|8",
+                            "4197515": "|go_7330_good.go|8",
+                            "4197517": "|go_7330_good.go|8",
+                            "4197519": "|go_7330_good.go|8",
+                            "4197524": "|go_7330_good.go|8",
+                            "4197529": "|go_7330_good.go|8",
+                            "4197534": "|go_7330_good.go|8",
+                            "4197539": "|go_7330_good.go|8"
+                        },
+                        "ends_in_branch": false,
+                        "is_entry": false,
+                        "is_new_entry": false,
+                        "immed_pdom": 8,
+                        "pdoms": [
+                            8
+                        ],
+                        "backedge_targets": [],
+                        "backedge_sources": [],
+                        "predes": [
+                            6,
+                            9
+                        ],
+                        "succes": [
+                            8
+                        ]
+                    },
+                    {
+                        "id": 8,
+                        "start_insn": 4197544,
+                        "last_insn": 4197548,
+                        "lines": [
+                            9
+                        ],
+                        "line": null,
+                        "rank_in_same_line": null,
+                        "index_to_rank": {
+                            "|go_7330_good.go|9": 1
+                        },
+                        "insn_to_index": {
+                            "4197544": "|go_7330_good.go|9",
+                            "4197548": "|go_7330_good.go|9"
+                        },
+                        "ends_in_branch": false,
+                        "is_entry": false,
+                        "is_new_entry": false,
+                        "pdoms": [],
+                        "backedge_targets": [],
+                        "backedge_sources": [],
+                        "predes": [
+                            7
+                        ],
+                        "succes": []
+                    },
+                    {
+                        "id": 9,
+                        "start_insn": 4197549,
+                        "last_insn": 4197556,
+                        "lines": [
+                            8
+                        ],
+                        "line": null,
+                        "rank_in_same_line": null,
+                        "index_to_rank": {
+                            "|go_7330_good.go|8": 3
+                        },
+                        "insn_to_index": {
+                            "4197549": "|go_7330_good.go|8",
+                            "4197556": "|go_7330_good.go|8"
+                        },
+                        "ends_in_branch": true,
+                        "is_entry": false,
+                        "is_new_entry": false,
+                        "immed_dom": 6,
+                        "immed_pdom": 7,
+                        "pdoms": [
+                            8,
+                            7
+                        ],
+                        "backedge_targets": [],
+                        "backedge_sources": [],
+                        "predes": [
+                            6
+                        ],
+                        "succes": [
+                            7
+                        ]
+                    }
+                ],
+                "ordered_bbs_in_slice": [
+                    1,
+                    5,
+                    2
+                ],
+                "target_bbs": [
+                    1,
+                    2
+                ],
+                "entry_bbs": [
+                    2
+                ],
+                "postorder_list": [
+                    4,
+                    3,
+                    8,
+                    7,
+                    9,
+                    6,
+                    1,
+                    5,
+                    2
+                ],
+                "built": true,
+                "sliced": true
+            },
+            "id_to_node": [
+                {
+                    "id": 1,
+                    "insn": 4197427,
+                    "hex_insn": "0x400c33",
+                    "lines": [
+                        5,
+                        6
+                    ],
+                    "function": "main.main",
+                    "explained": true,
+                    "is_cf": true,
+                    "bb": 1,
+                    "cf_predes": [
+                        5
+                    ],
+                    "cf_succes": [],
+                    "is_df": false,
+                    "mem_load": null,
+                    "reg_load": null,
+                    "mem_store": null,
+                    "reg_store": null,
+                    "df_predes": [],
+                    "df_succes": [],
+                    "node_backedge_targets": [],
+                    "node_backedge_sources": [],
+                    "group_ids": null,
+                    "group_insns": null,
+                    "file": null,
+                    "line": null
+                },
+                {
+                    "id": 2,
+                    "insn": 4197388,
+                    "hex_insn": "0x400c0c",
+                    "lines": [
+                        3
+                    ],
+                    "function": "main.main",
+                    "explained": true,
+                    "is_cf": true,
+                    "bb": 2,
+                    "cf_predes": [
+                        10
+                    ],
+                    "cf_succes": [
+                        5
+                    ],
+                    "is_df": false,
+                    "mem_load": null,
+                    "reg_load": null,
+                    "mem_store": null,
+                    "reg_store": null,
+                    "df_predes": [
+                        12
+                    ],
+                    "df_succes": [],
+                    "node_backedge_targets": [],
+                    "node_backedge_sources": [],
+                    "group_ids": null,
+                    "group_insns": null,
+                    "file": "go_7330_good.go",
+                    "line": 3,
+                    "index": 3,
+                    "total_count": 1
+                },
+                {
+                    "id": 3,
+                    "insn": 4197390,
+                    "hex_insn": "0x400c0e",
+                    "lines": [
+                        3
+                    ],
+                    "function": "main.main",
+                    "explained": false,
+                    "is_cf": true,
+                    "bb": 3,
+                    "cf_predes": [],
+                    "cf_succes": [],
+                    "is_df": false,
+                    "mem_load": null,
+                    "reg_load": null,
+                    "mem_store": null,
+                    "reg_store": null,
+                    "df_predes": [],
+                    "df_succes": [],
+                    "node_backedge_targets": [],
+                    "node_backedge_sources": [],
+                    "group_ids": null,
+                    "group_insns": null,
+                    "file": null,
+                    "line": null
+                },
+                {
+                    "id": 4,
+                    "insn": 4197395,
+                    "hex_insn": "0x400c13",
+                    "lines": [
+                        3
+                    ],
+                    "function": "main.main",
+                    "explained": false,
+                    "is_cf": true,
+                    "bb": 4,
+                    "cf_predes": [],
+                    "cf_succes": [],
+                    "is_df": false,
+                    "mem_load": null,
+                    "reg_load": null,
+                    "mem_store": null,
+                    "reg_store": null,
+                    "df_predes": [],
+                    "df_succes": [],
+                    "node_backedge_targets": [],
+                    "node_backedge_sources": [],
+                    "group_ids": null,
+                    "group_insns": null,
+                    "file": null,
+                    "line": null
+                },
+                {
+                    "id": 5,
+                    "insn": 4197413,
+                    "hex_insn": "0x400c25",
+                    "lines": [
+                        3,
+                        4,
+                        5
+                    ],
+                    "function": "main.main",
+                    "explained": true,
+                    "is_cf": true,
+                    "bb": 5,
+                    "cf_predes": [
+                        2
+                    ],
+                    "cf_succes": [
+                        0
+                    ],
+                    "is_df": false,
+                    "mem_load": null,
+                    "reg_load": null,
+                    "mem_store": null,
+                    "reg_store": null,
+                    "df_predes": [],
+                    "df_succes": [],
+                    "node_backedge_targets": [],
+                    "node_backedge_sources": [],
+                    "group_ids": null,
+                    "group_insns": null,
+                    "file": "go_7330_good.go",
+                    "line": 5,
+                    "index": 3,
+                    "total_count": 1
+                },
+                {
+                    "id": 6,
+                    "insn": 4197481,
+                    "hex_insn": "0x400c69",
+                    "lines": [
+                        8
+                    ],
+                    "function": "main.main",
+                    "explained": false,
+                    "is_cf": true,
+                    "bb": 6,
+                    "cf_predes": [],
+                    "cf_succes": [],
+                    "is_df": false,
+                    "mem_load": null,
+                    "reg_load": null,
+                    "mem_store": null,
+                    "reg_store": null,
+                    "df_predes": [],
+                    "df_succes": [],
+                    "node_backedge_targets": [],
+                    "node_backedge_sources": [],
+                    "group_ids": null,
+                    "group_insns": null,
+                    "file": null,
+                    "line": null
+                },
+                {
+                    "id": 7,
+                    "insn": 4197539,
+                    "hex_insn": "0x400ca3",
+                    "lines": [
+                        8
+                    ],
+                    "function": "main.main",
+                    "explained": false,
+                    "is_cf": true,
+                    "bb": 7,
+                    "cf_predes": [],
+                    "cf_succes": [],
+                    "is_df": false,
+                    "mem_load": null,
+                    "reg_load": null,
+                    "mem_store": null,
+                    "reg_store": null,
+                    "df_predes": [],
+                    "df_succes": [],
+                    "node_backedge_targets": [],
+                    "node_backedge_sources": [],
+                    "group_ids": null,
+                    "group_insns": null,
+                    "file": null,
+                    "line": null
+                },
+                {
+                    "id": 8,
+                    "insn": 4197548,
+                    "hex_insn": "0x400cac",
+                    "lines": [
+                        9
+                    ],
+                    "function": "main.main",
+                    "explained": false,
+                    "is_cf": true,
+                    "bb": 8,
+                    "cf_predes": [],
+                    "cf_succes": [],
+                    "is_df": false,
+                    "mem_load": null,
+                    "reg_load": null,
+                    "mem_store": null,
+                    "reg_store": null,
+                    "df_predes": [],
+                    "df_succes": [],
+                    "node_backedge_targets": [],
+                    "node_backedge_sources": [],
+                    "group_ids": null,
+                    "group_insns": null,
+                    "file": null,
+                    "line": null
+                },
+                {
+                    "id": 9,
+                    "insn": 4197556,
+                    "hex_insn": "0x400cb4",
+                    "lines": [
+                        8
+                    ],
+                    "function": "main.main",
+                    "explained": false,
+                    "is_cf": true,
+                    "bb": 9,
+                    "cf_predes": [],
+                    "cf_succes": [],
+                    "is_df": false,
+                    "mem_load": null,
+                    "reg_load": null,
+                    "mem_store": null,
+                    "reg_store": null,
+                    "df_predes": [],
+                    "df_succes": [],
+                    "node_backedge_targets": [],
+                    "node_backedge_sources": [],
+                    "group_ids": null,
+                    "group_insns": null,
+                    "file": null,
+                    "line": null
+                },
+                {
+                    "id": 0,
+                    "insn": 4197415,
+                    "hex_insn": "0x400c27",
+                    "lines": [
+                        5,
+                        6
+                    ],
+                    "function": "main.main",
+                    "explained": true,
+                    "is_cf": true,
+                    "bb": 1,
+                    "cf_predes": [
+                        5
+                    ],
+                    "cf_succes": [],
+                    "is_df": false,
+                    "mem_load": null,
+                    "reg_load": "",
+                    "mem_store": null,
+                    "reg_store": null,
+                    "df_predes": [],
+                    "df_succes": [],
+                    "node_backedge_targets": [],
+                    "node_backedge_sources": [],
+                    "group_ids": null,
+                    "group_insns": null,
+                    "file": "go_7330_good.go",
+                    "line": 6,
+                    "index": 1,
+                    "total_count": 1
+                },
+                {
+                    "id": 11,
+                    "insn": 4197404,
+                    "hex_insn": "0x400c1c",
+                    "lines": [],
+                    "function": "main.main",
+                    "explained": false,
+                    "is_cf": false,
+                    "cf_predes": [],
+                    "cf_succes": [],
+                    "is_df": true,
+                    "mem_load": null,
+                    "reg_load": null,
+                    "mem_store": null,
+                    "reg_store": null,
+                    "df_predes": [],
+                    "df_succes": [],
+                    "node_backedge_targets": [],
+                    "node_backedge_sources": [],
+                    "group_ids": null,
+                    "group_insns": null,
+                    "file": null,
+                    "line": null
+                },
+                {
+                    "id": 12,
+                    "insn": 4197385,
+                    "hex_insn": "0x400c09",
+                    "lines": [
+                        3
+                    ],
+                    "function": "main.main",
+                    "explained": true,
+                    "is_cf": false,
+                    "bb": 2,
+                    "cf_predes": [],
+                    "cf_succes": [],
+                    "is_df": true,
+                    "mem_load": {
+                        "reg": "rcx",
+                        "shift": 0,
+                        "off": 0,
+                        "off1": null,
+                        "off_reg": null,
+                        "is_bit_var": false,
+                        "read_same_as_write": 0
+                    },
+                    "reg_load": null,
+                    "mem_store": null,
+                    "reg_store": "",
+                    "df_predes": [],
+                    "df_succes": [
+                        2
+                    ],
+                    "node_backedge_targets": [],
+                    "node_backedge_sources": [],
+                    "group_ids": null,
+                    "group_insns": null,
+                    "file": "go_7330_good.go",
+                    "line": 3,
+                    "index": 2,
+                    "total_count": 1
+                }
+            ],
+            "bb_id_to_node_id": {
+                "1": 1,
+                "2": 2,
+                "3": 3,
+                "4": 4,
+                "5": 5,
+                "6": 6,
+                "7": 7,
+                "8": 8,
+                "9": 9
+            },
+            "nodes_in_cf_slice": [
+                2,
+                5
+            ],
+            "nodes_in_df_slice": [
+                12
+            ],
+            "none_df_starting_nodes": [
+                0
+            ]
+        },
+        {
+            "func": "runtime.main",
+            "prog": "go_7330_good",
+            "cfg": {
+                "func": "runtime.main",
+                "prog": "go_7330_good",
+                "ordered_bbs": [],
+                "ordered_bbs_in_slice": [],
+                "target_bbs": [],
+                "entry_bbs": [],
+                "postorder_list": [],
+                "built": true,
+                "sliced": true
+            },
+            "id_to_node": [],
+            "bb_id_to_node_id": {},
+            "nodes_in_cf_slice": [],
+            "nodes_in_df_slice": [],
+            "none_df_starting_nodes": []
+        }
+    ],
+    "out_pending": [
+        {
+            "func": "main.main",
+            "nodes": []
+        },
+        {
+            "func": "runtime.main",
+            "nodes": [
+                {
+                    "id": 10,
+                    "insn": 4271162,
+                    "hex_insn": "0x412c3a",
+                    "lines": [],
+                    "function": "runtime.main",
+                    "explained": false,
+                    "is_cf": true,
+                    "cf_predes": [],
+                    "cf_succes": [
+                        2
+                    ],
+                    "is_df": false,
+                    "mem_load": null,
+                    "reg_load": null,
+                    "mem_store": null,
+                    "reg_store": null,
+                    "df_predes": [],
+                    "df_succes": [],
+                    "node_backedge_targets": [],
+                    "node_backedge_sources": [],
+                    "group_ids": null,
+                    "group_insns": null,
+                    "file": null,
+                    "line": null
+                }
+            ]
+        }
+    ],
+    "graph_postorder_list": [],
+    "graph_reverse_postorder_list": [
+        0,
+        10,
+        10,
+        12
+    ]
+}

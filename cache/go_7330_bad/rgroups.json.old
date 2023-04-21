@@ -1,0 +1,238 @@
+[
+    {
+        "starting_node": "4197463@main.main",
+        "weight": 400000.0,
+        "finished": true,
+        "lines": [
+            8
+        ],
+        "file": "go_7330_bad.go",
+        "use_weight": true,
+        "relations": [
+            {
+                "target_node": "4197463@main.main",
+                "prede_node": "4197463@main.main",
+                "prede_count": 200000,
+                "weight": {
+                    "actual_weight": 400000.0,
+                    "base_weight": 400000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    8
+                ],
+                "file": "go_7330_bad.go",
+                "timestamp": 1000000006,
+                "duplicate": false
+            },
+            {
+                "target_node": "4197463@main.main",
+                "prede_node": "4197461@main.main",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": 400000.0,
+                    "base_weight": 400000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    7
+                ],
+                "file": "go_7330_bad.go",
+                "timestamp": 2000000006,
+                "duplicate": false
+            },
+            {
+                "target_node": "4197463@main.main",
+                "prede_node": "4197393@main.main",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": 400000.0,
+                    "base_weight": 400000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    4
+                ],
+                "file": "go_7330_bad.go",
+                "timestamp": 2000000010,
+                "duplicate": false
+            },
+            {
+                "target_node": "4197463@main.main",
+                "prede_node": "4452176@time.Now",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": 400000.0,
+                    "base_weight": 400000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    786
+                ],
+                "file": "time.go",
+                "timestamp": 1000000004,
+                "duplicate": false
+            },
+            {
+                "target_node": "4197463@main.main",
+                "prede_node": "4271162@runtime.main",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": 400000.0,
+                    "base_weight": 400000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    220
+                ],
+                "file": "proc.c",
+                "timestamp": 2000000011,
+                "duplicate": false
+            },
+            {
+                "target_node": "4197463@main.main",
+                "prede_node": "4452092@time.Now",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": 400000.0,
+                    "base_weight": 400000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    784
+                ],
+                "file": "time.go",
+                "timestamp": 666666671,
+                "duplicate": false
+            },
+            {
+                "target_node": "4197463@main.main",
+                "prede_node": "4270892@runtime.main",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": 400000.0,
+                    "base_weight": 400000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    179
+                ],
+                "file": "proc.c",
+                "timestamp": 2000000012,
+                "duplicate": false
+            },
+            {
+                "target_node": "4197463@main.main",
+                "prede_node": "4197418@main.main",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": 400000.0,
+                    "base_weight": 400000.0,
+                    "perc_contrib": 100.0,
+                    "corr": 5e-06,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 200000,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    6
+                ],
+                "file": "go_7330_bad.go",
+                "timestamp": 2000000009,
+                "duplicate": false
+            }
+        ]
+    }
+]
