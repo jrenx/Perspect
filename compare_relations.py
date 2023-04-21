@@ -1482,7 +1482,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         #print("rank: " + str(rank))
         included_diff.append(p)
 
-
+    sys.stdout = sys.__stdout__
     print("===============================================")
     print("===============================================")
     #insns_left = []
@@ -1493,11 +1493,14 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         rank = rank - 1
         print("-----------------------------------------")
         print("rank: " + str(rank))
-        print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
-        print(str(p[2]) + " " + str(p[3]))
-        if p[4] is not None: print(insn_to_index[p[4].insn])
+        print("weight: " + str(p[0]))# + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
+        print()
+        print("GOOD RUN:")
+        #print(str(p[2]) + " " + str(p[3]))
+        #if p[4] is not None: print(insn_to_index[p[4].insn])
         print(str(p[4]))
-        if p[5] is not None: print(insn_to_index[p[5].insn])
+        print("BAD RUN:")
+        #if p[5] is not None: print(insn_to_index[p[5].insn])
         print(str(p[5]))
         #if has a node in the graph, add a label...
 
@@ -1525,6 +1528,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
 if __name__ == "__main__":
     #f1 = sys.argv[1]
     #f2 = sys.argv[2]
+    sys.stdout = None
     limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
     _, other_dir, other_program, other_relations_file, _ = parse_relation_analysis_inputs()
 
