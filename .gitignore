@@ -11,9 +11,12 @@ binary_analysis/graph
 binary_analysis/*result
 binary_analysis/*results
 preprocessor/*.o
-preprocessor/preprocess
-preprocessor/preprocess_parallel
+preprocessor/call_site_parser
 preprocessor/count_node
+preprocessor/preprocess
+preprocessor/preprocess_cf_pass_rates
+preprocessor/preprocess_multiple
+preprocessor/preprocess_parallel
 rr/*.json
 rr/*.log
 rr/__pycache__/*
@@ -28,6 +31,7 @@ graph
 *result
 *results
 preprocess_data*
+preprocess_cf_pass_rate_data
 instruction_reg_log_arg
 binary_dump_*
 .vscode/*
