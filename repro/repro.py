@@ -28,7 +28,6 @@ def update(idd):
     print("Took " + str(b-a))
 
 if __name__ == '__main__':
-
     nthreads = 5
     threads = []
     for i in range(nthreads):
