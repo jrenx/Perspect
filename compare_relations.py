@@ -564,6 +564,17 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
             if equals is True: #TODO, for debugging for now
                 corr = "EQUAL!"
                 continue
+            OK = False
+            for succe in summ_right[r_right.insn]:
+                print("SUCCE is " + hex(succe))
+                oin = IndiceToInsnMap.translate_insn(succe, indices_right, indices_left)
+                if oin is not None:
+                    print(" is in other slice " + hex(oin))
+                    OK = True
+                    break
+            if OK is False:
+                print("HERE")
+                continue
         else:
             print("[compare_relation] Adding node to weight map on the left: " + hex(r_left.insn))
             weight_map_left[r_left.insn] = r_left.weight.perc_contrib
@@ -599,6 +610,19 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
             if equals is True: #TODO, for debugging for now
                 corr = "EQUAL!"
                 continue
+
+            OK = False
+            for succe in summ_left[r_left.insn]:
+                print("SUCCE is " + hex(succe))
+                oin = IndiceToInsnMap.translate_insn(succe, indices_left, indices_right) 
+                if oin is not None:
+                    print(" is in other slice " + hex(oin))
+                    OK = True
+                    break
+            if OK is False:
+                print("HERE")
+                continue
+
         else:
             print("[compare_relation] Adding node to weight map on the right: " + hex(r_right.insn))
             weight_map_right[r_right.insn] = r_right.weight.perc_contrib
@@ -639,9 +663,9 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
         print(r_left)
         print(r_right)
         #TODO, should we consider pass rate when deciding if they are equal?
-        if r_left.relaxed_equals(r_right):
-            print("[compare_relation/warn] parent relations equal, do not re-calculate weight.")
-            continue
+        #if r_left.relaxed_equals(r_right):
+        #    print("[compare_relation/warn] parent relations equal, do not re-calculate weight.")
+        #    continue
 
         #Not really handled??
         forward_impact = calculate_forward_impact(r_left, r_right)
@@ -996,9 +1020,9 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         insn_to_insn[r.insn] = r2.insn
 
         ''' If the two relations are roughly equal, ignore '''
-        if r.relaxed_equals(r2):
-            print("[ra] Relations roughly equal, ignore the relations: " + hex(r.insn) + " " + hex(r2.insn))
-            continue
+        #if r.relaxed_equals(r2):
+        #    print("[ra] Relations roughly equal, ignore the relations: " + hex(r.insn) + " " + hex(r2.insn))
+        #    continue
 
         ''' If average contribution of the pair of relations are small, ignore '''
         avg_contrib = (r2.weight.perc_contrib + r.weight.perc_contrib)/2
@@ -1046,9 +1070,9 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         r1 = pair[0]
         insn_to_insn[r1.insn] = r.insn
 
-        if r1.relaxed_equals(r):
-            print("[ra] Relations roughly equal, ignore the relations: " + hex(r1.insn) + " " + hex(r.insn))
-            continue
+        #if r1.relaxed_equals(r):
+        #    print("[ra] Relations roughly equal, ignore the relations: " + hex(r1.insn) + " " + hex(r.insn))
+        #    continue
 
         ''' If average contribution of the pair of relations are small, ignore '''
         avg_contrib = (r1.weight.perc_contrib + r.weight.perc_contrib) / 2
