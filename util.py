@@ -286,6 +286,31 @@ def parse_inputs():
     print("Starting events weights are: " + str(starting_insn_to_weight))
     return  limit, program, program_args, program_path, starting_events, starting_insn_to_weight
 
+def parse_inputs2():
+    extra_starting_event_file = None
+    with open("analysis.config", "r") as f:
+        for l in f.readlines():
+            segs = l.split("=")
+            if segs[0] == "extra_starting_event_file":
+                extra_starting_event_file = segs[1].strip()
+    print("Extra starting event file is: " + str(extra_starting_event_file))
+
+    starting_events = []
+    starting_insn_to_weight = {}
+    if extra_starting_event_file is not None:
+        with open(extra_starting_event_file, "r") as f:
+            for l in f.readlines():
+                segs = l.split()
+                reg = "" if segs[0] == "_" else regs[0]
+                insn = int(segs[1], 16)
+                starting_events.append([reg, insn, segs[2]])
+                if len(segs) >= 4:
+                    starting_insn_to_weight[insn] = float(segs[3])
+    print("Starting events are: " + str(starting_events))
+    print("Starting events weights are: " + str(starting_insn_to_weight))
+    return starting_events, starting_insn_to_weight
+
+
 def parse_parallelization_factor():
     pfactor = None
 
