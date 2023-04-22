@@ -65,12 +65,12 @@ def rr_backslice(binary_ptr, prog, branch, target, insn, reg, shift, off, off_re
     #    print("[main] writing to file: " + key)
     #    with open("rr_inputs", "a") as f:
     #        f.write(key+"\n")
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        # Connect to server and send data
-        sock.connect((HOST, PORT))
-        sock.sendall(bytes(key + "\n", "utf-8"))
-        print("[main] sending to socket: " + key)
-    raise Exception()
+    #with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+    #    # Connect to server and send data
+    #    sock.connect((HOST, PORT))
+    #    sock.sendall(bytes(key + "\n", "utf-8"))
+    #    print("[main] sending to socket: " + key)
+    #raise Exception()
 
     print("[main] Inputting to RR: " \
         + " reg: " + str(reg_str) + " shift: " + str(shift_str) + " off_reg: " + str(off_reg_str) + " off: " + str(off_str)\
