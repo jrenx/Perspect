@@ -1,0 +1,23 @@
+{
+    "_15990559___wt_rec_row_leaf_0_mongod_4.0.13": [
+        "",
+        15990559,
+        [
+            [
+                15990555,
+                "RCX",
+                0,
+                8,
+                null,
+                false,
+                false,
+                "memread",
+                "__wt_rec_row_leaf",
+                "",
+                null,
+                false,
+                null
+            ]
+        ]
+    ]
+}

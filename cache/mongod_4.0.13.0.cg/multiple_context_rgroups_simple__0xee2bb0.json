@@ -1,0 +1,1310 @@
+[
+    {
+        "starting_node": [
+            "src/third_party/wiredtiger/src/reconcile/rec_write.c",
+            39,
+            2,
+            1
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_write.c",
+                39,
+                2,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/evict/evict_page.c:149|src/third_party/wiredtiger/src/evict/evict_page.c",
+                680,
+                5,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/btree/bt_sync.c:402|src/third_party/wiredtiger/src/btree/bt_sync.c",
+                331,
+                6,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0xe6ef01",
+            "0xe51ded",
+            "0xed5ebe"
+        ],
+        "insn": 15134465,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 15134465,
+                "func": "__wt_reconcile",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 98.38709677419355,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.9838709677419355
+                },
+                "timestamp": 0,
+                "insn": 15015405,
+                "func": "__wt_evict",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 1.6129032258064515,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.016129032258064516
+                },
+                "timestamp": 0,
+                "insn": 15556286,
+                "func": "__wt_cache_op",
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "src/third_party/wiredtiger/src/btree/row_srch.c:511|src/third_party/wiredtiger/src/include/btree.i",
+            988,
+            7,
+            1
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "src/third_party/wiredtiger/src/btree/row_srch.c:511|src/third_party/wiredtiger/src/include/btree.i",
+                988,
+                7,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/btree/row_srch.c",
+                251,
+                2,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0xee91c2",
+            "0xee80f2"
+        ],
+        "insn": 15634882,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 15634882,
+                "func": "__wt_row_search",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 3.993576069831121,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 15630578,
+                "func": "__wt_row_search",
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+            1007,
+            4,
+            1
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                1007,
+                4,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                717,
+                2,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0xf3fe02",
+            "0xf3dd7d"
+        ],
+        "insn": 15990274,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 15990274,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 3.531196621304552,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 15981949,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "src/third_party/wiredtiger/src/evict/evict_page.c",
+            105,
+            2,
+            1
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "src/third_party/wiredtiger/src/evict/evict_page.c",
+                105,
+                2,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                2263,
+                8,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0xe51782",
+            "0xe4b696"
+        ],
+        "insn": 15013762,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 15013762,
+                "func": "__wt_evict",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 14988950,
+                "func": "__evict_page",
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+            995,
+            4,
+            1
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+                995,
+                4,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/cursor/cur_file.c",
+                397,
+                3,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0xeb0f67",
+            "0xefd56a"
+        ],
+        "insn": 15404903,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 15404903,
+                "func": "__wt_btcur_remove",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 15717738,
+                "func": "__curfile_remove",
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "src/third_party/wiredtiger/src/reconcile/rec_write.c:101|src/third_party/wiredtiger/src/reconcile/rec_write.c",
+            192,
+            5,
+            1
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_write.c:101|src/third_party/wiredtiger/src/reconcile/rec_write.c",
+                192,
+                5,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_write.c",
+                39,
+                2,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0xe6f468",
+            "0xe6ef01"
+        ],
+        "insn": 15135848,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 15135848,
+                "func": "__wt_reconcile",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.9993434627649597,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 15134465,
+                "func": "__wt_reconcile",
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "src/third_party/wiredtiger/src/evict/evict_lru.c",
+            315,
+            3,
+            1
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                315,
+                3,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                284,
+                4,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0xe4dcc7",
+            "0xe4dc96"
+        ],
+        "insn": 14998727,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 14998727,
+                "func": "__wt_evict_thread_run",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.8532066508313539,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 14998678,
+                "func": "__wt_evict_thread_run",
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "src/third_party/wiredtiger/src/btree/row_key.c:112|src/third_party/wiredtiger/src/include/btree.i:977|src/third_party/wiredtiger/src/include/btree.i",
+            836,
+            4,
+            1
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "src/third_party/wiredtiger/src/btree/row_key.c:112|src/third_party/wiredtiger/src/include/btree.i:977|src/third_party/wiredtiger/src/include/btree.i",
+                836,
+                4,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                1007,
+                4,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0xee460a",
+            "0xf3fe02"
+        ],
+        "insn": 15615498,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 15615498,
+                "func": "__wt_row_leaf_key_copy",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 15990274,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "src/third_party/wiredtiger/src/cursor/cur_file.c",
+            397,
+            3,
+            1
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "src/third_party/wiredtiger/src/cursor/cur_file.c",
+                397,
+                3,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/cursor/cur_file.c",
+                390,
+                4,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0xefd56a",
+            "0xefd435"
+        ],
+        "insn": 15717738,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 15717738,
+                "func": "__curfile_remove",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 15717429,
+                "func": "__curfile_remove",
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "src/third_party/wiredtiger/src/evict/evict_page.c:149|src/third_party/wiredtiger/src/evict/evict_page.c",
+            680,
+            5,
+            1
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "src/third_party/wiredtiger/src/evict/evict_page.c:149|src/third_party/wiredtiger/src/evict/evict_page.c",
+                680,
+                5,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/evict/evict_page.c",
+                105,
+                2,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0xe51ded",
+            "0xe51782"
+        ],
+        "insn": 15015405,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 15015405,
+                "func": "__wt_evict",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.996923511148744,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 15013762,
+                "func": "__wt_evict",
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "src/third_party/wiredtiger/src/btree/bt_cursor.c:1040|src/third_party/wiredtiger/src/btree/bt_cursor.c",
+            379,
+            7,
+            7
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "src/third_party/wiredtiger/src/btree/bt_cursor.c:1040|src/third_party/wiredtiger/src/btree/bt_cursor.c",
+                379,
+                7,
+                7
+            ],
+            [
+                "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+                995,
+                4,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0xeb1a4e",
+            "0xeb0f67"
+        ],
+        "insn": 15407694,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 15407694,
+                "func": "__wt_btcur_remove",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 15404903,
+                "func": "__wt_btcur_remove",
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "src/third_party/wiredtiger/src/btree/row_key.c",
+            129,
+            1,
+            1
+        ],
+        "use_weight": true,
+        "weight": 1958.0,
+        "predes": [
+            [
+                "src/third_party/wiredtiger/src/btree/row_key.c",
+                129,
+                1,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/btree/row_key.c:112|src/third_party/wiredtiger/src/include/btree.i",
+                988,
+                4,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/btree/row_srch.c:511|src/third_party/wiredtiger/src/include/btree.i",
+                988,
+                7,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0xee2bb0",
+            "0xee4671",
+            "0xee91c2"
+        ],
+        "insn": 15608752,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": 1958.0,
+                    "base_weight": 1958.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 4,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 15608752,
+                "func": "__wt_row_leaf_key_work",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 62.0,
+                    "base_weight": 1958.0,
+                    "perc_contrib": 3.1664964249233916,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": 0.031664964249233915
+                },
+                "timestamp": 0,
+                "insn": 15615601,
+                "func": "__wt_row_leaf_key_copy",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 1896.0,
+                    "base_weight": 1958.0,
+                    "perc_contrib": 96.8335035750766,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": 0.9683350357507661
+                },
+                "timestamp": 0,
+                "insn": 15634882,
+                "func": "__wt_row_search",
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "src/third_party/wiredtiger/src/evict/evict_lru.c",
+            1126,
+            3,
+            2
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                1126,
+                3,
+                2
+            ],
+            [
+                "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                1118,
+                4,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0xe4bc70",
+            "0xe4bc38"
+        ],
+        "insn": 14990448,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 14990448,
+                "func": "__evict_lru_pages",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 0.9508196721311475,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 60.17928730512249,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 14990392,
+                "func": "__evict_lru_pages",
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "src/third_party/wiredtiger/src/evict/evict_lru.c",
+            2220,
+            3,
+            1
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                2220,
+                3,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                1126,
+                3,
+                2
+            ]
+        ],
+        "predes_insns": [
+            "0xe4afd5",
+            "0xe4bc70"
+        ],
+        "insn": 14987221,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 14987221,
+                "func": "__evict_page",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 14990448,
+                "func": "__evict_lru_pages",
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "src/third_party/wiredtiger/src/evict/evict_lru.c",
+            2263,
+            8,
+            1
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                2263,
+                8,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                2220,
+                3,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0xe4b696",
+            "0xe4afd5"
+        ],
+        "insn": 14988950,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 14988950,
+                "func": "__evict_page",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.9834199959290169,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 14987221,
+                "func": "__evict_page",
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    },
+    {
+        "starting_node": [
+            "src/third_party/wiredtiger/src/evict/evict_lru.c",
+            1118,
+            4,
+            1
+        ],
+        "use_weight": false,
+        "weight": 100,
+        "predes": [
+            [
+                "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                1118,
+                4,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                315,
+                3,
+                1
+            ]
+        ],
+        "predes_insns": [
+            "0xe4bc38",
+            "0xe4dcc7"
+        ],
+        "insn": 14990392,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 14990392,
+                "func": "__evict_lru_pages",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 0,
+                "insn": 14998727,
+                "func": "__wt_evict_thread_run",
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    }
+]
