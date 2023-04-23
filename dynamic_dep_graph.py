@@ -268,7 +268,7 @@ class DynamicNode(JSONEncoder):
                         continue
                     print("Unhandled bit op: " + str(bit_op.operation))
                     print(self.static_node)
-                    raise Exception
+                    #raise Exception
                 if self.load_bit_mask is None:
                     self.load_bit_mask = load_bit_mask
                 else:
@@ -555,7 +555,6 @@ class DynamicDependence:
         print("[dyn_dep] Total number of instructions watched: " + str(len(instructions)))
         print(instructions)
         trace.run_function_trace(instructions)
-        print("NEED TO RUN THE ABOVE INSTRUCTION MANUALLY and replace instruction_reg_log.so with instruction_reg_deref_log.so")
         return
 
     def build_static_dependencies(self, starting_events, prog, sa_steps=10000):
@@ -964,7 +963,8 @@ class DynamicDependence:
             curr_result_file = result_file + "_" + hex(insn)
             print("Looking for file: " + str(curr_result_file))
             if os.path.isfile(curr_result_file):
-                starting_insn_to_dynamic_graph[insn] = DynamicGraph.load_graph_from_json(curr_result_file)
+                #starting_insn_to_dynamic_graph[insn] = DynamicGraph.load_graph_from_json(curr_result_file)
+                pass
             else:
                 left_over.append(insn)
         insns = left_over
@@ -1130,7 +1130,6 @@ class DynamicDependence:
                 print("-" * 60)
             print(stdout)
             print(stderr)
-
         with open(self.trace_path + ".parsed" + ('' if pa_id is None else ('_' + str(pa_id))), 'rb') as f:
             byte_seq = f.read()  # more than twice faster than readlines!
 
