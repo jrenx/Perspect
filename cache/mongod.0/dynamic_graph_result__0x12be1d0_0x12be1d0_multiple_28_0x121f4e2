@@ -1,0 +1,89 @@
+{
+    "starting_events": [
+        [
+            "",
+            19653072,
+            "__tree_walk_internal"
+        ]
+    ],
+    "dynamic_nodes": [
+        {
+            "id": 400906267,
+            "insn_id": 0,
+            "hex_insn": "0x121f4e2",
+            "func": "__session_checkpoint",
+            "static_node": 19893,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                400906268
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "19893": 2,
+                "19949": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 37530148.69957975,
+            "thread_id": 12
+        },
+        {
+            "id": 400906268,
+            "insn_id": 0,
+            "hex_insn": "0x1170b1f",
+            "func": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+            "static_node": 19949,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                400906267
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 37530148.69957975,
+            "thread_id": 12
+        }
+    ],
+    "node_frequencies": {},
+    "postorder_list": [
+        400906267,
+        400906268
+    ],
+    "reverse_postorder_list": [
+        400906268,
+        400906267
+    ],
+    "entry_nodes": [
+        400906268
+    ],
+    "exit_nodes": [
+        400906267
+    ],
+    "target_nodes": [
+        400906267
+    ],
+    "reachable_output_events_per_static_node": {
+        "19893": [
+            400906267
+        ],
+        "19949": [
+            400906267
+        ]
+    }
+}

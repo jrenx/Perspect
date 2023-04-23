@@ -1,0 +1,2494 @@
+[
+    {
+        "starting_node": "19190018@__txn_checkpoint_wrapper",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19190018
+        ],
+        "file": "__txn_checkpoint_wrapper",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19190018@__txn_checkpoint_wrapper",
+                "prede_node": "19190018@__txn_checkpoint_wrapper",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19190018
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19190018@__txn_checkpoint_wrapper",
+                "prede_node": "19183019@__txn_checkpoint_wrapper",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19183019
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19185669@__txn_checkpoint_wrapper",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19185669
+        ],
+        "file": "__txn_checkpoint_wrapper",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19185669@__txn_checkpoint_wrapper",
+                "prede_node": "19185669@__txn_checkpoint_wrapper",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19185669
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19185669@__txn_checkpoint_wrapper",
+                "prede_node": "19183019@__txn_checkpoint_wrapper",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19183019
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18287367@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18287367
+        ],
+        "file": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18287367@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_node": "18287367@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_count": 2,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18287367
+                ],
+                "file": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18287367@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_node": "18284749@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 0.5,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18284749
+                ],
+                "file": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19595150@__wt_sync_file",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19595150
+        ],
+        "file": "__wt_sync_file",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19595150@__wt_sync_file",
+                "prede_node": "19595150@__wt_sync_file",
+                "prede_count": 6,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19595150
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19595150@__wt_sync_file",
+                "prede_node": "19181717@__checkpoint_tree.constprop.15",
+                "prede_count": 6,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19181717
+                ],
+                "file": "__checkpoint_tree.constprop.15",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19595407@__wt_sync_file",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19595407
+        ],
+        "file": "__wt_sync_file",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19595407@__wt_sync_file",
+                "prede_node": "19595407@__wt_sync_file",
+                "prede_count": 6,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19595407
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19595407@__wt_sync_file",
+                "prede_node": "19595150@__wt_sync_file",
+                "prede_count": 6,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19595150
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19187984@__txn_checkpoint_wrapper",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19187984
+        ],
+        "file": "__txn_checkpoint_wrapper",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19187984@__txn_checkpoint_wrapper",
+                "prede_node": "19187984@__txn_checkpoint_wrapper",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19187984
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19187984@__txn_checkpoint_wrapper",
+                "prede_node": "19183019@__txn_checkpoint_wrapper",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19183019
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19181717@__checkpoint_tree.constprop.15",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19181717
+        ],
+        "file": "__checkpoint_tree.constprop.15",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19181717@__checkpoint_tree.constprop.15",
+                "prede_node": "19181717@__checkpoint_tree.constprop.15",
+                "prede_count": 6,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19181717
+                ],
+                "file": "__checkpoint_tree.constprop.15",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19181717@__checkpoint_tree.constprop.15",
+                "prede_node": "19181537@__checkpoint_tree.constprop.15",
+                "prede_count": 6,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.6,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19181537
+                ],
+                "file": "__checkpoint_tree.constprop.15",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "14126870@__session_checkpoint",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            14126870
+        ],
+        "file": "__session_checkpoint",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "14126870@__session_checkpoint",
+                "prede_node": "14126870@__session_checkpoint",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    14126870
+                ],
+                "file": "__session_checkpoint",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "14126870@__session_checkpoint",
+                "prede_node": "19002594@__session_checkpoint",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19002594
+                ],
+                "file": "__session_checkpoint",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19185431@__txn_checkpoint_wrapper",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19185431
+        ],
+        "file": "__txn_checkpoint_wrapper",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19185431@__txn_checkpoint_wrapper",
+                "prede_node": "19185431@__txn_checkpoint_wrapper",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19185431
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19185431@__txn_checkpoint_wrapper",
+                "prede_node": "19183019@__txn_checkpoint_wrapper",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19183019
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19296664@__wt_btcur_next",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19296664
+        ],
+        "file": "__wt_btcur_next",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19296664@__wt_btcur_next",
+                "prede_node": "19296664@__wt_btcur_next",
+                "prede_count": 7,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19296664
+                ],
+                "file": "__wt_btcur_next",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19296664@__wt_btcur_next",
+                "prede_node": "19289639@__wt_btcur_next",
+                "prede_count": 7,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.0006811326262527975,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19289639
+                ],
+                "file": "__wt_btcur_next",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19181851@__checkpoint_tree.constprop.15",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19181851
+        ],
+        "file": "__checkpoint_tree.constprop.15",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19181851@__checkpoint_tree.constprop.15",
+                "prede_node": "19181851@__checkpoint_tree.constprop.15",
+                "prede_count": 10,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19181851
+                ],
+                "file": "__checkpoint_tree.constprop.15",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19181851@__checkpoint_tree.constprop.15",
+                "prede_node": "19181537@__checkpoint_tree.constprop.15",
+                "prede_count": 10,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19181537
+                ],
+                "file": "__checkpoint_tree.constprop.15",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19190556@__wt_txn_checkpoint",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19190556
+        ],
+        "file": "__wt_txn_checkpoint",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19190556@__wt_txn_checkpoint",
+                "prede_node": "19190556@__wt_txn_checkpoint",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19190556
+                ],
+                "file": "__wt_txn_checkpoint",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19190556@__wt_txn_checkpoint",
+                "prede_node": "14126870@__session_checkpoint",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    14126870
+                ],
+                "file": "__session_checkpoint",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18287391@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18287391
+        ],
+        "file": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18287391@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_node": "18287391@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_count": 2,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18287391
+                ],
+                "file": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18287391@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_node": "18284749@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 0.5,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18284749
+                ],
+                "file": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19185186@__txn_checkpoint_wrapper",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19185186
+        ],
+        "file": "__txn_checkpoint_wrapper",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19185186@__txn_checkpoint_wrapper",
+                "prede_node": "19185186@__txn_checkpoint_wrapper",
+                "prede_count": 4,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19185186
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19185186@__txn_checkpoint_wrapper",
+                "prede_node": "19183019@__txn_checkpoint_wrapper",
+                "prede_count": 2,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 0.5,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1.3333333333333333,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19183019
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19191076@__wt_txn_checkpoint",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19191076
+        ],
+        "file": "__wt_txn_checkpoint",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19191076@__wt_txn_checkpoint",
+                "prede_node": "19191076@__wt_txn_checkpoint",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19191076
+                ],
+                "file": "__wt_txn_checkpoint",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19191076@__wt_txn_checkpoint",
+                "prede_node": "19190556@__wt_txn_checkpoint",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19190556
+                ],
+                "file": "__wt_txn_checkpoint",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19289639@__wt_btcur_next",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19289639
+        ],
+        "file": "__wt_btcur_next",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19289639@__wt_btcur_next",
+                "prede_node": "19289639@__wt_btcur_next",
+                "prede_count": 10277,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19289639
+                ],
+                "file": "__wt_btcur_next",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19289639@__wt_btcur_next",
+                "prede_node": "19350189@__wt_btcur_search_near",
+                "prede_count": 10106,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 98.33609029872531,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.9833609029872531
+                },
+                "lines": [
+                    19350189
+                ],
+                "file": "__wt_btcur_search_near",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19289639@__wt_btcur_next",
+                "prede_node": "18612776@__curfile_next",
+                "prede_count": 171,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 1.663909701274691,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.01663909701274691
+                },
+                "lines": [
+                    18612776
+                ],
+                "file": "__curfile_next",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18691753@__wt_page_evict_urgent",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18691753
+        ],
+        "file": "__wt_page_evict_urgent",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18691753@__wt_page_evict_urgent",
+                "prede_node": "18691753@__wt_page_evict_urgent",
+                "prede_count": 12,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18691753
+                ],
+                "file": "__wt_page_evict_urgent",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18691753@__wt_page_evict_urgent",
+                "prede_node": "19652283@__wt_page_release",
+                "prede_count": 12,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19652283
+                ],
+                "file": "__wt_page_release",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19183019@__txn_checkpoint_wrapper",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19183019
+        ],
+        "file": "__txn_checkpoint_wrapper",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19183019@__txn_checkpoint_wrapper",
+                "prede_node": "19183019@__txn_checkpoint_wrapper",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19183019
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19183019@__txn_checkpoint_wrapper",
+                "prede_node": "19191076@__wt_txn_checkpoint",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19191076
+                ],
+                "file": "__wt_txn_checkpoint",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19595436@__wt_sync_file",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19595436
+        ],
+        "file": "__wt_sync_file",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19595436@__wt_sync_file",
+                "prede_node": "19595436@__wt_sync_file",
+                "prede_count": 6,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19595436
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19595436@__wt_sync_file",
+                "prede_node": "19595150@__wt_sync_file",
+                "prede_count": 6,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19595150
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19290542@__wt_btcur_next",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19290542
+        ],
+        "file": "__wt_btcur_next",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19290542@__wt_btcur_next",
+                "prede_node": "19290542@__wt_btcur_next",
+                "prede_count": 37,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19290542
+                ],
+                "file": "__wt_btcur_next",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19290542@__wt_btcur_next",
+                "prede_node": "19289639@__wt_btcur_next",
+                "prede_count": 37,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.003600272453050501,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19289639
+                ],
+                "file": "__wt_btcur_next",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19596463@__wt_sync_file",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19596463
+        ],
+        "file": "__wt_sync_file",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19596463@__wt_sync_file",
+                "prede_node": "19596463@__wt_sync_file",
+                "prede_count": 18,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19596463
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19596463@__wt_sync_file",
+                "prede_node": "19595150@__wt_sync_file",
+                "prede_count": 6,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 0.3333333333333333,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 3,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19595150
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19596720@__wt_sync_file",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19596720
+        ],
+        "file": "__wt_sync_file",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19596720@__wt_sync_file",
+                "prede_node": "19596720@__wt_sync_file",
+                "prede_count": 6,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19596720
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19596720@__wt_sync_file",
+                "prede_node": "19595150@__wt_sync_file",
+                "prede_count": 6,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19595150
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19186866@__txn_checkpoint_wrapper",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19186866
+        ],
+        "file": "__txn_checkpoint_wrapper",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19186866@__txn_checkpoint_wrapper",
+                "prede_node": "19186866@__txn_checkpoint_wrapper",
+                "prede_count": 4,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19186866
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19186866@__txn_checkpoint_wrapper",
+                "prede_node": "19183019@__txn_checkpoint_wrapper",
+                "prede_count": 2,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 0.5,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1.3333333333333333,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19183019
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19183417@__txn_checkpoint_wrapper",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19183417
+        ],
+        "file": "__txn_checkpoint_wrapper",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19183417@__txn_checkpoint_wrapper",
+                "prede_node": "19183417@__txn_checkpoint_wrapper",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19183417
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19183417@__txn_checkpoint_wrapper",
+                "prede_node": "19183019@__txn_checkpoint_wrapper",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19183019
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19185338@__txn_checkpoint_wrapper",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19185338
+        ],
+        "file": "__txn_checkpoint_wrapper",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19185338@__txn_checkpoint_wrapper",
+                "prede_node": "19185338@__txn_checkpoint_wrapper",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19185338
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19185338@__txn_checkpoint_wrapper",
+                "prede_node": "19183019@__txn_checkpoint_wrapper",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19183019
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19186233@__txn_checkpoint_wrapper",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19186233
+        ],
+        "file": "__txn_checkpoint_wrapper",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19186233@__txn_checkpoint_wrapper",
+                "prede_node": "19186233@__txn_checkpoint_wrapper",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19186233
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19186233@__txn_checkpoint_wrapper",
+                "prede_node": "19183019@__txn_checkpoint_wrapper",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19183019
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19294395@__wt_btcur_next",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19294395
+        ],
+        "file": "__wt_btcur_next",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19294395@__wt_btcur_next",
+                "prede_node": "19294395@__wt_btcur_next",
+                "prede_count": 10253,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19294395
+                ],
+                "file": "__wt_btcur_next",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19294395@__wt_btcur_next",
+                "prede_node": "19289639@__wt_btcur_next",
+                "prede_count": 10253,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.9976646881385618,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19289639
+                ],
+                "file": "__wt_btcur_next",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19187391@__txn_checkpoint_wrapper",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19187391
+        ],
+        "file": "__txn_checkpoint_wrapper",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19187391@__txn_checkpoint_wrapper",
+                "prede_node": "19187391@__txn_checkpoint_wrapper",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19187391
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19187391@__txn_checkpoint_wrapper",
+                "prede_node": "19183019@__txn_checkpoint_wrapper",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19183019
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18287424@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18287424
+        ],
+        "file": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18287424@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_node": "18287424@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_count": 2,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18287424
+                ],
+                "file": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18287424@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_node": "18284749@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 0.5,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18284749
+                ],
+                "file": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19190597@__wt_txn_checkpoint",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19190597
+        ],
+        "file": "__wt_txn_checkpoint",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19190597@__wt_txn_checkpoint",
+                "prede_node": "19190597@__wt_txn_checkpoint",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19190597
+                ],
+                "file": "__wt_txn_checkpoint",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19190597@__wt_txn_checkpoint",
+                "prede_node": "19190556@__wt_txn_checkpoint",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19190556
+                ],
+                "file": "__wt_txn_checkpoint",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19597898@__wt_sync_file",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19597898
+        ],
+        "file": "__wt_sync_file",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19597898@__wt_sync_file",
+                "prede_node": "19597898@__wt_sync_file",
+                "prede_count": 12,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19597898
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19597898@__wt_sync_file",
+                "prede_node": "19595150@__wt_sync_file",
+                "prede_count": 6,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 0.5,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19595150
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19293529@__wt_btcur_next",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19293529
+        ],
+        "file": "__wt_btcur_next",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19293529@__wt_btcur_next",
+                "prede_node": "19293529@__wt_btcur_next",
+                "prede_count": 24,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19293529
+                ],
+                "file": "__wt_btcur_next",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19293529@__wt_btcur_next",
+                "prede_node": "19289639@__wt_btcur_next",
+                "prede_count": 24,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.002335311861438163,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19289639
+                ],
+                "file": "__wt_btcur_next",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19657434@__wt_tree_walk",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19657434
+        ],
+        "file": "__wt_tree_walk",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19657434@__wt_tree_walk",
+                "prede_node": "19657434@__wt_tree_walk",
+                "prede_count": 79,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19657434
+                ],
+                "file": "__wt_tree_walk",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19657434@__wt_tree_walk",
+                "prede_node": "19315444@__wt_btcur_prev",
+                "prede_count": 42,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 53.16455696202531,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.5316455696202531
+                },
+                "lines": [
+                    19315444
+                ],
+                "file": "__wt_btcur_prev",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19657434@__wt_tree_walk",
+                "prede_node": "19290542@__wt_btcur_next",
+                "prede_count": 37,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 46.835443037974684,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.46835443037974683
+                },
+                "lines": [
+                    19290542
+                ],
+                "file": "__wt_btcur_next",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19181537@__checkpoint_tree.constprop.15",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19181537
+        ],
+        "file": "__checkpoint_tree.constprop.15",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19181537@__checkpoint_tree.constprop.15",
+                "prede_node": "19181537@__checkpoint_tree.constprop.15",
+                "prede_count": 10,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19181537
+                ],
+                "file": "__checkpoint_tree.constprop.15",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19181537@__checkpoint_tree.constprop.15",
+                "prede_node": "19182892@__wt_checkpoint",
+                "prede_count": 6,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 60.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.6
+                },
+                "lines": [
+                    19182892
+                ],
+                "file": "__wt_checkpoint",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19181537@__checkpoint_tree.constprop.15",
+                "prede_node": "19185186@__txn_checkpoint_wrapper",
+                "prede_count": 4,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 40.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.4
+                },
+                "lines": [
+                    19185186
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19002594@__session_checkpoint",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19002594
+        ],
+        "file": "__session_checkpoint",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19002594@__session_checkpoint",
+                "prede_node": "19002594@__session_checkpoint",
+                "prede_count": 3,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19002594
+                ],
+                "file": "__session_checkpoint",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19002594@__session_checkpoint",
+                "prede_node": "19208467@__wt_txn_recover",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 33.33333333333333,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.3333333333333333
+                },
+                "lines": [
+                    19208467
+                ],
+                "file": "__wt_txn_recover",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19002594@__session_checkpoint",
+                "prede_node": "18287391@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_count": 2,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 66.66666666666666,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.6666666666666666
+                },
+                "lines": [
+                    18287391
+                ],
+                "file": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    }
+]

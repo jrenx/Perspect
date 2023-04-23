@@ -1,0 +1,640 @@
+{
+    "starting_events": [
+        [
+            "",
+            18692122,
+            "__wt_page_evict_urgent"
+        ]
+    ],
+    "dynamic_nodes": [
+        {
+            "id": 2883002,
+            "insn_id": 0,
+            "hex_insn": "0x124afe1",
+            "func": "__checkpoint_tree.constprop.15",
+            "static_node": 12138,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2883003
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "12138": 2,
+                "12222": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 2883003,
+            "insn_id": 0,
+            "hex_insn": "0x124b52c",
+            "func": "__wt_checkpoint",
+            "static_node": 12222,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2883002
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 2883605,
+            "insn_id": 0,
+            "hex_insn": "0x124afe1",
+            "func": "__checkpoint_tree.constprop.15",
+            "static_node": 12138,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2883606
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "12138": 2,
+                "12222": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 2883606,
+            "insn_id": 0,
+            "hex_insn": "0x124b52c",
+            "func": "__wt_checkpoint",
+            "static_node": 12222,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2883605
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 2884093,
+            "insn_id": 0,
+            "hex_insn": "0x124afe1",
+            "func": "__checkpoint_tree.constprop.15",
+            "static_node": 12138,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2884094
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "12138": 2,
+                "12223": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 2884094,
+            "insn_id": 0,
+            "hex_insn": "0x124be22",
+            "func": "__txn_checkpoint_wrapper",
+            "static_node": 12223,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2884093
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 2884156,
+            "insn_id": 0,
+            "hex_insn": "0x124afe1",
+            "func": "__checkpoint_tree.constprop.15",
+            "static_node": 12138,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2884157
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "12138": 2,
+                "12223": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 2884157,
+            "insn_id": 0,
+            "hex_insn": "0x124be22",
+            "func": "__txn_checkpoint_wrapper",
+            "static_node": 12223,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2884156
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 2967984,
+            "insn_id": 0,
+            "hex_insn": "0x124afe1",
+            "func": "__checkpoint_tree.constprop.15",
+            "static_node": 12138,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2967985
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "12138": 2,
+                "12222": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 2967985,
+            "insn_id": 0,
+            "hex_insn": "0x124b52c",
+            "func": "__wt_checkpoint",
+            "static_node": 12222,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2967984
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 2968634,
+            "insn_id": 0,
+            "hex_insn": "0x124afe1",
+            "func": "__checkpoint_tree.constprop.15",
+            "static_node": 12138,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2968635
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "12138": 2,
+                "12222": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 2968635,
+            "insn_id": 0,
+            "hex_insn": "0x124b52c",
+            "func": "__wt_checkpoint",
+            "static_node": 12222,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2968634
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 2969366,
+            "insn_id": 0,
+            "hex_insn": "0x124afe1",
+            "func": "__checkpoint_tree.constprop.15",
+            "static_node": 12138,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2969367
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "12138": 2,
+                "12223": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 2969367,
+            "insn_id": 0,
+            "hex_insn": "0x124be22",
+            "func": "__txn_checkpoint_wrapper",
+            "static_node": 12223,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2969366
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 2969732,
+            "insn_id": 0,
+            "hex_insn": "0x124afe1",
+            "func": "__checkpoint_tree.constprop.15",
+            "static_node": 12138,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                2969733
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "12138": 2,
+                "12223": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 2969733,
+            "insn_id": 0,
+            "hex_insn": "0x124be22",
+            "func": "__txn_checkpoint_wrapper",
+            "static_node": 12223,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                2969732
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 3079012,
+            "insn_id": 0,
+            "hex_insn": "0x124afe1",
+            "func": "__checkpoint_tree.constprop.15",
+            "static_node": 12138,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3079013
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "12138": 2,
+                "12222": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 1
+        },
+        {
+            "id": 3079013,
+            "insn_id": 0,
+            "hex_insn": "0x124b52c",
+            "func": "__wt_checkpoint",
+            "static_node": 12222,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3079012
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 1
+        },
+        {
+            "id": 3079282,
+            "insn_id": 0,
+            "hex_insn": "0x124afe1",
+            "func": "__checkpoint_tree.constprop.15",
+            "static_node": 12138,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3079283
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "12138": 2,
+                "12222": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 1
+        },
+        {
+            "id": 3079283,
+            "insn_id": 0,
+            "hex_insn": "0x124b52c",
+            "func": "__wt_checkpoint",
+            "static_node": 12222,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3079282
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 1
+        }
+    ],
+    "node_frequencies": {},
+    "postorder_list": [
+        2968634,
+        2968635,
+        2884156,
+        2884157,
+        2969732,
+        2969733,
+        3079012,
+        3079013,
+        2884093,
+        2884094,
+        3079282,
+        3079283,
+        2883002,
+        2883003,
+        2883605,
+        2883606,
+        2969366,
+        2969367,
+        2967984,
+        2967985
+    ],
+    "reverse_postorder_list": [
+        3079013,
+        3079012,
+        2884094,
+        2884093,
+        3079283,
+        3079282,
+        2883003,
+        2883002,
+        2969367,
+        2969366,
+        2883606,
+        2883605,
+        2967985,
+        2967984,
+        2968635,
+        2968634,
+        2884157,
+        2884156,
+        2969733,
+        2969732
+    ],
+    "entry_nodes": [
+        3079013,
+        2967985,
+        3079283,
+        2883003,
+        2968635,
+        2969367,
+        2884157,
+        2884094,
+        2969733,
+        2883606
+    ],
+    "exit_nodes": [
+        2883002,
+        3079282,
+        2968634,
+        2969366,
+        2884093,
+        2883605,
+        2884156,
+        2969732,
+        2967984,
+        3079012
+    ],
+    "target_nodes": [
+        2883002,
+        3079282,
+        2968634,
+        2884093,
+        2969366,
+        2883605,
+        2884156,
+        2969732,
+        2967984,
+        3079012
+    ],
+    "reachable_output_events_per_static_node": {
+        "12138": [
+            2883002,
+            3079282,
+            2968634,
+            2884093,
+            2969366,
+            2883605,
+            2884156,
+            2969732,
+            2967984,
+            3079012
+        ],
+        "12222": [
+            2883002,
+            2883605,
+            3079282,
+            2968634,
+            2967984,
+            3079012
+        ],
+        "12223": [
+            2884093,
+            2969366,
+            2884156,
+            2969732
+        ]
+    }
+}

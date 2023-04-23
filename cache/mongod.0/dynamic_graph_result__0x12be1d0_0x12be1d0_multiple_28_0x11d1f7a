@@ -1,0 +1,577 @@
+{
+    "starting_events": [
+        [
+            "",
+            19653072,
+            "__tree_walk_internal"
+        ]
+    ],
+    "dynamic_nodes": [
+        {
+            "id": 100177757,
+            "insn_id": 0,
+            "hex_insn": "0x11d1f7a",
+            "func": "__evict_lru_pages",
+            "static_node": 31362,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                100177769
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "31362": 2,
+                "6507": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 3312021.898890207,
+            "thread_id": 9
+        },
+        {
+            "id": 100177769,
+            "insn_id": 0,
+            "hex_insn": "0x11d840c",
+            "func": "__wt_evict_thread_run",
+            "static_node": 6507,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                100177757
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 3312021.898890207,
+            "thread_id": 9
+        },
+        {
+            "id": 100177759,
+            "insn_id": 0,
+            "hex_insn": "0x11d1f7a",
+            "func": "__evict_lru_pages",
+            "static_node": 31362,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                100177767
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "31362": 2,
+                "6507": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 3336419.8502632477,
+            "thread_id": 8
+        },
+        {
+            "id": 100177767,
+            "insn_id": 0,
+            "hex_insn": "0x11d840c",
+            "func": "__wt_evict_thread_run",
+            "static_node": 6507,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                100177759
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 3336419.8502632477,
+            "thread_id": 8
+        },
+        {
+            "id": 100177761,
+            "insn_id": 0,
+            "hex_insn": "0x11d1f7a",
+            "func": "__evict_lru_pages",
+            "static_node": 31362,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                100177765
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "31362": 2,
+                "6507": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 3549901.9247773536,
+            "thread_id": 7
+        },
+        {
+            "id": 100177765,
+            "insn_id": 0,
+            "hex_insn": "0x11d840c",
+            "func": "__wt_evict_thread_run",
+            "static_node": 6507,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                100177761
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 3549901.9247773536,
+            "thread_id": 7
+        },
+        {
+            "id": 220359477,
+            "insn_id": 0,
+            "hex_insn": "0x11d1f7a",
+            "func": "__evict_lru_pages",
+            "static_node": 31362,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                220359478
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "31362": 2,
+                "6507": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 3543802.4369340935,
+            "thread_id": 8
+        },
+        {
+            "id": 220359478,
+            "insn_id": 0,
+            "hex_insn": "0x11d840c",
+            "func": "__wt_evict_thread_run",
+            "static_node": 6507,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                220359477
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 3543802.4369340935,
+            "thread_id": 8
+        },
+        {
+            "id": 220359494,
+            "insn_id": 0,
+            "hex_insn": "0x11d1f7a",
+            "func": "__evict_lru_pages",
+            "static_node": 31362,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                220359527
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "31362": 2,
+                "6507": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 3397414.7286958494,
+            "thread_id": 9
+        },
+        {
+            "id": 220359527,
+            "insn_id": 0,
+            "hex_insn": "0x11d840c",
+            "func": "__wt_evict_thread_run",
+            "static_node": 6507,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                220359494
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 3397414.7286958494,
+            "thread_id": 9
+        },
+        {
+            "id": 220359581,
+            "insn_id": 0,
+            "hex_insn": "0x11d1f7a",
+            "func": "__evict_lru_pages",
+            "static_node": 31362,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                220359582
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "31362": 2,
+                "6507": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 3171733.678495223,
+            "thread_id": 7
+        },
+        {
+            "id": 220359582,
+            "insn_id": 0,
+            "hex_insn": "0x11d840c",
+            "func": "__wt_evict_thread_run",
+            "static_node": 6507,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                220359581
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 3171733.678495223,
+            "thread_id": 7
+        },
+        {
+            "id": 339836137,
+            "insn_id": 0,
+            "hex_insn": "0x11d1f7a",
+            "func": "__evict_lru_pages",
+            "static_node": 31362,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                339836145
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "31362": 2,
+                "6507": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 3519404.485561053,
+            "thread_id": 6
+        },
+        {
+            "id": 339836145,
+            "insn_id": 0,
+            "hex_insn": "0x11d840c",
+            "func": "__wt_evict_thread_run",
+            "static_node": 6507,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                339836137
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 3519404.485561053,
+            "thread_id": 6
+        },
+        {
+            "id": 339836174,
+            "insn_id": 0,
+            "hex_insn": "0x11d1f7a",
+            "func": "__evict_lru_pages",
+            "static_node": 31362,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                339836195
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "31362": 2,
+                "6507": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 3196131.629868264,
+            "thread_id": 7
+        },
+        {
+            "id": 339836195,
+            "insn_id": 0,
+            "hex_insn": "0x11d840c",
+            "func": "__wt_evict_thread_run",
+            "static_node": 6507,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                339836174
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 3196131.629868264,
+            "thread_id": 7
+        },
+        {
+            "id": 339836232,
+            "insn_id": 0,
+            "hex_insn": "0x11d1f7a",
+            "func": "__evict_lru_pages",
+            "static_node": 31362,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                339836236
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "31362": 2,
+                "6507": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 3324220.8745767274,
+            "thread_id": 8
+        },
+        {
+            "id": 339836236,
+            "insn_id": 0,
+            "hex_insn": "0x11d840c",
+            "func": "__wt_evict_thread_run",
+            "static_node": 6507,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                339836232
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 3324220.8745767274,
+            "thread_id": 8
+        }
+    ],
+    "node_frequencies": {},
+    "postorder_list": [
+        220359477,
+        220359478,
+        339836174,
+        339836195,
+        100177757,
+        100177769,
+        339836137,
+        339836145,
+        100177759,
+        100177767,
+        220359494,
+        220359527,
+        220359581,
+        220359582,
+        100177761,
+        100177765,
+        339836232,
+        339836236
+    ],
+    "reverse_postorder_list": [
+        220359582,
+        220359581,
+        220359527,
+        220359494,
+        339836236,
+        339836232,
+        220359478,
+        220359477,
+        339836195,
+        339836174,
+        100177765,
+        100177761,
+        100177769,
+        100177757,
+        339836145,
+        339836137,
+        100177767,
+        100177759
+    ],
+    "entry_nodes": [
+        100177769,
+        100177765,
+        220359527,
+        220359478,
+        339836195,
+        339836145,
+        100177767,
+        339836236,
+        220359582
+    ],
+    "exit_nodes": [
+        339836174,
+        339836137,
+        220359581,
+        100177757,
+        100177759,
+        100177761,
+        339836232,
+        220359494,
+        220359477
+    ],
+    "target_nodes": [
+        339836137,
+        339836174,
+        220359581,
+        100177759,
+        100177757,
+        100177761,
+        339836232,
+        220359494,
+        220359477
+    ],
+    "reachable_output_events_per_static_node": {
+        "31362": [
+            339836174,
+            339836137,
+            220359581,
+            100177759,
+            100177757,
+            100177761,
+            339836232,
+            220359494,
+            220359477
+        ],
+        "6507": [
+            339836174,
+            339836137,
+            220359581,
+            100177759,
+            100177757,
+            100177761,
+            339836232,
+            220359494,
+            220359477
+        ]
+    }
+}

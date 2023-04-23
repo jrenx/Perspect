@@ -1,0 +1,89 @@
+{
+    "starting_events": [
+        [
+            "",
+            18692122,
+            "__wt_page_evict_urgent"
+        ]
+    ],
+    "dynamic_nodes": [
+        {
+            "id": 44263,
+            "insn_id": 0,
+            "hex_insn": "0x11c188a",
+            "func": "__curfile_search_near",
+            "static_node": 7184,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                44264
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "7184": 2,
+                "16679": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 8.0731972404,
+            "thread_id": 24
+        },
+        {
+            "id": 44264,
+            "insn_id": 0,
+            "hex_insn": "0x11c1710",
+            "func": "__curfile_search_near",
+            "static_node": 16679,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                44263
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 8.0731972404,
+            "thread_id": 24
+        }
+    ],
+    "node_frequencies": {},
+    "postorder_list": [
+        44263,
+        44264
+    ],
+    "reverse_postorder_list": [
+        44264,
+        44263
+    ],
+    "entry_nodes": [
+        44264
+    ],
+    "exit_nodes": [
+        44263
+    ],
+    "target_nodes": [
+        44263
+    ],
+    "reachable_output_events_per_static_node": {
+        "7184": [
+            44263
+        ],
+        "16679": [
+            44263
+        ]
+    }
+}

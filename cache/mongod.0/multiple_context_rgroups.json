@@ -1,0 +1,1962 @@
+[
+    {
+        "starting_node": "18717442@__wt_evict",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18717442
+        ],
+        "file": "__wt_evict",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18717442@__wt_evict",
+                "prede_node": "18717442@__wt_evict",
+                "prede_count": 473,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18717442
+                ],
+                "file": "__wt_evict",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18717442@__wt_evict",
+                "prede_node": "18712871@__wt_evict",
+                "prede_count": 473,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18712871
+                ],
+                "file": "__wt_evict",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18711564@__wt_evict_thread_run",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18711564
+        ],
+        "file": "__wt_evict_thread_run",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18711564@__wt_evict_thread_run",
+                "prede_node": "18711564@__wt_evict_thread_run",
+                "prede_count": 9,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18711564
+                ],
+                "file": "__wt_evict_thread_run",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18711564@__wt_evict_thread_run",
+                "prede_node": "18711529@__wt_evict_thread_run",
+                "prede_count": 9,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.040983606557377046,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18711529
+                ],
+                "file": "__wt_evict_thread_run",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19595150@__wt_sync_file",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19595150
+        ],
+        "file": "__wt_sync_file",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19595150@__wt_sync_file",
+                "prede_node": "19595150@__wt_sync_file",
+                "prede_count": 4,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19595150
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19595150@__wt_sync_file",
+                "prede_node": "19181717@__checkpoint_tree.constprop.15",
+                "prede_count": 4,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19181717
+                ],
+                "file": "__checkpoint_tree.constprop.15",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "20107284@__wt_rec_row_leaf",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            20107284
+        ],
+        "file": "__wt_rec_row_leaf",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "20107284@__wt_rec_row_leaf",
+                "prede_node": "20107284@__wt_rec_row_leaf",
+                "prede_count": 1065,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    20107284
+                ],
+                "file": "__wt_rec_row_leaf",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "20107284@__wt_rec_row_leaf",
+                "prede_node": "18911317@__wt_reconcile",
+                "prede_count": 1065,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18911317
+                ],
+                "file": "__wt_reconcile",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19181717@__checkpoint_tree.constprop.15",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19181717
+        ],
+        "file": "__checkpoint_tree.constprop.15",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19181717@__checkpoint_tree.constprop.15",
+                "prede_node": "19181717@__checkpoint_tree.constprop.15",
+                "prede_count": 4,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19181717
+                ],
+                "file": "__checkpoint_tree.constprop.15",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19181717@__checkpoint_tree.constprop.15",
+                "prede_node": "19181537@__checkpoint_tree.constprop.15",
+                "prede_count": 4,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.8,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19181537
+                ],
+                "file": "__checkpoint_tree.constprop.15",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "14126870@__session_checkpoint",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            14126870
+        ],
+        "file": "__session_checkpoint",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "14126870@__session_checkpoint",
+                "prede_node": "14126870@__session_checkpoint",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    14126870
+                ],
+                "file": "__session_checkpoint",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "14126870@__session_checkpoint",
+                "prede_node": "19002594@__session_checkpoint",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19002594
+                ],
+                "file": "__session_checkpoint",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19190556@__wt_txn_checkpoint",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19190556
+        ],
+        "file": "__wt_txn_checkpoint",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19190556@__wt_txn_checkpoint",
+                "prede_node": "19190556@__wt_txn_checkpoint",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19190556
+                ],
+                "file": "__wt_txn_checkpoint",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19190556@__wt_txn_checkpoint",
+                "prede_node": "14126870@__session_checkpoint",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    14126870
+                ],
+                "file": "__session_checkpoint",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18287391@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18287391
+        ],
+        "file": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18287391@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_node": "18287391@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18287391
+                ],
+                "file": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18287391@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_node": "18284749@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 2.0,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18284749
+                ],
+                "file": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19185186@__txn_checkpoint_wrapper",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19185186
+        ],
+        "file": "__txn_checkpoint_wrapper",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19185186@__txn_checkpoint_wrapper",
+                "prede_node": "19185186@__txn_checkpoint_wrapper",
+                "prede_count": 4,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19185186
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19185186@__txn_checkpoint_wrapper",
+                "prede_node": "19183019@__txn_checkpoint_wrapper",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 0.25,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 2.0,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19183019
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19191076@__wt_txn_checkpoint",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19191076
+        ],
+        "file": "__wt_txn_checkpoint",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19191076@__wt_txn_checkpoint",
+                "prede_node": "19191076@__wt_txn_checkpoint",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19191076
+                ],
+                "file": "__wt_txn_checkpoint",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19191076@__wt_txn_checkpoint",
+                "prede_node": "19190556@__wt_txn_checkpoint",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19190556
+                ],
+                "file": "__wt_txn_checkpoint",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "20119460@__wt_rec_row_leaf",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            20119460
+        ],
+        "file": "__wt_rec_row_leaf",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "20119460@__wt_rec_row_leaf",
+                "prede_node": "20119460@__wt_rec_row_leaf",
+                "prede_count": 11128,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    20119460
+                ],
+                "file": "__wt_rec_row_leaf",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "20119460@__wt_rec_row_leaf",
+                "prede_node": "20107284@__wt_rec_row_leaf",
+                "prede_count": 1065,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 0.09570452911574406,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1731.4920634920634,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    20107284
+                ],
+                "file": "__wt_rec_row_leaf",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19289639@__wt_btcur_next",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19289639
+        ],
+        "file": "__wt_btcur_next",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19289639@__wt_btcur_next",
+                "prede_node": "19289639@__wt_btcur_next",
+                "prede_count": 3761,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19289639
+                ],
+                "file": "__wt_btcur_next",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19289639@__wt_btcur_next",
+                "prede_node": "19350189@__wt_btcur_search_near",
+                "prede_count": 3761,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1.0000722807842168,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19350189
+                ],
+                "file": "__wt_btcur_search_near",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18712871@__wt_evict",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18712871
+        ],
+        "file": "__wt_evict",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18712871@__wt_evict",
+                "prede_node": "18712871@__wt_evict",
+                "prede_count": 473,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18712871
+                ],
+                "file": "__wt_evict",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18712871@__wt_evict",
+                "prede_node": "18683720@__evict_page",
+                "prede_count": 473,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18683720
+                ],
+                "file": "__evict_page",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19183019@__txn_checkpoint_wrapper",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19183019
+        ],
+        "file": "__txn_checkpoint_wrapper",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19183019@__txn_checkpoint_wrapper",
+                "prede_node": "19183019@__txn_checkpoint_wrapper",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19183019
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19183019@__txn_checkpoint_wrapper",
+                "prede_node": "19191076@__wt_txn_checkpoint",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19191076
+                ],
+                "file": "__wt_txn_checkpoint",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18685867@__evict_lru_pages",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18685867
+        ],
+        "file": "__evict_lru_pages",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18685867@__evict_lru_pages",
+                "prede_node": "18685867@__evict_lru_pages",
+                "prede_count": 473,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18685867
+                ],
+                "file": "__evict_lru_pages",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18685867@__evict_lru_pages",
+                "prede_node": "18685818@__evict_lru_pages",
+                "prede_count": 9,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 0.019027484143763214,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 14.514285714285714,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18685818
+                ],
+                "file": "__evict_lru_pages",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19290542@__wt_btcur_next",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19290542
+        ],
+        "file": "__wt_btcur_next",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19290542@__wt_btcur_next",
+                "prede_node": "19290542@__wt_btcur_next",
+                "prede_count": 3761,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19290542
+                ],
+                "file": "__wt_btcur_next",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19290542@__wt_btcur_next",
+                "prede_node": "19289639@__wt_btcur_next",
+                "prede_count": 3761,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.7839522896770635,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19289639
+                ],
+                "file": "__wt_btcur_next",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19596463@__wt_sync_file",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19596463
+        ],
+        "file": "__wt_sync_file",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19596463@__wt_sync_file",
+                "prede_node": "19596463@__wt_sync_file",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19596463
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19596463@__wt_sync_file",
+                "prede_node": "19595150@__wt_sync_file",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 103.375,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19595150
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19095870@__thread_run",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19095870
+        ],
+        "file": "__thread_run",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19095870@__thread_run",
+                "prede_node": "19095870@__thread_run",
+                "prede_count": 9,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19095870
+                ],
+                "file": "__thread_run",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19095870@__thread_run",
+                "prede_node": "19095857@__thread_run",
+                "prede_count": 4,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 0.4444444444444444,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 105.875,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19095857
+                ],
+                "file": "__thread_run",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18683720@__evict_page",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18683720
+        ],
+        "file": "__evict_page",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18683720@__evict_page",
+                "prede_node": "18683720@__evict_page",
+                "prede_count": 473,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18683720
+                ],
+                "file": "__evict_page",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18683720@__evict_page",
+                "prede_node": "18682069@__evict_page",
+                "prede_count": 473,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.9311023622047244,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18682069
+                ],
+                "file": "__evict_page",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19597898@__wt_sync_file",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19597898
+        ],
+        "file": "__wt_sync_file",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19597898@__wt_sync_file",
+                "prede_node": "19597898@__wt_sync_file",
+                "prede_count": 592,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19597898
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19597898@__wt_sync_file",
+                "prede_node": "19595150@__wt_sync_file",
+                "prede_count": 4,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 0.006756756756756757,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 75.875,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19595150
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18911317@__wt_reconcile",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18911317
+        ],
+        "file": "__wt_reconcile",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18911317@__wt_reconcile",
+                "prede_node": "18911317@__wt_reconcile",
+                "prede_count": 1065,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18911317
+                ],
+                "file": "__wt_reconcile",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18911317@__wt_reconcile",
+                "prede_node": "18909675@__wt_reconcile",
+                "prede_count": 1065,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.9916666666666667,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18909675
+                ],
+                "file": "__wt_reconcile",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18682069@__evict_page",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18682069
+        ],
+        "file": "__evict_page",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18682069@__evict_page",
+                "prede_node": "18682069@__evict_page",
+                "prede_count": 473,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18682069
+                ],
+                "file": "__evict_page",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18682069@__evict_page",
+                "prede_node": "18685867@__evict_lru_pages",
+                "prede_count": 473,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18685867
+                ],
+                "file": "__evict_lru_pages",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19657434@__wt_tree_walk",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19657434
+        ],
+        "file": "__wt_tree_walk",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19657434@__wt_tree_walk",
+                "prede_node": "19657434@__wt_tree_walk",
+                "prede_count": 11130,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19657434
+                ],
+                "file": "__wt_tree_walk",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19657434@__wt_tree_walk",
+                "prede_node": "19290542@__wt_btcur_next",
+                "prede_count": 3761,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 33.79155435759209,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.3379155435759209
+                },
+                "lines": [
+                    19290542
+                ],
+                "file": "__wt_btcur_next",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19657434@__wt_tree_walk",
+                "prede_node": "19315444@__wt_btcur_prev",
+                "prede_count": 7369,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 66.20844564240791,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.6620844564240791
+                },
+                "lines": [
+                    19315444
+                ],
+                "file": "__wt_btcur_prev",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19181537@__checkpoint_tree.constprop.15",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19181537
+        ],
+        "file": "__checkpoint_tree.constprop.15",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19181537@__checkpoint_tree.constprop.15",
+                "prede_node": "19181537@__checkpoint_tree.constprop.15",
+                "prede_count": 4,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19181537
+                ],
+                "file": "__checkpoint_tree.constprop.15",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19181537@__checkpoint_tree.constprop.15",
+                "prede_node": "19185186@__txn_checkpoint_wrapper",
+                "prede_count": 4,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1.6666666666666667,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19185186
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19002594@__session_checkpoint",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19002594
+        ],
+        "file": "__session_checkpoint",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19002594@__session_checkpoint",
+                "prede_node": "19002594@__session_checkpoint",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19002594
+                ],
+                "file": "__session_checkpoint",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19002594@__session_checkpoint",
+                "prede_node": "18287391@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1.5,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18287391
+                ],
+                "file": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18711529@__wt_evict_thread_run",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18711529
+        ],
+        "file": "__wt_evict_thread_run",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18711529@__wt_evict_thread_run",
+                "prede_node": "18711529@__wt_evict_thread_run",
+                "prede_count": 9,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18711529
+                ],
+                "file": "__wt_evict_thread_run",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18711529@__wt_evict_thread_run",
+                "prede_node": "19095870@__thread_run",
+                "prede_count": 9,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1.0082644628099173,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19095870
+                ],
+                "file": "__thread_run",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18909675@__wt_reconcile",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18909675
+        ],
+        "file": "__wt_reconcile",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18909675@__wt_reconcile",
+                "prede_node": "18909675@__wt_reconcile",
+                "prede_count": 1065,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18909675
+                ],
+                "file": "__wt_reconcile",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18909675@__wt_reconcile",
+                "prede_node": "19597898@__wt_sync_file",
+                "prede_count": 592,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 55.586854460093896,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.5558685446009389
+                },
+                "lines": [
+                    19597898
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18909675@__wt_reconcile",
+                "prede_node": "18717442@__wt_evict",
+                "prede_count": 473,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 44.413145539906104,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.444131455399061
+                },
+                "lines": [
+                    18717442
+                ],
+                "file": "__wt_evict",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18685818@__evict_lru_pages",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18685818
+        ],
+        "file": "__evict_lru_pages",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18685818@__evict_lru_pages",
+                "prede_node": "18685818@__evict_lru_pages",
+                "prede_count": 9,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18685818
+                ],
+                "file": "__evict_lru_pages",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18685818@__evict_lru_pages",
+                "prede_node": "18711564@__wt_evict_thread_run",
+                "prede_count": 9,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18711564
+                ],
+                "file": "__wt_evict_thread_run",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    }
+]

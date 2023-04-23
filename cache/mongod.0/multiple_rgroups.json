@@ -1,0 +1,1070 @@
+[
+    {
+        "starting_node": "19306569@__cursor_reset",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19306569
+        ],
+        "file": "__cursor_reset",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19306569@__cursor_reset",
+                "prede_node": "19306569@__cursor_reset",
+                "prede_count": 3709,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19306569
+                ],
+                "file": "__cursor_reset",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19306569@__cursor_reset",
+                "prede_node": "19319081@__wt_btcur_prev",
+                "prede_count": 3709,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19319081
+                ],
+                "file": "__wt_btcur_prev",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19331593@__cursor_reset",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19331593
+        ],
+        "file": "__cursor_reset",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19331593@__cursor_reset",
+                "prede_node": "19331593@__cursor_reset",
+                "prede_count": 32057,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19331593
+                ],
+                "file": "__cursor_reset",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19331593@__cursor_reset",
+                "prede_node": "19349507@__wt_btcur_search_near",
+                "prede_count": 4749,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 14.814237140094209,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.14814237140094208
+                },
+                "lines": [
+                    19349507
+                ],
+                "file": "__wt_btcur_search_near",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19331593@__cursor_reset",
+                "prede_node": "19350305@__wt_btcur_search_near",
+                "prede_count": 3838,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 11.972424119537074,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.11972424119537074
+                },
+                "lines": [
+                    19350305
+                ],
+                "file": "__wt_btcur_search_near",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19331593@__cursor_reset",
+                "prede_node": "19344217@__wt_btcur_reset",
+                "prede_count": 14472,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 45.14458620582088,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.4514458620582088
+                },
+                "lines": [
+                    19344217
+                ],
+                "file": "__wt_btcur_reset",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19331593@__cursor_reset",
+                "prede_node": "19345587@__wt_btcur_search",
+                "prede_count": 3030,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 9.4519137785819,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.09451913778581901
+                },
+                "lines": [
+                    19345587
+                ],
+                "file": "__wt_btcur_search",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19331593@__cursor_reset",
+                "prede_node": "19364102@__wt_btcur_remove",
+                "prede_count": 2978,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 9.289702717035281,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.09289702717035281
+                },
+                "lines": [
+                    19364102
+                ],
+                "file": "__wt_btcur_remove",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19331593@__cursor_reset",
+                "prede_node": "19366733@__wt_btcur_remove",
+                "prede_count": 2990,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 9.327136038930654,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.09327136038930654
+                },
+                "lines": [
+                    19366733
+                ],
+                "file": "__wt_btcur_remove",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19344126@__wt_btcur_reset",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19344126
+        ],
+        "file": "__wt_btcur_reset",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19344126@__wt_btcur_reset",
+                "prede_node": "19344126@__wt_btcur_reset",
+                "prede_count": 14616,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19344126
+                ],
+                "file": "__wt_btcur_reset",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19344126@__wt_btcur_reset",
+                "prede_node": "18591021@__curfile_reset",
+                "prede_count": 14616,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18591021
+                ],
+                "file": "__curfile_reset",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18154447@mongo::WiredTigerCursor::reset",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18154447
+        ],
+        "file": "mongo::WiredTigerCursor::reset",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18154447@mongo::WiredTigerCursor::reset",
+                "prede_node": "18154447@mongo::WiredTigerCursor::reset",
+                "prede_count": 2046,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18154447
+                ],
+                "file": "mongo::WiredTigerCursor::reset",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18154447@mongo::WiredTigerCursor::reset",
+                "prede_node": "18307436@mongo::WiredTigerRecordStoreCursorBase::save",
+                "prede_count": 2046,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 2.0,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18307436
+                ],
+                "file": "mongo::WiredTigerRecordStoreCursorBase::save",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18307408@mongo::WiredTigerRecordStoreCursorBase::save",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18307408
+        ],
+        "file": "mongo::WiredTigerRecordStoreCursorBase::save",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18307408@mongo::WiredTigerRecordStoreCursorBase::save",
+                "prede_node": "18307408@mongo::WiredTigerRecordStoreCursorBase::save",
+                "prede_count": 1023,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18307408
+                ],
+                "file": "mongo::WiredTigerRecordStoreCursorBase::save",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18307408@mongo::WiredTigerRecordStoreCursorBase::save",
+                "prede_node": "18306255@mongo::WiredTigerRecordStoreCursorBase::saveUnpositioned",
+                "prede_count": 1023,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18306255
+                ],
+                "file": "mongo::WiredTigerRecordStoreCursorBase::saveUnpositioned",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19282201@__cursor_reset",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19282201
+        ],
+        "file": "__cursor_reset",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19282201@__cursor_reset",
+                "prede_node": "19282201@__cursor_reset",
+                "prede_count": 3709,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19282201
+                ],
+                "file": "__cursor_reset",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19282201@__cursor_reset",
+                "prede_node": "19293529@__wt_btcur_next",
+                "prede_count": 3709,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19293529
+                ],
+                "file": "__wt_btcur_next",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "19344217@__wt_btcur_reset",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            19344217
+        ],
+        "file": "__wt_btcur_reset",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "19344217@__wt_btcur_reset",
+                "prede_node": "19344217@__wt_btcur_reset",
+                "prede_count": 14616,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19344217
+                ],
+                "file": "__wt_btcur_reset",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "19344217@__wt_btcur_reset",
+                "prede_node": "19344126@__wt_btcur_reset",
+                "prede_count": 14616,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    19344126
+                ],
+                "file": "__wt_btcur_reset",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18712871@__wt_evict",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18712871
+        ],
+        "file": "__wt_evict",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18712871@__wt_evict",
+                "prede_node": "18712871@__wt_evict",
+                "prede_count": 473,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18712871
+                ],
+                "file": "__wt_evict",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18712871@__wt_evict",
+                "prede_node": "18683720@__evict_page",
+                "prede_count": 473,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18683720
+                ],
+                "file": "__evict_page",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18909675@__wt_reconcile",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18909675
+        ],
+        "file": "__wt_reconcile",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18909675@__wt_reconcile",
+                "prede_node": "18909675@__wt_reconcile",
+                "prede_count": 1080,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18909675
+                ],
+                "file": "__wt_reconcile",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18909675@__wt_reconcile",
+                "prede_node": "19597898@__wt_sync_file",
+                "prede_count": 607,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 56.2037037037037,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.562037037037037
+                },
+                "lines": [
+                    19597898
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18909675@__wt_reconcile",
+                "prede_node": "18717442@__wt_evict",
+                "prede_count": 473,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 43.7962962962963,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.43796296296296294
+                },
+                "lines": [
+                    18717442
+                ],
+                "file": "__wt_evict",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18307436@mongo::WiredTigerRecordStoreCursorBase::save",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18307436
+        ],
+        "file": "mongo::WiredTigerRecordStoreCursorBase::save",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18307436@mongo::WiredTigerRecordStoreCursorBase::save",
+                "prede_node": "18307436@mongo::WiredTigerRecordStoreCursorBase::save",
+                "prede_count": 1023,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18307436
+                ],
+                "file": "mongo::WiredTigerRecordStoreCursorBase::save",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18307436@mongo::WiredTigerRecordStoreCursorBase::save",
+                "prede_node": "18307408@mongo::WiredTigerRecordStoreCursorBase::save",
+                "prede_count": 1023,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18307408
+                ],
+                "file": "mongo::WiredTigerRecordStoreCursorBase::save",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18591021@__curfile_reset",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18591021
+        ],
+        "file": "__curfile_reset",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18591021@__curfile_reset",
+                "prede_node": "18591021@__curfile_reset",
+                "prede_count": 14616,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18591021
+                ],
+                "file": "__curfile_reset",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18591021@__curfile_reset",
+                "prede_node": "18590846@__curfile_reset",
+                "prede_count": 14616,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18590846
+                ],
+                "file": "__curfile_reset",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "18590846@__curfile_reset",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            18590846
+        ],
+        "file": "__curfile_reset",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "18590846@__curfile_reset",
+                "prede_node": "18590846@__curfile_reset",
+                "prede_count": 14616,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18590846
+                ],
+                "file": "__curfile_reset",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18590846@__curfile_reset",
+                "prede_node": "18154447@mongo::WiredTigerCursor::reset",
+                "prede_count": 2030,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 13.88888888888889,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.1388888888888889
+                },
+                "lines": [
+                    18154447
+                ],
+                "file": "mongo::WiredTigerCursor::reset",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18590846@__curfile_reset",
+                "prede_node": "18404933@mongo::WiredTigerSession::releaseCursor",
+                "prede_count": 5000,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 34.20908593322387,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.34209085933223865
+                },
+                "lines": [
+                    18404933
+                ],
+                "file": "mongo::WiredTigerSession::releaseCursor",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18590846@__curfile_reset",
+                "prede_node": "18669457@__wt_cursor_cache",
+                "prede_count": 3997,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 27.346743295019156,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.27346743295019155
+                },
+                "lines": [
+                    18669457
+                ],
+                "file": "__wt_cursor_cache",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "18590846@__curfile_reset",
+                "prede_node": "19785229@__curhs_reset",
+                "prede_count": 3588,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 24.548440065681447,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.24548440065681446
+                },
+                "lines": [
+                    19785229
+                ],
+                "file": "__curhs_reset",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    }
+]
