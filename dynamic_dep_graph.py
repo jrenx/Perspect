@@ -268,7 +268,7 @@ class DynamicNode(JSONEncoder):
                         continue
                     print("Unhandled bit op: " + str(bit_op.operation))
                     print(self.static_node)
-                    #raise Exception
+                    raise Exception
                 if self.load_bit_mask is None:
                     self.load_bit_mask = load_bit_mask
                 else:
@@ -555,6 +555,7 @@ class DynamicDependence:
         print("[dyn_dep] Total number of instructions watched: " + str(len(instructions)))
         print(instructions)
         trace.run_function_trace(instructions)
+        print("NEED TO RUN THE ABOVE INSTRUCTION MANUALLY and replace instruction_reg_log.so with instruction_reg_deref_log.so")
         return
 
     def build_static_dependencies(self, starting_events, prog, sa_steps=10000):
