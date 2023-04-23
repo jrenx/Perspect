@@ -1,0 +1,1502 @@
+[
+    {
+        "starting_node": "16155532@__wt_evict",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            699
+        ],
+        "file": "src/third_party/wiredtiger/src/evict/evict_page.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16155532@__wt_evict",
+                "prede_node": "16155532@__wt_evict",
+                "prede_count": 351,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    699
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_page.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16155532@__wt_evict",
+                "prede_node": "16151570@__wt_evict",
+                "prede_count": 351,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.025065706717936655,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    105
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_page.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16151570@__wt_evict",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            105
+        ],
+        "file": "src/third_party/wiredtiger/src/evict/evict_page.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16151570@__wt_evict",
+                "prede_node": "16151570@__wt_evict",
+                "prede_count": 14998,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    105
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_page.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16151570@__wt_evict",
+                "prede_node": "16127479@__evict_page",
+                "prede_count": 14990,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 99.94665955460728,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.9994665955460728
+                },
+                "lines": [
+                    2263
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16151570@__wt_evict",
+                "prede_node": "16160573@__wt_page_release_evict",
+                "prede_count": 8,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 0.05334044539271903,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.0005334044539271903
+                },
+                "lines": [
+                    80
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_page.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16128920@__evict_lru_pages",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            1118
+        ],
+        "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16128920@__evict_lru_pages",
+                "prede_node": "16128920@__evict_lru_pages",
+                "prede_count": 475,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    1118
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16128920@__evict_lru_pages",
+                "prede_node": "16137264@__wt_evict_thread_run",
+                "prede_count": 475,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    315
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16852000@__wt_row_leaf_key_work",
+        "weight": 77213.64542127908,
+        "finished": true,
+        "lines": [
+            129
+        ],
+        "file": "src/third_party/wiredtiger/src/btree/row_key.c",
+        "use_weight": true,
+        "relations": [
+            {
+                "target_node": "16852000@__wt_row_leaf_key_work",
+                "prede_node": "16852000@__wt_row_leaf_key_work",
+                "prede_count": 17738,
+                "weight": {
+                    "actual_weight": 77213.64542127908,
+                    "base_weight": 77213.64542127908,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 4,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    129
+                ],
+                "file": "src/third_party/wiredtiger/src/btree/row_key.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16852000@__wt_row_leaf_key_work",
+                "prede_node": "16862117@__wt_row_leaf_key_copy",
+                "prede_count": 16472,
+                "weight": {
+                    "actual_weight": 71702.73804145581,
+                    "base_weight": 77213.64542127908,
+                    "perc_contrib": 92.86278047130703,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": 0.9286278047130454
+                },
+                "lines": [
+                    988
+                ],
+                "file": "src/third_party/wiredtiger/src/include/btree.i",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16852000@__wt_row_leaf_key_work",
+                "prede_node": "16881912@__wt_row_search",
+                "prede_count": 1266,
+                "weight": {
+                    "actual_weight": 5510.907379827456,
+                    "base_weight": 77213.64542127908,
+                    "perc_contrib": 7.137219528698383,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": 0.07137219528695456
+                },
+                "lines": [
+                    988
+                ],
+                "file": "src/third_party/wiredtiger/src/include/btree.i",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16154018@__wt_evict",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            426
+        ],
+        "file": "src/third_party/wiredtiger/src/evict/evict_page.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16154018@__wt_evict",
+                "prede_node": "16154018@__wt_evict",
+                "prede_count": 204,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    426
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_page.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16154018@__wt_evict",
+                "prede_node": "16151570@__wt_evict",
+                "prede_count": 204,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.2886289027745109,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    105
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_page.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16879909@__wt_row_search",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            1648
+        ],
+        "file": "src/third_party/wiredtiger/src/include/btree.i",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16879909@__wt_row_search",
+                "prede_node": "16879909@__wt_row_search",
+                "prede_count": 15,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    1648
+                ],
+                "file": "src/third_party/wiredtiger/src/include/btree.i",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16879909@__wt_row_search",
+                "prede_node": "16877538@__wt_row_search",
+                "prede_count": 15,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.8093973112996312,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    251
+                ],
+                "file": "src/third_party/wiredtiger/src/btree/row_srch.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16156071@__wt_evict",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            383
+        ],
+        "file": "src/third_party/wiredtiger/src/evict/evict_page.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16156071@__wt_evict",
+                "prede_node": "16156071@__wt_evict",
+                "prede_count": 14,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    383
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_page.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16156071@__wt_evict",
+                "prede_node": "16151570@__wt_evict",
+                "prede_count": 14,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.005808780667396173,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    105
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_page.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16861994@__wt_row_leaf_key_copy",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            836
+        ],
+        "file": "src/third_party/wiredtiger/src/include/btree.i",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16861994@__wt_row_leaf_key_copy",
+                "prede_node": "16861994@__wt_row_leaf_key_copy",
+                "prede_count": 16472,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    836
+                ],
+                "file": "src/third_party/wiredtiger/src/include/btree.i",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16861994@__wt_row_leaf_key_copy",
+                "prede_node": "17271359@__wt_rec_row_leaf",
+                "prede_count": 16472,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    1007
+                ],
+                "file": "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16137264@__wt_evict_thread_run",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            315
+        ],
+        "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16137264@__wt_evict_thread_run",
+                "prede_node": "16137264@__wt_evict_thread_run",
+                "prede_count": 475,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    315
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16137264@__wt_evict_thread_run",
+                "prede_node": "16137228@__wt_evict_thread_run",
+                "prede_count": 475,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.648936170212766,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    284
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16972471@__curfile_remove",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            397
+        ],
+        "file": "src/third_party/wiredtiger/src/cursor/cur_file.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16972471@__curfile_remove",
+                "prede_node": "16972471@__curfile_remove",
+                "prede_count": 1023,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    397
+                ],
+                "file": "src/third_party/wiredtiger/src/cursor/cur_file.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16972471@__curfile_remove",
+                "prede_node": "16972085@__curfile_remove",
+                "prede_count": 1023,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    390
+                ],
+                "file": "src/third_party/wiredtiger/src/cursor/cur_file.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16282556@__wt_reconcile",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            192
+        ],
+        "file": "src/third_party/wiredtiger/src/reconcile/rec_write.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16282556@__wt_reconcile",
+                "prede_node": "16282556@__wt_reconcile",
+                "prede_count": 15646,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    192
+                ],
+                "file": "src/third_party/wiredtiger/src/reconcile/rec_write.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16282556@__wt_reconcile",
+                "prede_node": "16281169@__wt_reconcile",
+                "prede_count": 15646,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.9978872831812305,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    39
+                ],
+                "file": "src/third_party/wiredtiger/src/reconcile/rec_write.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "17271359@__wt_rec_row_leaf",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            1007
+        ],
+        "file": "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "17271359@__wt_rec_row_leaf",
+                "prede_node": "17271359@__wt_rec_row_leaf",
+                "prede_count": 16472,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    1007
+                ],
+                "file": "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "17271359@__wt_rec_row_leaf",
+                "prede_node": "17261668@__wt_rec_row_leaf",
+                "prede_count": 15646,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 0.9498542982030111,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 795.8400893280098,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    717
+                ],
+                "file": "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16125765@__evict_page",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            2220
+        ],
+        "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16125765@__evict_page",
+                "prede_node": "16125765@__evict_page",
+                "prede_count": 14990,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    2220
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16125765@__evict_page",
+                "prede_node": "16128976@__evict_lru_pages",
+                "prede_count": 7857,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 52.41494329553036,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.5241494329553036
+                },
+                "lines": [
+                    1126
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16125765@__evict_page",
+                "prede_node": "16132957@__wt_cache_eviction_worker",
+                "prede_count": 7133,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 47.58505670446965,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.47585056704469647
+                },
+                "lines": [
+                    2352
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16564812@__wt_btcur_remove",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            995
+        ],
+        "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16564812@__wt_btcur_remove",
+                "prede_node": "16564812@__wt_btcur_remove",
+                "prede_count": 1023,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    995
+                ],
+                "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16564812@__wt_btcur_remove",
+                "prede_node": "16972471@__curfile_remove",
+                "prede_count": 1023,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    397
+                ],
+                "file": "src/third_party/wiredtiger/src/cursor/cur_file.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16128976@__evict_lru_pages",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            1126
+        ],
+        "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16128976@__evict_lru_pages",
+                "prede_node": "16128976@__evict_lru_pages",
+                "prede_count": 7857,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    1126
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16128976@__evict_lru_pages",
+                "prede_node": "16128920@__evict_lru_pages",
+                "prede_count": 475,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 0.06045564464808451,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 91.81056466302368,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    1118
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16281169@__wt_reconcile",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            39
+        ],
+        "file": "src/third_party/wiredtiger/src/reconcile/rec_write.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16281169@__wt_reconcile",
+                "prede_node": "16281169@__wt_reconcile",
+                "prede_count": 15646,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    39
+                ],
+                "file": "src/third_party/wiredtiger/src/reconcile/rec_write.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16281169@__wt_reconcile",
+                "prede_node": "16155532@__wt_evict",
+                "prede_count": 351,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 2.24338489070689,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.0224338489070689
+                },
+                "lines": [
+                    699
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_page.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16281169@__wt_reconcile",
+                "prede_node": "16153213@__wt_evict",
+                "prede_count": 14545,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 92.9630576505177,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.929630576505177
+                },
+                "lines": [
+                    680
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_page.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16281169@__wt_reconcile",
+                "prede_node": "16783374@__wt_sync_file",
+                "prede_count": 750,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 4.793557458775406,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.047935574587754055
+                },
+                "lines": [
+                    331
+                ],
+                "file": "src/third_party/wiredtiger/src/btree/bt_sync.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16567774@__wt_btcur_remove",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            379
+        ],
+        "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16567774@__wt_btcur_remove",
+                "prede_node": "16567774@__wt_btcur_remove",
+                "prede_count": 1023,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    379
+                ],
+                "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16567774@__wt_btcur_remove",
+                "prede_node": "16564812@__wt_btcur_remove",
+                "prede_count": 1023,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    995
+                ],
+                "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16127479@__evict_page",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            2263
+        ],
+        "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16127479@__evict_page",
+                "prede_node": "16127479@__evict_page",
+                "prede_count": 14990,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    2263
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16127479@__evict_page",
+                "prede_node": "16125765@__evict_page",
+                "prede_count": 14990,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.8933285237289232,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    2220
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16881912@__wt_row_search",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            988
+        ],
+        "file": "src/third_party/wiredtiger/src/include/btree.i",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16881912@__wt_row_search",
+                "prede_node": "16881912@__wt_row_search",
+                "prede_count": 1266,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    988
+                ],
+                "file": "src/third_party/wiredtiger/src/include/btree.i",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16881912@__wt_row_search",
+                "prede_node": "16877538@__wt_row_search",
+                "prede_count": 1266,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 2.107519550287938,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    251
+                ],
+                "file": "src/third_party/wiredtiger/src/btree/row_srch.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16153213@__wt_evict",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            680
+        ],
+        "file": "src/third_party/wiredtiger/src/evict/evict_page.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16153213@__wt_evict",
+                "prede_node": "16153213@__wt_evict",
+                "prede_count": 14545,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    680
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_page.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16153213@__wt_evict",
+                "prede_node": "16151570@__wt_evict",
+                "prede_count": 14545,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.9864189071720033,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    105
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_page.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    }
+]

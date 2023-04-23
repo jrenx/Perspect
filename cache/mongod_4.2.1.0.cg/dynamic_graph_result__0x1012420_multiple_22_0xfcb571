@@ -1,0 +1,16 @@
+{
+    "starting_events": [
+        [
+            "",
+            16852000,
+            "__wt_row_leaf_key_work"
+        ]
+    ],
+    "dynamic_nodes": [],
+    "node_frequencies": {},
+    "postorder_list": [],
+    "reverse_postorder_list": [],
+    "entry_nodes": [],
+    "exit_nodes": [],
+    "target_nodes": []
+}

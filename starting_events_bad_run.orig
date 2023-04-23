@@ -1,8 +1,0 @@
-0xfa54b0 __wt_buf_grow_worker 0.008331298686
-0xfeca60 __wt_cell_unpack_dsk 0.006942748905000001
-0x1012420 __wt_row_leaf_key_work 1.326373607473
-0x1014b10 __wt_row_leaf_key_copy 0.0018513997079999999
-0x1070070 __wt_cell_unpack_dsk 0.006942748905000001
-0x10710f0 __rec_cell_build_leaf_key 0.026691012456999997
-0x1076410 __wt_rec_row_leaf 0.031936644963
-0x107bf20 __wt_rec_upd_select 0.00771416545

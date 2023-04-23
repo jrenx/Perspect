@@ -1,0 +1,26 @@
+[
+    [
+        "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+        984,
+        2,
+        3
+    ],
+    [
+        "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+        1007,
+        4,
+        1
+    ],
+    [
+        "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+        984,
+        2,
+        3
+    ],
+    [
+        "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+        984,
+        1,
+        3
+    ]
+]

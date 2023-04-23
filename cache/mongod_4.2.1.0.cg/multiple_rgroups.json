@@ -1,0 +1,766 @@
+[
+    {
+        "starting_node": "16334656@__session_commit_transaction",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            1663
+        ],
+        "file": "src/third_party/wiredtiger/src/session/session_api.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16334656@__session_commit_transaction",
+                "prede_node": "16334656@__session_commit_transaction",
+                "prede_count": 99012,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    1663
+                ],
+                "file": "src/third_party/wiredtiger/src/session/session_api.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16334656@__session_commit_transaction",
+                "prede_node": "16334386@__session_commit_transaction",
+                "prede_count": 99012,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    1646
+                ],
+                "file": "src/third_party/wiredtiger/src/session/session_api.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16453509@__wt_txn_commit",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            835
+        ],
+        "file": "src/third_party/wiredtiger/src/txn/txn.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16453509@__wt_txn_commit",
+                "prede_node": "16453509@__wt_txn_commit",
+                "prede_count": 100001,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    835
+                ],
+                "file": "src/third_party/wiredtiger/src/txn/txn.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16453509@__wt_txn_commit",
+                "prede_node": "16888362@__wt_las_insert_block",
+                "prede_count": 2448,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 2.4479755202447975,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.024479755202447974
+                },
+                "lines": [
+                    806
+                ],
+                "file": "src/third_party/wiredtiger/src/cache/cache_las.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16453509@__wt_txn_commit",
+                "prede_node": "16334656@__session_commit_transaction",
+                "prede_count": 97447,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 97.44602553974461,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.9744602553974461
+                },
+                "lines": [
+                    1663
+                ],
+                "file": "src/third_party/wiredtiger/src/session/session_api.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16453509@__wt_txn_commit",
+                "prede_node": "16895276@__wt_las_sweep",
+                "prede_count": 103,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 0.10299897001029991,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.001029989700102999
+                },
+                "lines": [
+                    1276
+                ],
+                "file": "src/third_party/wiredtiger/src/cache/cache_las.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16125765@__evict_page",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            2220
+        ],
+        "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16125765@__evict_page",
+                "prede_node": "16125765@__evict_page",
+                "prede_count": 100001,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    2220
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16125765@__evict_page",
+                "prede_node": "16128976@__evict_lru_pages",
+                "prede_count": 45406,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 45.405545944540556,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.45405545944540554
+                },
+                "lines": [
+                    1126
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16125765@__evict_page",
+                "prede_node": "16132957@__wt_cache_eviction_worker",
+                "prede_count": 54595,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 54.59445405545944,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.5459445405545944
+                },
+                "lines": [
+                    2352
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16560719@__wt_btcur_insert",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            379
+        ],
+        "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16560719@__wt_btcur_insert",
+                "prede_node": "16560719@__wt_btcur_insert",
+                "prede_count": 199,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    379
+                ],
+                "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16560719@__wt_btcur_insert",
+                "prede_node": "16557117@__wt_btcur_insert",
+                "prede_count": 199,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.9091127754387833,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    767
+                ],
+                "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16560279@__wt_btcur_insert",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            425
+        ],
+        "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16560279@__wt_btcur_insert",
+                "prede_node": "16560279@__wt_btcur_insert",
+                "prede_count": 99000,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    425
+                ],
+                "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16560279@__wt_btcur_insert",
+                "prede_node": "16557117@__wt_btcur_insert",
+                "prede_count": 99000,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.09088722456121667,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    767
+                ],
+                "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16132957@__wt_cache_eviction_worker",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            2352
+        ],
+        "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16132957@__wt_cache_eviction_worker",
+                "prede_node": "16132957@__wt_cache_eviction_worker",
+                "prede_count": 57713,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    2352
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16132957@__wt_cache_eviction_worker",
+                "prede_node": "16132272@__wt_cache_eviction_worker",
+                "prede_count": 25012,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 0.4333858922599761,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 2.3040041518623497,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    2293
+                ],
+                "file": "src/third_party/wiredtiger/src/evict/evict_lru.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16557790@__wt_btcur_insert",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            329
+        ],
+        "file": "src/third_party/wiredtiger/src/include/cursor.i",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16557790@__wt_btcur_insert",
+                "prede_node": "16557790@__wt_btcur_insert",
+                "prede_count": 199,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    329
+                ],
+                "file": "src/third_party/wiredtiger/src/include/cursor.i",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16557790@__wt_btcur_insert",
+                "prede_node": "16557117@__wt_btcur_insert",
+                "prede_count": 199,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.9091127754387833,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    767
+                ],
+                "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16559592@__wt_btcur_insert",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            890
+        ],
+        "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16559592@__wt_btcur_insert",
+                "prede_node": "16559592@__wt_btcur_insert",
+                "prede_count": 218,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    890
+                ],
+                "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16559592@__wt_btcur_insert",
+                "prede_node": "16557117@__wt_btcur_insert",
+                "prede_count": 218,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    767
+                ],
+                "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16560232@__wt_btcur_insert",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            425
+        ],
+        "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16560232@__wt_btcur_insert",
+                "prede_node": "16560232@__wt_btcur_insert",
+                "prede_count": 199,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    425
+                ],
+                "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16560232@__wt_btcur_insert",
+                "prede_node": "16557117@__wt_btcur_insert",
+                "prede_count": 199,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 0.9091127754387833,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    767
+                ],
+                "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    },
+    {
+        "starting_node": "16557117@__wt_btcur_insert",
+        "weight": 100,
+        "finished": true,
+        "lines": [
+            767
+        ],
+        "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+        "use_weight": false,
+        "relations": [
+            {
+                "target_node": "16557117@__wt_btcur_insert",
+                "prede_node": "16557117@__wt_btcur_insert",
+                "prede_count": 218,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    767
+                ],
+                "file": "src/third_party/wiredtiger/src/btree/bt_cursor.c",
+                "timestamp": 0,
+                "duplicate": false
+            },
+            {
+                "target_node": "16557117@__wt_btcur_insert",
+                "prede_node": "16964765@__curfile_insert",
+                "prede_count": 218,
+                "weight": {
+                    "actual_weight": null,
+                    "base_weight": 100,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    258
+                ],
+                "file": "src/third_party/wiredtiger/src/cursor/cur_file.c",
+                "timestamp": 0,
+                "duplicate": false
+            }
+        ]
+    }
+]

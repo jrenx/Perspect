@@ -1,0 +1,126 @@
+[
+    {
+        "starting_node": "17271359@__wt_rec_row_leaf",
+        "weight": 13566.0,
+        "finished": true,
+        "lines": [
+            1007
+        ],
+        "file": "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+        "use_weight": true,
+        "relations": [
+            {
+                "target_node": "17271359@__wt_rec_row_leaf",
+                "prede_node": "17271359@__wt_rec_row_leaf",
+                "prede_count": 13566,
+                "weight": {
+                    "actual_weight": 13566.0,
+                    "base_weight": 13566.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    1007
+                ],
+                "file": "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                "timestamp": 251788062,
+                "duplicate": false
+            },
+            {
+                "target_node": "17271359@__wt_rec_row_leaf",
+                "prede_node": "17271640@__wt_rec_row_leaf",
+                "prede_count": 13566,
+                "weight": {
+                    "actual_weight": 13566.0,
+                    "base_weight": 13566.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    984
+                ],
+                "file": "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                "timestamp": 251788070,
+                "duplicate": false
+            },
+            {
+                "target_node": "17271359@__wt_rec_row_leaf",
+                "prede_node": "17271636@__wt_rec_row_leaf",
+                "prede_count": 13566,
+                "weight": {
+                    "actual_weight": 13566.0,
+                    "base_weight": 13566.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    984
+                ],
+                "file": "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                "timestamp": 251788069,
+                "duplicate": false
+            },
+            {
+                "target_node": "17271359@__wt_rec_row_leaf",
+                "prede_node": "17271280@__wt_rec_row_leaf",
+                "prede_count": 13566,
+                "weight": {
+                    "actual_weight": 13566.0,
+                    "base_weight": 13566.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    845
+                ],
+                "file": "src/third_party/wiredtiger/src/include/btree.i",
+                "timestamp": 251788072,
+                "duplicate": false
+            }
+        ]
+    }
+]

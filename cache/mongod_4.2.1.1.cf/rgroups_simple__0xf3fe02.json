@@ -1,0 +1,1730 @@
+[
+    {
+        "starting_node": [
+            "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+            1007,
+            4,
+            1
+        ],
+        "use_weight": true,
+        "weight": 26.0,
+        "predes": [
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                1007,
+                4,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                984,
+                3,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                984,
+                2,
+                2
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                984,
+                2,
+                3
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:847|src/third_party/wiredtiger/src/include/cell.i:554|src/third_party/wiredtiger/src/include/cell.i",
+                986,
+                2,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:847|src/third_party/wiredtiger/src/include/cell.i:554|src/third_party/wiredtiger/src/include/cell.i",
+                818,
+                1,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:847|src/third_party/wiredtiger/src/include/cell.i:554|src/third_party/wiredtiger/src/include/cell.i",
+                811,
+                2,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:847|src/third_party/wiredtiger/src/include/cell.i:554|src/third_party/wiredtiger/src/include/cell.i:414|src/third_party/wiredtiger/src/include/cell.i",
+                632,
+                3,
+                2
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:847|src/third_party/wiredtiger/src/include/cell.i:554|src/third_party/wiredtiger/src/include/cell.i:414|src/third_party/wiredtiger/src/include/cell.i",
+                632,
+                3,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:847|src/third_party/wiredtiger/src/include/cell.i:554|src/third_party/wiredtiger/src/include/cell.i:414|src/third_party/wiredtiger/src/include/cell.i",
+                640,
+                1,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:847|src/third_party/wiredtiger/src/include/cell.i",
+                1013,
+                2,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:843|src/third_party/wiredtiger/src/include/btree.i",
+                846,
+                5,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:843|src/third_party/wiredtiger/src/include/btree.i",
+                836,
+                2,
+                3
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:843|src/third_party/wiredtiger/src/include/btree.i",
+                836,
+                2,
+                2
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:843|src/third_party/wiredtiger/src/include/btree.i",
+                836,
+                3,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                957,
+                2,
+                2
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                957,
+                3,
+                5
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                801,
+                1,
+                2
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                877,
+                2,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                827,
+                2,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                812,
+                3,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                802,
+                3,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                798,
+                4,
+                2
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                798,
+                10,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:672|src/third_party/wiredtiger/src/include/btree.i:1022|src/third_party/wiredtiger/src/include/cell.i:537|src/third_party/wiredtiger/src/include/cell.i",
+                1035,
+                1,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:672|src/third_party/wiredtiger/src/include/btree.i:1022|src/third_party/wiredtiger/src/include/cell.i",
+                705,
+                4,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:672|src/third_party/wiredtiger/src/include/btree.i:1022|src/third_party/wiredtiger/src/include/cell.i",
+                708,
+                3,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:672|src/third_party/wiredtiger/src/include/btree.i:1022|src/third_party/wiredtiger/src/include/cell.i",
+                708,
+                3,
+                6
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:672|src/third_party/wiredtiger/src/include/btree.i:1017|src/third_party/wiredtiger/src/include/cell.i:554|src/third_party/wiredtiger/src/include/cell.i",
+                986,
+                6,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:672|src/third_party/wiredtiger/src/include/btree.i:1022|src/third_party/wiredtiger/src/include/cell.i",
+                708,
+                1,
+                2
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:672|src/third_party/wiredtiger/src/include/btree.i:1017|src/third_party/wiredtiger/src/include/cell.i:554|src/third_party/wiredtiger/src/include/cell.i",
+                818,
+                1,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:672|src/third_party/wiredtiger/src/include/btree.i:1017|src/third_party/wiredtiger/src/include/cell.i:554|src/third_party/wiredtiger/src/include/cell.i",
+                811,
+                2,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:672|src/third_party/wiredtiger/src/include/btree.i:1017|src/third_party/wiredtiger/src/include/cell.i:554|src/third_party/wiredtiger/src/include/cell.i:413|src/third_party/wiredtiger/src/include/cell.i",
+                658,
+                3,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:672|src/third_party/wiredtiger/src/include/btree.i:1017|src/third_party/wiredtiger/src/include/cell.i:554|src/third_party/wiredtiger/src/include/cell.i",
+                781,
+                1,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:672|src/third_party/wiredtiger/src/include/btree.i:1017|src/third_party/wiredtiger/src/include/cell.i",
+                1013,
+                3,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:672|src/third_party/wiredtiger/src/include/btree.i:1014|src/third_party/wiredtiger/src/include/btree.i",
+                836,
+                2,
+                3
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:672|src/third_party/wiredtiger/src/include/btree.i:1014|src/third_party/wiredtiger/src/include/btree.i",
+                836,
+                2,
+                2
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:672|src/third_party/wiredtiger/src/include/btree.i:1014|src/third_party/wiredtiger/src/include/btree.i",
+                836,
+                4,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:668|src/third_party/wiredtiger/src/include/cell.i:554|src/third_party/wiredtiger/src/include/cell.i",
+                986,
+                2,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:668|src/third_party/wiredtiger/src/include/cell.i:554|src/third_party/wiredtiger/src/include/cell.i",
+                818,
+                1,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:668|src/third_party/wiredtiger/src/include/cell.i:554|src/third_party/wiredtiger/src/include/cell.i",
+                811,
+                2,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:668|src/third_party/wiredtiger/src/include/cell.i:554|src/third_party/wiredtiger/src/include/cell.i:414|src/third_party/wiredtiger/src/include/cell.i",
+                632,
+                3,
+                2
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:668|src/third_party/wiredtiger/src/include/cell.i:554|src/third_party/wiredtiger/src/include/cell.i:414|src/third_party/wiredtiger/src/include/cell.i",
+                632,
+                3,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:668|src/third_party/wiredtiger/src/include/cell.i:554|src/third_party/wiredtiger/src/include/cell.i:414|src/third_party/wiredtiger/src/include/cell.i",
+                640,
+                1,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                771,
+                3,
+                3
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c:663|src/third_party/wiredtiger/src/include/btree.i",
+                836,
+                5,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                720,
+                6,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                759,
+                2,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                751,
+                4,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                748,
+                2,
+                2
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                748,
+                4,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                747,
+                2,
+                2
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                747,
+                4,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                741,
+                3,
+                1
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                741,
+                3,
+                2
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                741,
+                4,
+                3
+            ],
+            [
+                "src/third_party/wiredtiger/src/reconcile/rec_row.c",
+                736,
+                2,
+                2
+            ]
+        ],
+        "predes_insns": [
+            "0xf3fe02",
+            "0xf3ff07",
+            "0xf3ff11",
+            "0xf3ff1f",
+            "0xf3fee1",
+            "0xf3ffd1",
+            "0xf3fa60",
+            "0xf3fa45",
+            "0xf3fa36",
+            "0xf3fa03",
+            "0xf3f9f7",
+            "0xf3f9f0",
+            "0xf3ed3f",
+            "0xf3ed35",
+            "0xf3ed2b",
+            "0xf3e59d",
+            "0xf3ed10",
+            "0xf3ed03",
+            "0xf3e573",
+            "0xf3e53e",
+            "0xf3e536",
+            "0xf3e3b7",
+            "0xf3e3a7",
+            "0xf3e39e",
+            "0xf3e377",
+            "0xf3e109",
+            "0xf3e120",
+            "0xf3e34a",
+            "0xf3e523",
+            "0xf3e126",
+            "0xf3ef9c",
+            "0xf3e503",
+            "0xf3dffa",
+            "0xf3dff0",
+            "0xf3e0f8",
+            "0xf3dfdc",
+            "0xf3dfd2",
+            "0xf3dfc8",
+            "0xf3f0b7",
+            "0xf3f084",
+            "0xf3ea2f",
+            "0xf3ea13",
+            "0xf3ea03",
+            "0xf3e9cc",
+            "0xf3eba7",
+            "0xf3df9b",
+            "0xf3df72",
+            "0xf3df3c",
+            "0xf3df1a",
+            "0xf3df0b",
+            "0xf3df04",
+            "0xf3de03",
+            "0xf3ddfc",
+            "0xf3ddb0",
+            "0xf3ddbc",
+            "0xf3ddc9",
+            "0xf3dda3"
+        ],
+        "insn": 15990274,
+        "relations": [
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2672065888,
+                "insn": 15990274,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2741116744,
+                "insn": 15990535,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2741116729,
+                "insn": 15990545,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2741116716,
+                "insn": 15990559,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2741116762,
+                "insn": 15990497,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2741116778,
+                "insn": 15990737,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2741116792,
+                "insn": 15989344,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2741116808,
+                "insn": 15989317,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2741116822,
+                "insn": 15989302,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2741116837,
+                "insn": 15989251,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2741116852,
+                "insn": 15989239,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2741116870,
+                "insn": 15989232,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2733116101,
+                "insn": 15985983,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2687248293,
+                "insn": 15985973,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2686415879,
+                "insn": 15985963,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2733116145,
+                "insn": 15984029,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2688382068,
+                "insn": 15985936,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2690241912,
+                "insn": 15985923,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2690241927,
+                "insn": 15983987,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2690241941,
+                "insn": 15983934,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2690241956,
+                "insn": 15983926,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2684048409,
+                "insn": 15983543,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2683994158,
+                "insn": 15983527,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2683994174,
+                "insn": 15983518,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2729276935,
+                "insn": 15983479,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2683994337,
+                "insn": 15982857,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2684110890,
+                "insn": 15982880,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2729053269,
+                "insn": 15983434,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2728847279,
+                "insn": 15983907,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2684110874,
+                "insn": 15982886,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2728847300,
+                "insn": 15986588,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2728847318,
+                "insn": 15983875,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2728847332,
+                "insn": 15982586,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2728847345,
+                "insn": 15982576,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2741117112,
+                "insn": 15982840,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2728847382,
+                "insn": 15982556,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2683704086,
+                "insn": 15982546,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2683994478,
+                "insn": 15982536,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2728847431,
+                "insn": 15986871,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2728847445,
+                "insn": 15986820,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2728847465,
+                "insn": 15985199,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2728847484,
+                "insn": 15985171,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2728847501,
+                "insn": 15985155,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2728847512,
+                "insn": 15985100,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2741117271,
+                "insn": 15985575,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2683994613,
+                "insn": 15982491,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2316726862,
+                "insn": 15982450,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2316726877,
+                "insn": 15982396,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2316943492,
+                "insn": 15982362,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2316943507,
+                "insn": 15982347,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2316943530,
+                "insn": 15982340,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2316943547,
+                "insn": 15982083,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2316943564,
+                "insn": 15982076,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2315475067,
+                "insn": 15982000,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2315475043,
+                "insn": 15982012,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 2.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 7.6923076923076925,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.07692307692307693
+                },
+                "timestamp": 2309186584,
+                "insn": 15982025,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            },
+            {
+                "weight": {
+                    "actual_weight": 26.0,
+                    "base_weight": 26.0,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "timestamp": 2315475084,
+                "insn": 15981987,
+                "func": "__wt_rec_row_leaf",
+                "duplicate": false
+            }
+        ],
+        "wavefront": []
+    }
+]
