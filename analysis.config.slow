@@ -1,6 +1,6 @@
 limit=10000
 program=du
-program_args=asdfg > /dev/null
+program_args=asdfg --exclude dupa > /dev/null
 program_path=/home/renxian2/coreutils_1014738/
 starting_event_file=starting_events
 single_machine_parallelization_factor=16
