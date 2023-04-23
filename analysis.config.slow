@@ -1,0 +1,8 @@
+limit=10000
+program=seq
+program_args=--equal-width 0 10000000 > /dev/null
+program_path=/home/renxian2/coreutils_930965/
+starting_event_file=starting_events_bad_run
+single_machine_parallelization_factor=16
+port=12000
+inner_port=9999
