@@ -1,0 +1,272 @@
+{
+    "starting_events": [
+        [
+            "",
+            18692122,
+            "__wt_page_evict_urgent"
+        ]
+    ],
+    "dynamic_nodes": [
+        {
+            "id": 17799662,
+            "insn_id": 0,
+            "hex_insn": "0x12b0145",
+            "func": "__wt_sync_file",
+            "static_node": 54,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                18855031
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "54": 2,
+                "2039": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 18855031,
+            "insn_id": 0,
+            "hex_insn": "0x12aff8e",
+            "func": "__wt_sync_file",
+            "static_node": 2039,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                17799662
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 18855305,
+            "insn_id": 0,
+            "hex_insn": "0x12b0145",
+            "func": "__wt_sync_file",
+            "static_node": 54,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                19825611
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "54": 2,
+                "2039": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 19825611,
+            "insn_id": 0,
+            "hex_insn": "0x12aff8e",
+            "func": "__wt_sync_file",
+            "static_node": 2039,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                18855305
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 19826198,
+            "insn_id": 0,
+            "hex_insn": "0x12b0145",
+            "func": "__wt_sync_file",
+            "static_node": 54,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                20212701
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "54": 2,
+                "2039": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 20212701,
+            "insn_id": 0,
+            "hex_insn": "0x12aff8e",
+            "func": "__wt_sync_file",
+            "static_node": 2039,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                19826198
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 20226084,
+            "insn_id": 0,
+            "hex_insn": "0x12b0145",
+            "func": "__wt_sync_file",
+            "static_node": 54,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                21064049
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "54": 2,
+                "2039": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 21064049,
+            "insn_id": 0,
+            "hex_insn": "0x12aff8e",
+            "func": "__wt_sync_file",
+            "static_node": 2039,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                20226084
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        }
+    ],
+    "node_frequencies": {},
+    "postorder_list": [
+        17799662,
+        18855031,
+        20226084,
+        21064049,
+        19826198,
+        20212701,
+        18855305,
+        19825611
+    ],
+    "reverse_postorder_list": [
+        20212701,
+        19826198,
+        21064049,
+        20226084,
+        18855031,
+        17799662,
+        19825611,
+        18855305
+    ],
+    "entry_nodes": [
+        19825611,
+        20212701,
+        18855031,
+        21064049
+    ],
+    "exit_nodes": [
+        18855305,
+        17799662,
+        20226084,
+        19826198
+    ],
+    "target_nodes": [
+        18855305,
+        19826198,
+        20226084,
+        17799662
+    ],
+    "reachable_output_events_per_static_node": {
+        "54": [
+            18855305,
+            19826198,
+            20226084,
+            17799662
+        ],
+        "2039": [
+            18855305,
+            19826198,
+            20226084,
+            17799662
+        ]
+    }
+}

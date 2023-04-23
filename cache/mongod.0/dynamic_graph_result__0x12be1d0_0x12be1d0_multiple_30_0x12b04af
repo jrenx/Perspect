@@ -1,0 +1,89 @@
+{
+    "starting_events": [
+        [
+            "",
+            19653072,
+            "__tree_walk_internal"
+        ]
+    ],
+    "dynamic_nodes": [
+        {
+            "id": 1440407341,
+            "insn_id": 0,
+            "hex_insn": "0x12b04af",
+            "func": "__wt_sync_file",
+            "static_node": 305,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                1443262881
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "305": 2,
+                "1651": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 1.3455328734,
+            "thread_id": 12
+        },
+        {
+            "id": 1443262881,
+            "insn_id": 0,
+            "hex_insn": "0x12aff8e",
+            "func": "__wt_sync_file",
+            "static_node": 1651,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                1440407341
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 282.5619034140001,
+            "thread_id": 12
+        }
+    ],
+    "node_frequencies": {},
+    "postorder_list": [
+        1440407341,
+        1443262881
+    ],
+    "reverse_postorder_list": [
+        1443262881,
+        1440407341
+    ],
+    "entry_nodes": [
+        1443262881
+    ],
+    "exit_nodes": [
+        1440407341
+    ],
+    "target_nodes": [
+        1440407341
+    ],
+    "reachable_output_events_per_static_node": {
+        "305": [
+            1440407341
+        ],
+        "1651": [
+            1440407341
+        ]
+    }
+}

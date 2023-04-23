@@ -1,6 +1,6 @@
 other_dir=/home/renxian2/eval_mongodb_57221
 other_prog=mongod
 other_ip=10.1.0.17
-other_key=__0x11d381a_1
+other_key=__0x12be1d0_1
 single_machine_parallelization_factor=8
 port=15000

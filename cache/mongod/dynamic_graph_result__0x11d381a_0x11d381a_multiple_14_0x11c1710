@@ -1,0 +1,577 @@
+{
+    "starting_events": [
+        [
+            "",
+            18692122,
+            "__wt_page_evict_urgent"
+        ]
+    ],
+    "dynamic_nodes": [
+        {
+            "id": 26413,
+            "insn_id": 0,
+            "hex_insn": "0x11c1710",
+            "func": "__curfile_search_near",
+            "static_node": 16679,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                26414
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "16679": 2,
+                "16821": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 1.3455328734,
+            "thread_id": 24
+        },
+        {
+            "id": 26414,
+            "insn_id": 0,
+            "hex_insn": "0x1153a3a",
+            "func": "mongo::wiredTigerPrepareConflictRetry<mongo::(anonymous namespace)::WiredTigerIndexCursorBase::seekWTCursor(mongo::KeyString::Value const&)::{lambda()#1}>",
+            "static_node": 16821,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                26413
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 1.3455328734,
+            "thread_id": 24
+        },
+        {
+            "id": 43057,
+            "insn_id": 0,
+            "hex_insn": "0x11c1710",
+            "func": "__curfile_search_near",
+            "static_node": 16679,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                43058
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "16679": 2,
+                "16821": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 6.727664367,
+            "thread_id": 24
+        },
+        {
+            "id": 43058,
+            "insn_id": 0,
+            "hex_insn": "0x1153a3a",
+            "func": "mongo::wiredTigerPrepareConflictRetry<mongo::(anonymous namespace)::WiredTigerIndexCursorBase::seekWTCursor(mongo::KeyString::Value const&)::{lambda()#1}>",
+            "static_node": 16821,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                43057
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 6.727664367,
+            "thread_id": 24
+        },
+        {
+            "id": 313274,
+            "insn_id": 0,
+            "hex_insn": "0x11c1710",
+            "func": "__curfile_search_near",
+            "static_node": 16679,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                313275
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "16679": 2,
+                "16821": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 1.3455328734,
+            "thread_id": 24
+        },
+        {
+            "id": 313275,
+            "insn_id": 0,
+            "hex_insn": "0x1153a3a",
+            "func": "mongo::wiredTigerPrepareConflictRetry<mongo::(anonymous namespace)::WiredTigerIndexCursorBase::seekWTCursor(mongo::KeyString::Value const&)::{lambda()#1}>",
+            "static_node": 16821,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                313274
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 1.3455328734,
+            "thread_id": 24
+        },
+        {
+            "id": 3814461,
+            "insn_id": 0,
+            "hex_insn": "0x11c1710",
+            "func": "__curfile_search_near",
+            "static_node": 16679,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                3814462
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "16679": 2,
+                "16821": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 1.3455328734,
+            "thread_id": 24
+        },
+        {
+            "id": 3814462,
+            "insn_id": 0,
+            "hex_insn": "0x1153a3a",
+            "func": "mongo::wiredTigerPrepareConflictRetry<mongo::(anonymous namespace)::WiredTigerIndexCursorBase::seekWTCursor(mongo::KeyString::Value const&)::{lambda()#1}>",
+            "static_node": 16821,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                3814461
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 1.3455328734,
+            "thread_id": 24
+        },
+        {
+            "id": 4899370,
+            "insn_id": 0,
+            "hex_insn": "0x11c1710",
+            "func": "__curfile_search_near",
+            "static_node": 16679,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                4899371
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "16679": 2,
+                "16821": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 1.3455328734,
+            "thread_id": 24
+        },
+        {
+            "id": 4899371,
+            "insn_id": 0,
+            "hex_insn": "0x1153a3a",
+            "func": "mongo::wiredTigerPrepareConflictRetry<mongo::(anonymous namespace)::WiredTigerIndexCursorBase::seekWTCursor(mongo::KeyString::Value const&)::{lambda()#1}>",
+            "static_node": 16821,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                4899370
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 1.3455328734,
+            "thread_id": 24
+        },
+        {
+            "id": 9461656,
+            "insn_id": 0,
+            "hex_insn": "0x11c1710",
+            "func": "__curfile_search_near",
+            "static_node": 16679,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                9461657
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "16679": 2,
+                "16821": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 1.3455328734,
+            "thread_id": 24
+        },
+        {
+            "id": 9461657,
+            "insn_id": 0,
+            "hex_insn": "0x1153a3a",
+            "func": "mongo::wiredTigerPrepareConflictRetry<mongo::(anonymous namespace)::WiredTigerIndexCursorBase::seekWTCursor(mongo::KeyString::Value const&)::{lambda()#1}>",
+            "static_node": 16821,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                9461656
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 1.3455328734,
+            "thread_id": 24
+        },
+        {
+            "id": 13119557,
+            "insn_id": 0,
+            "hex_insn": "0x11c1710",
+            "func": "__curfile_search_near",
+            "static_node": 16679,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                13119558
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "16679": 2,
+                "16821": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 1.3455328734,
+            "thread_id": 24
+        },
+        {
+            "id": 13119558,
+            "insn_id": 0,
+            "hex_insn": "0x1153a3a",
+            "func": "mongo::wiredTigerPrepareConflictRetry<mongo::(anonymous namespace)::WiredTigerIndexCursorBase::seekWTCursor(mongo::KeyString::Value const&)::{lambda()#1}>",
+            "static_node": 16821,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                13119557
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 1.3455328734,
+            "thread_id": 24
+        },
+        {
+            "id": 13125077,
+            "insn_id": 0,
+            "hex_insn": "0x11c1710",
+            "func": "__curfile_search_near",
+            "static_node": 16679,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                13125078
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "16679": 2,
+                "16821": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 1.3455328734,
+            "thread_id": 24
+        },
+        {
+            "id": 13125078,
+            "insn_id": 0,
+            "hex_insn": "0x1153a3a",
+            "func": "mongo::wiredTigerPrepareConflictRetry<mongo::(anonymous namespace)::WiredTigerIndexCursorBase::seekWTCursor(mongo::KeyString::Value const&)::{lambda()#1}>",
+            "static_node": 16821,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                13125077
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 1.3455328734,
+            "thread_id": 24
+        },
+        {
+            "id": 13720680,
+            "insn_id": 0,
+            "hex_insn": "0x11c1710",
+            "func": "__curfile_search_near",
+            "static_node": 16679,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                13720681
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "16679": 2,
+                "16821": 1
+            },
+            "output_set_count": 1,
+            "output_weight": 1.3455328734,
+            "thread_id": 24
+        },
+        {
+            "id": 13720681,
+            "insn_id": 0,
+            "hex_insn": "0x1153a3a",
+            "func": "mongo::wiredTigerPrepareConflictRetry<mongo::(anonymous namespace)::WiredTigerIndexCursorBase::seekWTCursor(mongo::KeyString::Value const&)::{lambda()#1}>",
+            "static_node": 16821,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                13720680
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": 1.3455328734,
+            "thread_id": 24
+        }
+    ],
+    "node_frequencies": {},
+    "postorder_list": [
+        13119557,
+        13119558,
+        4899370,
+        4899371,
+        313274,
+        313275,
+        13125077,
+        13125078,
+        26413,
+        26414,
+        9461656,
+        9461657,
+        43057,
+        43058,
+        3814461,
+        3814462,
+        13720680,
+        13720681
+    ],
+    "reverse_postorder_list": [
+        9461657,
+        9461656,
+        3814462,
+        3814461,
+        43058,
+        43057,
+        13720681,
+        13720680,
+        26414,
+        26413,
+        13119558,
+        13119557,
+        4899371,
+        4899370,
+        313275,
+        313274,
+        13125078,
+        13125077
+    ],
+    "entry_nodes": [
+        313275,
+        13119558,
+        43058,
+        13720681,
+        13125078,
+        3814462,
+        26414,
+        4899371,
+        9461657
+    ],
+    "exit_nodes": [
+        13119557,
+        313274,
+        13125077,
+        26413,
+        3814461,
+        4899370,
+        9461656,
+        13720680,
+        43057
+    ],
+    "target_nodes": [
+        313274,
+        13119557,
+        13125077,
+        26413,
+        3814461,
+        4899370,
+        9461656,
+        13720680,
+        43057
+    ],
+    "reachable_output_events_per_static_node": {
+        "16679": [
+            13119557,
+            313274,
+            13125077,
+            3814461,
+            26413,
+            4899370,
+            9461656,
+            13720680,
+            43057
+        ],
+        "16821": [
+            13119557,
+            313274,
+            13125077,
+            3814461,
+            26413,
+            4899370,
+            9461656,
+            13720680,
+            43057
+        ]
+    }
+}

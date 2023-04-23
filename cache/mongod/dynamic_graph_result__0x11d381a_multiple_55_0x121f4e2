@@ -1,0 +1,274 @@
+{
+    "starting_events": [
+        [
+            "",
+            18692122,
+            "__wt_page_evict_urgent"
+        ]
+    ],
+    "dynamic_nodes": [
+        {
+            "id": 21146786,
+            "insn_id": 0,
+            "hex_insn": "0x121f4e2",
+            "func": "__session_checkpoint",
+            "static_node": 40674,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                21146790
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "40674": 2,
+                "40730": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 21146790,
+            "insn_id": 0,
+            "hex_insn": "0x1170b1f",
+            "func": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+            "static_node": 40730,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                21146786
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 27105144,
+            "insn_id": 0,
+            "hex_insn": "0x121f4e2",
+            "func": "__session_checkpoint",
+            "static_node": 40674,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                27105145
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "40674": 2,
+                "40730": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 27105145,
+            "insn_id": 0,
+            "hex_insn": "0x1170b1f",
+            "func": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+            "static_node": 40730,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                27105144
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 27191657,
+            "insn_id": 0,
+            "hex_insn": "0x121f4e2",
+            "func": "__session_checkpoint",
+            "static_node": 40674,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                27191658
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "40674": 2,
+                "40730": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 27191658,
+            "insn_id": 0,
+            "hex_insn": "0x1170b1f",
+            "func": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+            "static_node": 40730,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                27191657
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 12
+        },
+        {
+            "id": 27300731,
+            "insn_id": 0,
+            "hex_insn": "0x121f4e2",
+            "func": "__session_checkpoint",
+            "static_node": 40674,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [
+                27300732
+            ],
+            "cf_predes_insn_id": [],
+            "cf_succes": [],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "input_sets": {
+                "40674": 2,
+                "24770": 1
+            },
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 1
+        },
+        {
+            "id": 27300732,
+            "insn_id": 0,
+            "hex_insn": "0x1251913",
+            "func": "__wt_txn_recover",
+            "static_node": 24770,
+            "weight": -1,
+            "is_valid_weight": false,
+            "is_aggregate_weight": false,
+            "cf_predes": [],
+            "cf_predes_insn_id": [],
+            "cf_succes": [
+                27300731
+            ],
+            "df_predes": [],
+            "df_succes": [],
+            "mem_load_addr": null,
+            "mem_load_addr_hex": null,
+            "mem_store_addr": null,
+            "mem_store_addr_hex": null,
+            "output_set_count": 1,
+            "output_weight": null,
+            "thread_id": 1
+        }
+    ],
+    "node_frequencies": {},
+    "postorder_list": [
+        27191657,
+        27191658,
+        27105144,
+        27105145,
+        21146786,
+        21146790,
+        27300731,
+        27300732
+    ],
+    "reverse_postorder_list": [
+        27105145,
+        27105144,
+        21146790,
+        21146786,
+        27300732,
+        27300731,
+        27191658,
+        27191657
+    ],
+    "entry_nodes": [
+        21146790,
+        27191658,
+        27300732,
+        27105145
+    ],
+    "exit_nodes": [
+        21146786,
+        27105144,
+        27191657,
+        27300731
+    ],
+    "target_nodes": [
+        21146786,
+        27300731,
+        27105144,
+        27191657
+    ],
+    "reachable_output_events_per_static_node": {
+        "40674": [
+            21146786,
+            27300731,
+            27105144,
+            27191657
+        ],
+        "40730": [
+            21146786,
+            27105144,
+            27191657
+        ],
+        "24770": [
+            27300731
+        ]
+    }
+}

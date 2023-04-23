@@ -1,0 +1,966 @@
+[
+    {
+        "starting_node": "18692122@__wt_page_evict_urgent",
+        "weight": 22.8740588478,
+        "finished": true,
+        "lines": [
+            18692122
+        ],
+        "file": "__wt_page_evict_urgent",
+        "use_weight": true,
+        "relations": [
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "18692122@__wt_page_evict_urgent",
+                "prede_count": 17,
+                "weight": {
+                    "actual_weight": 22.8740588478,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 2,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18692122
+                ],
+                "file": "__wt_page_evict_urgent",
+                "timestamp": 7960272,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "18691753@__wt_page_evict_urgent",
+                "prede_count": 17,
+                "weight": {
+                    "actual_weight": 22.8740588478,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 100.0,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "lines": [
+                    18691753
+                ],
+                "file": "__wt_page_evict_urgent",
+                "timestamp": 7301344,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19595589@__wt_sync_file",
+                "prede_count": 4,
+                "weight": {
+                    "actual_weight": 5.3821314936,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 23.52941176470588,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.23529411764705882
+                },
+                "lines": [
+                    19595589
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 19176811,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19652283@__wt_page_release",
+                "prede_count": 13,
+                "weight": {
+                    "actual_weight": 17.4919273542,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 76.47058823529413,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.7647058823529411
+                },
+                "lines": [
+                    19652283
+                ],
+                "file": "__wt_page_release",
+                "timestamp": 7258204,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19595150@__wt_sync_file",
+                "prede_count": 4,
+                "weight": {
+                    "actual_weight": 5.3821314936,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 23.52941176470588,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.23529411764705882
+                },
+                "lines": [
+                    19595150
+                ],
+                "file": "__wt_sync_file",
+                "timestamp": 23673256,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19650867@__wt_page_release",
+                "prede_count": 13,
+                "weight": {
+                    "actual_weight": 17.4919273542,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 76.47058823529413,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.7647058823529411
+                },
+                "lines": [
+                    19650867
+                ],
+                "file": "__wt_page_release",
+                "timestamp": 16129799,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19181717@__checkpoint_tree.constprop.15",
+                "prede_count": 4,
+                "weight": {
+                    "actual_weight": 5.3821314936,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 23.52941176470588,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.23529411764705882
+                },
+                "lines": [
+                    19181717
+                ],
+                "file": "__checkpoint_tree.constprop.15",
+                "timestamp": 23673261,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19655288@__tree_walk_internal",
+                "prede_count": 13,
+                "weight": {
+                    "actual_weight": 17.4919273542,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 76.47058823529413,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.7647058823529411
+                },
+                "lines": [
+                    19655288
+                ],
+                "file": "__tree_walk_internal",
+                "timestamp": 16320565,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19181537@__checkpoint_tree.constprop.15",
+                "prede_count": 4,
+                "weight": {
+                    "actual_weight": 5.3821314936,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 23.52941176470588,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.23529411764705882
+                },
+                "lines": [
+                    19181537
+                ],
+                "file": "__checkpoint_tree.constprop.15",
+                "timestamp": 23806073,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19653162@__tree_walk_internal",
+                "prede_count": 13,
+                "weight": {
+                    "actual_weight": 17.4919273542,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 76.47058823529413,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.7647058823529411
+                },
+                "lines": [
+                    19653162
+                ],
+                "file": "__tree_walk_internal",
+                "timestamp": 16320579,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19185186@__txn_checkpoint_wrapper",
+                "prede_count": 4,
+                "weight": {
+                    "actual_weight": 5.3821314936,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 23.52941176470588,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.23529411764705882
+                },
+                "lines": [
+                    19185186
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 22927722,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19657434@__wt_tree_walk",
+                "prede_count": 13,
+                "weight": {
+                    "actual_weight": 17.4919273542,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 76.47058823529413,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.7647058823529411
+                },
+                "lines": [
+                    19657434
+                ],
+                "file": "__wt_tree_walk",
+                "timestamp": 16317237,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19183019@__txn_checkpoint_wrapper",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": 5.3821314936,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 23.52941176470588,
+                    "corr": 0.25,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 4,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.23529411764705882
+                },
+                "lines": [
+                    19183019
+                ],
+                "file": "__txn_checkpoint_wrapper",
+                "timestamp": 25686066,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19315444@__wt_btcur_prev",
+                "prede_count": 6,
+                "weight": {
+                    "actual_weight": 8.0731972404,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 35.294117647058826,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.35294117647058826
+                },
+                "lines": [
+                    19315444
+                ],
+                "file": "__wt_btcur_prev",
+                "timestamp": 16976954,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19290542@__wt_btcur_next",
+                "prede_count": 7,
+                "weight": {
+                    "actual_weight": 9.4187301138,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 41.1764705882353,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.4117647058823529
+                },
+                "lines": [
+                    19290542
+                ],
+                "file": "__wt_btcur_next",
+                "timestamp": 15395758,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19191076@__wt_txn_checkpoint",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": 5.3821314936,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 23.52941176470588,
+                    "corr": 0.25,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 4,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.23529411764705882
+                },
+                "lines": [
+                    19191076
+                ],
+                "file": "__wt_txn_checkpoint",
+                "timestamp": 25686067,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19313685@__wt_btcur_prev",
+                "prede_count": 2,
+                "weight": {
+                    "actual_weight": 8.0731972404,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 35.294117647058826,
+                    "corr": 0.3333333333333333,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": false,
+                    "distribution": [
+                        1,
+                        5
+                    ],
+                    "weighted_distribution": [
+                        1.3455328734,
+                        6.727664367
+                    ]
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.35294117647058826
+                },
+                "lines": [
+                    19313685
+                ],
+                "file": "__wt_btcur_prev",
+                "timestamp": 16988395,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19289639@__wt_btcur_next",
+                "prede_count": 7,
+                "weight": {
+                    "actual_weight": 9.4187301138,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 41.1764705882353,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.4117647058823529
+                },
+                "lines": [
+                    19289639
+                ],
+                "file": "__wt_btcur_next",
+                "timestamp": 15772681,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19190556@__wt_txn_checkpoint",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": 5.3821314936,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 23.52941176470588,
+                    "corr": 0.25,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 4,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.23529411764705882
+                },
+                "lines": [
+                    19190556
+                ],
+                "file": "__wt_txn_checkpoint",
+                "timestamp": 25686073,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19351125@__wt_btcur_search_near",
+                "prede_count": 2,
+                "weight": {
+                    "actual_weight": 8.0731972404,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 35.294117647058826,
+                    "corr": 0.3333333333333333,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": false,
+                    "distribution": [
+                        5,
+                        1
+                    ],
+                    "weighted_distribution": [
+                        6.727664367,
+                        1.3455328734
+                    ]
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.35294117647058826
+                },
+                "lines": [
+                    19351125
+                ],
+                "file": "__wt_btcur_search_near",
+                "timestamp": 16987588,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19350189@__wt_btcur_search_near",
+                "prede_count": 7,
+                "weight": {
+                    "actual_weight": 9.4187301138,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 41.1764705882353,
+                    "corr": 1.0,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.4117647058823529
+                },
+                "lines": [
+                    19350189
+                ],
+                "file": "__wt_btcur_search_near",
+                "timestamp": 15681237,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "14126870@__session_checkpoint",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": 5.3821314936,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 23.52941176470588,
+                    "corr": 0.25,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 4,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.23529411764705882
+                },
+                "lines": [
+                    14126870
+                ],
+                "file": "__session_checkpoint",
+                "timestamp": 25686076,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19349044@__wt_btcur_search_near",
+                "prede_count": 9,
+                "weight": {
+                    "actual_weight": 17.4919273542,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 76.47058823529413,
+                    "corr": 0.6923076923076923,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": false,
+                    "distribution": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        5,
+                        1,
+                        1,
+                        1,
+                        1
+                    ],
+                    "weighted_distribution": [
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        6.727664367,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734
+                    ]
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.7647058823529411
+                },
+                "lines": [
+                    19349044
+                ],
+                "file": "__wt_btcur_search_near",
+                "timestamp": 15734499,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "19002594@__session_checkpoint",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": 5.3821314936,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 23.52941176470588,
+                    "corr": 0.25,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 4,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.23529411764705882
+                },
+                "lines": [
+                    19002594
+                ],
+                "file": "__session_checkpoint",
+                "timestamp": 25686079,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "18618506@__curfile_search_near",
+                "prede_count": 9,
+                "weight": {
+                    "actual_weight": 17.4919273542,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 76.47058823529413,
+                    "corr": 0.6923076923076923,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": false,
+                    "distribution": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        5,
+                        1,
+                        1,
+                        1,
+                        1
+                    ],
+                    "weighted_distribution": [
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        6.727664367,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734
+                    ]
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.7647058823529411
+                },
+                "lines": [
+                    18618506
+                ],
+                "file": "__curfile_search_near",
+                "timestamp": 15734501,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "18287391@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": 5.3821314936,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 23.52941176470588,
+                    "corr": 0.25,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 4,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.23529411764705882
+                },
+                "lines": [
+                    18287391
+                ],
+                "file": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "timestamp": 25147864,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "18618128@__curfile_search_near",
+                "prede_count": 9,
+                "weight": {
+                    "actual_weight": 17.4919273542,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 76.47058823529413,
+                    "corr": 0.6923076923076923,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": false,
+                    "distribution": [
+                        1,
+                        1,
+                        5,
+                        1,
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                    ],
+                    "weighted_distribution": [
+                        1.3455328734,
+                        1.3455328734,
+                        6.727664367,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734
+                    ]
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.7647058823529411
+                },
+                "lines": [
+                    18618128
+                ],
+                "file": "__curfile_search_near",
+                "timestamp": 15734502,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "18284749@mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "prede_count": 1,
+                "weight": {
+                    "actual_weight": 5.3821314936,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 23.52941176470588,
+                    "corr": 0.25,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": true,
+                    "ratio": 4,
+                    "conditional_proportion": null
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.23529411764705882
+                },
+                "lines": [
+                    18284749
+                ],
+                "file": "mongo::WiredTigerKVEngine::WiredTigerCheckpointThread::run",
+                "timestamp": 27284541,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "18168378@mongo::wiredTigerPrepareConflictRetry<mongo::(anonymous namespace)::WiredTigerIndexCursorBase::seekWTCursor(mongo::KeyString::Value const&)::{lambda()#1}>",
+                "prede_count": 9,
+                "weight": {
+                    "actual_weight": 17.4919273542,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 76.47058823529413,
+                    "corr": 0.6923076923076923,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": false,
+                    "distribution": [
+                        5,
+                        1,
+                        1,
+                        1,
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                    ],
+                    "weighted_distribution": [
+                        6.727664367,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734
+                    ]
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.7647058823529411
+                },
+                "lines": [
+                    18168378
+                ],
+                "file": "mongo::wiredTigerPrepareConflictRetry<mongo::(anonymous namespace)::WiredTigerIndexCursorBase::seekWTCursor(mongo::KeyString::Value const&)::{lambda()#1}>",
+                "timestamp": 14263210,
+                "duplicate": false
+            },
+            {
+                "target_node": "18692122@__wt_page_evict_urgent",
+                "prede_node": "18168279@mongo::wiredTigerPrepareConflictRetry<mongo::(anonymous namespace)::WiredTigerIndexCursorBase::seekWTCursor(mongo::KeyString::Value const&)::{lambda()#1}>",
+                "prede_count": 9,
+                "weight": {
+                    "actual_weight": 17.4919273542,
+                    "base_weight": 22.8740588478,
+                    "perc_contrib": 76.47058823529413,
+                    "corr": 0.6923076923076923,
+                    "order": 0
+                },
+                "forward": {
+                    "is_invariant": false,
+                    "distribution": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        1,
+                        1,
+                        1,
+                        1,
+                        5
+                    ],
+                    "weighted_distribution": [
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        1.3455328734,
+                        6.727664367
+                    ]
+                },
+                "backward": {
+                    "is_invariant": true,
+                    "ratio": 1,
+                    "conditional_proportion": 0.7647058823529411
+                },
+                "lines": [
+                    18168279
+                ],
+                "file": "mongo::wiredTigerPrepareConflictRetry<mongo::(anonymous namespace)::WiredTigerIndexCursorBase::seekWTCursor(mongo::KeyString::Value const&)::{lambda()#1}>",
+                "timestamp": 14263212,
+                "duplicate": false
+            }
+        ]
+    }
+]
