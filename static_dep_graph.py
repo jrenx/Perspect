@@ -19,6 +19,7 @@ DEBUG_SLICE = False
 VERBOSE = False
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 TRACKS_DIRECT_CALLER = True
+TRACKS_INDIRECT_CALLER = True
 # = False
 USE_BPATCH = False
 FILTER_UNEXECUTED_INSNS = False
@@ -35,6 +36,16 @@ class BasicBlock:
         self.start_insn = None
         self.last_insn = None
         self.lines = lines
+        
+        #TODO json
+        #for building indices
+        self.line = None #ignore for now
+        self.rank_in_same_line = None #ignore for now
+        self.start_index = None
+        self.last_index = None
+        self.insn_to_index = None
+        self.index_to_rank = None
+
         self.ends_in_branch = ends_in_branch
         self.is_entry = is_entry
         self.is_new_entry = False
@@ -68,6 +79,17 @@ class BasicBlock:
         data["start_insn"] = self.start_insn
         data["last_insn"] = self.last_insn
         data["lines"] = self.lines
+        data["line"] = self.line
+        data["rank_in_same_line"] = self.rank_in_same_line
+        if self.index_to_rank is not None:
+            data["index_to_rank"] = self.index_to_rank
+        if self.insn_to_index is not None:
+            data["insn_to_index"] = self.insn_to_index
+        if self.start_index is not None:
+            data["start_index"] = self.start_index
+        if self.last_index is not None:
+            data["last_index"] = self.last_index
+ 
         data["ends_in_branch"] = self.ends_in_branch
         data["is_entry"] = self.is_entry
         data["is_new_entry"] = self.is_new_entry
@@ -108,6 +130,7 @@ class BasicBlock:
         ends_in_branch = data['ends_in_branch']
         is_entry = True if data['is_entry'] == 1 else False
         lines = data['lines']
+
         bb = BasicBlock(id, ends_in_branch, is_entry, lines)
         bb.start_insn = data['start_insn']
         bb.last_insn = data['last_insn']
@@ -115,6 +138,22 @@ class BasicBlock:
         bb.ends_in_branch = data['ends_in_branch']
         bb.is_entry = data['is_entry']
         bb.is_new_entry = data['is_new_entry']
+
+        if "line" in data:
+            bb.line = data["line"]
+        if "rank_in_same_line" in data:
+            bb.rank_in_same_line = data["rank_in_same_line"]
+        if "insn_to_index" in data:
+            insn_to_index = data["insn_to_index"]
+            bb.insn_to_index = {}
+            for key in insn_to_index:
+                bb.insn_to_index[int(key)] = insn_to_index[key]
+        if "index_to_rank" in data:
+            bb.index_to_rank = data["index_to_rank"]
+        if "start_index" in data:
+            bb.start_index = data["start_index"]
+        if "last_index" in data:
+            bb.last_index = data["last_index"]
 
         if 'immed_dom' in data:
             bb.immed_dom = data['immed_dom']
@@ -457,6 +496,8 @@ class CFG:
             if bb in ignore_set:
                 if DEBUG_SIMPLIFY: print("[Simplify]   BB is already removed or cannot be removed")
                 continue
+
+            all_children = set()
             all_succes_before_immed_pdom = set()
             worklist = deque()
             worklist.append(bb)
@@ -468,6 +509,7 @@ class CFG:
                     if DEBUG_SIMPLIFY: print('[Simplify]   child BB already visited, ignore: ' + str(child_bb.id))
                     continue
                 visited.add(child_bb)
+                all_children.add(child_bb)
                 if DEBUG_SIMPLIFY: print("[Simplify]   child BB: " + str(child_bb.id) + \
                       " " + str(child_bb.lines) + \
                       " pdoms are " + str([pdom.lines for pdom in child_bb.pdoms] \
@@ -503,6 +545,18 @@ class CFG:
                 if DEBUG_SIMPLIFY:
                     print("[Simplify]   a child BB was a successor of the immed_pdom, possible have been aggressively simplified")
                 continue
+
+            cannot_simplify = False
+            for child_bb in all_children:
+                if DEBUG_SIMPLIFY: print("[Simplify] checking child_bb " + str(child_bb.id))
+                for child_prede_bb in child_bb.predes:
+                    if DEBUG_SIMPLIFY: print("[Simplify]    prede of child_bb " + str(child_prede_bb.id))
+                    if child_prede_bb not in all_children:
+                        cannot_simplify = True
+            if cannot_simplify is True:
+                if DEBUG_SIMPLIFY: print("[Simplify] Cannot remove the node, likely because it doesn't dominate the post dominator ...")
+                continue
+
             if len(self.target_bbs.intersection(all_succes_before_immed_pdom)) > 0:
                 #or len(self.entry_bbs.intersection(all_succes_before_immed_pdom)) > 0:
                 #ignore_set.union(all_succes_before_immed_pdom) #FIXME, do not assign after union why???
@@ -602,7 +656,10 @@ class CFG:
             if final is True:
                 if DEBUG_SIMPLIFY:
                     print("[simplify] Updating the predecessors and successors for bb: " + str(bb.id))
+                    print("[simplify] BB is: " + str(bb.id))
+                    print("[simplify] immed_pdom is: " + str(bb.immed_pdom.id))
                 for prede in bb.predes:
+                    if DEBUG_SIMPLIFY: print("[simplify] prede is: " + str(prede.id))
                     if bb in prede.succes:
                         prede.succes.remove(bb)
                     if prede.succes in bb.predes: #newly added
@@ -971,6 +1028,7 @@ class StaticNode:
         #        file, line = get_line(insn, StaticDepGraph.prog)
         self.file = file
         self.line = line
+        self.caller_files = None
         #if GENERATE_INSN_MAPPING is True:
         #    StaticDepGraph.insert_file_line_to_map(file, line)
         self.index = None
@@ -1046,6 +1104,8 @@ class StaticNode:
         #if GENERATE_INSN_MAPPING:
         data["file"] = self.file
         data["line"] = self.line
+        if self.caller_files is not None:
+            data["caller_files"] = self.caller_files
         if self.index is not None:
             data["index"] = self.index
         if self.total_count is not None:
@@ -1053,17 +1113,20 @@ class StaticNode:
         return data
 
     @staticmethod
-    def fromJSON(data):
+    def fromJSON(data, id_to_bb):
         id = data["id"]
         insn = data["insn"]
         function = data["function"]
         bb = data["bb"] if 'bb' in data else None #TODO, assign actual BB later
+        if bb is not None:
+            bb = id_to_bb[bb]
 
         file = None
         line = None
         if "file" in data and "line" in data:
             file = data["file"]
             line = data["line"]
+
 
         sn = StaticNode(insn, bb, function, id, file, line)
         #StaticDepGraph.insn_to_node[sn.insn] = sn
@@ -1072,6 +1135,8 @@ class StaticNode:
             sn.index = data["index"]
         if "total_count" in data:
             sn.total_count = data["total_count"]
+        if "caller_files" in data:
+            sn.caller_files = data["caller_files"]
 
         sn.explained = data["explained"]
         sn.is_cf = data["is_cf"]
@@ -1314,7 +1379,7 @@ class StaticDepGraph:
             sg.bb_id_to_node_id[int(key)] = data["bb_id_to_node_id"][key]
 
         for n in data["id_to_node"]:
-            sn = StaticNode.fromJSON(n)
+            sn = StaticNode.fromJSON(n, sg.cfg.id_to_bb)
             sg.id_to_node[sn.id] = sn
             all_id_to_node[sn.id] = sn
             sg.insn_to_node[sn.insn] = sn
@@ -1377,11 +1442,12 @@ class StaticDepGraph:
             json_nodes = json_func_to_nodes["nodes"]
             nodes = {}
             for json_node in json_nodes:
+                # If a node has a BB assigned, then it should be not be a pending nodes.
                 if 'bb' in json_node and json_node['bb'] is not None:
                     #FIXME: eventually remove this,
                     # any merged node which have a bb should have been removed from the pending map
                     continue
-                node = StaticNode.fromJSON(json_node)
+                node = StaticNode.fromJSON(json_node, {})
                 nodes[node.insn] = node
                 all_id_to_node[node.id] = node
             pending_nodes[func] = nodes
@@ -1605,7 +1671,7 @@ class StaticDepGraph:
     @staticmethod
     def build_indices(starting_events, prog, limit, align_indices=False,
                         our_source_code_dir=None, other_source_code_dir=None,
-                      source_codes_same=False):
+                      source_codes_same=False, our_binary=None):
         start = time.time()
         result_dir, result_file, indice_file, key = StaticDepGraph.build_file_names(starting_events, prog, limit)
         StaticDepGraph.result_file = result_file
@@ -1631,8 +1697,11 @@ class StaticDepGraph:
             else:
                 StaticDepGraph.generate_file_line_for_all_reachable_nodes(prog, our_source_code_dir)
                 StaticDepGraph.binary_ptr = setup(prog)
-                StaticDepGraph.build_binary_indices(prog)
-            StaticDepGraph.output_indices_mapping(indice_file)
+                StaticDepGraph.func_to_callsites, StaticDepGraph.func_hot_and_cold_path_map = get_func_to_callsites(prog)
+                StaticDepGraph.generate_rank_for_bbs(prog, our_source_code_dir)
+                #StaticDepGraph.build_binary_indices(prog)
+                StaticDepGraph.build_binary_indices2(prog)
+            StaticDepGraph.output_indices_mapping(indice_file, our_binary)
             StaticDepGraph.writeJSON(result_file)
         else:
             assert os.path.exists(indice_file)
@@ -1705,7 +1774,8 @@ class StaticDepGraph:
             total_node_count = 0
             full_slice = set()
             StaticDepGraph.func_to_callsites, StaticDepGraph.func_hot_and_cold_path_map = get_func_to_callsites(prog)
-            StaticDepGraph.func_first_insn_to_dyn_callsites = get_func_first_insn_to_dyn_callsites(prog)
+            if TRACKS_INDIRECT_CALLER is True:
+                StaticDepGraph.func_first_insn_to_dyn_callsites = get_func_first_insn_to_dyn_callsites(prog)
             StaticDepGraph.binary_ptr = setup(prog)
             if USE_BPATCH is False:
                 StaticDepGraph.binary_ptr2 = setup2(prog)
@@ -1850,32 +1920,50 @@ class StaticDepGraph:
         return False
 
     @staticmethod
-    def output_indices_mapping(result_file):
+    def output_indices_mapping(result_file, binary_file=None):
+        if binary_file is not None: insn_to_insn_str = parse_binary_file(binary_file)
         indices = []
         inner_indices = []
+        insns = []
+        insn_strs = []
         for graph in StaticDepGraph.func_to_graph.values():
             for node in itertools.chain(graph.none_df_starting_nodes, \
                                         graph.nodes_in_cf_slice.keys(), \
                                         graph.nodes_in_df_slice.keys()):
                 if node.explained is False:
                     continue
-                indices.append([node.file, node.line, node.index, node.total_count])
+                insns.append(node.insn)
+                if binary_file is not None: 
+                    insn_str = insn_to_insn_str[node.insn]
+                    insn_str_segs = insn_str.split()
+                    args = ' '.join(insn_str_segs[1:])
+                    op = insn_str_segs[0]
+                    insn_str = op + ' ' + ''.join([i for i in args if (not i.isalpha() and not i.isdigit())])
+                    insn_strs.append(insn_str)
+                indices.append([(get_callers_str(node.caller_files) if node.caller_files is not None else "") +
+                     node.file, node.line, node.index, node.total_count])
 
                 is_inner = True
-                for p in itertools.chain(node.cf_succes, node.df_succes):
+                for p in itertools.chain(node.cf_predes, node.df_predes):
                     if p.explained is False:
                         is_inner = False
                         break
                 if is_inner is False:
                     continue
-                inner_indices.append([node.file, node.line, node.index, node.total_count])
+                inner_indices.append([(node.caller_files if node.caller_files is not None else "") + 
+                    node.file, node.line, node.index, node.total_count])
         with open(result_file, 'w') as f:
             json.dump(indices, f, indent=4)
         with open(result_file + "_inner", 'w') as f:
             json.dump(inner_indices, f, indent=4)
+        with open(result_file + "_insns", 'w') as f:
+            json.dump(insns, f, indent=4)
+        if binary_file is not None:
+            with open(result_file + "_insn_strs", 'w') as f:
+                json.dump(insn_strs, f, indent=4)
 
     @staticmethod
-    def insert_file_line_to_map(node, file, line):
+    def insert_file_line_to_map(node, file, line, graph=None):
         if file is not None and line is not None:
             lines = StaticDepGraph.file_to_line_to_nodes.get(file, None)
             if lines is None:
@@ -1883,9 +1971,9 @@ class StaticDepGraph:
                 StaticDepGraph.file_to_line_to_nodes[file] = lines
             nodes = lines.get(line, None)
             if nodes is None:
-                nodes = set()
+                nodes = {}
                 lines[line] = nodes
-            nodes.add(node)
+            nodes[node] = graph
 
     @staticmethod
     def generate_file_line_for_all_reachable_nodes(prog, our_source_code_dir=None):
@@ -1907,11 +1995,11 @@ class StaticDepGraph:
         i = 0
         print("[indices] total number of file lines to parse: " + str(len(ret)))
         for l in ret:
-            file, line = parse_get_line_output(l)
+            file, line, caller_files = parse_get_line_output(l)
             insn = all_insns[i]
             i += 1
             assert insn not in insn_to_file_line
-            insn_to_file_line[insn] = [file, line]
+            insn_to_file_line[insn] = [file, line, caller_files]
             print("[indices] initial parse insn: " + hex(insn) + " file: " + file + " line: " + str(line))
 
         for graph in StaticDepGraph.func_to_graph.values():
@@ -1923,11 +2011,79 @@ class StaticDepGraph:
                 #if node.insn not in insn_to_file_line:
                 #    continue
                 file_line = insn_to_file_line[node.insn]
-                node.file = file_line[0] if our_source_code_dir is None else \
-                    file_line[0][file_line[0].startswith(our_source_code_dir) and len(our_source_code_dir):]
+                node.file = strip_file(file_line[0], our_source_code_dir)
                 node.line = file_line[1]
-                print("[indices] assignment insn: " + hex(node.insn) + " file " + node.file + " line " + str(node.line), flush=True)
-                StaticDepGraph.insert_file_line_to_map(node, node.file, node.line)
+                node.caller_files = strip_callers(file_line[2], our_source_code_dir)
+                if len(node.caller_files) == 0:
+                    node.caller_files = None
+                print("[indices] assignment insn: " + hex(node.insn) + " file " + node.file
+                        + " line " + str(node.line) + " caller_files " + str(node.caller_files), flush=True)
+                StaticDepGraph.insert_file_line_to_map(node, node.file, node.line, graph)
+        b = time.time()
+        print("[indices] generate file line for all reachable_nodes took: " + str(b-a), flush=True)
+
+    @staticmethod
+    def generate_rank_for_bbs(prog, our_source_code_dir):
+        a = time.time()
+
+        all_insns = set()
+        all_bbs = []
+        for graph in StaticDepGraph.func_to_graph.values():
+            assert len(graph.cfg.postorder_list) == len(graph.cfg.ordered_bbs)
+            for bb in graph.cfg.postorder_list:
+                all_bbs.append(bb)
+                bb.index_to_rank = {}
+                bb.insn_to_index = {}
+                addrs = getAllAddrsInBB(StaticDepGraph.binary_ptr, bb.start_insn, graph.func)
+                if len(addrs) == 0:
+                    #It could be that this BB actually maps the cold version of this function, try again
+                    if len(StaticDepGraph.func_hot_and_cold_path_map) > 0 and graph.func in StaticDepGraph.func_hot_and_cold_path_map:
+                        new_func = StaticDepGraph.func_hot_and_cold_path_map[graph.func]
+                        print("[warn] retrying with new function: " + str(new_func))
+                        addrs = getAllAddrsInBB(StaticDepGraph.binary_ptr, bb.start_insn, new_func)
+                assert len(addrs) > 0
+                for addr in addrs: 
+                    all_insns.add(addr)
+                    bb.insn_to_index[addr] = -1
+
+        all_insns = list(all_insns)
+        ret = execute_cmd_in_parallel([hex(insn) for insn in all_insns], 'get_file_line.sh', 'insns_', num_processor, prog)
+
+        assert(len(ret) == len(all_insns))
+        i = 0
+        print("[indices] total number of file lines to parse: " + str(len(ret)))
+        insn_to_index = {}
+        for l in ret:
+            file, line, callers = parse_get_line_output(l)
+            insn = all_insns[i]
+            insn_to_index[insn] = [strip_file(file, our_source_code_dir), line, strip_callers(callers, our_source_code_dir)]
+            i += 1
+            print("[indices] initial parse insn: " + hex(insn) + " file: " + file + " line: " + str(line))
+
+        for bb in all_bbs:
+            assert bb.insn_to_index is not None
+            for addr in bb.insn_to_index:
+                index = insn_to_index[addr]
+                file = index[0]
+                line = index[1]
+                callers = index[2]
+                index_str = callers_file_line_to_index(callers, file, line)
+                bb.insn_to_index[addr] = index_str
+                if index_str not in bb.index_to_rank:
+                    bb.index_to_rank[index_str] = -1
+
+        for graph in StaticDepGraph.func_to_graph.values():
+            index_to_rank = {}
+            bbs = list(graph.cfg.postorder_list)
+            sorted_bbs = sorted(bbs, key=lambda e: e.start_insn)
+            for bb in sorted_bbs:
+                for index in bb.index_to_rank.keys():
+                    if index not in index_to_rank:
+                        index_to_rank[index] = 1
+                    rank = index_to_rank[index]
+                    bb.index_to_rank[index] = rank
+                    index_to_rank[index] = rank + 1
+
         b = time.time()
         print("[indices] generate file line for all reachable_nodes took: " + str(b-a), flush=True)
 
@@ -1951,19 +2107,20 @@ class StaticDepGraph:
 
         file_line_to_offsets = {}
         i = 0
-        group = set()
+        #group = set()
         for l in ret:
-            if l.strip() != "DELIMINATOR":
-                group.add(l.strip())
-                continue
+            #if l.strip() != "DELIMINATOR":
+            #    group.add(l.strip())
+            #    continue
             file_line = all_file_lines[i]
             assert file_line not in file_line_to_offsets
             offsets = []
             file_line_to_offsets[file_line] = offsets
-            for o in group:
+            #for o in group:
+            for o in l:
                 start, end = parse_insn_offsets(o)
                 offsets.append([start, end])
-            group = set()
+            #group = set()
             i += 1
 
         for file in StaticDepGraph.file_to_line_to_nodes:
@@ -1974,7 +2131,7 @@ class StaticDepGraph:
                 offsets = file_line_to_offsets[file_line]
                 print("[indices] Offsets are: " + str(offsets))
                 nodes = StaticDepGraph.file_to_line_to_nodes[file][line]
-                all_nodes = set(nodes)
+                all_nodes = set(nodes.keys())
                 for start_end in itertools.chain(offsets, [[float('inf'), float('-inf')]]):
                     start = start_end[0]
                     end = start_end[1]
@@ -2020,6 +2177,46 @@ class StaticDepGraph:
                         node_list[i].index = index if index >= 0 else None
                         node_list[i].total_count = total_count
         assert(len(all_nodes) == 0)
+        b = time.time()
+        print("[indices] build binary indices took: " + str(b-a))
+
+    @staticmethod
+    def build_binary_indices2(prog):
+        a = time.time()
+        for file in StaticDepGraph.file_to_line_to_nodes:
+            for line in StaticDepGraph.file_to_line_to_nodes[file]:
+                node_to_graph = StaticDepGraph.file_to_line_to_nodes[file][line]
+                graph_to_nodes = {}
+                for node in node_to_graph:
+                    graph = node_to_graph[node]
+                    if graph not in graph_to_nodes:
+                        graph_to_nodes[graph] = []
+                    graph_to_nodes[graph].append(node)
+                for graph in graph_to_nodes:
+                    func = graph.func
+                    nodes = graph_to_nodes[graph]
+                    addrs = [n.insn for n in nodes]
+                    indices = get_addr_indices2(StaticDepGraph.binary_ptr, func, addrs)
+                    print(indices)
+                    print(len(indices))
+                    for i in range(len(nodes)):
+                        node = nodes[i]
+                        node.index = indices[i]
+                        assert node.index > 0
+                        index = callers_file_line_to_index(node.caller_files, node.file, node.line)
+                        if node.bb.insn_to_index is not None:
+                            found = False
+                            for insn in node.bb.insn_to_index:
+                                if insn == node.insn:
+                                    found = True
+                                    assert node.bb.insn_to_index[insn] == index
+                                    break
+
+                                if node.bb.insn_to_index[insn] != index:
+                                    node.index -= 1
+                            assert node.index > 0
+                            assert found == True
+                        node.total_count = node.bb.index_to_rank[index]
         b = time.time()
         print("[indices] build binary indices took: " + str(b-a))
 
@@ -2165,14 +2362,16 @@ class StaticDepGraph:
                 if func in StaticDepGraph.func_to_callsites:
                     callsites = StaticDepGraph.func_to_callsites[func]
                 dyn_callsites = []
-                for entry_bb in orig_entry_bbs:
-                    print("[static_dep] first instruction of function " + func + " is " + hex(entry_bb.start_insn))
-                    if entry_bb.start_insn in StaticDepGraph.func_first_insn_to_dyn_callsites:
-                        dyn_callsites = StaticDepGraph.func_first_insn_to_dyn_callsites[entry_bb.start_insn]
-                        print("[static_dep] found dynamic callsites for function " + func + ": " + str(dyn_callsites))
-                        break
+                if TRACKS_INDIRECT_CALLER is True:
+                    for entry_bb in orig_entry_bbs:
+                        print("[static_dep] first instruction of function " + func + " is " + hex(entry_bb.start_insn))
+                        if entry_bb.start_insn in StaticDepGraph.func_first_insn_to_dyn_callsites:
+                            dyn_callsites = StaticDepGraph.func_first_insn_to_dyn_callsites[entry_bb.start_insn]
+                            print("[static_dep] found dynamic callsites for function " + func + ": " + str(dyn_callsites))
+                            break
                 print("[static_dep] Instantiating callsites for: " + func)
                 for c in itertools.chain(callsites, dyn_callsites):
+                    print("[static_dep] Callsite is: " + str(c))
                     if c[0] in StaticDepGraph.insns_that_never_executed:
                         continue
                     print("[static_dep] Callsite is: " + str(c))
@@ -3091,7 +3290,7 @@ def main():
     parser.add_argument('-c', '--use_cached_static_graph', dest='use_cached_static_graph', action='store_true')
     parser.set_defaults(use_cached_static_graph=False)
 
-    parser.add_argument('-i', '--generate_indices', dest='generate_indices', action='store_true')
+    parser.add_argument('-in', '--generate_indices', dest='generate_indices', action='store_true')
     parser.set_defaults(generate_indices=False)
     parser.add_argument('-a', '--align_indices', dest='align_indices', action='store_true')
     parser.set_defaults(align_indices=False)
@@ -3101,6 +3300,8 @@ def main():
     parser.set_defaults(other_source_code_dir=None)
     parser.add_argument('-same', '--source_codes_same', dest='source_codes_same', action='store_true')
     parser.set_defaults(source_codes_same=False)
+    parser.add_argument('-b_ours', '--our_binary', dest='our_binary')
+    parser.set_defaults(our_binary=None)
     args = parser.parse_args()
 
     limit, program, _, _, starting_events, _ = parse_inputs()
@@ -3110,7 +3311,7 @@ def main():
     if args.generate_indices is True:
         assert args.parallelize_rr is False
 
-    if args.generate_indices is True:
+    if args.generate_indices is True and args.source_codes_same is False:
         assert args.our_source_code_dir is not None
     if args.align_indices is True:
         assert args.generate_indices is True
@@ -3126,7 +3327,8 @@ def main():
                                       align_indices=args.align_indices,
                                      our_source_code_dir=args.our_source_code_dir,
                                      other_source_code_dir=args.other_source_code_dir,
-                                     source_codes_same=args.source_codes_same)
+                                     source_codes_same=args.source_codes_same,
+                                     our_binary=args.our_binary)
 
 if __name__ == "__main__":
     main()

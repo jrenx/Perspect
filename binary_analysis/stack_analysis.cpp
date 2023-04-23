@@ -644,15 +644,27 @@ void getStackHeights(Function *f, std::vector<Block *> &list,
               if (DEBUG_STACK && DEBUG) {
                 cout << "[stack]     predecessor height @ " << std::hex << src->last() << std::dec
                      << " is not yet analyzed, need one more iteration..." << endl;
-                repeat = true;
               }
+              repeat = true;
               continue;
             }
             if (DEBUG_STACK && DEBUG) {
               cout << "[stack]     predecessor height @ " << std::hex << src->last() << std::dec
                    << " is " << insnToStackHeight[src->last()] << endl;
             }
-            assert(!hasAnAnalyzedPrede || insnToStackHeight[src->last()] == prevHeight);
+	    if (!CRASH_ON_ERROR) {
+	      if (hasAnAnalyzedPrede) {
+	        if (insnToStackHeight[src->last()] != prevHeight) {
+	          if (DEBUG_STACK && DEBUG) {
+                    cout << "[stack][warn]     predecessor height @ " << std::hex << src->last() << std::dec
+                         << " is not equal to another predecessor's height" << endl;
+                  }
+                  break;
+	        }
+	      }
+	    } else {
+              assert(!hasAnAnalyzedPrede || insnToStackHeight[src->last()] == prevHeight);
+	    }
             prevHeight = insnToStackHeight[src->last()];
             hasAnAnalyzedPrede = true;
           }
@@ -737,7 +749,7 @@ void getStackHeights(Function *f, std::vector<Block *> &list,
             if (DEBUG_STACK)
               cout << "[stack][warn] Unhandled case: " << insn.format() << endl;
         }
-        if (DEBUG_STACK && DEBUG) cout << "[stack] height @ " << addr << " is " << currHeight << endl;
+        if (DEBUG_STACK && DEBUG) cout << "[stack] height @ " << std::hex << addr << std::dec << " is " << currHeight << endl;
         insnToStackHeight[addr] = currHeight;
       }
     }
