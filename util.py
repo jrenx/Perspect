@@ -165,7 +165,7 @@ def get_callers_str(callers):
     return callers_str
 
 def parse_get_line_output(result):
-    caller_files = get_caller_files(result[1:])
+    caller_files = get_callers(result[1:])
     result = result[0]
     result = result.split()[0]
     result_seg = result.strip().split(":")
