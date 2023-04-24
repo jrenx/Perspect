@@ -79,6 +79,8 @@ class RelationAnalysis:
 
         self.rgroup_file = os.path.join(curr_dir, 'cache', self.prog, "rgroups.json")
         self.simple_rgroup_file = os.path.join(curr_dir, "cache", self.prog, "rgroups_simple_" + self.dd.key + ".json")
+
+    def cleanup(self):
         if os.path.exists(self.simple_rgroup_file):
             os.remove(self.simple_rgroup_file)
         if os.path.exists(self.rgroup_file):
@@ -192,6 +194,6 @@ class RelationAnalysis:
                 rgroups = []
                 for json_rgroup in json_rgroups:
                     rgroups.append(RelationGroup.fromJSON(json_rgroup, prog))
-                RelationAnalysis.print_rgroups(rgroups)
-            return True
-        return False
+                #RelationAnalysis.print_rgroups(rgroups)
+            return rgroups
+        return None
