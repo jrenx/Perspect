@@ -1,5 +1,0 @@
-cd asdfg
-./create.sh
-cd ..
-time du asdfg > /dev/null
-time du asdfg --exclude dupa > /dev/null
