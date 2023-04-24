@@ -19,7 +19,7 @@ DEBUG_SLICE = False
 VERBOSE = False
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 TRACKS_DIRECT_CALLER = True
-TRACKS_INDIRECT_CALLER = True
+TRACKS_INDIRECT_CALLER = False
 # = False
 USE_BPATCH = False
 FILTER_UNEXECUTED_INSNS = False
@@ -345,8 +345,8 @@ class CFG:
             if bb.start_insn <= insn <= bb.last_insn:
                 return bb
         print("bb for " + hex(insn) + " not found")
-        raise Exception
-        #return None
+        #raise Exception
+        return None
 
     def contains_insn(self, insn):
         for bb in self.ordered_bbs:
@@ -2530,6 +2530,7 @@ class StaticDepGraph:
             if final is False:
                 continue
             bb = self.cfg.getBB(node.insn)
+            if bb is None: continue
             node.bb = bb
             if StaticDepGraph.call_graph_pass_only is not True:
                 for prede in bb.predes:
