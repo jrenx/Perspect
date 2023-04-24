@@ -7,14 +7,18 @@ DEBUG = True
 Weight_Threshold = 0
 PRINT_IGNORE_RATIO = 10
 IGNORE_VARIABLE_CHAIN = False
+EXACT_INDEX_MATCH = True
 
 def get_line(insn, prog):
     if not isinstance(insn, str):
         insn = hex(insn)
-    cmd = ['addr2line', '-e', prog, insn]
+    cmd = ['addr2line', '-e', prog, insn, '-i']
     #print("[main] running command: " + str(cmd))
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
-    result_seg = result.stdout.decode('ascii').strip().split(":")
+    result = result.stdout.decode('ascii').strip()
+    result = result.splitlines()[-1]
+    result = result.split()[0]
+    result_seg = result.split(":")
     file = result_seg[0].split("/")[-1]
     try:
         line = int(result_seg[1])
@@ -39,25 +43,59 @@ class Invariance:
                 self.is_conditional == other.is_conditional and \
                 self.conditional_proportion == other.conditional_proportion
 
-    def relaxed_equals(self, other):
+    def relaxed_equals(self, other, self_count=None, other_count=None):
         if not isinstance(other, Invariance):
             return False
         if self.ratio != other.ratio:
             return False
         if self.is_conditional != other.is_conditional:
+            # If one is conditional and another is not but the conditional proportional is almost 100, return True.
+            if self.conditional_proportion is not None and self.conditional_proportion >= 0.99 or \
+                other.conditional_proportion is not None and other.conditional_proportion >= 0.99:
+                    return True
             return False
         if self.conditional_proportion == other.conditional_proportion:
             return True
         diff = abs(self.conditional_proportion - other.conditional_proportion)
         if diff/self.conditional_proportion < 0.1 or diff < 0.01:
             return True
+        if self_count is not None and other_count is not None:
+            self_prede_count = round(self_count * self.conditional_proportion)
+            other_prede_count = round(other_count * other.conditional_proportion)
+            if self_prede_count == other_prede_count:
+                return True
         return False
+
+    def difference(self, other):
+        if isinstance(other, Invariance):
+            return self.ratio - other.ratio
+        elif isinstance(other, Proportion):
+            return self.ratio - other.mu
+        else:
+            raise Exception
+
+    def magnitude(self):
+        return self.ratio
+
+    def corr(self):
+        mag = self.magnitude()
+        if mag > 1:
+            return 1/mag
+        else:
+            return mag
 
     def __str__(self):
         s = "INVARIANT with ratio: " + str(self.ratio)
         if self.is_conditional is True:
             s += " conditional with proportion: {:.2f}%".format(self.conditional_proportion*100)
         s += "\n"
+        return s
+
+    def str(self):
+        s = str(self.ratio)
+        if self.is_conditional is True:
+            s += " w/ {:.2f}%".format(self.conditional_proportion*100)
+        s += "<br>"
         return s
 
     def toJSON(self):
@@ -127,7 +165,7 @@ class Proportion:
                 self.w_mu == other.w_mu and \
                 self.w_std == other.w_std
 
-    def relaxed_equals(self, other):
+    def relaxed_equals(self, other, self_count=None, other_count=None):
         if not isinstance(other, Proportion):
             return False
         result = ks_2samp(self.distribution, other.distribution)
@@ -141,12 +179,35 @@ class Proportion:
             return True
         return False
 
+    def difference(self, other):
+        if isinstance(other, Invariance):
+            return self.mu - other.ratio
+        elif isinstance(other, Proportion):
+            return self.mu - other.mu
+        else:
+            raise Exception
+
+    def magnitude(self):
+        return self.mu
+
+    def corr(self):
+        mag = self.magnitude()
+        if mag > 1:
+            return 1/mag
+        else:
+            return mag
+
     def __str__(self):
         s = "VARIABLE "
         s += "with distrib (mean: {:.2f}".format(self.mu) + ", std: {:.2f}".format(self.std) + ") "
         if self.weighted_distribution is not None and len(self.weighted_distribution) > 0:
             s += "and weighted distrib (mean: {:.2f}".format(self.w_mu) + ", std: {:.2f}".format(self.w_std) + ")"
         s += "\n"
+        return s
+
+    def str(self):
+        s = "distrib({:.2f}".format(self.mu) + ", {:.2f}".format(self.std) + ")"
+        s += "<br>"
         return s
 
     def toJSON(self):
@@ -163,7 +224,7 @@ class Proportion:
         return Proportion(distribution, weighted_distribution)
 
 class Relation:
-    def __init__(self, target_node, prede_node, prede_count, weight, prog, lines=None, file=None):
+    def __init__(self, target_node, prede_node, prede_count, weight, prog, lines=None, file=None, func=None):
         self.target_node = target_node
         self.prede_node = prede_node
         self.prede_count = prede_count
@@ -172,6 +233,7 @@ class Relation:
         self.backward = None
         self.timestamp = None
         self.insn = None
+        self.func = None
 
         self.lines = lines
         self.file = file
@@ -195,14 +257,18 @@ class Relation:
                 self.forward == other.forward and \
                 self.backward == other.backward
 
-    def relaxed_equals(self, other):
+    def relaxed_equals(self, other, self_count=None, other_count=None):
+        #print("[relation] self_count: " + str(self_count) + " other_count: " + str(other_count))
         if not isinstance(other, Relation):
             return False
-        diff = abs(self.weight.perc_contrib == other.weight.perc_contrib)/self.weight.perc_contrib
-        return diff < 0.1 and \
-               self.weight.corr == other.weight.corr and \
-               self.forward.relaxed_equals(other.forward) and \
-                self.backward.relaxed_equals(other.backward)
+        #diff = abs(self.weight.perc_contrib - other.weight.perc_contrib)/self.weight.perc_contrib
+        #return diff < 0.1 and \
+        #       self.weight.corr == other.weight.corr and \
+        #       self.forward.relaxed_equals(other.forward) and \
+        #        self.backward.relaxed_equals(other.backward)
+
+        return ((self.forward == None and other.forward == None) or self.forward.relaxed_equals(other.forward)) and \
+                ((self.backward == None and other.backward == None) or self.backward.relaxed_equals(other.backward, self_count, other_count))
 
     def __str__(self):
         s = ""
@@ -220,6 +286,24 @@ class Relation:
         s += "  => backward: " + str(self.backward)
         s += "-----------------\n"
         return s
+
+    def str(self):
+        s = ""
+        #s += "  >>> " + str(self.key) + " "
+        #if self.prede_node is not None:
+        #    s += self.prede_node.hex_insn + "@" + self.prede_node.function
+        #elif self.insn is not None:
+        #    s += hex(self.insn)
+        #s += " timestamp: " + str(self.timestamp)
+        #if self.duplicate is True:
+        #    s += " Duplicate "
+        #s += "<<<\n"
+        #s += "  " + str(self.weight) + "\n"
+        s += "Rel(Ev|Sym): " + self.forward.str()
+        s += "Rel(Sym|Ev):" + self.backward.str()
+        s += "-------------------------------"
+        return s
+
 
     def toJSON(self):
         data = {}
@@ -433,7 +517,8 @@ class SimpleRelationGroup:
         if relation_group.relations is not None:
             for r in relation_group.relations.values():
                 n = r.prede_node
-                predes.append([n.file, n.line, n.index, n.total_count])
+                predes.append([(n.caller_files if n.caller_files is not None else "") + 
+                    n.file, n.line, n.index, n.total_count])
                 prede_insns.append(n.hex_insn)
         data["predes"] = predes
         data["predes_insns"] = prede_insns
@@ -448,6 +533,7 @@ class SimpleRelationGroup:
                 relation_data["backward"] = r.backward.toJSON() if r.backward is not None else None
                 relation_data["timestamp"] = r.timestamp
                 relation_data["insn"] = r.prede_node.insn if r.prede_node is not None else r.insn
+                relation_data["func"] = r.prede_node.function if r.prede_node is not None else ""
                 relation_data["duplicate"] = r.duplicate
                 relations.append(relation_data)
         data["relations"] = relations
@@ -486,7 +572,7 @@ class SimpleRelationGroup:
             assert(len(sorted_predes) == len(json_simple_relation_group["relations"]))
             for i in range(len(sorted_predes)):
                 index_quad = sorted_predes[i]
-                print(index_quad)
+                #print(index_quad)
                 if "??" in index_quad:
                     print("[ra/warn] no file or linenum found for insn: " + prede_insns[i] if prede_insns is not None else "")
                     continue
@@ -494,10 +580,11 @@ class SimpleRelationGroup:
                 file, line, index, total_count = Indices.parse_index_quad(index_quad)
 
                 weight = Weight.fromJSON(relation_data["weight"])
-                print(weight)
+                #print(weight)
                 relation = Relation(None, None, None, weight, None, lines=line, file=file)
                 if "timestamp" in relation_data: relation.timestamp = relation_data["timestamp"]
                 if "insn" in relation_data: relation.insn = relation_data["insn"]
+                if "func" in relation_data: relation.func = relation_data["func"]
                 if "duplicate" in relation_data: relation.duplicate = relation_data["duplicate"]
                 forward = relation_data["forward"]
                 if forward is not None:
@@ -509,23 +596,8 @@ class SimpleRelationGroup:
                         if backward["is_invariant"] is False else Invariance.fromJSON(backward)
                 relations.append((relation, index_quad))
 
-                child_key = Indices.build_key_from_index_quad(index_quad)
-                relations_map[child_key] = (relation, index_quad)
-                if total_count == 0 or total_count is None or index is None:
-                    child_key_short = file + "_" + str(line)
-                    relations_map[child_key_short] = (relation, index_quad)
-                else:
-                    child_key_short = file + "_" + str(line)
-                    inner_map = relations_map.get(child_key_short, {})
-                    if len(inner_map) == 0:
-                        relations_map[child_key_short] = inner_map
-                    elif isinstance(inner_map, tuple):
-                        pair = inner_map
-                        inner_map = {}
-                        inner_map[0] = pair
-                    ratio = index/max(total_count,1)
-                    inner_map[ratio] = (relation, index_quad)
-                    #relations_map[child_key_short] = (relation, index_quad)
+                Indices.insert_to_external_indice_to_item_map(relations_map, index_quad, relation)
+
         wavefront = None
         if "wavefront" in json_simple_relation_group:
             wavefront = []
@@ -543,21 +615,24 @@ class SimpleRelationGroup:
 
 class SimpleRelationGroups:
 
-    def __init__(self, relations_map, indices):
+    def __init__(self, relations_map, indices, relation_groups=None):
         self.relations_map = relations_map
         self.indices = indices
+        self.relation_groups = relation_groups
 
     @staticmethod
     def fromJSON(data):
         relations_map = {}
         index_quads = []
+        relation_groups = []
         for json_simple_relation_group in data:
-            simple_relation = SimpleRelationGroup.fromJSON(json_simple_relation_group)
-            relations_map[simple_relation.key] = simple_relation
-            relations_map[simple_relation.key_short] = simple_relation
-            index_quads.append(simple_relation.index_quad)
+            simple_relation_group = SimpleRelationGroup.fromJSON(json_simple_relation_group)
+            relations_map[simple_relation_group.key] = simple_relation_group
+            relations_map[simple_relation_group.key_short] = simple_relation_group
+            index_quads.append(simple_relation_group.index_quad)
+            relation_groups.append(simple_relation_group)
         indices_map = Indices.build_indices(index_quads)
-        return SimpleRelationGroups(relations_map, indices_map)
+        return SimpleRelationGroups(relations_map, indices_map, relation_groups)
 
 class Indices:
     def __init__(self, indices_map):
@@ -595,6 +670,100 @@ class Indices:
                     lines[line] = (total_count, indices)
                 
         return Indices(indices_map)
+
+    @staticmethod
+    def insert_to_external_indice_to_item_map(extern_map, index_quad, item1, item2=None):
+        file, line, index, total_count = Indices.parse_index_quad(index_quad)
+        child_key = Indices.build_key_from_index_quad(index_quad)
+        if item2 is None: extern_map[child_key] = (item1, index_quad)
+        else: extern_map[child_key] = (item1, index_quad, item2)
+        if EXACT_INDEX_MATCH is True:
+            return
+        if total_count == 0 or total_count is None or index is None:
+            child_key_short = file + "_" + str(line)
+            if item2 is None: extern_map[child_key_short] = (item1, index_quad)
+            else: extern_map[child_key_short] = (item1, index_quad, item2)
+        else:
+            child_key_short = file + "_" + str(line)
+            inner_map = extern_map.get(child_key_short, {})
+            if len(inner_map) == 0:
+                extern_map[child_key_short] = inner_map
+            elif not isinstance(inner_map, dict):
+                pair = inner_map
+                inner_map = {}
+                inner_map[0] = pair
+            ratio = index / max(total_count, 1)
+            if item2 is None: inner_map[ratio] = (item1, index_quad)
+            else: extern_map[child_key_short] = (item1, index_quad, item2)
+
+    @staticmethod
+    def get_item_from_external_indice_map2(indices, extern_map, index_quad, my_insn_indices=None, other_insn_indices=None):
+        if EXACT_INDEX_MATCH is True:
+            key = Indices.build_key_from_index_quad(index_quad)
+            #assert not isinstance(val, dict)
+            ret = extern_map.get(key)
+            #TODO possibly change back
+            #if ret is not None:
+            #    return ret
+
+            #TODO remove
+            assert my_insn_indices is not None
+            assert other_insn_indices is not None
+            if my_insn_indices is None or other_insn_indices is None:
+                return ret
+            
+            my_insn_str = my_insn_indices.get_insn_str(index_quad)
+            #print("my_str: " + str(my_insn_str))
+            if my_insn_str is None:
+                return ret
+
+            other_insn_str = other_insn_indices.get_insn_str(index_quad)
+            if my_insn_str == other_insn_str and ret is not None:
+                return ret
+            for i in [1, -1, 2, -2]:
+                curr_index_quad = list(index_quad)
+                curr_index_quad[2] = curr_index_quad[2] + i
+                if curr_index_quad[2] < 1:
+                    continue
+                #print(curr_index_quad)
+                other_insn_str = other_insn_indices.get_insn_str(curr_index_quad)
+                #print("other_str: " + str(other_insn_str))
+                if other_insn_str == my_insn_str:
+                    print("[ra] Using inexact index match because insn strs are equal: " + str(other_insn_str) + " " + str(my_insn_str))
+                    key = Indices.build_key_from_index_quad(curr_index_quad)
+                    return extern_map.get(key)
+            return ret
+
+        else:
+            return Indices.get_item_from_external_indice_map(indices, extern_map, index_quad)
+ 
+    @staticmethod
+    def get_item_from_external_indice_map(indices, extern_map, index_quad):
+        if EXACT_INDEX_MATCH is True:
+            key = Indices.build_key_from_index_quad(index_quad)
+            #assert not isinstance(val, dict)
+            return extern_map.get(key)
+ 
+        file, line, index, total_count = Indices.parse_index_quad(index_quad)
+        key = indices.get_indices2(file, line, total_count, index)
+        if key is None:
+            return None
+
+        val = extern_map.get(key)
+        if isinstance(val, dict):
+            # when cannot find a precise match, match on ratio
+            our_ratio = (index if index is not None else 0)/ max(total_count if total_count is not None else 1, 1)
+            min_diff_ratio = 1
+            for their_ratio in val:
+                ratio_diff = abs(their_ratio-our_ratio)
+                if ratio_diff < min_diff_ratio:
+                    min_diff_ratio = their_ratio
+            if abs(min_diff_ratio-our_ratio) > 0.05:
+                return None
+            item = val[min_diff_ratio]
+        else:
+            item = val
+        return item
 
     def get_indices(self, n):
         return self.get_indices2(n.file, n.line, n.total_count, n.index)
@@ -634,6 +803,61 @@ class Indices:
                 return True
         return False
 
+class IndiceToInsnMap():
+    def __init__(self):
+        self.indices = None
+        self.index_to_insn = {}
+        self.index_to_insn_str = {}
+        self.insn_to_quad = {}
+
+    def build(self, indices_file_path, insns_file_path, insn_strs_file_path=None):
+        print("[ra] Building indices from files: " + str(indices_file_path) + " " + str(insns_file_path))
+        assert os.path.exists(indices_file_path)
+        with open(indices_file_path, 'r') as f:
+            index_quads = json.load(f)
+
+        assert os.path.exists(insns_file_path)
+        with open(insns_file_path, 'r') as f:
+            insns = json.load(f)
+       
+        insn_strs = None
+        if insn_strs_file_path is not None:
+            assert os.path.exists(insn_strs_file_path)
+            with open(insn_strs_file_path, 'r') as f:
+                insn_strs = json.load(f)
+
+        assert(len(index_quads) == len(insns))
+        if insn_strs is not None:
+            assert(len(index_quads) == len(insn_strs))
+        self.indices = Indices.build_indices(index_quads)
+        for i in range(len(index_quads)):
+            index_quad = index_quads[i]
+            insn = insns[i]
+            insn_str = insn_strs[i] if insn_strs is not None else None
+            #assert insn_str is not None
+            Indices.insert_to_external_indice_to_item_map(self.index_to_insn, index_quad, insn)
+            if insn_str is not None:
+                Indices.insert_to_external_indice_to_item_map(self.index_to_insn_str, index_quad, insn_str)
+            self.insn_to_quad[insn] = index_quad
+
+    def get_insn(self, index_quad, my_insn_indices, other_insn_indices):
+        pair = Indices.get_item_from_external_indice_map2(\
+                self.indices, self.index_to_insn, index_quad, my_insn_indices, other_insn_indices)
+        return pair[0] if pair is not None else None
+
+    def get_insn_str(self, index_quad):
+        pair = Indices.get_item_from_external_indice_map(self.indices, self.index_to_insn_str, index_quad)
+        return pair[0] if pair is not None else None
+
+    def get_index_quad(self, insn):
+        return self.insn_to_quad.get(insn, None)
+
+    @staticmethod
+    def translate_insn(insn, my_indices, other_indices):
+        index_quad = my_indices.get_index_quad(insn)
+        if index_quad is None:
+            return None
+        return other_indices.get_insn(index_quad, my_indices, other_indices)
 
 class Weight:
     def __init__(self, actual_weight, base_weight, perc_contrib, corr, order):
@@ -665,9 +889,9 @@ class Weight:
         s = ""
         s += "Total weight:{:20.2f} ".format(self.total_weight)
         s += "%Contrib:{:6.2f}% ".format(self.perc_contrib)
-        s += "Corr:{:6.2f}% ".format(self.corr * 100)
+        #s += "Corr:{:6.2f}% ".format(self.corr * 100)
         #s += "Round:{:.2f} ".format(self.round_contrib)
-        s += "order:{:6d} ".format(self.order)
+        #s += "order:{:6d} ".format(self.order)
         return s
 
     def toJSON(self):
