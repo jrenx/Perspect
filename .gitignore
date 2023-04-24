@@ -3,7 +3,6 @@ pin/obj-ia32/*
 pin/__pycache__/*
 pin/__init__.py
 pin/*.pyc
-pin/*.out*
 binary_analysis/*.o
 binary_analysis/*.so
 binary_analysis/analysis
