@@ -1,4 +1,0 @@
-time ./seq 0 10000000 > /dev/null
-time ./seq --equal-width 0 10000000 > /dev/null
-
-#symptom doesn't exist in good run
