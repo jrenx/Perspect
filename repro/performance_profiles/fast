@@ -1,3 +1,0 @@
-36.31 mongod mongod [.] __wt_page_in_func
-0.06  mongod mongod [.] __wt_txn_read
-0.01  mongod mongod [.] __wt_txn_upd_value_visible_all
