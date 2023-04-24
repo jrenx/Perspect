@@ -1,8 +1,8 @@
 limit=2500
-program=go_11068_bad_fast
+program=go_11068_good_fast
 program_args=
 program_path=/home/renxian2/eval_go_11068/
-starting_event_file=starting_events_bad_run
+starting_event_file=starting_events_good_run
 single_machine_parallelization_factor=16
 port=12000
 inner_port=9999
