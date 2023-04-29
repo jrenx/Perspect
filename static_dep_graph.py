@@ -2430,12 +2430,12 @@ class StaticDepGraph:
                 if StaticDepGraph.data_flow_pass_only is True:
                     initial_node.cf_succes.append(br)
                     br.cf_predes.append(initial_node)
-                if br not in graph.nodes_in_cf_slice:
-                    graph.nodes_in_cf_slice[br] = br
-                if initial_node not in graph.nodes_in_cf_slice:
-                    graph.nodes_in_cf_slice[initial_node] = initial_node
-                #print(br)
-                #print(initial_node)
+                    if br not in graph.nodes_in_cf_slice:
+                        graph.nodes_in_cf_slice[br] = br
+                    if initial_node not in graph.nodes_in_cf_slice:
+                        graph.nodes_in_cf_slice[initial_node] = initial_node
+                    #print(br)
+                    #print(initial_node)
         else:
             graph = StaticDepGraph.make_graph(func, prog)
 
