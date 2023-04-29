@@ -1,0 +1,8 @@
+limit=10000
+program=redis-server
+program_args=
+program_path=/home/renxian2/Perspect/
+starting_event_file=starting_events_good_run
+single_machine_parallelization_factor=16
+port=12000
+inner_port=9999
