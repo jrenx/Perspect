@@ -34,8 +34,8 @@ class InsRegTrace:
         pin_program_list.extend(self.program)
         pin_cmd = ' '.join(pin_program_list)
         print(pin_cmd)
-        if execute is True:
-            subprocess.call(pin_cmd, shell=True)
+        #if execute is True:
+        #    subprocess.call(pin_cmd, shell=True)
 
     def parse_break_points(self, branch, target):
         count = -1
