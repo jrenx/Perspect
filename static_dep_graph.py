@@ -420,7 +420,14 @@ class CFG:
                         if pdom_ids is None:
                             pdom_ids = set(bb_id_to_pdom_ids[succe.id])
                         else:
-                            pdom_ids = pdom_ids.intersection(bb_id_to_pdom_ids[succe.id])
+                            new_pdom_ids = pdom_ids.intersection(bb_id_to_pdom_ids[succe.id])
+                            if len(new_pdom_ids) == 0:
+                                # This indicates the existing succes examined
+                                # have a cyclic dependency on the current BB itself,
+                                # so their successors can be ignored
+                                if bb.id in pdom_ids:
+                                    new_pdom_ids = set(bb_id_to_pdom_ids[succe.id])
+                            pdom_ids = new_pdom_ids
                         if DEBUG_SIMPLIFY: print("[Simplify]      current pdom : " + str(pdom_ids))
                     if cont is True:
                         continue
@@ -534,8 +541,11 @@ class CFG:
                     print("[Simplify/warn] While checking if " + str(bb.id) + " can be removed, " +
                             "found BB's pdom: " + str(bb.immed_pdom.id) + " is not in child BB " + str(child_bb.id) +
                             "'s pdoms: " + str([p.id for p in child_bb.pdoms]))
-                    ignore = True
-                    break
+                    if bb in child_bb.pdoms:
+                        print("[Simplify/warn] however, BB is in child BB's pdoms.")
+                    else:
+                        ignore = True
+                        break
                 #assert bb.immed_pdom in child_bb.pdoms, str(bb.id) + " " + str(bb.immed_pdom.id) + " " + str([p.id for p in child_bb.pdoms])
                 all_succes_before_immed_pdom.add(child_bb)
                 for succe in child_bb.succes:
@@ -631,6 +641,7 @@ class CFG:
                         assert False
                     """
                     # weirdly, sometimes the entry can have a predecessor, I dunno why
+                    # ^ could be circular dependency!
                     if bb in self.entry_bbs:
                         if DEBUG_SIMPLIFY: print("[static_dep] should be normal entry block")
                         assert bb.is_entry or bb.is_new_entry, bb.id
