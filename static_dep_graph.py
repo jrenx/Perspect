@@ -18,6 +18,7 @@ DEBUG_SIMPLIFY = False
 DEBUG_SLICE = False
 VERBOSE = False
 curr_dir = os.path.dirname(os.path.realpath(__file__))
+IS_NEWER_GO = False
 TRACKS_DIRECT_CALLER = True
 TRACKS_INDIRECT_CALLER = False
 # = False
@@ -3082,6 +3083,15 @@ class StaticDepGraph:
             return
 
         if StaticDepGraph.call_graph_pass_only is True:
+            if IS_NEWER_GO is True: self.cfg.slice(final)
+            for bb in self.cfg.target_bbs:
+                node_id = self.bb_id_to_node_id[bb.id]
+                node = self.id_to_node[node_id]
+                node.cf_predes = []
+            for prede in self.cfg.entry_bbs:
+                prede_node_id = self.bb_id_to_node_id[prede.id]
+                prede_node = self.id_to_node[prede_node_id]
+                prede_node.cf_succes = []
             for bb in self.cfg.target_bbs:
                 node_id = self.bb_id_to_node_id[bb.id]
                 node = self.id_to_node[node_id]
