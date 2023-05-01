@@ -61,3 +61,4 @@ pin/fast/_0x40a960_instruction_trace.out filter=lfs diff=lfs merge=lfs -text
 pin/fast/_0x40a960_instruction_trace.out.avg_timestamp filter=lfs diff=lfs merge=lfs -text
 pin/fast/_0x40a960_instruction_trace.out.count filter=lfs diff=lfs merge=lfs -text
 pin/fast/ filter=lfs diff=lfs merge=lfs -text
+cache/du/addr2line.json filter=lfs diff=lfs merge=lfs -text
