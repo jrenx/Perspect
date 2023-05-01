@@ -1132,6 +1132,8 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         #rank = rank - 1
         print("-----------------------------------------")
         print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
+        if p[0] <= 0:
+            continue
         print(str(p[2]) + " " + str(p[3]))
         if p[4] is not None: print(insn_to_index[p[4].insn])
         print(str(p[4]))
