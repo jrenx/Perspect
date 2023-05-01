@@ -1514,7 +1514,7 @@ def print_result(included_diff):
         if p[4] is not None:
             insn_str = hex(p[4].insn)
             if insn_str not in addr2line_cache:
-                srcline = get_line_raw(p[4].insn, program)
+                srcline = get_line_raw(p[4].insn, program + "_debug")
                 addr2line_cache[insn_str] = srcline
             print(addr2line_cache[insn_str])
             print(str(p[4]))
@@ -1524,7 +1524,7 @@ def print_result(included_diff):
         if p[5] is not None:
             insn_str = hex(p[5].insn)
             if insn_str not in addr2line_cache:
-                srcline = get_line_raw(p[5].insn, program)
+                srcline = get_line_raw(p[5].insn, program + "_debug")
                 addr2line_cache[insn_str] = srcline
             print(addr2line_cache[insn_str])
             #if p[5] is not None: print(insn_to_index[p[5].insn])
