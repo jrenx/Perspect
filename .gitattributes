@@ -65,3 +65,4 @@ pin/_0x47cc85__0x47ca00__0x47ccd5_instruction_trace.out.tar.gz filter=lfs diff=l
 go_11068_bad_fast filter=lfs diff=lfs merge=lfs -text
 go_11068_bad_fast_debug_objdump filter=lfs diff=lfs merge=lfs -text
 go_11068_good_fast_debug_objdump filter=lfs diff=lfs merge=lfs -text
+cache/go_11068_bad_fast/addr2line.json filter=lfs diff=lfs merge=lfs -text
