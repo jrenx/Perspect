@@ -30,3 +30,4 @@ pin/_0x45add5_instruction_trace.out.avg_timestamp filter=lfs diff=lfs merge=lfs 
 repro/history filter=lfs diff=lfs merge=lfs -text
 repro/record.sh filter=lfs diff=lfs merge=lfs -text
 repro/reproduction_steps filter=lfs diff=lfs merge=lfs -text
+cache/13552_slow/addr2line.json filter=lfs diff=lfs merge=lfs -text
