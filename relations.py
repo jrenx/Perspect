@@ -272,7 +272,7 @@ class Relation:
 
     def __str__(self):
         s = ""
-        s += "  >>> " + str(self.key) + " "
+        s += "  >>> " #+ str(self.key) + " "
         if self.prede_node is not None:
             s += self.prede_node.hex_insn + "@" + self.prede_node.function
         elif self.insn is not None:
