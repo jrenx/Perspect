@@ -103,6 +103,14 @@ def execute_cmd_in_parallel(all_inputs, script_name, prefix, num_processor, prog
         os.remove(file_name + ".out")
     return ret
 
+def get_line_raw(insn, prog):
+    if not isinstance(insn, str):
+        insn = hex(insn)
+    cmd = ['addr2line', '-e', prog, insn, '-i']
+    #print("[main] running command: " + str(cmd))
+    result = subprocess.run(cmd, stdout=subprocess.PIPE)
+    return result.stdout.decode('ascii').strip()
+
 def get_line(insn, prog):
     if not isinstance(insn, str):
         insn = hex(insn)
