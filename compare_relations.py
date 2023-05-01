@@ -1242,7 +1242,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         if p[4] is not None:
             insn_str = hex(p[4].insn)
             if insn_str not in addr2line_cache:
-                srcline = get_line_raw(p[4].insn, program)
+                srcline = get_line_raw(p[4].insn, program + "_debug")
                 addr2line_cache[insn_str] = srcline
             print(addr2line_cache[insn_str])
             print(str(p[4]))
@@ -1252,7 +1252,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         if p[5] is not None:
             insn_str = hex(p[5].insn)
             if insn_str not in addr2line_cache:
-                srcline = get_line_raw(p[5].insn, program)
+                srcline = get_line_raw(p[5].insn, program + "_debug")
                 addr2line_cache[insn_str] = srcline
             print(addr2line_cache[insn_str])
 
