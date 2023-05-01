@@ -1491,7 +1491,7 @@ def print_result(included_diff):
     cache_dir1 = os.path.join(curr_dir, "cache", program)
     file1 = "addr2line.json"
     f1 = os.path.join(cache_dir1, file1)
-    print(f1)
+    #print(f1)
     addr2line_cache = {}
     if os.path.exists(f1):
         with open(f1, 'r') as f:
