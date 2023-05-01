@@ -1397,6 +1397,8 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         #rank = rank - 1
         print("-----------------------------------------")
         print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
+        if p[0] < 15:
+            continue
         print(str(p[2]) + " " + str(p[3]))
         if p[4] is not None: print(insn_to_index[p[4].insn])
         print(str(p[4]))
@@ -1409,8 +1411,24 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         if r_left is not None and r_right is not None:
             include = compare_absolute_count(left, right, r_left, r_right, left_summary, right_summary,
                                              counts_left, counts_right, insn_to_insn)
+            for seen in left_seen:
+                if r_left.relaxed_equals(seen):
+                    print("[compare_relation] already seen a similar relation, ignore...")
+                    include = False
+                    break
+                else:
+                    m1 = seen.forward.magnitude()
+                    m2 = r_left.forward.magnitude()
+                    mdiff = abs((m2 - m1) / m2) * 100
+                    print("HEREE")
+                    print(mdiff)
+                    if mdiff < 25:
+                        include = False
+                        break
             if include is False:
                 print("[compare_relation] absolute count of event same in both runs, ignore...")
+            elif include is True:
+                left_seen.append(r_left)
         elif r_left is not None:
             print("[compare_relation] only has r left: " + str(len(left_seen)))
             for seen in left_seen:
