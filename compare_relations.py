@@ -12,6 +12,7 @@ from collections import deque
 import plotly.graph_objects as go
 
 curr_dir = os.path.dirname(os.path.realpath(__file__))
+program = None
 
 def parse(f):
     with open(f, 'r') as ff:
@@ -1486,6 +1487,15 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
 
 def print_result(included_diff):
     sys.stdout = sys.__stdout__
+
+    cache_dir1 = os.path.join(curr_dir, "cache", program)
+    file1 = "addr2line.json"
+    f1 = os.path.join(cache_dir1, file1)
+    print(f1)
+    addr2line_cache = {}
+    if os.path.exists(f1):
+        with open(f1, 'r') as f:
+            addr2line_cache = json.load(f)
     print("===============================================")
     print("===============================================")
     #insns_left = []
@@ -1501,8 +1511,21 @@ def print_result(included_diff):
         print("GOOD RUN:")
         #print(str(p[2]) + " " + str(p[3]))
         #if p[4] is not None: print(insn_to_index[p[4].insn])
+        if p[4] is not None:
+            insn_str = hex(p[4].insn)
+            if insn_str not in addr2line_cache:
+                srcline = get_line_raw(p[4].insn, program)
+                addr2line_cache[insn_str] = srcline
+            print(addr2line_cache[insn_str])
         print(str(p[4]))
         print("BAD RUN:")
+        if p[5] is not None:
+            insn_str = hex(p[5].insn)
+            if insn_str not in addr2line_cache:
+                srcline = get_line_raw(p[5].insn, program)
+                addr2line_cache[insn_str] = srcline
+            print(addr2line_cache[insn_str])
+
         #if p[5] is not None: print(insn_to_index[p[5].insn])
         print(str(p[5]))
         #if has a node in the graph, add a label...
@@ -1517,6 +1540,8 @@ def print_result(included_diff):
         #if r_right is None:
         #    insns_left.append(r_left.insn)
         #    insns_right.append(r_left.insn)
+    with open(f1, 'w') as f:
+        json.dump(addr2line_cache, f, indent=4, ensure_ascii=False)
     
     #with open('insns_left', 'w') as out:
     #    for i in insns_left:
