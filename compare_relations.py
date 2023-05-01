@@ -1236,6 +1236,23 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                       inner_indices_left=None, inner_indices_right=None):
     if left is None or right is None:
         print("[warn] One relation group is None")
+        diff = []
+        if left is not None:
+            for pair in left.relations:
+                r = pair[0]
+                if r.insn != left.insn: continue
+                prede = pair[1]
+                diff.append((r.weight.perc_contrib, r.timestamp, r.weight.perc_contrib, r.timestamp, r, None, r.forward.corr()))
+                if r.insn == left.insn: break
+        if right is not None:
+            for pair in right.relations:
+                r = pair[0]
+                if r.insn != right.insn: continue
+                prede = pair[1]
+                diff.append((r.weight.perc_contrib, r.timestamp, r.weight.perc_contrib, r.timestamp, None, r, r.forward.corr()))
+                if r.insn == right.insn: break
+        sorted_diff = sorted(diff, key=lambda e: (e[0], e[1]))
+        print_result(sorted_diff)
         return
     left_summary_file = os.path.join(d1, hex(left.insn) + "_summary")
     print(left_summary_file)
@@ -1465,7 +1482,9 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         print("HAS RANK")
         #print("rank: " + str(rank))
         included_diff.append(p)
+    print_result(included_diff)
 
+def print_result(included_diff):
     sys.stdout = sys.__stdout__
     print("===============================================")
     print("===============================================")
