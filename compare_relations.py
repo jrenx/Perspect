@@ -1245,7 +1245,9 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                 srcline = get_line_raw(p[4].insn, program)
                 addr2line_cache[insn_str] = srcline
             print(addr2line_cache[insn_str])
-        print(str(p[4]))
+            print(str(p[4]))
+        else:
+            print("Relation does not exist")
         print("BAD RUN:")
         if p[5] is not None:
             insn_str = hex(p[5].insn)
@@ -1254,13 +1256,15 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                 addr2line_cache[insn_str] = srcline
             print(addr2line_cache[insn_str])
 
-        #if p[5] is not None: print(insn_to_index[p[5].insn])
-        print(str(p[5]))
-        #if p[4] is not None:
-        #    rel_map1[p[4].insn] = p
-        #if p[5] is not None:
-        #    rel_map2[p[5].insn] = p
-        #if has a node in the graph, add a label...
+            #if p[5] is not None: print(insn_to_index[p[5].insn])
+            print(str(p[5]))
+            #if p[4] is not None:
+            #    rel_map1[p[4].insn] = p
+            #if p[5] is not None:
+            #    rel_map2[p[5].insn] = p
+            #if has a node in the graph, add a label...
+        else:
+            print("Relation does not exist")
 
         #r_left = p[4]
         #r_right = p[5]
