@@ -80,3 +80,4 @@ mongod_debugac filter=lfs diff=lfs merge=lfs -text
 mongod_debugad filter=lfs diff=lfs merge=lfs -text
 mongod_debugaa filter=lfs diff=lfs merge=lfs -text
 mongod_debugab filter=lfs diff=lfs merge=lfs -text
+cache/mongod/addr2line.json filter=lfs diff=lfs merge=lfs -text
