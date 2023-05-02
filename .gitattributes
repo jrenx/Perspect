@@ -57,3 +57,4 @@ pin/_0x4cd380__0x4cd290__0x449580_instruction_trace.out.debug filter=lfs diff=lf
 pin/_0x4cd380__0x4cd290__0x449580_instruction_trace.out.full_count filter=lfs diff=lfs merge=lfs -text
 redis-server filter=lfs diff=lfs merge=lfs -text
 redis-server_debug filter=lfs diff=lfs merge=lfs -text
+cache/redis-server/addr2line.json filter=lfs diff=lfs merge=lfs -text
