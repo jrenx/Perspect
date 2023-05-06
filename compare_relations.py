@@ -1508,7 +1508,7 @@ def print_result(included_diff):
         print("rank: " + str(rank))
         print("weight: " + str(p[0]))# + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
         print()
-        print("GOOD RUN:")
+        print("BAD RUN:")
         #print(str(p[2]) + " " + str(p[3]))
         #if p[4] is not None: print(insn_to_index[p[4].insn])
         if p[4] is not None:
@@ -1520,7 +1520,7 @@ def print_result(included_diff):
             print(str(p[4]))
         else:
             print("Relation does not exist")
-        print("BAD RUN:")
+        print("GOOD RUN:")
         if p[5] is not None:
             insn_str = hex(p[5].insn)
             if insn_str not in addr2line_cache:
