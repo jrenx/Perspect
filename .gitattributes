@@ -32,3 +32,5 @@ cache/909_ziptest_exe9/rgroups_simple_rdi_0x409daa_rbx_0x407240_rdx_0x40742b_rcx
 repro/ filter=lfs diff=lfs merge=lfs -text
 repro/reproduction_steps filter=lfs diff=lfs merge=lfs -text
 repro/test.zip filter=lfs diff=lfs merge=lfs -text
+repro/909-go.tar.gz filter=lfs diff=lfs merge=lfs -text
+repro/909_ziptest_exe9_objdump filter=lfs diff=lfs merge=lfs -text
