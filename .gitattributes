@@ -388,3 +388,5 @@ cache/909_ziptest_exe9_32/dynamic_graph_result_esi_0x8050c16_ebx_0x804e41c_eax_0
 repro/ filter=lfs diff=lfs merge=lfs -text
 repro/reproduction_steps filter=lfs diff=lfs merge=lfs -text
 repro/test.zip filter=lfs diff=lfs merge=lfs -text
+repro/909-go.tar.gz filter=lfs diff=lfs merge=lfs -text
+repro/909_ziptest_exe9_32_objdump filter=lfs diff=lfs merge=lfs -text
