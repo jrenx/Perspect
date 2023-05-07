@@ -57,7 +57,7 @@ class Invariance:
         if self.conditional_proportion == other.conditional_proportion:
             return True
         diff = abs(self.conditional_proportion - other.conditional_proportion)
-        if diff/self.conditional_proportion < 0.1 or diff < 0.01:
+        if diff/self.conditional_proportion < 0.2 or diff < 0.01:
             return True
         if self_count is not None and other_count is not None:
             self_prede_count = round(self_count * self.conditional_proportion)
