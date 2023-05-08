@@ -1,7 +1,7 @@
+import sys, traceback
+from dynamic_dep_graph import *
 from scipy.stats import norm
 from scipy.stats import ks_2samp
-from dynamic_dep_graph import *
-import sys, traceback
 
 DEBUG = True
 Weight_Threshold = 0
