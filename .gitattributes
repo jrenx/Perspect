@@ -60,3 +60,4 @@ repro/log_good filter=lfs diff=lfs merge=lfs -text
 repro/reproduction_steps filter=lfs diff=lfs merge=lfs -text
 repro/check.sh filter=lfs diff=lfs merge=lfs -text
 repro/ filter=lfs diff=lfs merge=lfs -text
+repro/8832-go.tar.gz filter=lfs diff=lfs merge=lfs -text
