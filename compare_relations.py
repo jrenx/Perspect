@@ -1268,7 +1268,13 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                 elif r.insn != left.insn: continue
                 prede = pair[1]
                 diff.append((r.weight.perc_contrib, r.timestamp, r.weight.perc_contrib, r.timestamp, r, None, r.forward.corr()))
-                if r.insn == left.insn: break
+            if len(diff) == 0:
+                for pair in left.relations:
+                    r = pair[0]
+                    if r.insn != left.insn: continue
+                    prede = pair[1]
+                    diff.append((r.weight.perc_contrib, r.timestamp, r.weight.perc_contrib, r.timestamp, r, None, r.forward.corr()))
+                    if r.insn == left.insn: break
         if right is not None:
             for pair in right.relations:
                 r = pair[0]
