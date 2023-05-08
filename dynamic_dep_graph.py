@@ -26,7 +26,7 @@ time_record = {}
 DEBUG_POST_ORDER = False
 DEBUG = False
 PARALLEL_PREPARSE = True
-PROP_WEIGHT = False
+PROP_WEIGHT = True
 DEBUG_MULTIPLE = False
 
 class DynamicNode(JSONEncoder):
