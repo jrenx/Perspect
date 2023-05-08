@@ -1237,22 +1237,49 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                       inner_indices_left=None, inner_indices_right=None):
     if left is None or right is None:
         print("[warn] One relation group is None")
+        divergences = []
+        if right is None:
+            limit, program, program_args, program_path, starting_events, starting_insn_to_weight = parse_inputs()
+            StaticDepGraph.build_dependencies(starting_events, program, limit=limit)
+            q = deque()
+            visited = set()
+            for n in StaticDepGraph.starting_nodes:
+                q.appendleft(n)
+            #print(len(q))
+            while len(q) > 0:
+                #print(len(q))
+                n = q.popleft()
+                if n in visited:
+                    continue
+                visited.add(n)
+                if counts_right[n.insn] != 0:
+                    divergences.append(n.insn)
+                else:
+                    for p in n.cf_predes: q.appendleft(p)
+                    for p in n.df_predes: q.appendleft(p)
+        print("Divergence points: " + str([divergences]))
+
         diff = []
         if left is not None:
             for pair in left.relations:
                 r = pair[0]
-                if r.insn != left.insn: continue
+                if len(divergences) != 0:
+                    if r.insn not in divergences: continue
+                elif r.insn != left.insn: continue
                 prede = pair[1]
                 diff.append((r.weight.perc_contrib, r.timestamp, r.weight.perc_contrib, r.timestamp, r, None, r.forward.corr()))
                 if r.insn == left.insn: break
         if right is not None:
             for pair in right.relations:
                 r = pair[0]
-                if r.insn != right.insn: continue
+                if len(divergences) != 0:
+                    if r.insn not in divergences: continue
+                elif r.insn != right.insn: continue
                 prede = pair[1]
                 diff.append((r.weight.perc_contrib, r.timestamp, r.weight.perc_contrib, r.timestamp, None, r, r.forward.corr()))
                 if r.insn == right.insn: break
         sorted_diff = sorted(diff, key=lambda e: (e[0], e[1]))
+
         print_result(sorted_diff)
         return
     left_summary_file = os.path.join(d1, hex(left.insn) + "_summary")
