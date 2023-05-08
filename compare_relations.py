@@ -233,8 +233,8 @@ def compare_children_rels(insn1, insn2, mrs1, mrs2, filter1=None, filter2=None,
     return ret
 
 #TODO, merge this logic and the logic being used in the main comparison loop!!
-def get_relation_pairs(insn1, insn2, mrs1, mrs2):
-    print("[compare_relation] Looking for relation pairs, insn1: " + hex(insn1) + " insn2: " + hex(insn2))
+def get_relation_pairs(insn1, insn2, mrs1, mrs2, indices1=None, indices2=None):
+    #print("[compare_relation] Looking for relation pairs, insn1: " + hex(insn1) + " insn2: " + hex(insn2))
     if mrs1 is None or mrs2 is None:
         return None, None, None
     left = mrs1[insn1] if insn1 in mrs1 else None
@@ -1265,6 +1265,26 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
             #if has a node in the graph, add a label...
         else:
             print("Relation does not exist")
+
+        i = 0
+        if p[4] is not None and p[5] is not None:
+            pairs, succes, insns = get_relation_pairs(p[4].insn, p[5].insn, mcrs_left, mcrs_right)
+            if pairs is None:
+                continue
+            for i in range(len(pairs)):
+                pp = pairs[i]
+                s = succes[i]
+                ip = insns[i]
+                if ip[0] == p[4].insn: continue
+
+                print("\t---------------------------------")
+                print("\t relation w.r.t successor # " + str(i))
+                print("\t" + str(s[0]) + " " + (hex(ip[0]) if ip[0] is not None else "None"))
+                print(''.join('\t' + l + '\n' for l in str(pp[0]).split('\n')[0:]))
+                print("\t>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                print("\t" + str(s[1]) + " " + (hex(ip[1]) if ip[1] is not None else "None"))
+                print(''.join('\t' + l + '\n' for l in str(pp[1]).split('\n')[0:]))
+                #print("\t---------------------------------")
 
         #r_left = p[4]
         #r_right = p[5]
