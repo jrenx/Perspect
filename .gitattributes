@@ -26,3 +26,4 @@ repro/ filter=lfs diff=lfs merge=lfs -text
 repro/13552_slow filter=lfs diff=lfs merge=lfs -text
 repro/history filter=lfs diff=lfs merge=lfs -text
 repro/record.sh filter=lfs diff=lfs merge=lfs -text
+repro/13552-go.tar.gz filter=lfs diff=lfs merge=lfs -text
