@@ -1169,6 +1169,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         #rank = rank - 1
         print("-----------------------------------------")
         print("weight: " + str(p[0]) + " timestamp: " + str(p[1]) + " correlation:" + str(p[6]))
+        if p[0] < 10: continue
         print(str(p[2]) + " " + str(p[3]))
         print(str(p[4]))
         print(str(p[5]))
