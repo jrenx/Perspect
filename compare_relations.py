@@ -1266,16 +1266,18 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         else:
             print("Relation does not exist")
 
-        i = 0
         if p[4] is not None and p[5] is not None:
             pairs, succes, insns = get_relation_pairs(p[4].insn, p[5].insn, mcrs_left, mcrs_right)
             if pairs is None:
                 continue
+            visited = set()
             for i in range(len(pairs)):
                 pp = pairs[i]
                 s = succes[i]
                 ip = insns[i]
                 if ip[0] == p[4].insn: continue
+                if ip[0] in visited: continue
+                visited.add(ip[0])
 
                 print("\t---------------------------------")
                 print("\t relation w.r.t successor # " + str(i))
