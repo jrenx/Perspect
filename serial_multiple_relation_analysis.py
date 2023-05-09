@@ -144,7 +144,7 @@ class SerialMultipleRelationAnalysis(RelationAnalysis):
             self.simple_rgroup_file = os.path.join(curr_dir, "cache", self.prog, "multiple_rgroups_simple_" + self.dd.key + ".json")
         else:
             self.rgroup_file = os.path.join(curr_dir, 'cache', self.prog, "multiple_context_rgroups.json")
-            self.simple_rgroup_file = os.path.join(curr_dir, "cache", self.prog, "multiple_context_rgroups_simple_" + self.dd.key + ".json")
+            self.simple_rgroup_file = os.path.join(curr_dir, "cache", self.prog, "multiple_context_rgroups_simple_" + self.dd.key + "_" + hex(parent_insn) +".json")
 
         self.print_rgroups(self.relation_groups)
 
