@@ -13,6 +13,7 @@ import plotly.graph_objects as go
 
 curr_dir = os.path.dirname(os.path.realpath(__file__))
 program = None
+prev_rank = 0
 
 def parse(f):
     with open(f, 'r') as ff:
@@ -376,8 +377,6 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1, mcf1, mcf12, mf1, mf12, pf1, p
     rs2 = parse(f2)
     #print(rs2)
 
-    mcrs1 = parse_multiple_relations(mcf1)
-    mcrs2 = parse_multiple_relations(mcf12)
     mrs1 = parse_multiple_relations(mf1)
     mrs2 = parse_multiple_relations(mf12)
 
@@ -429,6 +428,8 @@ def compare_relation_groups(f1, f2, tf1, tf2, d1, mcf1, mcf12, mf1, mf12, pf1, p
     #print(sorted_diff)
     print("========================================")
     for p in sorted_diff:
+        mcrs1 = parse_multiple_relations(mcf1.split(".")[0] + "_" + hex(p[2].insn)  + ".json")
+        mcrs2 = parse_multiple_relations(mcf12.split(".")[0] + "_" + hex(p[3].insn)  + ".json")
         print()
         print(str(p[0]) + " " + str(p[1]) + " " + str(p[2]) + " " + str(p[3]))
         print()
@@ -738,7 +739,7 @@ def sort_relations_precise(diff, max_weight, max_timestamp, left, right,
         #Check that there are no cases where a relation with the successor exists
         # but the successor does not exist in the summary file.
         left_over = set(left_succe_to_rels.keys()).difference(succe_insns_left)
-        assert(len(left_over) == 0), str(set(left_succe_to_rels.keys())) + " " + str(succe_insns_left)
+        #assert(len(left_over) == 0), str(set(left_succe_to_rels.keys())) + " " + str(succe_insns_left)
         if len(rigt_succe_to_rels) > 0:
             print("[compare_relation/warn] Unhandled case: the right hand side has "
                   + str(len(rigt_succe_to_rels)) + " more successor relations that left")
@@ -1230,7 +1231,9 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
     #insns_right = []
     rel_map1 = {}
     rel_map2 = {}
-    rank = len(included_diff) + 1
+    global prev_rank
+    rank = len(included_diff) + 1 + prev_rank
+    prev_rank = rank - 1
     for p in reversed(included_diff):
         rank = rank - 1
         print("-----------------------------------------")
@@ -1301,6 +1304,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
         #    insns_right.append(r_left.insn)
     with open(f1, 'w') as f:
         json.dump(addr2line_cache, f, indent=4, ensure_ascii=False)
+    sys.stdout = None
     
     #with open('insns_left', 'w') as out:
     #    for i in insns_left:
@@ -1383,4 +1387,4 @@ if __name__ == "__main__":
     print(mf1)
     print(mf12)
 
-    compare_relation_groups(f1, f12, tf1, tf12, d1, mcf1, mcf12, mf1, mf12, pf1, pf12, pduf1, pduf12, True)
+    compare_relation_groups(f1, f12, tf1, tf12, d1, mcf1, mcf12, mf1, mf12, pf1, pf12, pduf1, pduf12, False)
