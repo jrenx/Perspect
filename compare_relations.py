@@ -1526,6 +1526,7 @@ def compare_relations(parent_d, parent_key, left, right, counts_left, counts_rig
                 s = succes[i]
                 ip = insns[i]
                 if ip[0] == p[4].insn: continue
+                if ip[1] is None or ip[0] is None: continue
 
                 print("\t---------------------------------")
                 print("\t relation w.r.t successor # " + str(i))
