@@ -1,6 +1,4 @@
 # To set up software dependencies, run:
-`cp setup.sh ..`
-`cd ..`
 `./setup.sh`
 
 # Where to find data for each bug:

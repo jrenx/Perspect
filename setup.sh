@@ -2,6 +2,9 @@
 echo "=================================================================="
 echo "                installing Python & dependencies"
 echo "=================================================================="
+cd ..
+DIR=$(pwd)
+echo "Current directory is: "$DIR
 sudo apt-get install python3.7 -y
 sudo apt-get install python3-pip -y
 python3.7 -m pip install --upgrade pip
@@ -22,13 +25,13 @@ wget https://github.com/dyninst/dyninst/archive/v10.1.0.tar.gz
 tar -xzvf v10.1.0.tar.gz
 mkdir prefix
 cd prefix
-cmake /home/dev/dyninst-10.1.0 -DCMAKE_INSTALL_PREFIX=/home/dev/prefix
+cmake $DIR/dyninst-10.1.0 -DCMAKE_INSTALL_PREFIX=$DIR/prefix
 make install -j32
-echo "export DYNINST_LIB=/home/dev/prefix/lib" >> /home/dev/.bashrc
-echo "export DYNINST_INCLUDE=/home/dev/prefix/include" >> /home/dev/.bashrc
-echo "export DYNINSTAPI_RT_LIB=/home/dev/prefix/lib/libdyninstAPI_RT.so" >> /home/dev/.bashrc
-echo "export LD_LIBRARY_PATH=/home/dev/prefix/lib" >> /home/dev/.bashrc
-source /home/dev/.bashrc 
+echo "export DYNINST_LIB=$DIR/prefix/lib" >> $DIR/.bashrc
+echo "export DYNINST_INCLUDE=$DIR/prefix/include" >> $DIR/.bashrc
+echo "export DYNINSTAPI_RT_LIB=$DIR/prefix/lib/libdyninstAPI_RT.so" >> $DIR/.bashrc
+echo "export LD_LIBRARY_PATH=$DIR/prefix/lib" >> $DIR/.bashrc
+source $DIR/.bashrc 
 # set up boost
 echo "=================================================================="
 echo "                    installing Boost"
