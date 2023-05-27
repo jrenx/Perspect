@@ -82,10 +82,7 @@ Step.3
 
 `python3.7 compare_relations.py`
 
-# For detailed manual, see:
+# For detailed manual, and help with interpreting the outputs of each case, see:
 
 https://docs.google.com/document/d/17qUF55PS_XGMB8MyapEzgbwEnDeTgU6bVfcE0VUv2L0/edit?usp=sharing
-
-# For help with interpreting the outputs of each case, see:
-
-https://docs.google.com/document/d/1w42JbDzXIhMbAJtFdiq1Zq2y9J_i8-JhQcKvPH0liQI/edit?usp=sharing
+https://docs.google.com/document/d/1odb3rEvPKN-2pk7_42vMdP-Of-Zk-W0zB61zV1SBk-g/edit?usp=sharing
