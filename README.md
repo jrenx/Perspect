@@ -4,7 +4,7 @@
 # If the setup script does not work, try use this docker image:
 # To install docker engine, see https://docs.docker.com/engine/install/ubuntu/
 docker pull jrenx/perspect:ready1
-sudo docker run -it jrenx/perspect:ready1
+sudo docker run --privileged -it jrenx/perspect:ready1
 cd /home/dev/Perspect
 
 # Where to find data for each bug:
