@@ -2,6 +2,7 @@
 `./setup.sh`
 
 # If the setup script does not work, try use this docker image:
+# To install docker engine, see https://docs.docker.com/engine/install/ubuntu/
 docker pull jrenx/perspect:ready
 sudo docker run -it c144f23a1932
 cd /home/dev/Perspect
