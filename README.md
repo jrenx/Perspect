@@ -1,6 +1,11 @@
 # To set up software dependencies, run:
 `./setup.sh`
 
+# If the setup script does not work, try use this docker image:
+docker pull jrenx/perspect:ready
+sudo docker run -it c144f23a1932
+cd /home/dev/Perspect
+
 # Where to find data for each bug:
 
 For go-909 (https://github.com/golang/go/issues/909): 
