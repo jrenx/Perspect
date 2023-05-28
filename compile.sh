@@ -5,4 +5,4 @@ cd $SDIR"/"binary_analysis && make
 cd $SDIR"/"preprocessor && make clean
 cd $SDIR"/"preprocessor && make
 cd $SDIR"/"pin && make clean
-cd $SDIR"/"pin && make PIN_ROOT=/home/renxian2/pin-3.11
+cd $SDIR"/"pin && make PIN_ROOT=$HOME/pin-3.11
